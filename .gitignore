@@ -1,0 +1,22 @@
+# IDE
+.idea/
+*.iml
+
+# Local tooling
+.atl/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# OS
+.DS_Store
+Thumbs.db
