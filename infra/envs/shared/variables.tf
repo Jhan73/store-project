@@ -23,3 +23,9 @@ variable "budget_alert_email" {
   description = "Receives budget alerts. Pass it as TF_VAR_budget_alert_email; it is not committed."
   type        = string
 }
+
+variable "developer_username" {
+  description = "IAM Identity Center user that receives the jugueria-dev permission set."
+  type        = string
+  default     = "jugueria-dev"
+}
