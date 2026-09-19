@@ -555,7 +555,7 @@ Idempotency must live **inside the use-case transaction**, so it cannot be a ser
 
 ### 6.1 Rendering strategy (hybrid, per route)
 
-The scaffold prerenders `**`; that must change — the menu depends on live data.
+Unknown paths return 404 (no client route matches). The SSR server accepts only the hosts in the runtime variable `NG_ALLOWED_HOSTS`, set per environment (Angular's SSRF protection); `/healthz` is served by Express before Angular so ALB health checks pass.
 
 | Route area | Render mode | Reason |
 |------------|-------------|--------|
@@ -612,7 +612,7 @@ src/app/
 
 ### 6.5 API client, money, and time
 
-**API types.** TypeScript types are generated from `backend/api/openapi.json` with `openapi-typescript` into `src/app/core/api/schema.d.ts` (`npm run api:generate`), and the generated file is committed. Only types are generated, not runtime code, so the generator does not tie the app to a specific Angular version. Feature data-access services call `HttpClient` using those types; DTO types are never written by hand. The frontend CI job also runs when `backend/api/openapi.json` changes and fails if the regenerated file differs from the committed one.
+**API types.** TypeScript types are generated from `backend/api/openapi.json` with `openapi-typescript` into `src/app/core/api/schema.d.ts` (`npm run api:generate`), and the generated file is committed. Only types are generated, not runtime code, so the generator does not tie the app to a specific Angular version. Feature data-access services call `HttpClient` using those types; DTO types are never written by hand. The frontend CI job also runs when `backend/api/openapi.json` changes and fails if the regenerated file differs from the committed one. Compatibility note: `openapi-typescript` 7.x declares a TypeScript 5 peer while Angular 22 uses TypeScript 6; M1-F1 resolves it (a compatible release, or running the pinned generator through `npx` with its own TypeScript).
 
 **Money.** The frontend never computes an amount the customer pays: totals, fees, discounts, and bill splits come from the API. For previews (e.g. the cart subtotal before checkout), a `Money` utility in `core/` parses the `amount` string into integer minor units (`"12.50"` → `1250`) without `parseFloat`, adds integers, and formats with `Intl.NumberFormat` using the currency from the API.
 
