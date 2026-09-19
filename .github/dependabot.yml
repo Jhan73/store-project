@@ -34,6 +34,13 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@primeuix/*"
         update-types: ["version-update:semver-major"]
+      # Types follow the Node 24 runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Removed in M0-04.
+      - dependency-name: "karma*"
+      - dependency-name: "jasmine*"
+      - dependency-name: "@types/jasmine"
 
   - package-ecosystem: github-actions
     directory: /
