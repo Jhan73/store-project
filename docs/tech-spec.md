@@ -15,15 +15,15 @@ This document defines **how** the PRD is built: architecture, data, APIs, securi
 |------|----------|
 | Architecture | **Modular monolith** — one Spring Boot deployable, modules enforced by Spring Modulith, one PostgreSQL schema per module |
 | Backend | Java 25 (LTS) · Spring Boot 4.1.x · Spring Modulith 2.1.x · Spring Security 7 · JPA + Flyway |
-| Frontend | Angular **22** (upgrade from the scaffolded 20 at M0) · zoneless · signals · hybrid SSR |
-| Database | PostgreSQL 17 on Amazon RDS, one instance per environment |
+| Frontend | Angular **22** · zoneless · signals · hybrid SSR |
+| Database | PostgreSQL 18 on Amazon RDS, one instance per environment |
 | Real-time | STOMP over WebSocket; cross-instance fan-out with PostgreSQL `LISTEN/NOTIFY` |
 | Payments | `PaymentGateway` port; **Mercado Pago Checkout Pro** in binary mode as first adapter |
 | Preparation board | Projection owned by `preparation`; its row state arbitrates staff/customer races |
 | Hosting | AWS **ECS Express Mode** (Fargate + ALB) · RDS · S3 · ECR · SES · SSM Parameter Store |
 | IaC | Terraform (foundation resources); services deployed by the pipeline |
 | Environments | `test` and `prod` |
-| Branching | Trunk-based: short-lived branches → PR → `main`; build once, promote the same image |
+| Branching | `feature/*` → `develop` (auto-deploys `test`) → release PR → `main` (deploys `prod` after approval); `hotfix/*` → `main`, then back-merge to `develop`; build once, promote the same image |
 | CI/CD | GitHub Actions, OIDC to AWS, reusable workflows, manual approval for `prod` |
 
 Rejected alternatives and reasons are in §13.
@@ -38,9 +38,9 @@ flowchart LR
   end
   subgraph AWS["AWS (per environment)"]
     ALB[Application Load Balancer<br/>HTTPS · WebSocket]
-    FE[frontend<br/>Angular SSR · Node 22<br/>ECS Fargate]
+    FE[frontend<br/>Angular SSR · Node 24<br/>ECS Fargate]
     BE[backend<br/>Spring Boot · Java 25<br/>ECS Fargate]
-    DB[(RDS PostgreSQL 17)]
+    DB[(RDS PostgreSQL 18)]
     S3[(S3 product images<br/>via CloudFront)]
     SES[SES email]
     SSM[SSM Parameter Store]
@@ -83,11 +83,20 @@ Frontend and API are on different hosts of the **same site**, so the refresh coo
 | Resilience | Spring Framework 7 `@Retryable` / `@ConcurrencyLimit` (`@EnableResilientMethods`) | No extra library |
 | Rate limiting | Bucket4j (in-memory, per task) | Coarse throttling of auth and checkout endpoints only; per-task counts are an accepted approximation. Security-relevant counters (lockout, idempotency) live in PostgreSQL |
 | Observability | Actuator · Micrometer · `micrometer-registry-cloudwatch2` · structured JSON logs | — |
-| Frontend | Angular 22 · TypeScript (per Angular 22 support matrix) · Node 22 LTS | Upgrade 20 → 21 → 22 with `ng update`, one major at a time |
-| Frontend tests | Vitest (Angular default since v21) · Playwright for E2E | Migrate with `ng g @schematics/angular:refactor-jasmine-vitest` |
+| Frontend | Angular 22 · TypeScript (per Angular 22 support matrix) · Node 24 LTS (`.nvmrc`; Angular 22 supports `^24.15.0`) | Follow new majors with `ng update`, one major at a time |
+| Frontend tests | Vitest (Angular default since v21) · Playwright for E2E | — |
 | Local dev | Docker Compose (`compose.yaml`) + `spring-boot-docker-compose` | — |
 
-> **Why upgrade Angular now:** Angular 20 LTS ends 2026-11-28. Starting features on it means a forced migration mid-project. Upgrading an almost empty scaffold costs minutes; upgrading a finished app costs days.
+**Dependency policy** (applies to backend, frontend, and CI actions):
+
+- **A new dependency requires the owner's explicit approval.** The proposal states the problem, why the platform (JDK, Spring Boot starters, Angular packages, Web APIs) is not enough, the alternatives considered, license, maintenance activity, and — for the frontend — bundle size impact.
+- Prefer the platform: `Intl` for formatting, `crypto.randomUUID()` for idempotency keys, `java.time` for dates, Spring's `RestClient` for HTTP.
+- Backend versions come from BOMs (Spring Boot parent, `spring-modulith-bom`). Unmanaged libraries declare their version once in `<properties>`. No version ranges, `SNAPSHOT`, or milestone versions on `develop`/`main`.
+- Frontend: `package-lock.json` is committed and CI installs with `npm ci`, never `npm install`.
+- Licenses: MIT, Apache-2.0, BSD, ISC only, enforced by `actions/dependency-review-action` (`allow-licenses`). GPL/AGPL are rejected.
+- Updates arrive through Dependabot, one major version at a time.
+- Already rejected — do not propose again without new arguments: jjwt (§7.1), MapStruct (§4.13), H2 (§11.1), Redis or any broker client (§13 D4/D5), NgRx or any global store (§6.2), runtime OpenAPI client generators (§6.5), `uuid`/`lodash`/`moment` (platform APIs cover them).
+
 
 `spring-boot-devtools` stays `optional`/`runtime` and is excluded from the production image (the Spring Boot Maven plugin already excludes it from repackaged jars).
 
@@ -95,9 +104,9 @@ Frontend and API are on different hosts of the **same site**, so the refresh coo
 
 | Where | Change |
 |-------|--------|
-| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `springdoc-openapi-starter-webmvc-ui`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
+| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `spring-boot-starter-security-oauth2-resource-server` (§7.1; Boot 4 name — the old `spring-boot-starter-oauth2-resource-server` is deprecated); `com.fasterxml.uuid:java-uuid-generator` (UUID v7, §4.11); ArchUnit (test, §7.1 and §4.12 rules); `maven-failsafe-plugin` bound to `verify` for `*IT` tests (§11.1); AWS SDK for Java v2 `s3` and `sesv2`, plus `sso`/`ssooidc` for local SSO profiles (§8.5), added with the first WP that needs them; `springdoc-openapi-starter-webmvc-ui`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
 | `application.properties` | Remove `spring.profiles.active=dev`. No profile is hardcoded: `SPRING_PROFILES_ACTIVE` is `test` or `prod` in each ECS service, and `local` for development |
-| `frontend/` | `ng update` 20 → 21 → 22; migrate Karma/Jasmine to Vitest; replace `RenderMode.Prerender` on `**` (§6.1); `withEventReplay()` → `withIncrementalHydration()`; add angular-eslint |
+| `frontend/` | Remove leftover Karma/Jasmine packages (Angular 22 and Vitest are already in place); replace `RenderMode.Prerender` on `**` (§6.1); `withEventReplay()` → `withIncrementalHydration()`; add angular-eslint |
 
 ## 4. Backend design
 
@@ -115,12 +124,12 @@ Base package: `com.jhanantezana.jugueria`. Each direct sub-package is a Spring M
 | `instore` | Tables, tickets and lines, voids, comps, transfers/merges, quick sales, in-store payments, register shifts, cash movements | `TicketLinesSent`, `TicketLineVoided`, `TicketLineComped`, `TicketTransferred`, `TicketsMerged`, `PaymentRecorded`, `PaymentVoided`, `SaleRecorded`, `SaleVoided`, `CashMovementRecorded`, `ShiftOpened`, `ShiftClosed` | FR-INS-*, FR-REG-* |
 | `preparation` | Board projection (both channels): line states, markers, all-day aggregation, fire time, timestamps, run-out flags | `PreparationStarted`, `LineReady`, `OrderReady`, `OrderHandedOver`, `LineFlaggedUnavailable` | FR-PRP-*, BR-08 |
 | `payments` | `PaymentGateway` port, Mercado Pago adapter, payments, webhooks, full and partial refunds | `PaymentConfirmed`, `PaymentFailed`, `RefundCompleted` | FR-ONL-05/09/15, BR-02/05 |
-| `notifications` | Email (SES), real-time push (STOMP), `LISTEN/NOTIFY` bridge | — | FR-ONL-06, FR-REG-06, NFR-04 |
+| `notifications` | Email (port with two adapters: SMTP to Mailpit locally, SES API v2 with the task role in `test`/`prod` — no stored credentials), real-time push (STOMP), `LISTEN/NOTIFY` bridge | — | FR-ONL-06, FR-REG-06, NFR-04 |
 | `reporting` | Sales and exception read models, dashboard, heatmap, reports, CSV export | — | FR-RPT-* |
 | `audit` | Append-only audit log and search | — | FR-AUD-* |
 | `shared` | `Money`, `Currency`, error model, `CurrentActor`, ID generation, idempotency store (§5) | — | — |
 
-Module rules (verified in CI by `ApplicationModules.of(JugueriaApplication.class).verify()`):
+Module rules (verified in CI by `ApplicationModules.of(BackendApplication.class).verify()`):
 
 1. A module exposes only its **top-level package** (API types, commands, events). Sub-packages (`internal`, `web`, `persistence`) are private.
 2. Synchronous calls between modules go through the other module's public API types — never its repositories or entities.
@@ -322,7 +331,7 @@ IDs are UUID v7 (time-ordered, generated in the application). Money is `numeric(
 | Schema | Tables |
 |--------|--------|
 | `identity` | `user_account` (incl. `failed_attempts`, `locked_until`), `refresh_token` (hashed, family for rotation), `verification_token` |
-| `store` | `store_settings` (incl. `online_mode`, estimate parameters, thresholds, capacity limit), `opening_hours`, `delivery_zone` (fee, delivery minutes, minimum, free threshold), `reason` (type: void / comp / cash out / stock adjustment) |
+| `store` | `store_settings` (incl. `online_mode`, estimate parameters, thresholds, capacity limit), `opening_hour`, `delivery_zone` (fee, delivery minutes, minimum, free threshold), `reason` (type: void / comp / cash out / stock adjustment) |
 | `catalog` | `station`, `category` (`station_id`), `product` (incl. `quick_sale_pinned`), `modifier_group` (required, min, max), `modifier_option` (price delta, available), `product_modifier_group`, `allergen`, `product_allergen`, `option_allergen` |
 | `inventory` | `stock_item`, `stock_reservation`, `stock_movement` |
 | `ordering` | `online_order` (incl. `run_out_preference`, `scheduled_for`, `estimated_ready_at`, `estimated_delivery_at`, notes), `online_order_line` (product + modifier snapshot, note, allergy), `order_status_history`, `slot_booking`, `daily_order_counter` |
@@ -349,9 +358,76 @@ Line snapshots store product name, chosen options with their price deltas, and t
 ### 4.10 Database migrations
 
 - Flyway runs at application startup (PostgreSQL advisory lock makes it safe with several tasks).
-- Versions are timestamps to avoid collisions between modules: `V2026_09_17_1030__catalog_create_product.sql`, under `db/migration/<module>/`.
+- Versions are timestamps to avoid collisions between modules: `V2026_09_17_1030__catalog_create_product.sql`, under the repository-root `db/migration/<module>/`, packaged onto the backend classpath (`classpath:db/migration`) at build time.
 - Flyway connects as the `migrator` role (DDL); the application as `app` (DML only). Credentials come from SSM.
 - **Expand/contract only**: a release may add columns/tables; removing or renaming happens in a later release, after no deployed version uses them. This is what makes image rollback (§10.5) safe.
+
+### 4.11 Transactions, persistence, and event listeners
+
+**Transaction boundaries**
+
+- `@Transactional` goes **only** on application service methods in `internal/` — one use case, one transaction. Never on controllers, domain objects, or Spring Data repositories. Queries use `@Transactional(readOnly = true)`.
+- A module API called synchronously by another module (the §4.1 exception) joins the caller's transaction (default propagation).
+- **No remote calls inside a transaction** (Mercado Pago, SES, S3). With a Hikari pool of 10 (§8.1), a slow provider holding connections exhausts the pool for the whole task. Pattern: transaction 1 prepares and commits → call the provider → transaction 2 records the result. Example: checkout commits order + reservation, then creates the provider preference, then stores its ID; if the call fails, the reservation simply expires.
+- Calling a `@Transactional` method from the same class bypasses the proxy and silently runs without that transaction. Split into another bean instead.
+- Domain events are published inside the transaction (`ApplicationEventPublisher`); the Modulith registry stores the publication atomically with the business change.
+
+**Event listeners are idempotent**
+
+- `@ApplicationModuleListener` is asynchronous, runs after commit, in its own transaction, and is delivered **at least once**: a failure or restart re-delivers the event.
+- Every listener must produce the same result when the same event arrives twice. Guard with state (`UPDATE … WHERE status = 'RESERVED'`) or with a unique constraint on the effect (e.g. one `stock_movement` per reason + reference + product). Never "check then insert" in Java.
+- Listeners never assume ordering between different events; they check the current state instead.
+- Every listener has a test that delivers the same event twice and asserts a single effect.
+- Events are records named in past tense (`OrderPaid`), carry IDs plus the data consumers need (and `actorId`/`actorRole` when attribution matters, §7.1), and never contain entities. Incomplete publications are stored with the event's class name: **renaming or moving an event class, or removing a field, breaks re-delivery** of pending publications. Evolve events by adding fields only; rename only in a later release, once no incomplete publications exist.
+- One event per business fact. Events live in the publishing module's top-level package and include `occurredAt` (from the injected `Clock`, §4.12).
+- Application services publish events (`ApplicationEventPublisher`); entities do not publish them.
+- A listener class lives in the consuming module's `internal/`, is named after what it does (`ReserveStockOnOrderPlaced`), and handles one event type.
+
+**JPA conventions**
+
+| Topic | Rule |
+|-------|------|
+| Open session in view | `spring.jpa.open-in-view=false` (Spring Boot enables it by default, which holds a connection for the whole request) |
+| Schema generation | `spring.jpa.hibernate.ddl-auto=validate` in **every** profile. Flyway owns DDL |
+| Placement | Entities live in `internal/`; every entity declares `@Table(schema = "<module>")` |
+| IDs | UUID v7 assigned at construction through `shared`'s `Ids.newId()` (the only ID source; backed by `com.fasterxml.uuid:java-uuid-generator`). Entities extend `shared`'s base entity implementing `Persistable<UUID>`, so Spring Data does not run a `SELECT` before inserting an entity with an assigned ID |
+| equals / hashCode | Based on the ID only |
+| Lombok on entities | `@Getter` and `@NoArgsConstructor(access = PROTECTED)` only. Never `@Data`, `@EqualsAndHashCode`, `@ToString`, or `@Setter` — they trigger lazy loading, recursion, and broken identity |
+| Associations | Only inside one aggregate (e.g. `ticket` → `ticket_line`). Other aggregates are referenced by ID. **Other modules are always a plain `UUID` column**, never an entity reference. Every `@ManyToOne`/`@OneToOne` declares `fetch = LAZY` (JPA's default is `EAGER`) |
+| Enums | `@Enumerated(EnumType.STRING)` always (the default `ORDINAL` breaks when constants are reordered) |
+| Money | `@Embeddable Money` (`numeric(12,2)` + `char(3)` currency). Compare with `compareTo`, never `BigDecimal.equals` (it is scale-sensitive). Every operation that can produce more than two decimals states its rounding explicitly |
+| Time | `Instant` for every persisted moment (`timestamptz`); `hibernate.jdbc.time_zone=UTC` |
+| Read paths | List and report queries return projections (records), not entities. Use fetch joins or `@EntityGraph` where entities are needed, to avoid N+1 |
+| Conditional updates | `JdbcClient` or `@Modifying` queries returning the affected row count; `0` ⇒ `BusinessException` (§5.1). They bypass the persistence context: do not load the same row as an entity in that transaction, or use `@Modifying(flushAutomatically = true, clearAutomatically = true)` |
+
+### 4.12 Time
+
+- A single `Clock` bean (UTC) is defined in `shared`. Code reads time only through an injected `Clock` (`Instant.now(clock)`). `Instant.now()`, `LocalDate.now()`, `LocalDateTime.now()`, `new Date()`, and `System.currentTimeMillis()` without a clock are forbidden in `src/main` (ArchUnit rule). Without it, reservation expiry, estimates, and business-day boundaries cannot be tested.
+- Persisted and transmitted moments are `Instant` (UTC). The business day and any "today" logic use `LocalDate` computed with the store `ZoneId` from `store_settings` (BR-06) — never the JVM default time zone.
+- Tests use a fixed or manually advanced clock, never `Thread.sleep`.
+
+### 4.13 Code conventions
+
+**Three separate model types — never reuse one as another:**
+
+| Type | Lives in | Form | Example |
+|------|----------|------|---------|
+| Entity | `internal/` (private) | JPA class (§4.11) | `Order` |
+| Module API type | Top-level package (public, for other modules) | `record` | `OrderView`, `PlaceOrderCommand` |
+| REST DTO | `web/` (private, for HTTP clients) | `record` with Bean Validation | `CreateOrderRequest`, `OrderResponse`, `OrderSummaryResponse` (list item) |
+
+The REST contract and the inter-module contract evolve independently, so a REST DTO is never returned from a module API and a module API type is never exposed over HTTP.
+
+- **Records** for DTOs, commands, events, projections, and value objects. Lombok only on entities (§4.11).
+- **Mapping is manual** (a static `from(...)` factory on the DTO or a small mapper class in `web/`). No MapStruct or reflection mappers.
+- Request records validate with Bean Validation (`@NotNull`, `@Positive`, `@Valid` on nested records); business rules stay in the domain (§4.2).
+- **Jackson 3** (Spring Boot 4 default): imports are `tools.jackson.*`, except annotations (`com.fasterxml.jackson.annotation.*`). Customize with a `JsonMapper` bean or `@JacksonComponent` — not `ObjectMapper` or `@JsonComponent` (Jackson 2 / Boot 3 APIs).
+
+**Configuration**
+
+- Deployment configuration (URLs, timeouts, credentials, pool sizes) is bound with one `@ConfigurationProperties` record per module, prefix `jugueria.<module>`, annotated `@Validated`. No scattered `@Value`.
+- Environment variables map by relaxed binding (`JUGUERIA_PAYMENTS_WEBHOOK_SECRET` → `jugueria.payments.webhook-secret`); secrets come from SSM through the ECS task definition (§7).
+- **Business parameters** that the store may tune (estimate minutes, thresholds, capacity, feature flags) live in `store_settings` in the database and are editable by ADMIN — never in properties files, which would require a deploy to change.
 
 ## 5. API design
 
@@ -359,13 +435,13 @@ Line snapshots store product name, chosen options with their price deltas, and t
 |-------|------------|
 | Style | REST + JSON, resources under `/api/v1/**` |
 | Versioning | Literal `/api/v1` prefix in controller mappings. Spring Framework 7 API versioning is adopted only when a `v2` is needed (spike first: path-segment strategy has open issues, e.g. spring-framework#35404) |
-| Errors | RFC 9457 Problem Details (`spring.mvc.problemdetails.enabled=true`) with a stable `code` field |
+| Errors | RFC 9457 Problem Details with a stable `code` field — full model in §5.1 |
 | Money | `{ "amount": "12.50", "currency": "PEN" }` — amount as string, never a float |
 | Time | ISO-8601 UTC |
 | Pagination | `?page=&size=` (max 100), response includes `totalElements` |
-| Idempotency | `Idempotency-Key` header required on every command that moves money or stock: `POST /orders`, order cancel, ticket payments, quick sales, line void/comp, cash movements, shift close, refunds. Stored in PostgreSQL `shared.idempotency_key` (`key` unique, `request_hash`, `response`, `expires_at` = 24 h), inserted **in the same transaction** as the operation — never in memory, because retries can reach a different task. Same key + different body ⇒ `422` |
+| Idempotency | `Idempotency-Key` header required on every command that moves money or stock: `POST /orders`, order cancel, ticket payments, quick sales, line void/comp, cash movements, shift close, refunds. Stored in PostgreSQL `shared.idempotency_key` (unique on `actor_id` + `key`, `request_hash`, `response`, `expires_at` = 24 h), inserted **in the same transaction** as the operation — never in memory, because retries can reach a different task. Same key + different body ⇒ `422`. Implementation in §5.2 |
 | Concurrency | `ETag`/`If-Match` on updates of catalog items and settings |
-| Contract | OpenAPI generated by springdoc, committed as `backend/api/openapi.json`; CI fails if the generated spec differs (API changes are always explicit in PRs). The frontend client is generated from it |
+| Contract | OpenAPI generated by springdoc, committed as `backend/api/openapi.json`; CI fails if the generated spec differs (API changes are always explicit in PRs). The frontend TypeScript types are generated from it (§6.5) |
 
 Main resources:
 
@@ -378,6 +454,101 @@ Main resources:
 | Admin | `/admin/products`, `/admin/modifier-groups`, `/admin/allergens`, `/admin/stations`, `/admin/tables`, `/admin/reasons`, `/admin/stock`, `/admin/users`, `/admin/settings`, `/admin/orders/{id}/refunds` |
 | Reports | `/reports/dashboard`, `/reports/heatmap`, `/reports/sales`, `/reports/shifts`, `/reports/exceptions`, `/audit` |
 | Integration | `/payments/webhooks/mercadopago` |
+
+### 5.1 Error model
+
+Every error response — from controllers, Spring MVC, Spring Security filters, or unexpected failures — has the same shape (`Content-Type: application/problem+json`):
+
+```json
+{
+  "type": "about:blank",
+  "title": "Conflict",
+  "status": 409,
+  "detail": "Board order 0191f2c4-… is PREPARING; cancellation requires WAITING",
+  "instance": "/api/v1/orders/0191f2c4-…/cancel",
+  "code": "ordering.preparation-already-started",
+  "correlationId": "5f0c9b1e-…"
+}
+```
+
+| Field | Rule |
+|-------|------|
+| `code` | Stable machine identifier, `<module>.<kebab-case-reason>` (e.g. `inventory.insufficient-stock`, `common.validation-failed`). **Part of the public API**: once released, never renamed, removed, or reused with another meaning |
+| `title` / `detail` | English, for developers and logs. Never shown to end users. `detail` never contains stack traces, SQL, secrets, or personal data |
+| `correlationId` | Same value as the `X-Request-Id` response header and the logs (§4.7) |
+| `errors` | Only for validation failures: `[{ "field": "lines[0].quantity", "constraint": "Positive", "message": "must be greater than 0" }]` (`field` is the JSON path; `constraint` the Bean Validation annotation name) |
+| Extra properties | Allowed when the client needs data to act, declared per code (e.g. shift close `409` includes `expectedCash` and `difference`, §4.3) |
+
+API responses never contain user-facing text: the frontend maps `code` to a Spanish message (NFR-12, §6.6). Emails are the only user-facing text the backend produces (§6.6).
+
+**Status mapping**
+
+| Situation | Status | `code` |
+|-----------|--------|--------|
+| Malformed JSON, wrong type, missing required header | 400 | `common.malformed-request` |
+| Bean Validation failure | 400 | `common.validation-failed` (+ `errors`) |
+| Missing `Idempotency-Key` on a command that requires it | 400 | `common.idempotency-key-required` |
+| Missing, invalid, or expired access token | 401 | `auth.unauthenticated` |
+| Authenticated, role not allowed | 403 | `auth.forbidden` |
+| Resource does not exist, **or belongs to another customer** (never reveal existence) | 404 | `<module>.<entity>-not-found` |
+| Request conflicts with the **current state** of a resource, which may change (race lost, conditional update affected 0 rows, invalid state transition, insufficient stock) | 409 | module-specific |
+| Optimistic lock failure (`@Version`) | 409 | `common.concurrent-modification` |
+| Same `Idempotency-Key` while the first request is still running | 409 | `common.idempotency-in-progress` |
+| `If-Match` does not match the current `ETag` | 412 | `common.precondition-failed` |
+| `If-Match` missing where required | 428 | `common.precondition-required` |
+| Request is well-formed but breaks a business rule **independent of changing state** (below zone minimum, outside opening hours, modifier min/max) | 422 | module-specific |
+| Same `Idempotency-Key` with a different body | 422 | `common.idempotency-key-reused` |
+| Throttled by Bucket4j | 429 | `common.rate-limited` (+ `Retry-After`) |
+| External provider unavailable or timed out | 503 | `<module>.provider-unavailable` |
+| Anything unexpected | 500 | `common.internal-error` (generic `detail`) |
+
+Rule of thumb for 409 vs 422: if the same request could succeed later without changing it (someone else changed the state), it is `409`; if the request itself must change, it is `422`.
+
+**Backend implementation**
+
+- `shared` exposes `ErrorCode` (interface: `code()`, `status()`) and one exception, `BusinessException(ErrorCode, Map<String, Object> properties)`. Each module declares its codes in a public enum (`OrderingError implements ErrorCode`) with the wire code written explicitly — never derived from the constant name.
+- One global `@RestControllerAdvice` in `shared` (extending `ResponseEntityExceptionHandler`, so Spring MVC exceptions also become Problem Details) builds every error body. Modules never declare `@ExceptionHandler`/`@ControllerAdvice`, never catch exceptions to build error responses, and never use `ResponseStatusException`.
+- Spring Security filter-level errors never reach the advice: a custom `AuthenticationEntryPoint` (401) and `AccessDeniedHandler` (403) write the same Problem Details body.
+- Expected persistence exceptions are translated inside the module into a code (e.g. unique violation on email → `identity.email-already-registered`); unexpected ones become `500`.
+- Logging: `4xx` at `INFO` without stack trace; `5xx` at `ERROR` with stack trace. Both include `code` and `correlationId`.
+- All codes are listed in the OpenAPI spec so the frontend's code-to-message map is type-checked against it.
+
+**Client handling** (frontend `core/`, §6.4): one HTTP interceptor parses Problem Details into a typed error; a central map in `core/errors` turns `code` into a localized message, with a generic message per status for unknown codes; validation `errors` are mapped to form controls by `field`; generic error screens show the `correlationId` for support.
+
+### 5.2 Idempotency implementation
+
+Idempotency must live **inside the use-case transaction**, so it cannot be a servlet filter or an MVC interceptor (both run outside the transaction, and a crash between the operation and the key insert would lose the guarantee).
+
+1. The controller reads `Idempotency-Key` (must be a UUID; missing ⇒ `400 common.idempotency-key-required`) and passes it to the application service as a parameter.
+2. The service's first statement calls `shared`'s idempotency API with the actor ID, the key, and a request hash (SHA-256 of method + path + canonical body):
+   `INSERT INTO shared.idempotency_key … ON CONFLICT (actor_id, key) DO NOTHING`.
+3. Inserted ⇒ run the command, then store the response (status + body) in the same row before commit.
+4. Conflict ⇒ the row belongs to an earlier request. Same hash ⇒ return the stored response with header `Idempotent-Replayed: true`, without re-running the command. Different hash ⇒ `422 common.idempotency-key-reused`.
+5. A concurrent duplicate blocks on the unique index until the first transaction ends (PostgreSQL behavior), then follows step 4. The statement runs with a short `lock_timeout`; exceeding it returns `409 common.idempotency-in-progress`.
+
+- Keys are scoped by `actor_id`: two users sending the same key never see each other's responses.
+- Only successful results are stored. A rejected command (`409`/`422`) rolls back its transaction, including the key row, so a retry is evaluated again against the current state.
+- Expired rows are deleted by the scheduled-jobs pattern (§4.3, `SKIP LOCKED`).
+- Payment webhooks do not use this mechanism; they dedupe by provider event ID (§4.3).
+
+### 5.3 Resource and payload conventions
+
+| Topic | Convention |
+|-------|------------|
+| Paths | Plural nouns in kebab-case (`/modifier-groups/{id}`); IDs are UUIDs. State-changing actions that are not CRUD are sub-resources with a verb (`POST /tickets/{id}/send`) |
+| Create | `201 Created` + `Location` header + the created resource |
+| Update / command | `200 OK` with the updated resource, so the client does not need a second request |
+| Delete | `204 No Content` |
+| JSON names | `camelCase` |
+| Enums | `UPPER_SNAKE_CASE` strings, identical to the Java constant names |
+| Nulls | Absent optional values are serialized as `null` (never omitted); collections are never `null`, only empty |
+| Moments | ISO-8601 UTC with `Z` (`2026-09-18T15:04:05Z`) |
+| Dates | `YYYY-MM-DD` for business days and calendar dates |
+| Durations | Integers with the unit in the name (`deliveryMinutes`) |
+| Money | `{ "amount": "12.50", "currency": "PEN" }` (§5) |
+| Lists | `PageResponse<T>` from `shared`: `{ content, page, size, totalElements, totalPages }`. Never serialize Spring Data's `Page` directly |
+| Sorting | `?sort=field,asc|desc`, only on fields each endpoint allows explicitly |
+| OpenAPI | Every endpoint documents its success response and the error `code`s it can return (§5.1) |
 
 ## 6. Frontend design
 
@@ -398,7 +569,7 @@ The scaffold prerenders `**`; that must change — the menu depends on live data
 
 ```
 src/app/
-├── core/        auth (token store, interceptors, guards), api (generated client), realtime (STOMP), error handling
+├── core/        auth (token store, interceptors, guards), api (generated types, §6.5), realtime (STOMP), error handling
 ├── shared/ui/   presentational components (no services injected)
 └── features/
     ├── storefront/   menu, product detail
@@ -408,13 +579,14 @@ src/app/
     └── admin/        dashboard, catalog (modifiers, allergens, stations), tables, reasons, stock, users, settings, reports, audit
 ```
 
+- **File and class naming** follows the Angular style guide (v20+): no type suffixes for components, directives, and services (`order-list.ts` → `class OrderList`; never `order-list.component.ts`); other types use a hyphenated suffix (`auth-guard.ts`, `price-pipe.ts`, `error-interceptor.ts`); tests are `*.spec.ts` next to the file. Services are named by role: `<Feature>Api` for HTTP data access (`orders-api.ts` → `OrdersApi`) and `<Feature>Store` for signal state (`cart-store.ts` → `CartStore`).
 - Container/presentational split: route components orchestrate; `shared/ui` components receive `input()` and emit `output()`.
 - State: signals in feature-scoped services (provided in the feature route's `providers`), `computed()` for derivations. No global store library. This deliberately narrows the `providedIn: 'root'` default of `frontend/.claude/CLAUDE.md`: only cross-feature services (auth, API client, realtime) are root singletons, so feature state such as cart or board filters does not leak between features.
 - Accessibility (NFR-10): semantic HTML, labelled controls, focus management in dialogs, and color tokens meeting WCAG AA contrast; board age colors are always paired with text (elapsed minutes), never color alone.
 - Forms: Reactive Forms; adopt Signal Forms only once it is stable.
 - Role guards per feature (`canMatch`), mirrored by backend authorization (the backend is the only real enforcement).
 - Cart persisted in `localStorage` (FR-ONL-02); prices shown from the server, recalculated at checkout.
-- UI text in Spanish via Angular i18n extraction (NFR-12).
+- UI text in Spanish via Angular i18n (NFR-12); conventions in §6.6.
 - Product configurator (storefront and ticket editor) is one shared component driven by the modifier-group rules (required, min/max), so both channels validate identically; the backend validates again.
 
 ### 6.3 Board and staff screens
@@ -431,8 +603,34 @@ src/app/
 
 - Access token (JWT, 15 min) kept **in memory only**.
 - Refresh token in a `__Host-` cookie: `HttpOnly; Secure; SameSite=Strict`, rotated on every use; reuse of a rotated token revokes the whole family.
-- On load, the app calls `POST /auth/refresh` (with `credentials: 'include'`) to restore the session. SSR never renders authenticated content, so tokens never exist on the SSR server.
+- On load, the app calls `POST /auth/refresh` (with `credentials: 'include'` and the `X-Requested-With` header, §7.1) to restore the session. SSR never renders authenticated content, so tokens never exist on the SSR server.
+- One auth interceptor in `core/auth` attaches the bearer token **only** to requests for the API origin. On `401` it runs a **single-flight** refresh (concurrent `401`s wait for the same refresh), retries the original request once, and on refresh failure clears the session and redirects to login. It never retries `/auth/*` calls, to avoid loops.
+- `403` shows a forbidden state; it never triggers a refresh.
+- Commands that require `Idempotency-Key` (§5) generate one UUID **per user intent** (e.g. per "Pay" click) and reuse it on every retry of that intent. A new key per retry would defeat idempotency.
 - Why this cookie works cross-origin: `SameSite` is evaluated per **site** (registrable domain), and `<domain>` and `api.<domain>` are the same site, so the cookie is sent; `__Host-` pins it to `api.<domain>` exactly. Do **not** add a `Domain` attribute or relax `SameSite` — both would weaken it.
+
+### 6.5 API client, money, and time
+
+**API types.** TypeScript types are generated from `backend/api/openapi.json` with `openapi-typescript` into `src/app/core/api/schema.d.ts` (`npm run api:generate`), and the generated file is committed. Only types are generated, not runtime code, so the generator does not tie the app to a specific Angular version. Feature data-access services call `HttpClient` using those types; DTO types are never written by hand. The frontend CI job also runs when `backend/api/openapi.json` changes and fails if the regenerated file differs from the committed one.
+
+**Money.** The frontend never computes an amount the customer pays: totals, fees, discounts, and bill splits come from the API. For previews (e.g. the cart subtotal before checkout), a `Money` utility in `core/` parses the `amount` string into integer minor units (`"12.50"` → `1250`) without `parseFloat`, adds integers, and formats with `Intl.NumberFormat` using the currency from the API.
+
+**Time.** Moments arrive as ISO-8601 UTC and are displayed in the **store** time zone (from store settings), not the browser's. Screens that compute elapsed time (board age colors, countdowns) correct for device clock drift with an offset derived from the API's `Date` response header.
+
+### 6.6 Internationalization (NFR-12)
+
+Release 1 ships only Spanish, but every text is externalized so a translation is a new file, not a code change.
+
+- The **source locale is Spanish**: `i18n.sourceLocale` in `angular.json` is `es`, or its regional variant (e.g. `es-PE`) once PRD Q1 confirms the country. Source text is written in Spanish directly in templates and `$localize` strings.
+- **Every user-facing text has a custom ID**: `i18n="@@<feature>.<screen>.<element>"` in templates (`@@checkout.summary.payButton`), `` $localize`:@@<id>:Pagar` `` in TypeScript. IDs are stable: rewording a text keeps its ID. Without custom IDs, Angular derives IDs from the text, and every rewording would orphan its translations.
+- Attributes that users read or hear (`aria-label`, `title`, `placeholder`, `alt`) are marked with `i18n-<attribute>` too.
+- Short or ambiguous texts carry a description for translators: `i18n="Button that confirms the payment|@@checkout.summary.payButton"`.
+- Plurals and variants use ICU expressions (`{count, plural, =1 {1 producto} other {{{count}} productos}}`). Never build a sentence by concatenating translated fragments.
+- Numbers, currency, and dates are formatted by locale-aware pipes or `Intl`, never by hand.
+- Error messages use the ID `@@error.<code>` (§5.1), so each backend `code` has exactly one translatable message.
+- Enforcement: the angular-eslint rule `@angular-eslint/template/i18n` (with `checkId`) fails CI on unmarked text or missing IDs; `ng extract-i18n` runs in CI and its output file is committed.
+
+**Emails** are the only user-facing text produced by the backend (`notifications`). They are templates stored in the `notifications` module, one file per message and locale, never strings in Java code. The template engine is chosen when the first email is implemented. API responses never contain user-facing text (§5.1).
 
 ## 7. Security
 
@@ -441,7 +639,7 @@ src/app/
 | Authentication | Email + password (delegating encoder, bcrypt default); email verification; account lockout after 5 failed attempts for 15 min, stored in `identity.user_account` so it holds across all tasks; Bucket4j throttling on `/auth/*` as a secondary layer |
 | Tokens | JWT signed with RS256 (key pair in SSM, `kid` for rotation). Asymmetric so a future extracted service validates tokens without sharing a secret |
 | Session revocation | Deactivation/role change revokes refresh tokens; access tokens expire ≤ 15 min (FR-ADM-01); WebSocket sessions closed |
-| Authorization | Role-based (`CUSTOMER`, `SERVER`, `CASHIER`, `ADMIN`) with method security; ownership checks for customer data; matrix = PRD §4 |
+| Authorization | Role-based (`CUSTOMER`, `SERVER`, `CASHIER`, `ADMIN`) with method security; ownership checks for customer data; matrix = PRD §4; implementation in §7.1 |
 | First admin | Created by a one-off bootstrap command using credentials from SSM; no default accounts in code |
 | Payments | Checkout Pro redirect ⇒ card data never reaches our systems (NFR-09); webhook signature verification + server-side fetch |
 | Secrets | SSM Parameter Store `SecureString` under `/jugueria/<env>/…`; the task role of each environment reads only its own path; nothing in the repo or images |
@@ -449,6 +647,43 @@ src/app/
 | Web | CORS allowlist = frontend origin; security headers (HSTS, CSP, `X-Content-Type-Options`, `frame-ancestors 'none'`) set by the SSR server and backend |
 | Input | Bean Validation on every DTO; no dynamic SQL; output encoding by Angular |
 | Personal data | BR-07: deletion anonymizes customer data; logs never contain passwords, tokens, or full addresses |
+
+### 7.1 Authentication and authorization in the backend
+
+**Tokens — Spring Security only, no JWT library or custom filter.**
+
+- Issuing: `identity` signs access tokens with Spring Security's `NimbusJwtEncoder` (RS256, key pair from SSM, `kid` header).
+- Validating: `spring-boot-starter-security-oauth2-resource-server` with a `NimbusJwtDecoder` built from the public key(s). It validates signature, algorithm, `exp`, `iss`, and `aud`. Libraries such as jjwt and hand-written JWT filters are not allowed.
+- Claims: `sub` (user ID), `roles` (e.g. `["CASHIER"]`), `iss`, `aud`, `iat`, `exp`, `jti`. A `JwtAuthenticationConverter` maps `roles` to authorities `ROLE_<ROLE>`. No personal data in claims.
+
+**One `SecurityFilterChain`**, owned by `identity` (`identity/internal/security`):
+
+- Stateless (`SessionCreationPolicy.STATELESS`); no HTTP session, no form login.
+- **Deny by default:** every `/api/v1/**` request requires authentication except an explicit allowlist kept in that single class: `POST /auth/login|register|refresh|logout|verify`, `GET /catalog/menu`, `GET /store/status`, `POST /payments/webhooks/**` (authenticated by provider signature in the adapter), `GET /actuator/health/**`, and the `/ws` handshake (authenticated on STOMP `CONNECT`, §4.4).
+- The filter chain decides **only** public vs authenticated. It never contains role rules.
+- CSRF protection is disabled because the API authenticates with bearer tokens. The only cookie-authenticated endpoints (`/auth/refresh`, `/auth/logout`) rely on `__Host-` + `SameSite=Strict` (§6.4), the CORS allowlist, and a required `X-Requested-With` header that forces a CORS preflight.
+- CORS: allowlist from configuration (the frontend origin of each environment); credentials allowed only for that origin.
+- 401/403 bodies follow §5.1.
+
+**Authorization in three layers** — each check lives in exactly one layer:
+
+| Layer | Question | Where | How |
+|-------|----------|-------|-----|
+| 1. Authentication | Is there a valid user? | Filter chain | Deny by default + allowlist |
+| 2. Role | May this role call this endpoint at all? | Controller methods (`web/`) | `@PreAuthorize("hasAnyRole('CASHIER','ADMIN')")` following the PRD §4 matrix |
+| 3. Ownership and state | May *this* actor act on *this* resource in its *current* state? | Application service / domain (`internal/`) | Business rules using `CurrentActor`; they throw `BusinessException` (§5.1) |
+
+- Role checks go on controllers, not on module APIs or services: those are also called by event listeners and scheduled jobs that have no user, and must not be blocked.
+- Every controller method has `@PreAuthorize` unless its route is in the allowlist. An architecture test (ArchUnit) enforces it, so a forgotten annotation fails the build instead of opening an endpoint.
+- Rules that depend on data are layer 3, never SpEL expressions: "SERVER may void a line only while it is `PENDING`" is a domain rule.
+- Ownership is enforced in the query (`findByIdAndCustomerId`), returning `404` for someone else's resource (§5.1).
+
+**`CurrentActor`** (public, `shared`) is the only way business code reads who is acting: `id()`, `role()`, `isSystem()`. Code in `internal/` never touches `SecurityContextHolder`.
+
+- Scheduled jobs and asynchronous listeners (`@ApplicationModuleListener`) run without a request user: `CurrentActor` returns `SYSTEM` there.
+- Events whose consumers need attribution carry `actorId` and `actorRole` explicitly; the security context does not travel with asynchronous events. The synchronous `audit` listener (§4.7) runs in the publisher's thread and reads `CurrentActor` directly.
+
+**Tests:** each endpoint has at least one allowed-role and one denied-role test (`spring-security-test`'s `jwt()` request post-processor), plus the ArchUnit rule above.
 
 ## 8. Infrastructure (AWS)
 
@@ -459,15 +694,28 @@ src/app/
 | Region | `us-east-1` | `us-east-1` |
 | ECS Express service `backend` | 0.5 vCPU / 1 GB, 1 task | 0.5 vCPU / 1 GB, min 1 · max 4 tasks (CPU 60% target) |
 | ECS Express service `frontend` | 0.25 vCPU / 0.5 GB, 1 task | 0.25 vCPU / 0.5 GB, min 1 · max 3 tasks |
-| ALB | Provisioned by Express Mode (HTTPS via ACM, HTTP→HTTPS redirect) | same |
-| RDS PostgreSQL 17 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection |
+| ALB | **One ALB shared by both environments** (D15): Express Mode host-based rules (`test.<domain>` / `<domain>`), HTTPS via ACM, HTTP→HTTPS redirect | same ALB |
+| RDS PostgreSQL 18 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection |
+| Power mode (below) | `on-demand` | `on-demand` until launch · `store-hours` during the M2 pilot · `always-on` from launch |
 | S3 + CloudFront (media) | `jugueria-test-media` | `jugueria-prod-media` (versioning on) |
-| SES | Sandbox (verified addresses only) | Production access |
+| SES | Account-level SES shared with `prod`; an application **recipient allowlist** prevents emailing real people from `test` | Production access (requested at M1, tech-spec R5) |
+| CloudWatch metrics export | Off (meters stay on Actuator) | Allowlist, ≤ 15 series (§12) |
 | Logs retention | 14 days | 90 days |
 
-Shared: ECR repositories `jugueria/backend`, `jugueria/frontend` (immutable tags, scan on push, lifecycle keeps last 30 images); Route 53 hosted zone; GitHub OIDC provider and IAM roles.
+Shared: VPC and ALB (§8.2); ECR repositories `jugueria/backend`, `jugueria/frontend` (immutable tags, scan on push, lifecycle keeps last 30 images); Route 53 hosted zone; GitHub OIDC provider and IAM roles; SES identity for the domain.
 
-`test` runs only during working hours: `scheduled-test-scale.yml` sets both services to 0 tasks overnight (23:00–07:00 store time) and back to 1 in the morning; `cd.yml` scales `test` to 1 before deploying if it is at 0 (PRD C2).
+**Power modes (PRD C2).** The environments are used about 4 hours a day before launch, so they are off by default. Each environment's mode is stored in SSM (`/jugueria/<env>/power/mode`):
+
+| Mode | Behavior | Used by |
+|------|----------|---------|
+| `on-demand` | Off by default (ECS at 0 tasks, RDS stopped). Started by `cd-test.yml`/`cd-prod.yml` before deploying, or manually with `env-control.yml` (environment + hours, default 4). The start writes a stop time to `/jugueria/<env>/power/stop-after`; `env-autostop.yml` (hourly) turns the environment off once that time has passed | `test` always; `prod` until launch |
+| `store-hours` | `env-autostop.yml` starts the environment before opening and stops it after closing, following the opening hours | `prod` during the M2 pilot |
+| `always-on` | Never stopped (min 1 task per service) | `prod` from launch: payment webhooks arrive at any time, the storefront must show "closed, opens at …" outside opening hours (FR-ONL-08), and NFR-01 applies |
+
+- Starting takes a few minutes (RDS startup); workflows wait for RDS to be available before scaling ECS.
+- AWS restarts a stopped RDS instance after 7 days; `env-autostop.yml` stops it again.
+- Stopping never deletes anything: the ALB, RDS storage, and snapshots remain, which is why a ~USD 30/month floor exists (§8.3).
+- Payment webhooks sent while an environment is off are lost (e.g. M3 test orders in `test`). The reconciliation job (§4.3) queries the provider after the next start and recovers them.
 
 **Scaling without code changes (NFR-06):** capacity grows by changing ECS min/max tasks or task size and the RDS instance class — all configuration in the pipeline or Terraform.
 
@@ -477,27 +725,54 @@ Shared: ECR repositories `jugueria/backend`, `jugueria/frontend` (immutable tags
 
 ### 8.2 Networking (no NAT gateway)
 
-- Default-style VPC with public subnets in 2 AZs for ALB and tasks; tasks have public IPs for egress (Mercado Pago, SES), but their security group only accepts traffic from the ALB.
-- RDS in private subnets; security group accepts `5432` only from the backend task security group.
+- **One VPC for `test` and `prod`** — required to share the ALB (Express Mode shares a load balancer only within a VPC). Public subnets in 2 AZs for the ALB and tasks.
+- Environment isolation does not rely on the network: each environment has its own security groups, task roles, SSM path (`/jugueria/<env>/…`), RDS instance, and S3 bucket.
+- Tasks have public IPs for egress (Mercado Pago, SES); their security group accepts traffic only from the ALB. Every public IPv4 address is billed (~USD 3.60/month each, including the ALB's one per AZ), so task counts stay at the minimum (§8.3).
+- RDS in private subnets, not publicly accessible; each instance's security group accepts `5432` only from the backend task security group **of the same environment**.
 - A NAT gateway (~USD 33/month + data) is intentionally avoided; revisit if compliance requires private tasks.
 
 ### 8.3 Cost estimate — budget for NFR-13 (validate with AWS Pricing Calculator at M0)
 
-| Item | test | prod |
-|------|------|------|
-| Fargate (backend + frontend) | ~18 (16 h/day) | ~27 (always on) |
-| ALB | ~18 | ~18 |
-| RDS `db.t4g.micro` + storage | ~15 | ~16 |
-| CloudWatch, ECR, Route 53, SES, SSM, CloudFront (free-tier volume) | ~5 | ~6 |
-| **Total (USD/month)** | **~56** | **~67** |
+Almost all of the cost is **billed per hour, not per use** (Fargate, ALB, RDS, public IPv4): it does not shrink with low traffic. Usage-billed services (S3, SES, SSM standard parameters, CloudFront) cost cents at this volume.
 
-**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`**, tracked with an AWS Budgets alert at 80%. Further levers: stop the `test` RDS instance outside working hours; RDS free tier during the first 12 months; Fargate Graviton (ARM64) once Express Mode support is confirmed.
+Estimate in USD/month, assuming `on-demand` environments run ~4 h/day (power modes, §8.1):
+
+| Item | `test` (on-demand) | `prod` before launch (on-demand) | `prod` from launch (always-on) |
+|------|--------------------|----------------------------------|--------------------------------|
+| Fargate (backend + frontend) | ~4.5 | ~4.5 | ~27 |
+| RDS `db.t4g.micro` (instance hours + storage/backups) | ~4 | ~5 | ~16 |
+| Public IPv4 of running tasks | ~1 | ~1 | ~7 |
+| CloudWatch, ECR, Route 53, SES, SSM, S3, CloudFront | ~2 | ~3 | ~6 |
+| **Subtotal** | **~12** | **~14** | **~56** |
+
+Plus the shared ALB (D15) and its 2 public IPv4 addresses, billed while they exist: **~USD 25**.
+
+| Phase | Total | Share of budget |
+|-------|-------|-----------------|
+| Before launch (M0–M4) | **~USD 51** | ~39% |
+| From launch | **~USD 93** | ~72% |
+
+**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`**, tracked with an AWS Budgets alert at 80%. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
+
+**Free tier:** do not count on it. Accounts created after 2025-07-15 get USD 100–200 in credits for 6 months instead of the former 12-month free tier (e.g. 750 RDS hours). Credits are a cushion; the budget must hold without them.
 
 ### 8.4 Infrastructure as Code
 
-- `infra/` holds Terraform (S3 backend with native state locking) for: ECR, RDS, security groups, S3, SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege).
+- `infra/` holds Terraform (S3 backend with native state locking) for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
 - The **ECS Express services** are created/updated by the deploy pipeline (`aws-actions/amazon-ecs-deploy-express-service`), not by Terraform, to avoid two tools owning the same resource.
-- `infra/envs/test` and `infra/envs/prod` share modules; `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment.
+- Three Terraform roots share modules: `infra/envs/shared` (VPC, ECR, Route 53, GitHub OIDC provider, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+
+### 8.5 Local development
+
+| Resource | Local | Why |
+|----------|-------|-----|
+| PostgreSQL | Docker (`compose.yaml`) | RDS is private and unreachable from a laptop by design; local resets (`db/CLAUDE.md`) and Testcontainers need a disposable database |
+| Product images | **Real S3**, bucket `jugueria-dev-media` | Usage-billed and nearly free; no filesystem adapter to maintain |
+| Email | Mailpit (SMTP, web UI) | SES delivers only to verified or real addresses; Mailpit shows every message without sending it |
+| Secrets | Environment variables / an uncommitted `.env` | No real secrets locally |
+
+- Local AWS access uses **short-lived credentials** from IAM Identity Center: `aws sso login --profile jugueria-dev`, then run the backend with `AWS_PROFILE=jugueria-dev`. The `jugueria-dev` permission set can only read and write `jugueria-dev-media`. Never put long-lived access keys in `.env`.
+- Automated tests never call real AWS (§11.1).
 
 ## 9. Repository, branching, and release
 
@@ -506,34 +781,51 @@ Shared: ECR repositories `jugueria/backend`, `jugueria/frontend` (immutable tags
 ```
 store-project/
 ├── .github/
-│   ├── workflows/        ci-backend.yml, ci-frontend.yml, ci-infra.yml, cd.yml, rollback.yml, scheduled-test-scale.yml
+│   ├── workflows/        ci.yml (+ reusable _ci-backend.yml, _ci-frontend.yml, _ci-infra.yml), cd-test.yml, cd-prod.yml, rollback.yml, env-control.yml, env-autostop.yml
 │   ├── actions/          composite actions (setup-java-maven, setup-node-cache, aws-login)
 │   ├── CODEOWNERS · dependabot.yml · pull_request_template.md
 ├── backend/              Spring Boot (Dockerfile, api/openapi.json)
 ├── frontend/             Angular (Dockerfile)
+├── db/                   Flyway migrations (migration/<module>/)
 ├── e2e/                  Playwright tests
 ├── infra/                Terraform
 ├── docs/                 PRD.md, tech-spec.md, runbooks/
 └── compose.yaml          local PostgreSQL + Mailpit
 ```
 
-`store-project` is already initialized as its own Git repository (no commits yet); M0 pushes it to GitHub and applies the rules below.
+`store-project` is already initialized as its own Git repository; M0 pushes it to GitHub and applies the rules below.
 
-### 9.2 Branching (trunk-based)
+### 9.2 Branching (develop / main with hotfixes)
+
+Each environment maps to one long-lived branch: `develop` → `test`, `main` → `prod`.
+
+```
+feature/<name> ── PR (squash) ──▶ develop ── push ──▶ TEST  (automatic, no approval)
+                                     │
+                                     └── PR (merge commit) ──▶ main ── push ──▶ PROD  (manual approval)
+                                                                ▲
+hotfix/<name> ─────────── PR (squash) ──────────────────────────┘
+                          then: PR main → develop (merge commit)
+```
 
 | Rule | Setting |
 |------|---------|
-| Trunk | `main` — always deployable |
-| Work branches | `feat/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*` — branched from `main`, merged within ~2 days |
-| Merge | Pull request only; **squash merge**; PR title in Conventional Commits (validated in CI) |
-| Protection (ruleset on `main`) | Required checks green, branch up to date, linear history, no force-push, no deletion, conversations resolved |
-| Hotfix | Same flow (`fix/*` → PR → `main`) — the pipeline is fast enough; no long-lived release or develop branches |
-| Unfinished work | Hidden behind configuration flags in `store_settings`, never behind long-lived branches |
+| Long-lived branches | `develop` (integration, deployed to `test`) and `main` (production, deployed to `prod`). Both always deployable |
+| Work branches | `feature/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*` — branched from `develop`, merged back within ~2 days, **squash merge** |
+| Release | PR `develop → main` with a **merge commit** (never squash: squashing between long-lived branches makes them diverge and every later release conflicts) |
+| Hotfix | `hotfix/*` branched from `main` → PR → `main` (squash). Immediately afterwards, back-merge PR `main → develop` with a merge commit, so the next release does not revert the fix |
+| Protection (rulesets on `develop` and `main`) | PR only, required check `ci-ok` green (§10.2), branch up to date, no force-push, no deletion, conversations resolved. No linear-history requirement (release and back-merge PRs need merge commits). `main` accepts PRs only from `develop` and `hotfix/*` (checked in CI) |
+| PR titles | Conventional Commits (validated in CI) |
+| Unfinished work | Hidden behind configuration flags in `store_settings`, never behind long-lived work branches |
+
+Accepted risk: hotfixes reach `prod` without passing through `test`. Mitigation: full PR CI, post-deploy smoke tests, and keeping hotfixes minimal.
 
 ### 9.3 Versioning and traceability (NFR-08)
 
-- Every merge to `main` builds **one** image per changed app, tagged with the full commit SHA (ECR tags immutable).
-- Promotion to `prod` deploys that **same digest** — never rebuilds.
+- Apps are deployed independently: `backend` (`backend/**`, `db/**`) and `frontend` (`frontend/**`). A change that touches only one app builds and deploys only that app.
+- Every push to `develop` builds **one** image per changed app, tagged with the full commit SHA (ECR tags immutable), and deploys it to `test`. "Changed" is computed against the commit **last deployed successfully to `test` for that app**, not against the previous commit, so a failed run is picked up by the next push. After deploying, the digest of every app (built or unchanged) is recorded for that commit (GitHub deployment metadata).
+- A push to `main` from a release PR takes the digests recorded for the merged `develop` commit (`HEAD^2`) when its tree is identical to `main`'s — **never rebuilds**. It compares each app's digest with the one currently running in `prod` and deploys only the apps that differ. A release accumulates many commits, so comparing against the previous commit would miss changes.
+- A hotfix (trees differ) builds images from `main` only for the apps it changed compared with the commit running in `prod`.
 - A successful `prod` deploy creates a Git tag `vYYYY.MM.DD-N` and a GitHub Release with generated notes, the image digests, and the approver.
 - Result: every production change links commit → PR → pipeline run → image digest → approver.
 
@@ -543,13 +835,21 @@ store-project/
 
 ```mermaid
 flowchart LR
-  PR[Pull request] --> CI[CI: build · test · scan<br/>path-filtered]
-  CI -->|required checks| M[merge to main]
-  M --> B[build images once<br/>tag = SHA · push ECR]
+  F[feature/* PR] --> CI[CI: build · test · scan<br/>path-filtered]
+  CI -->|required checks| D[merge to develop]
+  D --> B[build images once<br/>tag = SHA · push ECR]
   B --> T[deploy test]
   T --> V[smoke + E2E on test]
-  V --> A{manual approval<br/>environment: prod}
-  A --> P[deploy same digest to prod]
+  V --> RP[release PR<br/>develop → main]
+  H[hotfix/* PR] --> CI2[CI]
+  CI2 --> M
+  RP --> M[merge to main]
+  M --> G{tree == HEAD^2?}
+  G -->|yes| RD[reuse digests<br/>verified on test]
+  G -->|no: hotfix| HB[build images]
+  RD --> A{manual approval<br/>environment: prod}
+  HB --> A
+  A --> P[deploy to prod]
   P --> S[smoke on prod]
   S --> R[tag + GitHub Release]
 ```
@@ -558,21 +858,34 @@ flowchart LR
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
-| `ci-backend.yml` | PR/push touching `backend/**` | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check; dependency review |
-| `ci-frontend.yml` | PR/push touching `frontend/**` | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
-| `ci-infra.yml` | PR touching `infra/**` | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
-| `ci-common.yml` | Every PR | PR-title lint (Conventional Commits), secret scan (gitleaks), workflow lint (actionlint) |
-| `cd.yml` | Push to `main` | detect changed apps → build/scan/push images → scale `test` up if at 0 → deploy `test` → smoke + Playwright E2E → approval → deploy `prod` → smoke → release |
-| `rollback.yml` | `workflow_dispatch` (env, app, image SHA) | Redeploy a previous image digest; requires the same environment approval |
-| `scheduled-test-scale.yml` | `schedule` (cron) | Scale `test` down at night / up in the morning |
+| `ci.yml` | Every PR to `develop` or `main` | `changes` (path filter) → `common` (always) + `backend` / `frontend` / `infra` (only if their paths changed) → `ci-ok` (gate) |
+| `_ci-backend.yml` (reusable) | Called by `ci.yml` when `backend/**` or `db/**` changed | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check; dependency review |
+| `_ci-frontend.yml` (reusable) | Called by `ci.yml` when `frontend/**` or `backend/api/openapi.json` changed (API type drift check, §6.5) | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
+| `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
+| `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
+| `cd-prod.yml` | Push to `main` | resolve images (reuse digests of `HEAD^2` if trees match, else build/scan/push the hotfix's changed apps) → keep apps whose digest differs from `prod` → approval → start `prod` if it is off → deploy them to `prod` → smoke → tag + release |
 
-Shared logic lives in **reusable workflows** (`_build-image.yml`, `_deploy-ecs.yml`) and **composite actions**.
+The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint).
+
+#### Path filters and required checks
+
+Path-filtered **workflows** (`on.pull_request.paths`) cannot be required checks: when a PR does not touch their paths the workflow never starts, GitHub keeps the check as "Expected — Waiting for status", and the PR can never merge. Therefore:
+
+- Filtering happens **inside** `ci.yml`, at job level. The `changes` job computes which areas changed; each area job runs with `if: needs.changes.outputs.<area> == 'true'`.
+- Changes to `.github/**` run **every** area job, because a workflow or composite action change can break any of them.
+- `ci-ok` is the **only** required check in the rulesets. It depends on all jobs, runs with `if: always()`, and fails if any needed job ended in `failure` or `cancelled`. Skipped area jobs count as success.
+- `if: always()` is mandatory on `ci-ok`: without it, a failed area job makes `ci-ok` **skipped**, and a skipped job reports success — the PR would merge with failing tests.
+| `rollback.yml` | `workflow_dispatch` (env, app, image SHA) | Redeploy a previous image digest; requires the same environment approval |
+| `env-control.yml` | `workflow_dispatch` (environment, start/stop, hours) | Start or stop an environment; on start, record the stop time (§8.1) |
+| `env-autostop.yml` | `schedule` (hourly) | Apply each environment's power mode: stop expired `on-demand` environments, follow opening hours for `store-hours` |
+
+Shared logic lives in **reusable workflows** (`_ci-backend.yml`, `_ci-frontend.yml`, `_ci-infra.yml`, `_build-image.yml`, `_deploy-ecs.yml`) and **composite actions**. `cd-test.yml` and `cd-prod.yml` call `_build-image.yml` and `_deploy-ecs.yml` once per app to deploy, so apps are built and deployed independently.
 
 ### 10.3 Environments and gates
 
 | Environment | Deployed by | Protection | Secrets/vars |
 |-------------|-------------|------------|--------------|
-| `test` | Automatic after merge | Only `main` can deploy | `AWS_ROLE_ARN_TEST`, service names, URLs |
+| `test` | Automatic on push to `develop` | Only `develop` can deploy | `AWS_ROLE_ARN_TEST`, service names, URLs |
 | `prod` | After approval | Required reviewer (owner), only `main`, wait timer 0 | `AWS_ROLE_ARN_PROD`, service names, URLs |
 
 Application secrets are **not** GitHub secrets: they live in SSM and are injected into tasks at runtime. GitHub only holds role ARNs and non-sensitive variables. Each ECS service sets `SPRING_PROFILES_ACTIVE` to its environment (`test` or `prod`); `application-test.properties` and `application-prod.properties` hold only non-secret differences.
@@ -598,22 +911,22 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 
 | Course module | Where it is applied |
 |---------------|---------------------|
-| 06 Branching strategies | §9.2 trunk-based |
+| 06 Branching strategies | §9.2 `develop`/`main` with hotfixes and back-merges |
 | 07 Matrix builds | Playwright across Chromium/Firefox/WebKit; backend tests split by module |
-| 08 / 09 CI backend / frontend | `ci-backend.yml`, `ci-frontend.yml` |
+| 08 / 09 CI backend / frontend | `_ci-backend.yml`, `_ci-frontend.yml`, called from `ci.yml` |
 | 04 Marketplace and own actions (cache) | Official setup actions with built-in dependency cache; composite actions in `.github/actions/*` |
 | 05 Secrets, variables, environments | §10.3 environment protection and variables; §7 application secrets in SSM, not in GitHub |
 | 10 Testing in pipelines | §11 |
-| 11 Monorepos and path filters | Path-filtered CI; changed-app detection in `cd.yml` |
+| 11 Monorepos and path filters | Job-level path filters with a single required gate (`ci-ok`, §10.2); per-app deploys in `cd-test.yml` and `cd-prod.yml` |
 | 12 Monolith vs microservices | Modular monolith with extraction-ready modules |
 | 13 Docker build/push ECR | `_build-image.yml` with Docker layer cache (`type=gha`) |
 | 14 Concurrency | §10.4 |
 | 15 Multi-environment | `test` → `prod` with approval |
 | 16 Rollback | `rollback.yml`, expand/contract |
 | 17 Continuous deploy to AWS | ECS Express Mode (the course's App Runner content is replaced: App Runner closed to new customers on 2026-04-30) |
-| 18 Reusable workflows / composite actions | `_build-image.yml`, `_deploy-ecs.yml`, `.github/actions/*` |
+| 18 Reusable workflows / composite actions | `_ci-*.yml`, `_build-image.yml`, `_deploy-ecs.yml`, `.github/actions/*` |
 | 19 Supply-chain security / OIDC | §10.4 |
-| 21 Observability and cost | §12, §8.3 budget, scheduled scale-down, cache + path filters + concurrency combined |
+| 21 Observability and cost | §12, §8.3 budget, power modes (`env-control.yml`, `env-autostop.yml`), cache + path filters + concurrency combined |
 | 22 Debugging pipelines | Runbook `docs/runbooks/pipeline-debugging.md` |
 | 23 Final project (microservices) | Future: extract `notifications` or `payments` |
 
@@ -630,7 +943,7 @@ Development follows **TDD**: a failing test precedes each production change.
 | Architecture | `ApplicationModules.verify()` | Module boundaries and cycles | Every PR |
 | Adapter | WireMock | Mercado Pago adapter: approved/rejected only (BR-02), partial refunds, timeouts, bad signature | Every PR |
 | API contract | OpenAPI drift check | Backend spec vs committed spec | Every PR |
-| Unit (frontend) | Vitest + Angular Testing utilities | Services, signals, components; i18n extraction runs in the build and fails on untranslated source text (NFR-12) | Every PR |
+| Unit (frontend) | Vitest + Angular Testing utilities | Services, signals, components; i18n lint (`@angular-eslint/template/i18n`) fails on unmarked text or missing IDs (NFR-12, §6.6) | Every PR |
 | Real-time latency | Integration test with two app instances | Change committed on instance A reaches a subscriber on instance B in ≤ 5 s (NFR-04) | Every PR |
 | Race conditions | Module integration tests with parallel threads | Start vs customer cancel; SERVER void vs line Ready; transfer to an occupied table; two slots claims for the last capacity | Every PR |
 | E2E | Playwright against `test` | Journeys 2–7 of PRD §7 fully (two browser contexts: staff tablet + board); journey 1 up to the payment redirect | After each `test` deploy |
@@ -639,14 +952,48 @@ Development follows **TDD**: a failing test precedes each production change.
 
 Coverage gates: backend ≥ 80% lines on `internal` packages; frontend ≥ 80% lines on `core` and `features`. Payment confirmation end-to-end is covered by backend integration tests (provider stubbed) because provider sandboxes are not reliable enough for gating.
 
+### 11.1 Test conventions
+
+**Backend**
+
+| Topic | Convention |
+|-------|------------|
+| Kinds | `*Test` = no Spring context (plain JUnit; run by Surefire in `mvn test`). `*IT` = anything that starts a Spring context or a container (run by Failsafe in `mvn verify`) |
+| Location | Same package as the code under test |
+| Method names | Behavior in words: `rejectsVoidWhenLineIsReady()`, `reservesStockInProductIdOrder()`; body structured as given / when / then |
+| Test data | Builder methods per module in test sources (`OrderFixtures.aPaidOrder()`), never shared across modules |
+| PostgreSQL | One Testcontainers `postgres:18` container per JVM, registered with `@ServiceConnection` in a shared `@TestConfiguration`. Never H2 |
+| Isolation | Integration tests are **not** `@Transactional`: a rolled-back test never commits, so `@ApplicationModuleListener`s (after commit) never run and the test passes for the wrong reason. Each test cleans the tables it wrote (helper truncating the module's schema) |
+| Async events | Modulith's `Scenario` API (`scenario.stimulate(…).andWaitForEventOfType(…)`), never `Thread.sleep` |
+| Mocks | Only external-system ports and other modules' APIs, with `@MockitoBean` (`@MockBean` was removed in Spring Boot 4). Never mock repositories or the database |
+| AWS | Tests never call real AWS. S3 and SES adapters are tested with WireMock through the SDK's endpoint override; real behavior is verified by smoke tests in `test` |
+| Security | `jwt()` request post-processor from `spring-security-test` (§7.1) |
+| Time | Fixed or advanced `Clock` (§4.12) |
+
+**Frontend**
+
+- `*.spec.ts` next to the file, run by Vitest.
+- Test public behavior: rendered DOM for components, signal values for stores. Never test private methods.
+- HTTP services: `provideHttpClient()` + `provideHttpClientTesting()` with `HttpTestingController`.
+- Timers (undo window, countdowns): Vitest fake timers (`vi.useFakeTimers()`).
+
 ## 12. Observability and operations
 
 | Signal | Implementation |
 |--------|----------------|
 | Logs | JSON (`logging.structured.format.console=ecs`) to CloudWatch; fields include `correlation_id`, `trace_id`, `user_id` (never PII) |
-| Metrics | Micrometer → CloudWatch: HTTP latency/errors, JVM, Hikari pool, plus business metrics (`orders.placed`, `orders.paid`, `orders.late_vs_estimate`, `payments.failed`, `refunds.automatic`, `board.lines_voided`, `webhooks.lag`, `events.incomplete`) |
+| Metrics | Micrometer → CloudWatch through an **export allowlist** (below): business metrics (`orders.placed`, `orders.paid`, `orders.late_vs_estimate`, `payments.failed`, `refunds.automatic`, `board.lines_voided`, `webhooks.lag`, `events.incomplete`) plus Hikari pool usage. HTTP latency, 5xx rate, and target health come from the ALB's built-in metrics; RDS metrics from RDS. All Micrometer meters stay available on the task's Actuator for debugging |
 | Tracing | Micrometer tracing IDs in logs for correlation; a tracing backend is deferred until more than one service exists |
 | Health | Actuator liveness/readiness; only `health` and `info` exposed |
+
+**Metric conventions**
+
+- **Cost first.** CloudWatch bills every exported metric — each name *and each unique combination of dimension values* — per month, and a Micrometer timer exports several metrics (`count`, `sum`, `max`). Spring Boot registers hundreds of meters by default (JVM, HTTP per URI/status, …): exporting them all would break NFR-13. A `MeterFilter` in `shared` exports only an explicit allowlist; everything else is denied for CloudWatch.
+- Budget: only `prod` exports to CloudWatch, at most **15 series** (`test` keeps meters on Actuator; alarms exist only for `prod`). A new exported metric or tag states its series count in the PR.
+- Names: lowercase, dot-separated, `<domain>.<fact>` (`orders.paid`, `payments.failed`); multi-word segments in snake_case (`orders.late_vs_estimate`). Base units (seconds), no unit in the name.
+- Meter types: counter for facts that happen (`orders.paid`), timer for durations (`webhooks.lag`), gauge for current values (`events.incomplete`).
+- **Tags only with low, bounded cardinality**: `channel` (`online`/`in_store`), `reason`, `provider`, `outcome`. Never IDs, emails, amounts, or free text: each distinct value becomes a new billed series.
+- Business metrics are recorded in application services or event listeners of the owning module, with name constants declared in that module.
 
 Alarms (SNS → owner email): ALB 5xx > 2% over 5 min; p95 latency > 1 s over 10 min; unhealthy targets > 0 for 5 min; RDS CPU > 80% / free storage < 20%; `payments.failed` spike; incomplete event publications older than 10 min.
 
@@ -663,19 +1010,22 @@ Runbooks in `docs/runbooks/`: rollback, database restore, payment webhook replay
 | D5 | Cache | Caffeine + cluster-wide eviction | Redis/ElastiCache (extra cost and infra; not needed until cached data outgrows memory) |
 | D6 | Payments | Port + Mercado Pago Checkout Pro (provisional until PRD Q1 confirms the country) | Stripe (weaker local payment method coverage in LatAm); Checkout API/Bricks (larger PCI scope); provider SDK in domain (lock-in) |
 | D7 | Frontend version | Upgrade to Angular 22 at M0 | Stay on 20 (LTS ends 2026-11-28) |
-| D8 | Branching | Trunk-based + promotion | Gitflow (long-lived branches, merge overhead, rebuilds per branch contradict "build once") |
+| D8 | Branching | `develop` → `test`, `main` → `prod`, release PRs, `hotfix/*` + back-merge; digests promoted from `develop` so "build once" holds | Trunk-based + promotion (one branch for both environments; no explicit release PR between `test` and `prod`); full Gitflow (extra `release/*` branches not needed with two environments) |
 | D9 | Environments | `test` + `prod` | Add `staging` (cost and effort not justified for one developer; `test` fulfils pre-prod role) |
 | D10 | IaC | Terraform for foundation, pipeline for services | Everything by console (not auditable); everything in Terraform (conflicts with deploy action ownership) |
 | D11 | Online order acceptance | Automatic on payment + busy mode / pause / capacity (BR-09) | Manual accept (needs someone watching and a timeout-refund path; marketplaces need it because they don't control the kitchen) |
 | D12 | Payment approval | Mercado Pago binary mode | Pending/in-review payments (up to hours of review; useless for drinks ordered for now) |
 | D13 | Board state | `preparation.board_order` row as arbiter, conditional updates | Distributed locks or status duplicated in each module (race conditions between staff and customer actions) |
 | D14 | Offline | Disconnected state + paper fallback | Offline-first staff screens with local sync (large effort; deferred) |
+| D15 | Load balancer and VPC | One VPC and one Express Mode ALB shared by `test` and `prod`; isolation by security groups, task roles, SSM paths, and separate RDS/S3 | One ALB and VPC per environment (~USD 25/month more: second ALB + its public IPv4 addresses, for isolation this project does not need) |
+| D16 | Email transport | Email port: SMTP adapter (Mailpit, local) + SES API v2 adapter with the ECS task role (`test`/`prod`) | SES SMTP interface everywhere (needs long-lived IAM user credentials stored as a secret); a personal Gmail account (personal credential in the system, sender shown as a personal address, lower deliverability) |
+| D17 | Environment uptime | Power modes: `test` on-demand; `prod` on-demand until launch, store-hours during the pilot, always-on from launch (§8.1) | Both environments always on (~USD 118/month, ~90% of the budget, for ~4 h/day of use); `test` on a fixed daily schedule (still ~16 h/day billed) |
 
 ## 14. Risks and open questions
 
 | # | Risk / question | Mitigation / owner |
 |---|-----------------|--------------------|
-| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker, sharing one ALB across environments) are unconfirmed | Validate in M0 walking skeleton; fall back to standard ECS with the same pipeline if blocked |
+| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing is documented for up to 25 services in one VPC (D15) but must be verified with two environments | Validate in M0 walking skeleton; fall back to standard ECS with the same pipeline if blocked |
 | R2 | Single-AZ RDS: an AZ outage means restore time (within NFR-07's 2 h RTO) | Accepted for Release 1; Multi-AZ when revenue justifies (~2× RDS cost) |
 | R3 | Mercado Pago availability/fees depend on the country (PRD Q1) | Confirm with Q1 by M1, before payments work starts in M3; the port allows switching the adapter |
 | R4 | Electronic invoicing may be legally required (PRD Q2) | If yes, add an `invoicing` module and provider before M3 |

@@ -283,7 +283,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 
 | Milestone | Content | Exit criteria |
 |-----------|---------|---------------|
-| M0 — Walking skeleton | Repo, pipelines, TEST + PROD environments, health endpoint deployed end-to-end | A commit on `main` reaches TEST automatically and PROD after approval |
+| M0 — Walking skeleton | Repo, pipelines, TEST + PROD environments, health endpoint deployed end-to-end | A merge to `develop` reaches TEST automatically; a release PR merged to `main` reaches PROD after approval |
 | M1 — Catalog & staff | Catalog, modifiers, allergens, stations, availability, tables, reason lists, staff accounts, audit log | FR-CAT, FR-ADM-01/02, FR-INS-09/14, FR-AUD done |
 | M2 — In-store | Tickets, voids/comps, transfers, quick sale, board (all views, markers, colors), register shifts with blind close and cash movements, stock | FR-INS, FR-REG, FR-PRP, FR-STK done; used in the store in parallel with paper for 1 week |
 | M3 — Online | Customer accounts, checkout with modifiers, estimates, busy mode, run-out preference, payments, delivery/pickup, notifications | FR-ONL done; 20 real test orders paid and refunded in TEST |
@@ -313,7 +313,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | Q1 | Country and currency (drives payment methods, the payment provider choice, and tax wording)? | M1 |
 | Q2 | Is electronic invoicing legally required for online sales from day one? | M3 |
 | Q3 | Audit-record retention period required by the accountant? | M4 |
-| Q4 | Domain name for the storefront? | M0 |
+| Q4 | Domain name for the storefront? **Answered: `jhanantezana.com`** (storefront host still to be chosen: apex or a subdomain) | M0 |
 | Q5 | Will juices and food be prepared at separate stations? | M2 |
 
 ## 12. Glossary
