@@ -85,6 +85,8 @@ updates:
   - package-ecosystem: terraform
     directories:
       - /infra/envs/shared
+      - /infra/envs/test
+      - /infra/envs/prod
     target-branch: develop
     schedule:
       interval: weekly
