@@ -17,3 +17,11 @@ output "ecr_repository_urls" {
 output "github_oidc_provider_arn" {
   value = aws_iam_openid_connect_provider.github.arn
 }
+
+output "ci_plan_role_arn" {
+  value = aws_iam_role.ci_plan.arn
+}
+
+output "infra_apply_role_arns" {
+  value = { for env, role in aws_iam_role.infra_apply : env => role.arn }
+}
