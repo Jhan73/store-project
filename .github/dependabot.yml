@@ -82,6 +82,15 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
+  - package-ecosystem: terraform
+    directories:
+      - /infra/envs/shared
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop

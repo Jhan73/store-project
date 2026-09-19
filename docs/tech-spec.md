@@ -764,15 +764,16 @@ Plus the shared ALB (D15) and its 2 public IPv4 addresses, billed while they exi
 | Before launch (M0–M4) | **~USD 51** | ~39% |
 | From launch | **~USD 93** | ~72% |
 
-**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`**, tracked with an AWS Budgets alert at 80%. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
+**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`** — the hard ceiling. The AWS Budgets alert is tighter, so drift is noticed early: **USD 70 before launch, USD 120 from launch**, alerting at 80% actual and 100% forecasted. The alert email is passed as `TF_VAR_budget_alert_email` and never committed. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
 
 **Free tier:** do not count on it. Accounts created after 2025-07-15 get USD 100–200 in credits for 6 months instead of the former 12-month free tier (e.g. 750 RDS hours). Credits are a cushion; the budget must hold without them.
 
 ### 8.4 Infrastructure as Code
 
-- `infra/` holds Terraform (S3 backend with native state locking) for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
+- `infra/` holds Terraform for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
 - The **ECS Express services** are created/updated by the deploy pipeline (`aws-actions/amazon-ecs-deploy-express-service`), not by Terraform, to avoid two tools owning the same resource.
-- Three Terraform roots share modules: `infra/envs/shared` (VPC, ECR, Route 53 hosted zone `jugueria.jhanantezana.com` delegated by NS records from the parent `jhanantezana.com` zone, GitHub OIDC provider, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+- Three Terraform roots share modules: `infra/envs/shared` (VPC `10.40.0.0/16`, ECR, `jugueria*` records in the existing `jhanantezana.com` Route 53 zone of the same account — no delegated zone, Terraform never manages the whole zone —, GitHub OIDC provider, budget, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+- State lives in the pre-existing, versioned bucket `acme-tfstate-dev-463470979604-us-east-1`, shared with another project, under keys `jugueria/<root>/terraform.tfstate` (S3 native locking). This project's IAM roles are limited to `jugueria/*`. The first `apply` of each root is local with the admin profile; CI runs `plan` once the OIDC roles exist.
 
 ### 8.5 Local development
 
