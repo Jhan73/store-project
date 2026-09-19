@@ -5,10 +5,10 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 ## Where things live
 
 - **Flyway migrations live here:** `db/migration/<module>/`. This folder is the single source of truth for the database schema.
-- Flyway runs at backend startup (tech-spec §4.10), so the backend build must package `db/migration` onto its classpath as `classpath:db/migration` (Maven resource pointing at `../db`, pending — Flyway is not in `pom.xml` yet). Consequences:
+- Flyway runs at backend startup (tech-spec §4.10), so the backend build must package `db/migration` onto its classpath as `classpath:db/migration` (Maven resource pointing at `../db` in `backend/pom.xml`). Consequences:
   - The backend Docker build context must include `db/` (build from the repo root, not from `backend/`).
   - Backend CI path filters must include `db/**`, so a migration-only PR still runs the backend tests.
-- Local database today: `localhost:5438`, database `jugueria` (see `backend/src/main/resources/application-dev.properties`). A `compose.yaml` with PostgreSQL + Mailpit is planned at the repo root.
+- Local database: PostgreSQL 18 from the root `compose.yaml` (database, user, and password `jugueria`), on a random host port — find it with `docker compose port postgres 5432`.
 
 ## Schema ownership
 
@@ -27,7 +27,7 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 ### Local workflow
 
 - A migration that is **not merged to `develop` yet** is yours: edit it freely instead of stacking fix-up migrations.
-- After editing it, reset the local database: `docker compose down -v` and start again (once `compose.yaml` exists; until then, drop and recreate the local `jugueria` database). Flyway re-applies everything on startup.
+- After editing it, reset the local database: `docker compose down -v` and start again. Flyway re-applies everything on startup.
 - To avoid writing DDL from scratch, let Hibernate write a **draft** without touching the database, then turn it into a migration by hand (module schema, partial indexes, constraints, naming):
   ```properties
   spring.jpa.properties.jakarta.persistence.schema-generation.scripts.action=create

@@ -48,6 +48,22 @@ updates:
       - dependency-name: "jasmine*"
       - dependency-name: "@types/jasmine"
 
+  - package-ecosystem: docker
+    directory: /backend
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop

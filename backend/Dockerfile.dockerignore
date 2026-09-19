@@ -1,0 +1,6 @@
+*
+!backend/.mvn
+!backend/mvnw
+!backend/pom.xml
+!backend/src/main
+!db/migration
