@@ -18,19 +18,28 @@ Never manage ECS Express services or their ALB in Terraform — two tools owning
 infra/
 ├── modules/          shared modules
 └── envs/
-    ├── shared/       VPC, ECR, Route 53 zone jugueria.jhanantezana.com (NS-delegated from the parent zone), OIDC provider, SES domain identity, jugueria-dev-media, jugueria-dev permission set
+    ├── shared/       VPC 10.40.0.0/16, ECR, jugueria* records in the existing jhanantezana.com zone, OIDC provider, SES domain identity, jugueria-dev-media, jugueria-dev permission set, budget
     ├── test/
     └── prod/
 ```
 
-`test` and `prod` use the same modules; differences are variables only. State in an S3 backend with native state locking.
+`test` and `prod` use the same modules; differences are variables only.
+
+**State:** the pre-existing bucket `acme-tfstate-dev-463470979604-us-east-1` (versioned, encrypted, private), **shared with another project**. This repo only uses keys under `jugueria/`; its IAM roles must never be granted anything outside `jugueria/*`. Each root has a committed `backend.hcl` (partial backend configuration, S3 native locking with `use_lockfile`).
+
+**DNS:** `jhanantezana.com` is a Route 53 zone in this same account. Terraform reads it with a data source and manages **only** its own `jugueria*` records — never import or manage the whole zone.
+
+**Bootstrap:** the first `apply` of each root runs locally with the admin profile (`AWS_PROFILE=jugueria-admin`), because the GitHub OIDC roles do not exist yet. Until they do, CI only runs `fmt` and `validate` (`init -backend=false`).
 
 ## Commands
 
 ```bash
-terraform -chdir=infra/envs/<shared|test|prod> fmt -check -recursive
-terraform -chdir=infra/envs/<shared|test|prod> validate
-terraform -chdir=infra/envs/<shared|test|prod> plan
+export AWS_PROFILE=jugueria-admin                        # after: aws sso login --profile jugueria-admin
+terraform -chdir=infra/envs/<root> init -backend-config=backend.hcl
+terraform fmt -check -recursive infra
+terraform -chdir=infra/envs/<root> validate
+terraform -chdir=infra/envs/<root> plan -out=<root>.tfplan   # shared also needs TF_VAR_budget_alert_email
+terraform -chdir=infra/envs/<root> providers lock -platform=linux_amd64 -platform=windows_amd64 -platform=darwin_arm64
 ```
 
 `plan` runs in CI on PRs touching `infra/**` (posted as a PR comment). `apply` runs **only** manually through the protected GitHub environment — never from a local machine against `prod`.
@@ -47,5 +56,5 @@ terraform -chdir=infra/envs/<shared|test|prod> plan
 - **SES:** one domain identity for the account, shared by `test` and `prod`. The application's recipient allowlist, not SES sandbox, keeps `test` from emailing real people.
 - **ECR:** `jugueria/backend`, `jugueria/frontend` — immutable tags, scan on push, lifecycle keeps the last 30 images.
 - **Logs:** CloudWatch retention 14 days (`test`), 90 days (`prod`).
-- **Cost (tech-spec §8.3):** `test` + `prod` ≤ USD 130/month, AWS Budgets alert at 80% (~USD 51 before launch, ~USD 93 after). Most cost is hourly (Fargate, ALB, RDS, **public IPv4 at ~USD 3.60/month each**), so low traffic does not lower it — only power modes do. Do not count on the free tier. Justify every resource that adds recurring cost, especially anything billed while an environment is off (it raises the ~USD 30 floor).
+- **Cost (tech-spec §8.3):** `test` + `prod` ≤ USD 130/month (ceiling). Budget alert `budget_limit_usd`: 70 before launch (estimate ~USD 51), 120 from launch (estimate ~USD 93), alerting at 80% actual / 100% forecasted. Most cost is hourly (Fargate, ALB, RDS, **public IPv4 at ~USD 3.60/month each**), so low traffic does not lower it — only power modes do. Do not count on the free tier. Justify every resource that adds recurring cost, especially anything billed while an environment is off (it raises the ~USD 30 floor).
 - **Scaling** is configuration only (ECS min/max tasks, task size, RDS class) — never a code change.
