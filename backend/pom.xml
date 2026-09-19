@@ -191,6 +191,10 @@
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
 								</path>
+								<path>
+									<groupId>org.springframework.modulith</groupId>
+									<artifactId>spring-modulith-apt</artifactId>
+								</path>
 							</annotationProcessorPaths>
 						</configuration>
 					</execution>
@@ -205,6 +209,10 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
+								</path>
+								<path>
+									<groupId>org.springframework.modulith</groupId>
+									<artifactId>spring-modulith-apt</artifactId>
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
