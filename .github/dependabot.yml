@@ -37,6 +37,9 @@ updates:
       # Types follow the Node 24 runtime.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # Angular pins the TypeScript range; update it only with `ng update`.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       # Removed in M0-04.
       - dependency-name: "karma*"
       - dependency-name: "jasmine*"
