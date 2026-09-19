@@ -59,6 +59,7 @@ Rules:
 - **Never squash `develop → main` or `main → develop`.** Squashing between long-lived branches rewrites their commits, so both branches diverge and every following release PR conflicts.
 - After every hotfix merged into `main`, open the `main → develop` back-merge PR immediately; otherwise the next release reverts the fix.
 - Both `develop` and `main` are protected: PR only, required check `ci-ok` green, no force-push, no deletion. `main` also requires the PR to come from `develop` or `hotfix/*` (checked in CI).
+- **`develop` is the default branch**, so PRs, Dependabot (config and security updates), and scheduled workflows use it.
 - **Build once, promote the digest.** Images are built on `develop` (tagged with the commit SHA) and verified on `test`. A push to `main` deploys the digests already verified for the merged `develop` commit (`HEAD^2`) when its tree is identical to `main`'s; it builds new images only when the trees differ (hotfix). `prod` never gets an image that was rebuilt from the same code.
 
 ## CI/CD in the monorepo

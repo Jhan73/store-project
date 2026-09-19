@@ -823,6 +823,7 @@ hotfix/<name> ─────────── PR (squash) ──────�
 | Rule | Setting |
 |------|---------|
 | Long-lived branches | `develop` (integration, deployed to `test`) and `main` (production, deployed to `prod`). Both always deployable |
+| Default branch | `develop`. PRs target it by default; Dependabot reads its config from it and opens security updates against it (they would otherwise skip `test`); scheduled workflows (`env-autostop.yml`) run the version on `develop`, already exercised in `test` |
 | Work branches | `feature/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*` — branched from `develop`, merged back within ~2 days, **squash merge** |
 | Release | PR `develop → main` with a **merge commit** (never squash: squashing between long-lived branches makes them diverge and every later release conflicts) |
 | Hotfix | `hotfix/*` branched from `main` → PR → `main` (squash). Immediately afterwards, back-merge PR `main → develop` with a merge commit, so the next release does not revert the fix |
