@@ -18,21 +18,21 @@ resource "aws_acm_certificate" "app" {
   }
 }
 
+# ACM validates *.domain with the same record as the apex, so it is skipped to keep one owner per record.
 resource "aws_route53_record" "certificate_validation" {
   for_each = {
     for option in aws_acm_certificate.app.domain_validation_options : option.domain_name => {
       name   = option.resource_record_name
       record = option.resource_record_value
       type   = option.resource_record_type
-    }
+    } if option.domain_name != "*.${local.domain}"
   }
 
-  zone_id         = data.aws_route53_zone.parent.zone_id
-  name            = each.value.name
-  type            = each.value.type
-  ttl             = 300
-  records         = [each.value.record]
-  allow_overwrite = true
+  zone_id = data.aws_route53_zone.parent.zone_id
+  name    = each.value.name
+  type    = each.value.type
+  ttl     = 300
+  records = [each.value.record]
 }
 
 resource "aws_acm_certificate_validation" "app" {
