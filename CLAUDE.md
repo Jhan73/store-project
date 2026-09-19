@@ -29,7 +29,7 @@ Each area has its own `CLAUDE.md` with local rules — read it before working th
 | `e2e/` | Playwright tests (planned) | — |
 | `compose.yaml` | Local PostgreSQL 18 + Mailpit, started by Spring Boot's Docker Compose support | — |
 
-**Current state:** early scaffold. CI and the backend skeleton exist; most of the tech-spec (business modules, CD workflows, Terraform, `e2e/`) is not implemented yet; tech-spec §3 "Scaffold changes at M0" lists the pending setup. Never assume a file described in the spec exists — check first.
+**Current state:** early scaffold. CI and the backend and frontend skeletons exist; most of the tech-spec (business modules, CD workflows, Terraform, `e2e/`) is not implemented yet; tech-spec §3 "Scaffold changes at M0" lists the pending setup. Never assume a file described in the spec exists — check first.
 
 ## Deployment overview
 
