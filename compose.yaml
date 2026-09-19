@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:18@sha256:10037cee1d5ebfc057cd71b3365466cf27ce8d4bd0c4f409e426fcb2b3fb12e7
+    environment:
+      POSTGRES_DB: jugueria
+      POSTGRES_USER: jugueria
+      POSTGRES_PASSWORD: jugueria
+    ports:
+      - "5432"
+    volumes:
+      # PostgreSQL 18 images keep data under /var/lib/postgresql, not .../data.
+      - postgres-data:/var/lib/postgresql
+
+  mailpit:
+    image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres-data:
