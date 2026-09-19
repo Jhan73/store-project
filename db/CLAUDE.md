@@ -22,7 +22,7 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 - One module per migration file, under that module's folder: `db/migration/catalog/V2026_09_17_1030__catalog_create_product.sql`.
 - **Expand/contract only.** A release may add tables/columns; dropping or renaming happens in a later release once no deployed version uses them. Image rollback depends on this.
 - Never edit a migration once it is merged to `develop` — it has already run on `test`, and Flyway's checksum validation would fail. Add a new one.
-- `spring.jpa.hibernate.ddl-auto=validate` in **every** profile, including local — Flyway owns DDL. (`application-dev.properties` still has `update`; it must change.) Never `update`/`create` locally: Hibernate cannot generate partial unique indexes, `CHECK` constraints, grants, or roles, so the local schema would silently differ from `test`/`prod` and from the Testcontainers schema used by `*IT` tests.
+- `spring.jpa.hibernate.ddl-auto=validate` in **every** profile, including local — Flyway owns DDL. Never `update`/`create` locally: Hibernate cannot generate partial unique indexes, `CHECK` constraints, grants, or roles, so the local schema would silently differ from `test`/`prod` and from the Testcontainers schema used by `*IT` tests.
 
 ### Local workflow
 
