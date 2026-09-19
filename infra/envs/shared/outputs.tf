@@ -25,3 +25,15 @@ output "ci_plan_role_arn" {
 output "infra_apply_role_arns" {
   value = { for env, role in aws_iam_role.infra_apply : env => role.arn }
 }
+
+output "certificate_arn" {
+  value = aws_acm_certificate_validation.app.certificate_arn
+}
+
+output "email_identity" {
+  value = aws_sesv2_email_identity.domain.email_identity
+}
+
+output "dev_media_bucket" {
+  value = aws_s3_bucket.dev_media.bucket
+}
