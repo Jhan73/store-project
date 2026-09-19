@@ -35,7 +35,7 @@ Not yet in `pom.xml` (pending M0, tech-spec §3): Modulith starters + BOM, Flywa
 
 `*IT` classes run through the Maven Failsafe plugin, which is not in `pom.xml` yet (M0). Until it is added, `*IT` classes do not run at all.
 
-Local run (tech-spec §8.5): PostgreSQL and Mailpit from `compose.yaml`; product images go to the real bucket `jugueria-dev-media` using short-lived credentials — `aws sso login --profile jugueria-dev`, then start with `AWS_PROFILE=jugueria-dev`. Never put AWS access keys in `.env`.
+Local run (tech-spec §8.5): PostgreSQL and Mailpit from `compose.yaml` (created in M0-03; until then, use your local PostgreSQL); product images go to the real bucket `jugueria-dev-media` using short-lived credentials — `aws sso login --profile jugueria-dev`, then start with `AWS_PROFILE=jugueria-dev`. Never put AWS access keys in `.env`.
 
 Profiles: `application.properties` currently hardcodes `spring.profiles.active=dev`. The target (tech-spec §3) is no hardcoded profile: `SPRING_PROFILES_ACTIVE` is `local` for development and `test`/`prod` in each ECS service. Profile files hold only non-secret differences.
 

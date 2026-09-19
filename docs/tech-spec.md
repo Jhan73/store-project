@@ -67,7 +67,7 @@ flowchart LR
 | `<domain>` / `test.<domain>` | frontend service |
 | `api.<domain>` / `api.test.<domain>` | backend service (REST `/api/v1/**`, WebSocket `/ws`, webhooks `/api/v1/payments/webhooks/**`) |
 
-Frontend and API are on different hosts of the **same site**, so the refresh cookie works with `SameSite=Strict` and CORS allows only the matching frontend origin.
+`<domain>` is **`jugueria.jhanantezana.com`** (PRD Q4): a subdomain, so the parent domain stays free for other uses. Frontend and API are on different hosts of the **same site** (`jhanantezana.com`), so the refresh cookie works with `SameSite=Strict` and CORS allows only the matching frontend origin.
 
 ## 3. Technology stack and versions
 
@@ -94,7 +94,8 @@ Frontend and API are on different hosts of the **same site**, so the refresh coo
 - Backend versions come from BOMs (Spring Boot parent, `spring-modulith-bom`). Unmanaged libraries declare their version once in `<properties>`. No version ranges, `SNAPSHOT`, or milestone versions on `develop`/`main`.
 - Frontend: `package-lock.json` is committed and CI installs with `npm ci`, never `npm install`.
 - Licenses: MIT, Apache-2.0, BSD, ISC only, enforced by `actions/dependency-review-action` (`allow-licenses`). GPL/AGPL are rejected.
-- Updates arrive through Dependabot, one major version at a time.
+- **No license exceptions are in force.** PrimeNG 22+ (PrimeUI license) would need one, recorded here with its conditions, before it is adopted (§6.7).
+- Updates arrive through Dependabot, one major version at a time. PrimeNG majors are ignored (§6.7).
 - Already rejected — do not propose again without new arguments: jjwt (§7.1), MapStruct (§4.13), H2 (§11.1), Redis or any broker client (§13 D4/D5), NgRx or any global store (§6.2), runtime OpenAPI client generators (§6.5), `uuid`/`lodash`/`moment` (platform APIs cover them).
 
 
@@ -632,6 +633,17 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 
 **Emails** are the only user-facing text produced by the backend (`notifications`). They are templates stored in the `notifications` module, one file per message and locale, never strings in Java code. The template engine is chosen when the first email is implemented. API responses never contain user-facing text (§5.1).
 
+### 6.7 UI kit and theming
+
+| Topic | Decision |
+|-------|----------|
+| Component library | **PrimeNG 21** (last MIT community line, pinned to an exact `21.1.x`; never `-lts`, which is commercial) + `@primeuix/themes` 2.x + `@angular/cdk` 22. Styled mode with one custom preset (`definePreset`) sharing the app's palette; `darkModeSelector` set to the app's dark-mode class |
+| PrimeNG 21 on Angular 22 | Owner decision to avoid a license key. PrimeNG 21 declares Angular 21 peers, so it is installed with `package.json` `overrides` scoped to `primeng`. **Not vendor-supported and frozen** (no further MIT patches). Verified in M1-F1 (build, SSR, and component smoke tests); Dependabot ignores PrimeNG majors |
+| Exit plan | If the combination breaks, or a security fix is needed, migrate to PrimeNG 22 under the PrimeUI Community license (free for this project's size; license key and yearly renewal) — that requires recording a license exception in §3 |
+| Icons | Tabler via `@tabler/icons-angular` (official, MIT, standalone component, tree-shakable) |
+| Color modes | Light and dark; default from `prefers-color-scheme`, user choice persisted in `localStorage`, applied as a class on `<html>` by an inline script before first paint (no flash on SSR pages); WCAG AA in both modes (NFR-10) |
+| Tokens | CSS variables for every theme token (colors, radius, shadows, spacing), semantic names (`--background`, `--foreground`, `--primary`, …), defined once with light and dark values; no hardcoded colors in components |
+
 ## 7. Security
 
 | Concern | Control |
@@ -760,7 +772,7 @@ Plus the shared ALB (D15) and its 2 public IPv4 addresses, billed while they exi
 
 - `infra/` holds Terraform (S3 backend with native state locking) for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
 - The **ECS Express services** are created/updated by the deploy pipeline (`aws-actions/amazon-ecs-deploy-express-service`), not by Terraform, to avoid two tools owning the same resource.
-- Three Terraform roots share modules: `infra/envs/shared` (VPC, ECR, Route 53, GitHub OIDC provider, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+- Three Terraform roots share modules: `infra/envs/shared` (VPC, ECR, Route 53 hosted zone `jugueria.jhanantezana.com` delegated by NS records from the parent `jhanantezana.com` zone, GitHub OIDC provider, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
 
 ### 8.5 Local development
 

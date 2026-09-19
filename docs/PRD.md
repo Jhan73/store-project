@@ -313,7 +313,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | Q1 | Country and currency (drives payment methods, the payment provider choice, and tax wording)? | M1 |
 | Q2 | Is electronic invoicing legally required for online sales from day one? | M3 |
 | Q3 | Audit-record retention period required by the accountant? | M4 |
-| Q4 | Domain name for the storefront? **Answered: `jhanantezana.com`** (storefront host still to be chosen: apex or a subdomain) | M0 |
+| Q4 | Domain name for the storefront? **Answered: `jugueria.jhanantezana.com`** (subdomain of `jhanantezana.com`) | M0 |
 | Q5 | Will juices and food be prepared at separate stations? | M2 |
 
 ## 12. Glossary

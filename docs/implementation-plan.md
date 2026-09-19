@@ -23,8 +23,8 @@ This plan turns the PRD milestones into ordered **work packages** (WP). It says 
 
 | Milestone | Goal | Exit criteria (PRD §10) | Blocking decisions |
 |-----------|------|-------------------------|--------------------|
-| **M0** Walking skeleton | Repo, pipelines, `test` + `prod`, health endpoint end to end | A merge to `develop` reaches `test` automatically; a release PR to `main` reaches `prod` after approval | Storefront host under `jhanantezana.com` (Q4) |
-| **M1** Catalog & staff | Staff auth, catalog with modifiers and availability, settings, tables, audit | FR-CAT, FR-ADM-01/02, FR-INS-09/14, FR-AUD done | Q1 country/currency · UI library |
+| **M0** Walking skeleton | Repo, pipelines, `test` + `prod`, health endpoint end to end | A merge to `develop` reaches `test` automatically; a release PR to `main` reaches `prod` after approval | — (Q4 answered: `jugueria.jhanantezana.com`) |
+| **M1** Catalog & staff | Staff auth, catalog with modifiers and availability, settings, tables, audit | FR-CAT, FR-ADM-01/02, FR-INS-09/14, FR-AUD done | Q1 country/currency |
 | **M2** In-store | Tickets, board, register shifts, stock | FR-INS, FR-REG, FR-PRP, FR-STK done; used in the store in parallel with paper for 1 week | Q5 stations · email template engine |
 | **M3** Online | Customer accounts, checkout, payments, estimates, notifications | FR-ONL done; 20 real test orders paid and refunded in `test` | Q2 invoicing · payment provider account · SES production access |
 | **M4** Dashboard & launch | Reports, dashboard, hardening, load test, restore drill | FR-RPT done; all M items done; NFR-05 and NFR-07 verified | Q3 audit retention |
@@ -53,11 +53,11 @@ M0 is the only milestone that is not backend → frontend: the pipeline comes fi
 
 | ID | Work package | Spec | Done when | Status |
 |----|--------------|------|-----------|--------|
-| M0-01 | **Repository and GitHub setup**: push to GitHub, create `develop`, rulesets for `develop`/`main`, environments `test`/`prod` (reviewer on `prod`), CODEOWNERS, PR template, `dependabot.yml` | §9.2, §10.3, §10.4 | Direct pushes to `develop`/`main` are rejected; `prod` deploys require approval | todo |
+| M0-01 | **Repository and GitHub setup**: push to GitHub, create `develop`, rulesets for `develop`/`main`, environments `test`/`prod` (reviewer on `prod`), CODEOWNERS, PR template, `dependabot.yml` (ignores PrimeNG major updates) | §9.2, §10.3, §10.4 | Direct pushes to `develop`/`main` are rejected; `prod` deploys require approval | todo |
 | M0-02 | **CI**: `ci.yml` (`changes`, `common`, area jobs, `ci-ok`), reusable `_ci-backend/frontend/infra.yml`, composite actions | §10.2, §10.4 | A frontend-only PR runs only frontend + common jobs; a failing job makes `ci-ok` fail; `ci-ok` is the only required check | todo |
 | M0-03 | **Backend skeleton**: remove hardcoded profile and committed password; profiles `local`/`test`/`prod`; `ddl-auto=validate`, `open-in-view=false`; Actuator (health only), Flyway packaging `db/migration`, Modulith core + `verify()` test, Testcontainers, Failsafe; `compose.yaml` (PostgreSQL 18 + Mailpit); structured JSON logs; Dockerfile (repo-root context) | §3, §4.10, §4.11, §11.1, `db/CLAUDE.md` | `./mvnw verify` runs `*Test` and `*IT`; app starts locally against Compose; readiness at `/actuator/health/readiness` | todo |
 | M0-04 | **Frontend skeleton**: remove Karma/Jasmine, `@types/node` aligned with Node 24, angular-eslint (incl. `template/i18n`), source locale `es`, per-route render modes, `withIncrementalHydration()`, `/healthz` in `server.ts`, `api:generate` script, Dockerfile | §3, §6.1, §6.5, §6.6 | `npm test`, lint, and SSR build pass; `/healthz` returns 200 | todo |
-| M0-05 | **Infrastructure (Terraform)**: state backend; `shared` root (VPC, ECR, Route 53, OIDC provider); `test`/`prod` roots (RDS PostgreSQL 18, security groups, SSM placeholders, ACM, IAM roles); AWS Budgets alert | §8, `infra/CLAUDE.md` | `plan` runs on PRs; `apply` only through the protected environment; `db.t4g.micro` confirmed for PostgreSQL 18 | todo |
+| M0-05 | **Infrastructure (Terraform)**: state backend; `shared` root (VPC, ECR, Route 53 zone `jugueria.jhanantezana.com` + NS delegation in the parent zone, OIDC provider); `test`/`prod` roots (RDS PostgreSQL 18, security groups, SSM placeholders, ACM, IAM roles); AWS Budgets alert | §8, `infra/CLAUDE.md` | `plan` runs on PRs; `apply` only through the protected environment; `db.t4g.micro` confirmed for PostgreSQL 18 | todo |
 | M0-06 | **CD**: `_build-image.yml`, `_deploy-ecs.yml`, `cd-test.yml` (per-app, digest recording), `cd-prod.yml` (digest promotion, approval, tag + release), smoke tests, `rollback.yml`; **power modes**: `env-control.yml` + `env-autostop.yml`, both environments `on-demand` | §8.1, §9.3, §10.1–10.5 | Both apps run on ECS Express Mode in `test` and `prod` **behind one shared ALB** (validates D15/R1); a release reuses the `test` digests; rollback to a previous SHA works; deploying to a stopped environment starts it; an environment started for 4 h is stopped automatically | todo |
 | M0-close | **Close M0**: exit criteria; cost validated with the AWS Pricing Calculator; runbook `docs/runbooks/rollback.md` | §8.3, §10.5 | Exit criteria met; estimated cost within NFR-13 | todo |
 
@@ -65,7 +65,7 @@ M0 is the only milestone that is not backend → frontend: the pipeline comes fi
 
 ## M1 — Catalog & staff
 
-**Before starting:** Q1 answered (country, currency, payment provider). **Before M1 frontend:** UI component library and styling decided (open decision in `frontend/CLAUDE.md`). **During M1:** request SES production access (tech-spec R5).
+**Before starting:** Q1 answered (country, currency, payment provider). **During M1:** request SES production access (tech-spec R5).
 
 ### Backend
 
@@ -73,7 +73,7 @@ Order matters: foundations and `audit` come first, so every later module is audi
 
 | ID | Work package | Scope | Spec | Done when | Status |
 |----|--------------|-------|------|-----------|--------|
-| M1-B1 | **Shared foundations**: `Money`, `Ids`, `Clock`, base entity, `CurrentActor`, `ErrorCode`/`BusinessException` + global advice, `PageResponse`, correlation ID, `MeterFilter` allowlist, ArchUnit rules (`@PreAuthorize`, no `now()`) | — | §4.11–4.13, §5.1, §7.1, §12 | Error bodies match §5.1 for MVC, validation, and unexpected errors; ArchUnit rules fail on violations | todo |
+| M1-B1 | **Shared foundations**: `Money`, `Ids`, `Clock`, base entity, `CurrentActor`, `ErrorCode`/`BusinessException` + global advice, `PageResponse`, correlation ID, `MeterFilter` allowlist, ArchUnit rules (`@PreAuthorize`, no `now()`) | — | §4.11–4.13, §5.1, §5.3, §7.1, §12 | Error bodies match §5.1 for MVC, validation, and unexpected errors; ArchUnit rules fail on violations | todo |
 | M1-B2 | **identity — staff**: login, JWT (`NimbusJwtEncoder`/resource server), refresh rotation cookie, lockout, `SecurityFilterChain`, staff accounts and roles, deactivation revokes sessions, first-admin bootstrap command | FR-ADM-01 | §7, §7.1, §6.4 | Allowed/denied-role tests per endpoint; deactivated user loses access within 15 min | todo |
 | M1-B3 | **audit**: `audit_log` (partitioned), synchronous listener, append-only grants, search endpoint | FR-AUD-01/02 | §4.7 | Audit failure rolls back the change; `UPDATE/DELETE` on `audit_log` fails for role `app` | todo |
 | M1-B4 | **store**: settings, opening hours, delivery zones, reason lists, board thresholds | FR-ADM-02, FR-INS-14 | §4.1, §4.8 | Settings editable with `ETag`/`If-Match`; changes audited | todo |
@@ -87,7 +87,7 @@ Infra in M1: S3 media buckets + CloudFront; `jugueria-dev-media` and the `juguer
 
 | ID | Work package | Scope | Spec | Done when | Status |
 |----|--------------|-------|------|-----------|--------|
-| M1-F1 | **Core**: login, auth interceptor (single-flight refresh), role guards, error interceptor + `code` map, API types, `Money`/time utils, STOMP client, staff/admin shell, i18n setup | — | §5.1, §6.2–6.6 | Session restores on reload; expired token refreshes once; errors show localized messages | todo |
+| M1-F1 | **Core**: login, auth interceptor (single-flight refresh), role guards, error interceptor + `code` map, API types, `Money`/time utils, STOMP client, staff/admin shell, i18n setup, theme tokens with light/dark mode, Tabler icons, PrimeNG 21 setup on Angular 22 (scoped `overrides`) | — | §5.1, §6.2–6.7 | Session restores on reload; expired token refreshes once; errors show localized messages; PrimeNG 21 builds, renders with SSR, and passes component smoke tests on Angular 22 (if not, stop and ask the owner) | todo |
 | M1-F2 | **Admin catalog**: categories, products, modifiers, allergens, stations, images, availability | FR-CAT-01, 05–07 | §6.2 | ADMIN creates a product with modifier groups end to end | todo |
 | M1-F3 | **Admin store & staff**: settings, opening hours, zones, reason lists, tables, staff accounts | FR-ADM-01/02, FR-INS-09/14 | §6.2 | Each setting round-trips; `412` on concurrent edits handled | todo |
 | M1-F4 | **Staff availability ("86")** screen | FR-CAT-03 | §6.3 | Toggle reflects on another open screen in ≤ 5 s | todo |

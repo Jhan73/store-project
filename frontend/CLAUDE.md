@@ -8,7 +8,28 @@ Angular app with hybrid SSR. Repo-wide rules are in the root `CLAUDE.md`; design
 
 Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vitest · Node 24 LTS (`.nvmrc`) · SCSS.
 
-**Open decision:** the UI component library and styling approach are not chosen yet. Do not add one (Angular Material, CDK, Tailwind, …) and do not build a design system; ask the owner first.
+## UI and theming (tech-spec §6.7)
+
+**Component library:** **PrimeNG 21** (`primeng` pinned to the exact `21.1.x` community release — never a `-lts` version, which is commercial), `@primeuix/themes` 2.x, and `@angular/cdk` 22. All MIT; no license key. No other component library.
+- PrimeNG 21 declares Angular 21 peers. It is installed on Angular 22 through `overrides` in `package.json`, scoped to `primeng` only — never with a global `legacy-peer-deps`.
+- This combination is not supported by the vendor. If a PrimeNG component misbehaves, check first whether it is an Angular 22 incompatibility, and report it to the owner instead of patching around it: the fallback is migrating to PrimeNG 22 (tech-spec §6.7).
+- **Do not upgrade to PrimeNG 22** without the owner's approval: it uses a different license (PrimeUI, key required).
+- Styled mode with one custom preset (`definePreset`). The preset and the app's semantic tokens share one palette; do not restyle PrimeNG components with ad-hoc CSS.
+- PrimeNG's `darkModeSelector` is the same `<html>` class used for the app's dark mode, so both switch together.
+
+**Icons:** Tabler, through `@tabler/icons-angular` (official, MIT). Import each icon individually (tree-shaking); no icon fonts, no other icon sets. Decorative icons are `aria-hidden="true"`; icon-only buttons need an i18n `aria-label`.
+
+**Light and dark mode:**
+- Both modes are supported everywhere. Default follows `prefers-color-scheme`; the user's choice is stored in `localStorage` and applied as a class on `<html>`.
+- The class is applied by an inline script in `index.html` before first paint, so SSR pages never flash the wrong theme.
+- Every screen meets WCAG AA contrast in **both** modes.
+
+### Styling
+
+- Use CSS variables for all theme tokens (colors, radius, shadows, spacing).
+- Prefer semantic tokens (`--background`, `--foreground`, `--primary`, etc.).
+- Avoid hardcoded colors.
+- Tokens are defined once, in the global theme stylesheet, with a light and a dark value each. Components only consume `var(--token)`; they never define colors of their own.
 
 Pending (tech-spec §3): angular-eslint, removing leftover Karma/Jasmine packages from `package.json`, replacing the `**` prerender route, `withEventReplay()` → `withIncrementalHydration()`, and `openapi-typescript` with the `api:generate` script (§6.5).
 

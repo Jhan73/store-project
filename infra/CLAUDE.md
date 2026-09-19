@@ -18,7 +18,7 @@ Never manage ECS Express services or their ALB in Terraform — two tools owning
 infra/
 ├── modules/          shared modules
 └── envs/
-    ├── shared/       VPC, ECR, Route 53, OIDC provider, SES domain identity, jugueria-dev-media, jugueria-dev permission set
+    ├── shared/       VPC, ECR, Route 53 zone jugueria.jhanantezana.com (NS-delegated from the parent zone), OIDC provider, SES domain identity, jugueria-dev-media, jugueria-dev permission set
     ├── test/
     └── prod/
 ```
