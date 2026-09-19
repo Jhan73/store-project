@@ -93,7 +93,7 @@ flowchart LR
 - Prefer the platform: `Intl` for formatting, `crypto.randomUUID()` for idempotency keys, `java.time` for dates, Spring's `RestClient` for HTTP.
 - Backend versions come from BOMs (Spring Boot parent, `spring-modulith-bom`). Unmanaged libraries declare their version once in `<properties>`. No version ranges, `SNAPSHOT`, or milestone versions on `develop`/`main`.
 - Frontend: `package-lock.json` is committed and CI installs with `npm ci`, never `npm install`.
-- Licenses: MIT, Apache-2.0, BSD, ISC only, enforced by `actions/dependency-review-action` (`allow-licenses`). GPL/AGPL are rejected.
+- Licenses: **direct dependencies** MIT, Apache-2.0, BSD, or ISC (checked at approval). **Transitive dependencies** may also use other permissive licenses common in the npm ecosystem: 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense, Python-2.0, CC-BY-4.0 (data files). `actions/dependency-review-action` enforces the union of both lists (`allow-licenses`), since it cannot tell direct from transitive. GPL/AGPL are rejected.
 - **No license exceptions are in force.** PrimeNG 22+ (PrimeUI license) would need one, recorded here with its conditions, before it is adopted (§6.7).
 - Updates arrive through Dependabot, one major version at a time. PrimeNG majors are ignored (§6.7).
 - Already rejected — do not propose again without new arguments: jjwt (§7.1), MapStruct (§4.13), H2 (§11.1), Redis or any broker client (§13 D4/D5), NgRx or any global store (§6.2), runtime OpenAPI client generators (§6.5), `uuid`/`lodash`/`moment` (platform APIs cover them).
@@ -872,13 +872,13 @@ flowchart LR
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
 | `ci.yml` | Every PR to `develop` or `main` | `changes` (path filter) → `common` (always) + `backend` / `frontend` / `infra` (only if their paths changed) → `ci-ok` (gate) |
-| `_ci-backend.yml` (reusable) | Called by `ci.yml` when `backend/**` or `db/**` changed | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check; dependency review |
+| `_ci-backend.yml` (reusable) | Called by `ci.yml` when `backend/**` or `db/**` changed | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check |
 | `_ci-frontend.yml` (reusable) | Called by `ci.yml` when `frontend/**` or `backend/api/openapi.json` changed (API type drift check, §6.5) | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
 | `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
 | `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
 | `cd-prod.yml` | Push to `main` | resolve images (reuse digests of `HEAD^2` if trees match, else build/scan/push the hotfix's changed apps) → keep apps whose digest differs from `prod` → approval → start `prod` if it is off → deploy them to `prod` → smoke → tag + release |
 
-The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint).
+The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint), and dependency review (vulnerabilities of high severity or above, license allowlist from §3).
 
 #### Path filters and required checks
 

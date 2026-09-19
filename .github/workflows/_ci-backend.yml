@@ -1,0 +1,41 @@
+name: CI backend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      # Temporary: integration tests move to Testcontainers.
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: jugueria
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5438:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-backend
+      - name: Build and test
+        run: ./mvnw -B -ntp verify
