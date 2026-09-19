@@ -1,9 +1,3 @@
-# Ephemeral + write-only arguments keep the master password out of the Terraform state.
-ephemeral "random_password" "master" {
-  length  = 32
-  special = false
-}
-
 resource "aws_db_subnet_group" "main" {
   name       = local.name
   subnet_ids = data.aws_subnets.private.ids
@@ -29,10 +23,10 @@ resource "aws_db_instance" "main" {
   storage_type      = "gp3"
   storage_encrypted = true
 
-  db_name             = "jugueria"
-  username            = "jugueria_admin"
-  password_wo         = ephemeral.random_password.master.result
-  password_wo_version = var.master_password_version
+  db_name  = "jugueria"
+  username = "jugueria_admin"
+  # RDS keeps and rotates the master password in Secrets Manager; Terraform never sees it.
+  manage_master_user_password = true
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
   parameter_group_name   = aws_db_parameter_group.main.name

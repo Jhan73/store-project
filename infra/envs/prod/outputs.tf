@@ -17,3 +17,7 @@ output "task_execution_role_arn" {
 output "backend_task_role_arn" {
   value = module.environment.backend_task_role_arn
 }
+
+output "database_master_secret_arn" {
+  value = module.environment.database_master_secret_arn
+}

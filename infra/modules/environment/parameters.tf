@@ -1,12 +1,5 @@
-# Application credentials (app and migrator roles) are created out of band: a managed
-# secret would be refreshed into the Terraform state, which lives in a shared bucket.
-resource "aws_ssm_parameter" "db_master_password" {
-  name             = "${local.ssm_prefix}/db/master-password"
-  type             = "SecureString"
-  value_wo         = ephemeral.random_password.master.result
-  value_wo_version = var.master_password_version
-}
-
+# Secret values (application database credentials, JWT keys) are created out of band:
+# a managed secret would be refreshed into the Terraform state, which lives in a shared bucket.
 resource "aws_ssm_parameter" "db_url" {
   name  = "${local.ssm_prefix}/db/url"
   type  = "String"

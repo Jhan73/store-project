@@ -38,13 +38,21 @@ resource "aws_iam_role_policy_attachment" "ci_plan_read_only" {
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
-# The state bucket is shared with another project: plans may only read this project's keys.
+# Plans may read only this project's state (the bucket is shared) and never a secret value.
 data "aws_iam_policy_document" "ci_plan_state_scope" {
   statement {
     sid           = "DenyObjectsOutsideJugueriaState"
     effect        = "Deny"
     actions       = ["s3:GetObject", "s3:GetObjectVersion"]
     not_resources = ["${local.state_bucket_arn}/jugueria/*"]
+  }
+
+  # ReadOnlyAccess includes ssm:Get*, and the aws/ssm key lets any account principal decrypt via SSM.
+  statement {
+    sid       = "DenySecretValues"
+    effect    = "Deny"
+    actions   = ["kms:Decrypt", "secretsmanager:GetSecretValue"]
+    resources = ["*"]
   }
 
   statement {

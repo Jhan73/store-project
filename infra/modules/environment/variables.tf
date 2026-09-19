@@ -14,9 +14,3 @@ variable "backup_retention_days" {
 variable "deletion_protection" {
   type = bool
 }
-
-variable "master_password_version" {
-  description = "Increment to rotate the RDS master password."
-  type        = number
-  default     = 1
-}
