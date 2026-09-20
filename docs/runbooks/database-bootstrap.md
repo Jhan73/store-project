@@ -1,47 +1,98 @@
 # Bootstrap the database roles of an environment
 
-After the first `terraform apply` of an environment, its RDS instance has only the master user, which the applications never use. This runbook creates the two roles the backend needs — `migrator` (DDL, used by Flyway) and `app` (DML, used by the application) — and stores their credentials in SSM, out of band, so no secret ever reaches the Terraform state.
+## What this does
 
-Run it **once per environment**, after the first apply and before the first deploy. It takes about 15 minutes.
+A freshly applied environment has an RDS instance with exactly one user: the master, which RDS generates and rotates in Secrets Manager. The applications never use it. This runbook creates the two roles they do use and publishes their credentials where ECS can inject them.
+
+You end up with:
+
+| Created | Where | Used by |
+|---------|-------|---------|
+| Role `migrator` | PostgreSQL | Flyway, at backend startup — owns all DDL |
+| Role `app` | PostgreSQL | The application — DML only, cannot create or drop anything |
+| Default privileges | PostgreSQL | Grant `app` its DML rights on every table `migrator` creates later |
+| Four parameters under `/jugueria/<env>/db/` | SSM Parameter Store | The ECS task execution role, which injects them as environment variables |
+
+Run it **once per environment**, after the first `terraform apply` and before the first deploy. Both environments take about 30 minutes together.
+
+Until it runs, the environment cannot be deployed: the backend starts, Flyway tries to connect as `migrator`, and the task dies on startup.
+
+## Why the two roles are separate
+
+`app` has no `UPDATE` or `DELETE` on the append-only tables of the design — `audit.audit_log`, `inventory.stock_movement`, `ordering.order_status_history`, `instore.in_store_payment`, `instore.cash_movement`. Those revocations live in the migrations that create each table, not here, because the tables do not exist yet.
+
+That split is what makes the audit trail a guarantee rather than a convention. An application running with DDL rights can rewrite its own history, and no code review catches the day it does.
 
 ## Why it is not Terraform
 
-The state file lives in a bucket shared with another project. A secret managed by Terraform is read back into the state on every refresh, even behind `ignore_changes`, so the credentials are created here instead. Terraform owns only `/jugueria/<env>/db/url` and `/jugueria/<env>/power/mode`.
+The state file lives in an S3 bucket shared with another project. A secret managed by Terraform is read back into the state on every refresh, even behind `ignore_changes`. So Terraform owns only the two non-secret parameters — `/jugueria/<env>/db/url` and `/jugueria/<env>/power/mode` — and the credentials are created here, out of band.
 
-## Prerequisites
+## Before you start
 
-| Requirement | Check |
-|-------------|-------|
-| Admin SSO session | `aws sts get-caller-identity --profile jugueria-admin` |
-| Session Manager plugin | `session-manager-plugin --version` ([install](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)) |
-| Docker running | `docker version` — used to run `psql` without installing PostgreSQL locally |
-| The environment is applied | `terraform -chdir=infra/envs/<env> plan` reports no changes |
+### Prerequisites
 
-All commands are PowerShell 7 and assume:
+| Requirement | How to check | Expected |
+|-------------|--------------|----------|
+| Admin SSO session | `aws sts get-caller-identity --profile jugueria-admin` | An ARN, not an error |
+| Session Manager plugin | `session-manager-plugin --version` | A version number ([install](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)) |
+| Docker running | `docker version` | A server version — `psql` runs in a container, nothing is installed |
+| Environment applied | `terraform -chdir=infra/envs/<env> plan` | `No changes` |
+
+The SSO session lasts one hour. If any command fails with `ExpiredToken`, run `aws sso login --profile jugueria-admin` and continue from where you were — nothing needs to be redone.
+
+> If `~/.aws/credentials` still contains a stale `[jugueria-admin]` section, the CLI prefers it over the SSO profile and every call fails with `ExpiredToken`. Either delete that section, or point the CLI at an empty file for this session: `$env:AWS_SHARED_CREDENTIALS_FILE = "$env:TEMP\empty-aws-credentials"`.
+
+### Two terminals, and which is which
+
+This is the part that goes wrong. The tunnel is a foreground process that never returns, so it needs a terminal of its own, and everything else needs a *single* terminal that stays alive from start to finish.
+
+| | Purpose | Rule |
+|---|---------|------|
+| **Terminal A** | Holds the tunnel | Opens it and does nothing else. You will not type in it again until you close the tunnel |
+| **Terminal B** | Everything else | One session, start to finish. Every block below marked `Terminal B` runs here |
+
+**Never open a third terminal.** `$Master`, `$AppPassword`, `$MigratorPassword`, and the `New-Password` function live only in Terminal B's memory. They are never written to disk — that is deliberate. Open a new terminal and they are gone, and if you have already created the roles, their passwords are gone with them.
+
+Set these once in **Terminal B**, and again in **Terminal A** before opening the tunnel:
 
 ```powershell
 $env:AWS_PROFILE = "jugueria-admin"
 $EnvName = "test"      # or "prod"
 ```
 
+### Before opening any tunnel: make sure no old one survives
+
+`Ctrl+C` does not reliably terminate `session-manager-plugin.exe`. A surviving process keeps port 15432 bound, so the next tunnel starts, prints its session id, and then silently never opens the port. The symptom is confusing: Systems Manager reports the instance `Online`, but `pg_isready` gets no response.
+
+Run this in **Terminal B** before opening a tunnel, and again before each later one. It is safe when nothing is listening:
+
+```powershell
+Get-NetTCPConnection -LocalPort 15432 -State Listen -ErrorAction SilentlyContinue |
+  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+Kill by PID, as above — never a blanket `taskkill` by image name.
+
 ## Quick path
 
-1. Open a tunnel to the private RDS instance through a temporary bastion.
-2. Read the RDS master password from Secrets Manager.
-3. Generate the `app` and `migrator` passwords.
-4. Create the roles and their default privileges.
-5. Store the four credentials in SSM.
-6. Verify the roles and the default privileges.
-7. Repeat for the other environment on the same bastion.
-8. Destroy the bastion.
+1. Create the bastion — `Terminal B`
+2. Open the tunnel — `Terminal A`
+3. Probe the tunnel — `Terminal B`
+4. Read the RDS master password — `Terminal B`
+5. Generate the role passwords — `Terminal B`
+6. Create the roles — `Terminal B`
+7. Store the credentials in SSM — `Terminal B`
+8. Verify — `Terminal B`
+9. Repeat for the other environment, same bastion
+10. Destroy the bastion — `Terminal B`
 
-## 1. Open a tunnel
+## 1. Create the bastion — `Terminal B`
 
 RDS lives in private subnets with no route to the internet and `publicly_accessible = false`, so there is no path from a laptop. A throwaway EC2 instance in a public subnet bridges it: Session Manager reaches the instance outbound over 443, and the instance forwards TCP 5432 to RDS.
 
-The instance reuses the environment's existing `backend` security group, which the database already accepts. **No security group, subnet, or Terraform change is needed.** Nothing is ever exposed to the internet: the bastion opens no inbound port, has no key pair, and is terminated at the end. A `t4g.nano` alive for 15 minutes costs well under one cent.
+The instance reuses the environment's existing `backend` security group, which the database already accepts, so **no security group, subnet, or Terraform change is needed**. Nothing is exposed: the bastion opens no inbound port and has no key pair.
 
-Create the instance profile — IAM only, no cost:
+Create the instance profile — IAM only, free:
 
 ```powershell
 $Trust = '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
@@ -54,7 +105,7 @@ aws iam add-role-to-instance-profile --instance-profile-name jugueria-bootstrap-
 Remove-Item trust.json
 ```
 
-Launch it:
+Launch the instance:
 
 ```powershell
 $Subnet = aws ec2 describe-subnets --filters "Name=tag:Tier,Values=public" --query "Subnets[0].SubnetId" --output text
@@ -67,46 +118,87 @@ $Bastion = aws ec2 run-instances `
   --iam-instance-profile Name=jugueria-bootstrap-bastion `
   --tag-specifications "ResourceType=instance,Tags=[{Key=Name,Value=jugueria-bootstrap-bastion}]" `
   --query "Instances[0].InstanceId" --output text
+
+$Bastion
 ```
 
-Wait until Systems Manager sees it — this takes two to three minutes after the instance reaches `running`:
+Write down that instance id. Terminal A needs it, and `$Bastion` does not exist there.
+
+Wait for Systems Manager to register it — up to three minutes after the instance reaches `running`:
 
 ```powershell
 aws ssm describe-instance-information --filters "Key=InstanceIds,Values=$Bastion" --query "InstanceInformationList[0].PingStatus" --output text
 ```
 
-When it prints `Online`, open the tunnel. **Leave this terminal open** and run the remaining steps in a second one:
+Repeat until it prints `Online`. Also collect the database endpoint, which Terminal A needs:
 
 ```powershell
-$DbHost = aws rds describe-db-instances --db-instance-identifier "jugueria-$EnvName" --query "DBInstances[0].Endpoint.Address" --output text
-
-aws ssm start-session --target $Bastion `
-  --document-name AWS-StartPortForwardingSessionToRemoteHost `
-  --parameters "host=$DbHost,portNumber=5432,localPortNumber=15432"
+aws rds describe-db-instances --db-instance-identifier "jugueria-$EnvName" --query "DBInstances[0].Endpoint.Address" --output text
 ```
 
-## 2. Read the master password
+## 2. Open the tunnel — `Terminal A`
 
-RDS generates and rotates it in Secrets Manager. It is used only here and never leaves this session.
+Open a second terminal. Paste the instance id and endpoint from step 1 as literals — Terminal A has none of Terminal B's variables:
+
+```powershell
+$env:AWS_PROFILE = "jugueria-admin"
+
+aws ssm start-session --target i-xxxxxxxxxxxxxxxxx `
+  --document-name AWS-StartPortForwardingSessionToRemoteHost `
+  --parameters "host=jugueria-test.xxxxxxxx.us-east-1.rds.amazonaws.com,portNumber=5432,localPortNumber=15432"
+```
+
+It must print **both** lines:
+
+```
+Port 15432 opened for sessionId ...
+Waiting for connections...
+```
+
+If it stops after `Starting session with SessionId`, the port is still held by an earlier tunnel. Go back to "make sure no old one survives", then try again.
+
+**Leave this terminal alone from here on.** Everything below is Terminal B.
+
+## 3. Probe the tunnel — `Terminal B`
+
+One second, and it rules out the entire class of connectivity failures before any password is involved:
+
+```powershell
+docker run --rm postgres:18 pg_isready -h host.docker.internal -p 15432
+```
+
+Expected: `accepting connections`.
+
+Session Manager binds the forwarded port to `127.0.0.1`. Reaching it from a container works on Docker Desktop 29.6.1, but other versions may not resolve `host.docker.internal` to a loopback-only listener. If the probe fails, install the client locally (`scoop install postgresql`) and replace every `docker run … psql` below with a direct `psql -h localhost -p 15432 …`.
+
+Do not work around it by running `psql` on the bastion. That puts the new passwords on a host you are about to destroy, and in its shell history.
+
+## 4. Read the RDS master password — `Terminal B`
+
+Used only in this runbook, only in this session:
 
 ```powershell
 $SecretArn = aws rds describe-db-instances --db-instance-identifier "jugueria-$EnvName" --query "DBInstances[0].MasterUserSecret.SecretArn" --output text
 $Master    = (aws secretsmanager get-secret-value --secret-id $SecretArn --query SecretString --output text | ConvertFrom-Json).password
 ```
 
-## 3. Generate the role passwords
+## 5. Generate the role passwords — `Terminal B`
 
-Alphanumeric on purpose: these values travel through JDBC URLs, shell variables, and container environments, where `@`, `/`, `:`, and `%` are parsing hazards. Thirty-two characters keep the entropy well above what the lost symbols cost.
+Alphanumeric on purpose: these values travel through JDBC URLs, shell variables, container environments, and single-quoted SQL literals, where `@`, `/`, `:`, `%`, and `'` are parsing hazards. Thirty-two characters more than cover the entropy the dropped symbols would have added.
 
 ```powershell
 function New-Password { -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ }) }
 $AppPassword      = New-Password
 $MigratorPassword = New-Password
+
+"EnvName=$EnvName | MasterSet=$([bool]$Master) | AppLen=$($AppPassword.Length) | MigratorLen=$($MigratorPassword.Length)"
 ```
 
-## 4. Create the roles
+That last line is a guard against the most common mistake — being in the wrong terminal. It must print the environment you intend, `MasterSet=True`, and two lengths of `32`. Anything else means you are not where you think you are. Stop and fix it before running step 6.
 
-`migrator` owns every object it creates; `app` only reads and writes rows. The default privileges are declared **without `IN SCHEMA`**, so they apply to every schema `migrator` creates later — that is what lets each module's first migration create its own schema without a second visit to this runbook.
+## 6. Create the roles — `Terminal B`
+
+`migrator` owns every object it creates; `app` only reads and writes rows. The default privileges are declared **without `IN SCHEMA`**, so they apply to every schema `migrator` creates later — that is what lets each module's first migration create its own schema without another visit to this runbook.
 
 Schema `USAGE` is not covered by default privileges, so every migration that creates a schema must also grant it. That is deliberate: it keeps the grant next to the schema it protects.
 
@@ -130,32 +222,26 @@ $Sql | docker run --rm -i -e PGPASSWORD=$Master -e PGSSLMODE=require postgres:18
   psql -h host.docker.internal -p 15432 -U jugueria_admin -d jugueria -v ON_ERROR_STOP=1
 ```
 
-`PGSSLMODE=require` is mandatory: the parameter group sets `rds.force_ssl=1`, so the server rejects plaintext connections. Use `require` rather than `verify-full` — the tunnel presents the certificate under `host.docker.internal`, which will never match the RDS hostname.
+Expected: `CREATE ROLE` twice, `GRANT ROLE`, `REVOKE`, `GRANT` twice, `ALTER DEFAULT PRIVILEGES` twice. No errors.
 
-Before running anything that needs a password, probe the tunnel — it costs a second and rules out the whole class of connectivity failures:
+`PGSSLMODE=require` is mandatory — the parameter group sets `rds.force_ssl=1` and the server rejects plaintext connections. Use `require`, not `verify-full`: the tunnel presents the certificate under `host.docker.internal`, which will never match the RDS hostname.
 
-```powershell
-docker run --rm postgres:18 pg_isready -h host.docker.internal -p 15432
-```
+### If it fails with `role "migrator" already exists`
 
-Expected: `accepting connections`. Session Manager binds the forwarded port to `127.0.0.1`; reaching it from a container worked on Docker Desktop 29.6.1, but on other versions `host.docker.internal` may not resolve to a loopback-only listener. If the probe fails, install the client locally (`scoop install postgresql`) and replace each `docker run … psql` with a direct `psql -h localhost -p 15432 …`. Do not work around it by running `psql` on the bastion: that would put the new passwords on a host you are about to throw away, and in its shell history.
+A previous run got this far and stopped before step 7, leaving roles whose passwords nobody holds — they were never written anywhere. `ON_ERROR_STOP=1` aborted before changing anything, so nothing is damaged.
 
-**Run every step from step 2 onward in the same terminal.** `$Master`, `$AppPassword`, `$MigratorPassword`, and `New-Password` live in that session only, and step 5 needs them. The tunnel occupies a terminal of its own.
-
-### If the roles already exist
-
-A run interrupted between step 4 and step 5 leaves the roles created with passwords nobody holds — they were never written anywhere. Do not drop the roles. Replace the two `CREATE ROLE` lines with `ALTER ROLE`, keep the rest of the script unchanged, and run it again: every remaining statement is idempotent.
+Do not drop the roles. Replace the two `CREATE ROLE` lines with `ALTER ROLE` and run the block again; every other statement is idempotent:
 
 ```sql
 ALTER ROLE migrator LOGIN PASSWORD '$MigratorPassword';
 ALTER ROLE app      LOGIN PASSWORD '$AppPassword';
 ```
 
-Append-only tables (`audit.audit_log`, `inventory.stock_movement`, `ordering.order_status_history`, `instore.in_store_payment`, `instore.cash_movement`) revoke `UPDATE` and `DELETE` from `app` in their own migrations, not here — the tables do not exist yet.
+A `NOTICE` saying `jugueria_admin has already been granted membership in role migrator` is expected on a re-run and is not an error.
 
-## 5. Store the credentials in SSM
+## 7. Store the credentials in SSM — `Terminal B`
 
-The task execution role reads `/jugueria/<env>/*` and decrypts through SSM only, so these four parameters are all the backend needs.
+The task execution role reads `/jugueria/<env>/*` and decrypts through SSM only, so these four parameters are all the backend needs:
 
 ```powershell
 aws ssm put-parameter --name "/jugueria/$EnvName/db/app/username"      --type String       --value "app"              --overwrite
@@ -174,16 +260,18 @@ They map to the backend environment variables one to one:
 | `/jugueria/<env>/db/migrator/username` | `DB_MIGRATOR_USERNAME` | Flyway |
 | `/jugueria/<env>/db/migrator/password` | `DB_MIGRATOR_PASSWORD` | Flyway |
 
-## 6. Verify
+## 8. Verify — `Terminal B`
 
-Confirm each role can log in and that `app` cannot create objects:
+`app` must log in and must not be able to create anything:
 
 ```powershell
 "SELECT current_user; CREATE SCHEMA smoke_test;" | docker run --rm -i -e PGPASSWORD=$AppPassword -e PGSSLMODE=require postgres:18 `
   psql -h host.docker.internal -p 15432 -U app -d jugueria
 ```
 
-Expected: `current_user` is `app`, then `ERROR: permission denied for database jugueria`. An error here is the pass condition — if the schema is created instead, `app` has more rights than it should and the grants above did not apply.
+Expected: `current_user` is `app`, then `ERROR: permission denied for database jugueria`. **The error is the pass condition.** If the schema is created instead, `app` has more rights than it should.
+
+`migrator` must log in:
 
 ```powershell
 "SELECT current_user;" | docker run --rm -i -e PGPASSWORD=$MigratorPassword -e PGSSLMODE=require postgres:18 `
@@ -192,20 +280,35 @@ Expected: `current_user` is `app`, then `ERROR: permission denied for database j
 
 Expected: `migrator`.
 
-Then confirm the default privileges landed. This is the check worth caring about: without these rows, Flyway creates tables that the application cannot read, and nothing fails until the first deploy.
+The default privileges must exist. This is the check worth caring about — without these rows Flyway creates tables the application cannot read, and nothing fails until the first deploy, far from the cause:
 
 ```powershell
 "SELECT defaclobjtype, defaclacl FROM pg_default_acl;" | docker run --rm -i -e PGPASSWORD=$Master -e PGSSLMODE=require postgres:18 `
   psql -h host.docker.internal -p 15432 -U jugueria_admin -d jugueria
 ```
 
-Expected: two rows, `r` for tables granting `app=arwd/migrator`, and `S` for sequences granting `app=rU/migrator`.
+Expected: two rows — `r` (tables) granting `app=arwd/migrator`, and `S` (sequences) granting `app=rU/migrator`.
 
-## 7. The second environment
+And the parameters must be in SSM with the right types:
 
-Reuse the same bastion instead of launching another one. Only two things change.
+```powershell
+aws ssm get-parameters-by-path --path "/jugueria/$EnvName" --recursive --query "sort_by(Parameters,&Name)[].{name:Name,type:Type}" --output table
+```
 
-**Point it at the other environment's security group.** The database accepts only its own environment's `backend` group:
+Expected: six rows, with `db/app/password` and `db/migrator/password` as `SecureString`.
+
+## 9. The second environment
+
+Reuse the same bastion. Three things change, in this order.
+
+**Close the tunnel and confirm the process is gone.** In Terminal A press `Ctrl+C`, then in Terminal B:
+
+```powershell
+Get-NetTCPConnection -LocalPort 15432 -State Listen -ErrorAction SilentlyContinue |
+  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+
+**Move the bastion to the other environment's security group.** Each database accepts only its own environment's `backend` group:
 
 ```powershell
 $EnvName = "prod"
@@ -213,18 +316,25 @@ $Sg = aws ec2 describe-security-groups --filters "Name=group-name,Values=jugueri
 aws ec2 modify-instance-attribute --instance-id $Bastion --groups $Sg
 ```
 
-**Kill the first tunnel before opening the second.** `Ctrl+C` does not always terminate `session-manager-plugin.exe`. A surviving process keeps port 15432 bound, the new session starts but never prints `Waiting for connections`, and `pg_isready` reports no response even though Systems Manager shows the instance `Online`. Check and kill by PID — never a blanket `taskkill` by image name:
+**Reopen the tunnel with the other endpoint**, then repeat steps 3 to 8 in the same Terminal B. Start at step 4: `$Master` is the *other* instance's password, and a stale value fails authentication.
+
+If you ever doubt which database you are connected to, ask the server rather than the tunnel:
 
 ```powershell
-Get-NetTCPConnection -LocalPort 15432 -State Listen -ErrorAction SilentlyContinue |
-  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+"SELECT inet_server_addr();" | docker run --rm -i -e PGPASSWORD=$Master -e PGSSLMODE=require postgres:18 `
+  psql -h host.docker.internal -p 15432 -U jugueria_admin -d jugueria
 ```
 
-Then reopen the tunnel with the other endpoint and repeat steps 2 to 6. Start step 2 by re-reading `$Master`: it is the other instance's password, and a stale value fails authentication.
+Compare it with the instance's private address:
 
-## 8. Destroy the bastion
+```powershell
+aws ec2 describe-network-interfaces --filters "Name=description,Values=RDSNetworkInterface" `
+  --query "NetworkInterfaces[?contains(Groups[].GroupName|join(',',@),'jugueria-$EnvName-database')].PrivateIpAddress" --output text
+```
 
-Close the tunnel terminal with `Ctrl+C`, then:
+## 10. Destroy the bastion — `Terminal B`
+
+Close the tunnel in Terminal A with `Ctrl+C` first, then:
 
 ```powershell
 aws ec2 terminate-instances --instance-ids $Bastion
@@ -234,33 +344,60 @@ aws iam detach-role-policy --role-name jugueria-bootstrap-bastion --policy-arn a
 aws iam delete-role --role-name jugueria-bootstrap-bastion
 ```
 
-Confirm nothing is left running:
+Confirm nothing survives:
 
 ```powershell
-aws ec2 describe-instances --filters "Name=tag:Name,Values=jugueria-bootstrap-bastion" "Name=instance-state-name,Values=running" --query "Reservations[].Instances[].InstanceId" --output text
+aws ec2 describe-instances --filters "Name=tag:Name,Values=jugueria-bootstrap-bastion" "Name=instance-state-name,Values=running,pending" --query "Reservations[].Instances[].InstanceId" --output text
+aws iam get-role --role-name jugueria-bootstrap-bastion
+Get-NetTCPConnection -LocalPort 15432 -State Listen -ErrorAction SilentlyContinue
 ```
 
-Expected: empty.
+Expected: empty, `NoSuchEntity`, empty.
+
+Then close Terminal B. The passwords die with it, which is the point — from here on they exist only in SSM.
 
 ## Checklist
 
 Per environment:
 
-- [ ] Both roles log in over SSL
-- [ ] `app` cannot create schemas
+- [ ] `app` logs in over SSL and cannot create schemas
+- [ ] `migrator` logs in over SSL
 - [ ] `pg_default_acl` has the `r` and `S` rows granting to `app`
-- [ ] Six SSM parameters exist under `/jugueria/<env>/`, with the two passwords as `SecureString`
+- [ ] Six parameters under `/jugueria/<env>/`, the two passwords as `SecureString`
 
-Once:
+Once, at the end:
 
-- [ ] Passwords are not in any shell history file, note, or commit
-- [ ] The bastion instance is terminated and its IAM role deleted
-- [ ] No `session-manager-plugin.exe` is still holding port 15432
-- [ ] The PowerShell session holding the passwords is closed
+- [ ] Bastion instance terminated
+- [ ] Instance profile and IAM role deleted
+- [ ] No `session-manager-plugin.exe` holding port 15432
+- [ ] Terminal B closed
+- [ ] No password in a file, a note, a commit, or a shell history
+
+## Cost
+
+us-east-1 on-demand rates at the time of writing, for the whole runbook covering both environments — roughly 30 minutes of bastion uptime.
+
+| Item | Rate | Both environments |
+|------|------|-------------------|
+| `t4g.nano` instance | USD 0.0042 / hour | ~USD 0.002 |
+| Public IPv4 address | USD 0.005 / hour | ~USD 0.003 |
+| 8 GB gp3 root volume | USD 0.08 / GB-month | ~USD 0.001 |
+| IAM role and instance profile | free | — |
+| Session Manager and its plugin | free | — |
+| SSM Standard parameters | free | — |
+| `SecureString` encryption with the `aws/ssm` managed key | USD 0.03 / 10,000 requests | negligible |
+| Secrets Manager reads | USD 0.05 / 10,000 requests | negligible |
+| **Total** | | **under USD 0.01** |
+
+**Recurring cost added: none.** Every resource this runbook creates is destroyed in step 10.
+
+Not caused by this runbook, but worth knowing while you are here: each environment's RDS managed master password is a Secrets Manager secret at USD 0.40 per month, so USD 0.80 per month for `test` and `prod` together. That is the price of never having the master password in Terraform state, a GitHub secret, or a developer's machine.
+
+Rejected alternatives and what they would have cost, in case anyone reconsiders: a permanent bastion at roughly USD 3 per month, or Systems Manager VPC interface endpoints at roughly USD 21 per month. For a procedure that runs twice in the lifetime of the project, neither earns its keep.
 
 ## If you need to rotate later
 
-Repeat steps 1 to 3, then `ALTER ROLE app PASSWORD '<new>'`, update SSM, and redeploy the environment so the tasks pick up the new value. Rotating `migrator` only affects the next deploy, since Flyway connects at startup.
+Steps 1 to 5, then `ALTER ROLE app PASSWORD '<new>'`, update SSM, and redeploy the environment so the tasks pick up the new value. Rotating `migrator` only takes effect on the next deploy, since Flyway connects at startup.
 
 ## Next step
 
