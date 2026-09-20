@@ -7,9 +7,11 @@ resource "aws_db_parameter_group" "main" {
   name   = local.name
   family = "postgres18"
 
+  # Static parameter: RDS only applies it on reboot, so the default "immediate" drifts on every plan.
   parameter {
-    name  = "rds.force_ssl"
-    value = "1"
+    name         = "rds.force_ssl"
+    value        = "1"
+    apply_method = "pending-reboot"
   }
 }
 
