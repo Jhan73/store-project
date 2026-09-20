@@ -115,3 +115,100 @@ resource "aws_iam_role_policy_attachment" "infra_apply_admin" {
   role       = each.value.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+
+locals {
+  ecr_repository_arns = [for repo in aws_ecr_repository.app : repo.arn]
+}
+
+data "aws_iam_policy_document" "deploy" {
+  for_each = toset(["test", "prod"])
+
+  statement {
+    sid       = "EcrLogin"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "EcrPushAndRead"
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:DescribeImages",
+    ]
+    resources = local.ecr_repository_arns
+  }
+
+  # Express Mode owns the load balancer and its certificate, so it is driven only through these APIs.
+  statement {
+    sid = "EcsExpressDeploy"
+    actions = [
+      "ecs:CreateCluster",
+      "ecs:RegisterTaskDefinition",
+      "ecs:CreateExpressGatewayService",
+      "ecs:UpdateExpressGatewayService",
+      "ecs:DescribeExpressGatewayService",
+      "ecs:DescribeClusters",
+      "ecs:DescribeServices",
+      "ecs:UpdateService",
+      "ecs:ListServiceDeployments",
+      "ecs:DescribeServiceDeployments",
+      "ecs:TagResource",
+      "ecs:UntagResource",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "PassEnvironmentRoles"
+    actions   = ["iam:PassRole"]
+    resources = ["arn:aws:iam::${var.account_id}:role/jugueria-${each.key}-*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com", "ecs.amazonaws.com"]
+    }
+  }
+
+  # Power modes: the deploy starts a stopped environment before rolling out (tech-spec 8.1).
+  statement {
+    sid       = "ReadPowerMode"
+    actions   = ["ssm:GetParameter", "ssm:PutParameter"]
+    resources = ["arn:aws:ssm:${var.region}:${var.account_id}:parameter/jugueria/${each.key}/power/*"]
+  }
+
+  statement {
+    sid       = "StartEnvironmentDatabase"
+    actions   = ["rds:StartDBInstance", "rds:StopDBInstance"]
+    resources = ["arn:aws:rds:${var.region}:${var.account_id}:db:jugueria-${each.key}"]
+  }
+
+  statement {
+    sid       = "ReadDatabaseState"
+    actions   = ["rds:DescribeDBInstances"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "deploy" {
+  for_each = toset(["test", "prod"])
+
+  name                 = "jugueria-deploy-${each.key}"
+  description          = "Build, push and deploy from the protected ${each.key} GitHub environment"
+  assume_role_policy   = data.aws_iam_policy_document.github_environment_assume[each.key].json
+  max_session_duration = 3600
+}
+
+resource "aws_iam_role_policy" "deploy" {
+  for_each = aws_iam_role.deploy
+
+  name   = "deploy"
+  role   = each.value.id
+  policy = data.aws_iam_policy_document.deploy[each.key].json
+}

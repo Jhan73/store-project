@@ -47,3 +47,25 @@ resource "aws_iam_role" "backend_task" {
   name               = "${local.name}-backend-task"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
 }
+
+data "aws_iam_policy_document" "ecs_infrastructure_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs.amazonaws.com"]
+    }
+  }
+}
+
+# Express Mode provisions the load balancer, certificate, scaling and alarms under this role.
+resource "aws_iam_role" "ecs_infrastructure" {
+  name               = "${local.name}-ecs-infrastructure"
+  assume_role_policy = data.aws_iam_policy_document.ecs_infrastructure_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_infrastructure" {
+  role       = aws_iam_role.ecs_infrastructure.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSInfrastructureRoleforExpressGatewayServices"
+}

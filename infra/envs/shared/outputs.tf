@@ -37,3 +37,7 @@ output "email_identity" {
 output "dev_media_bucket" {
   value = aws_s3_bucket.dev_media.bucket
 }
+
+output "deploy_role_arns" {
+  value = { for env, role in aws_iam_role.deploy : env => role.arn }
+}
