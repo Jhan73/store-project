@@ -706,7 +706,8 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 | Region | `us-east-1` | `us-east-1` |
 | ECS Express service `backend` | 0.5 vCPU / 1 GB, 1 task | 0.5 vCPU / 1 GB, min 1 · max 4 tasks (CPU 60% target) |
 | ECS Express service `frontend` | 0.25 vCPU / 0.5 GB, 1 task | 0.25 vCPU / 0.5 GB, min 1 · max 3 tasks |
-| ALB | **One ALB shared by both environments** (D15): Express Mode host-based rules (`test.<domain>` / `<domain>`), HTTPS via ACM, HTTP→HTTPS redirect | same ALB |
+| ALB | **One ALB shared by both environments** (D15), created and owned by Express Mode: its own generated hostname, its own ACM certificate, host-header listener rules. Not addressable by our domain — see D18 | same ALB |
+| CloudFront (D18) | `test.jugueria.<domain>` → Express endpoint, our ACM certificate | `jugueria.<domain>` → Express endpoint, same certificate |
 | RDS PostgreSQL 18 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection |
 | Power mode (below) | `on-demand` | `on-demand` until launch · `store-hours` during the M2 pilot · `always-on` from launch |
 | S3 + CloudFront (media) | `jugueria-test-media` | `jugueria-prod-media` (versioning on) |
@@ -1034,12 +1035,13 @@ Runbooks in `docs/runbooks/`: rollback, database restore, payment webhook replay
 | D15 | Load balancer and VPC | One VPC and one Express Mode ALB shared by `test` and `prod`; isolation by security groups, task roles, SSM paths, and separate RDS/S3 | One ALB and VPC per environment (~USD 25/month more: second ALB + its public IPv4 addresses, for isolation this project does not need) |
 | D16 | Email transport | Email port: SMTP adapter (Mailpit, local) + SES API v2 adapter with the ECS task role (`test`/`prod`) | SES SMTP interface everywhere (needs long-lived IAM user credentials stored as a secret); a personal Gmail account (personal credential in the system, sender shown as a personal address, lower deliverability) |
 | D17 | Environment uptime | Power modes: `test` on-demand; `prod` on-demand until launch, store-hours during the pilot, always-on from launch (§8.1) | Both environments always on (~USD 118/month, ~90% of the budget, for ~4 h/day of use); `test` on a fixed daily schedule (still ~16 h/day billed) |
+| D18 | Custom domain in front of Express Mode | CloudFront distribution per environment: viewers get `jugueria.<domain>` / `test.jugueria.<domain>` with our ACM certificate, the origin is the Express endpoint. Express Mode exposes no domain or certificate input — verified against the `create-express-gateway-service` and `update-express-gateway-service` API models, whose only network field is `networkConfiguration.{securityGroups,subnets}`, and against the five Express operations, none of which touch DNS or TLS | Standard ECS services with our own ALB and certificate (full control, but gives up D15 and adds the load balancer, listeners, target groups and health checks to Terraform); serving `test` on the generated Express hostname (no certificate cost, but an unmemorable host and no single place to add WAF or caching later) |
 
 ## 14. Risks and open questions
 
 | # | Risk / question | Mitigation / owner |
 |---|-----------------|--------------------|
-| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing is documented for up to 25 services in one VPC (D15) but must be verified with two environments | Validate in M0 walking skeleton; fall back to standard ECS with the same pipeline if blocked |
+| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing up to 25 services per VPC is documented and still has to be seen with two environments. **Resolved at M0-06:** Express Mode accepts no domain or certificate, which is why D18 exists. **Still open:** Express deprovisions unused ALBs, so the generated endpoint a CloudFront origin points at may not be stable — power modes scale tasks to zero without deleting the service, which should keep it, but that is read from the documentation, not observed | Validate in M0 walking skeleton; assert the endpoint is unchanged after an autostop cycle; fall back to standard ECS with the same pipeline if blocked |
 | R2 | Single-AZ RDS: an AZ outage means restore time (within NFR-07's 2 h RTO) | Accepted for Release 1; Multi-AZ when revenue justifies (~2× RDS cost) |
 | R3 | Mercado Pago availability/fees depend on the country (PRD Q1) | Confirm with Q1 by M1, before payments work starts in M3; the port allows switching the adapter |
 | R4 | Electronic invoicing may be legally required (PRD Q2) | If yes, add an `invoicing` module and provider before M3 |
