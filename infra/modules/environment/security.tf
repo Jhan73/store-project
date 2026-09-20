@@ -24,7 +24,7 @@ resource "aws_vpc_security_group_egress_rule" "frontend_all" {
 
 resource "aws_security_group" "database" {
   name        = "${local.name}-database"
-  description = "PostgreSQL, reachable only from this environment's backend tasks"
+  description = "PostgreSQL, reachable only from the backend tasks of this environment"
   vpc_id      = data.aws_vpc.main.id
 }
 
