@@ -4,4 +4,5 @@ module "environment" {
   environment           = "test"
   backup_retention_days = 1
   deletion_protection   = false
+  log_retention_days    = 14
 }

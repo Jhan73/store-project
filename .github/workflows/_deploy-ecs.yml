@@ -1,0 +1,220 @@
+name: Deploy to ECS
+
+on:
+  workflow_call:
+    inputs:
+      app:
+        description: Application to deploy, backend or frontend.
+        required: true
+        type: string
+      environment:
+        description: GitHub environment to deploy to, test or prod.
+        required: true
+        type: string
+      image:
+        description: Image reference pinned by digest.
+        required: true
+        type: string
+    outputs:
+      endpoint:
+        description: Base URL the Express service answers on.
+        value: ${{ jobs.deploy.outputs.endpoint }}
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  deploy:
+    name: deploy ${{ inputs.app }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      endpoint: ${{ steps.endpoint.outputs.url }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Service configuration
+        id: config
+        env:
+          APP: ${{ inputs.app }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          BACKEND_SECURITY_GROUP_ID: ${{ vars.BACKEND_SECURITY_GROUP_ID }}
+          FRONTEND_SECURITY_GROUP_ID: ${{ vars.FRONTEND_SECURITY_GROUP_ID }}
+          SUBNET_IDS: ${{ vars.SUBNET_IDS }}
+        run: |
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          parameters="arn:aws:ssm:$AWS_REGION:$account:parameter/jugueria/$ENVIRONMENT"
+          cluster="jugueria-$ENVIRONMENT"
+          service="jugueria-$ENVIRONMENT-$APP"
+
+          case "$APP" in
+            backend)
+              port=8080
+              health_check_path=/actuator/health/readiness
+              cpu=512
+              memory=1024
+              if [[ "$ENVIRONMENT" == prod ]]; then max_tasks=4; else max_tasks=1; fi
+              security_groups="$BACKEND_SECURITY_GROUP_ID"
+              task_role_arn="arn:aws:iam::$account:role/jugueria-$ENVIRONMENT-backend-task"
+              environment_variables="$(jq -nc --arg value "$ENVIRONMENT" \
+                '[{name: "SPRING_PROFILES_ACTIVE", value: $value}]')"
+              secrets="$(jq -nc --arg p "$parameters" '[
+                {name: "DB_URL",               valueFrom: "\($p)/db/url"},
+                {name: "DB_USERNAME",          valueFrom: "\($p)/db/app/username"},
+                {name: "DB_PASSWORD",          valueFrom: "\($p)/db/app/password"},
+                {name: "DB_MIGRATOR_USERNAME", valueFrom: "\($p)/db/migrator/username"},
+                {name: "DB_MIGRATOR_PASSWORD", valueFrom: "\($p)/db/migrator/password"}
+              ]')"
+              ;;
+            frontend)
+              port=4000
+              health_check_path=/healthz
+              cpu=256
+              memory=512
+              if [[ "$ENVIRONMENT" == prod ]]; then max_tasks=3; else max_tasks=1; fi
+              security_groups="$FRONTEND_SECURITY_GROUP_ID"
+              task_role_arn=""
+              environment_variables="$(jq -nc --arg value "$port" \
+                '[{name: "PORT", value: $value}]')"
+              secrets="[]"
+              ;;
+            *)
+              echo "::error::Unknown app '$APP'."
+              exit 1
+              ;;
+          esac
+
+          for required in "$SUBNET_IDS" "$security_groups"; do
+            if [[ -z "$required" ]]; then
+              echo "::error::The $ENVIRONMENT environment is missing a network variable for $APP."
+              exit 1
+            fi
+          done
+
+          {
+            echo "account=$account"
+            echo "cluster=$cluster"
+            echo "service=$service"
+            echo "service_arn=arn:aws:ecs:$AWS_REGION:$account:service/$cluster/$service"
+            echo "port=$port"
+            echo "health_check_path=$health_check_path"
+            echo "cpu=$cpu"
+            echo "memory=$memory"
+            echo "max_tasks=$max_tasks"
+            echo "security_groups=$security_groups"
+            echo "task_role_arn=$task_role_arn"
+            echo "environment_variables=$environment_variables"
+            echo "secrets=$secrets"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Cluster exists
+        env:
+          CLUSTER: ${{ steps.config.outputs.cluster }}
+        run: aws ecs create-cluster --cluster-name "$CLUSTER" --query 'cluster.status' --output text
+
+      # Angular rejects a Host that is not allowed, and the host exists only once the service
+      # does, so the first ever deploy of the frontend has no host to allow yet.
+      - name: Host the service already answers on
+        id: known
+        env:
+          SERVICE_ARN: ${{ steps.config.outputs.service_arn }}
+        run: |
+          endpoint="$(aws ecs describe-express-gateway-service --service-arn "$SERVICE_ARN" \
+            --query 'service.activeConfigurations[0].ingressPaths[0].endpoint' \
+            --output text 2>/dev/null || true)"
+          if [[ "$endpoint" == "None" ]]; then
+            endpoint=""
+          fi
+          echo "endpoint=$endpoint" >> "$GITHUB_OUTPUT"
+
+      - name: Allowed hosts
+        id: hosts
+        env:
+          APP: ${{ inputs.app }}
+          ENDPOINT: ${{ steps.known.outputs.endpoint }}
+          VARIABLES: ${{ steps.config.outputs.environment_variables }}
+        run: |
+          variables="$VARIABLES"
+          if [[ "$APP" == frontend && -n "$ENDPOINT" ]]; then
+            host="${ENDPOINT#*://}"
+            variables="$(jq -nc --argjson current "$variables" --arg host "${host%%/*}" \
+              '$current + [{name: "NG_ALLOWED_HOSTS", value: $host}]')"
+          fi
+          echo "variables=$variables" >> "$GITHUB_OUTPUT"
+
+      # The action detects whether the service exists, then polls the service deployment
+      # until it is SUCCESSFUL and fails the step on FAILED or STOPPED.
+      - name: Deploy
+        id: deploy
+        uses: aws-actions/amazon-ecs-deploy-express-service@7c48a2de16441d528a3c89829831968dc1455010 # v1.2.2
+        with:
+          cluster: ${{ steps.config.outputs.cluster }}
+          service-name: ${{ steps.config.outputs.service }}
+          image: ${{ inputs.image }}
+          execution-role-arn: arn:aws:iam::${{ steps.config.outputs.account }}:role/jugueria-${{ inputs.environment }}-task-execution
+          infrastructure-role-arn: arn:aws:iam::${{ steps.config.outputs.account }}:role/jugueria-${{ inputs.environment }}-ecs-infrastructure
+          task-role-arn: ${{ steps.config.outputs.task_role_arn }}
+          container-port: ${{ steps.config.outputs.port }}
+          health-check-path: ${{ steps.config.outputs.health_check_path }}
+          cpu: ${{ steps.config.outputs.cpu }}
+          memory: ${{ steps.config.outputs.memory }}
+          subnets: ${{ vars.SUBNET_IDS }}
+          security-groups: ${{ steps.config.outputs.security_groups }}
+          environment-variables: ${{ steps.hosts.outputs.variables }}
+          secrets: ${{ steps.config.outputs.secrets }}
+          log-group: /ecs/jugueria-${{ inputs.environment }}-${{ inputs.app }}
+          log-stream-prefix: ecs
+          min-task-count: 1
+          max-task-count: ${{ steps.config.outputs.max_tasks }}
+          auto-scaling-metric: AVERAGE_CPU
+          auto-scaling-target-value: 60
+
+      - name: Allowed hosts for the host just created
+        id: new_hosts
+        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == ''
+        env:
+          ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
+          VARIABLES: ${{ steps.config.outputs.environment_variables }}
+        run: |
+          host="${ENDPOINT#*://}"
+          jq -nc --argjson current "$VARIABLES" --arg host "${host%%/*}" \
+            '$current + [{name: "NG_ALLOWED_HOSTS", value: $host}]' \
+            | sed 's/^/variables=/' >> "$GITHUB_OUTPUT"
+
+      - name: Allow the new host
+        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == ''
+        uses: aws-actions/amazon-ecs-deploy-express-service@7c48a2de16441d528a3c89829831968dc1455010 # v1.2.2
+        with:
+          cluster: ${{ steps.config.outputs.cluster }}
+          service-name: ${{ steps.config.outputs.service }}
+          image: ${{ inputs.image }}
+          execution-role-arn: arn:aws:iam::${{ steps.config.outputs.account }}:role/jugueria-${{ inputs.environment }}-task-execution
+          infrastructure-role-arn: arn:aws:iam::${{ steps.config.outputs.account }}:role/jugueria-${{ inputs.environment }}-ecs-infrastructure
+          environment-variables: ${{ steps.new_hosts.outputs.variables }}
+
+      - name: Endpoint
+        id: endpoint
+        env:
+          ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
+          APP: ${{ inputs.app }}
+        run: |
+          if [[ -z "$ENDPOINT" ]]; then
+            echo "::error::The deploy returned no endpoint."
+            exit 1
+          fi
+          url="${ENDPOINT%/}"
+          if [[ "$url" != http://* && "$url" != https://* ]]; then
+            url="https://$url"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "- $APP: $url" >> "$GITHUB_STEP_SUMMARY"
