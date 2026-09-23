@@ -29,6 +29,8 @@
 	<properties>
 		<java.version>25</java.version>
 		<spring-modulith.version>2.1.1</spring-modulith.version>
+		<!-- Ahead of the Spring Boot BOM: 11.0.24 carries an authentication bypass. -->
+		<tomcat.version>11.0.26</tomcat.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
