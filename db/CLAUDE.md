@@ -13,6 +13,7 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 ## Schema ownership
 
 - One PostgreSQL schema per backend module: `identity`, `store`, `catalog`, `inventory`, `ordering`, `instore`, `preparation`, `payments`, `reporting`, `audit`, `shared`, plus `modulith` (event publication registry).
+- Plus `flyway`, which holds only `flyway_schema_history`. It is not a module and no module may read it. `migrator` has `CREATE ON DATABASE` but no rights on `public`, so Flyway cannot use its default location; `spring.flyway.schemas=flyway` makes it create and own this one. That also makes `flyway` the default schema for migrations, so every migration must qualify its objects with its own schema — which the one-schema-per-module rule already requires.
 - A module reads and writes **only its own schema**.
 - **No cross-schema foreign keys.** Reference other modules' rows by ID only. This is what keeps modules extractable.
 

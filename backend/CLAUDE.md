@@ -229,7 +229,7 @@ Full model and status table in tech-spec §5.1. Rules:
 | Level | Tooling |
 |-------|---------|
 | Unit | JUnit + AssertJ + Mockito — domain rules, state machines, pricing, estimate formula |
-| Module integration | `@ApplicationModuleTest` + Testcontainers PostgreSQL (`@ServiceConnection`); assert events with `PublishedEvents` |
+| Module integration | `@ApplicationModuleTest` + the shared Testcontainers PostgreSQL fixture; assert events with `PublishedEvents` |
 | Architecture | `ApplicationModules.of(<MainClass>.class).verify()` |
 | Adapters | WireMock for Mercado Pago (approved/rejected only, partial refunds, timeouts, bad signature) |
 | Races | Module integration tests with parallel threads for each race listed in tech-spec §11 |
@@ -241,7 +241,8 @@ Conventions (tech-spec §11.1):
 - `*Test` = no Spring context (Surefire, `mvn test`). `*IT` = any Spring context or container (Failsafe, `mvn verify`). Same package as the code under test.
 - Method names describe behavior (`rejectsVoidWhenLineIsReady()`); body as given / when / then.
 - Test data from per-module builders (`OrderFixtures.aPaidOrder()`), never shared across modules.
-- One `postgres:18` Testcontainers container per JVM via `@ServiceConnection` in a shared `@TestConfiguration`.
+- One `postgres:18` Testcontainers container per JVM, in a shared `@TestConfiguration`. It runs `db/least-privilege-roles.sql`, which mirrors the bootstrap runbook, and the context connects as `app` with Flyway as `migrator` through a `JdbcConnectionDetails` bean — not `@ServiceConnection`, which would connect as the database owner. Connecting as the owner hides every missing grant until a deploy: that is how `permission denied for schema public` reached `test`. Keep the script in step with the runbook.
+- Flyway user and password go in `@SpringBootTest(properties = …)`. A `src/test/resources/application.properties` would shadow the main file whole, silently dropping every setting in it.
 - **Integration tests are never `@Transactional`**: the rollback prevents the commit, so after-commit listeners never run and the test passes for the wrong reason. Clean up the tables you wrote instead.
 - Async events: Modulith `Scenario` (`stimulate(…).andWaitForEventOfType(…)`), never `Thread.sleep`.
 - Mock only external-system ports and other modules' APIs, with `@MockitoBean` (`@MockBean` no longer exists in Boot 4). Never mock repositories.
