@@ -1,0 +1,64 @@
+name: Environment control
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to start or stop.
+        required: true
+        type: choice
+        options: [test, prod]
+      state:
+        description: What to do.
+        required: true
+        type: choice
+        options: [start, stop]
+      hours:
+        description: Hours to keep it running before env-autostop turns it off. Ignored on stop.
+        required: false
+        default: "4"
+        type: string
+
+permissions:
+  contents: read
+
+# Shares the deploy group, so starting or stopping cannot overlap a deploy or a rollback.
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  control:
+    name: ${{ inputs.state }} ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The power role, not the environment's deploy role: this workflow never touches images, and
+      # asking the prod reviewer to approve turning a machine on adds nothing.
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_POWER_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: ./.github/actions/power
+        with:
+          environment: ${{ inputs.environment }}
+          state: ${{ inputs.state }}
+          hours: ${{ inputs.hours }}
+
+      - name: Summary
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          STATE: ${{ inputs.state }}
+        run: |
+          echo "- $ENVIRONMENT $STATE" >> "$GITHUB_STEP_SUMMARY"

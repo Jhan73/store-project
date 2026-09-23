@@ -41,3 +41,7 @@ output "dev_media_bucket" {
 output "deploy_role_arns" {
   value = { for env, role in aws_iam_role.deploy : env => role.arn }
 }
+
+output "power_role_arn" {
+  value = aws_iam_role.power.arn
+}
