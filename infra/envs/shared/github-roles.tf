@@ -1,6 +1,8 @@
 locals {
-  github_repository = "Jhan73/store-project"
-  state_bucket_arn  = "arn:aws:s3:::acme-tfstate-dev-463470979604-us-east-1"
+  # GitHub issues immutable subject claims here: the owner and repository names carry their
+  # numeric IDs, so renaming or recreating the repository cannot reuse this trust.
+  github_subject_prefix = "repo:Jhan73@126625958/store-project@1376786417"
+  state_bucket_arn      = "arn:aws:s3:::acme-tfstate-dev-463470979604-us-east-1"
 }
 
 data "aws_iam_policy_document" "github_pull_request_assume" {
@@ -21,7 +23,7 @@ data "aws_iam_policy_document" "github_pull_request_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${local.github_repository}:pull_request"]
+      values   = ["${local.github_subject_prefix}:pull_request"]
     }
   }
 }
@@ -95,7 +97,7 @@ data "aws_iam_policy_document" "github_environment_assume" {
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${local.github_repository}:environment:${each.key}"]
+      values   = ["${local.github_subject_prefix}:environment:${each.key}"]
     }
   }
 }
