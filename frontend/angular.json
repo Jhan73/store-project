@@ -33,7 +33,10 @@
             "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
-            }
+            },
+            "polyfills": [
+              "@angular/localize/init"
+            ]
           },
           "configurations": {
             "production": {
@@ -86,11 +89,26 @@
             "buildTarget": ":build:testing",
             "runner": "vitest"
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/app/**/*.html"
+            ]
+          }
         }
+      },
+      "i18n": {
+        "sourceLocale": "es"
       }
     }
   },
   "cli": {
-    "analytics": "c30a591a-520c-472a-9175-5d4ed1405244"
+    "analytics": "c30a591a-520c-472a-9175-5d4ed1405244",
+    "schematicCollections": [
+      "angular-eslint"
+    ]
   }
 }

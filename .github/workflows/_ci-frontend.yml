@@ -1,0 +1,38 @@
+name: CI frontend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-frontend
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npx ng test --watch=false
+      - name: Production build (SSR)
+        run: npm run build
+      - name: SSR server smoke test
+        env:
+          NG_ALLOWED_HOSTS: localhost
+          PORT: "4000"
+        run: |
+          node dist/frontend/server/server.mjs &
+          for _ in $(seq 1 20); do curl -fs localhost:4000/healthz >/dev/null && break; sleep 0.5; done
+          curl -fs localhost:4000/healthz
+          curl -fs localhost:4000/ | grep -q '<html lang="es"'
+      - name: Container image builds
+        run: docker build --tag frontend:ci .

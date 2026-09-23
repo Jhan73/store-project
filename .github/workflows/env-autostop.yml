@@ -1,0 +1,106 @@
+name: Environment autostop
+
+on:
+  schedule:
+    # Hourly. Scheduled runs use the default branch, which is what the power role trusts.
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  sweep:
+    name: sweep ${{ matrix.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Shares the deploy group, or a sweep could stop an environment in the middle of a deploy.
+    concurrency:
+      group: deploy-${{ matrix.environment }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [test, prod]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_POWER_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Is this environment past its stop time
+        id: verdict
+        env:
+          ENVIRONMENT: ${{ matrix.environment }}
+        run: |
+          mode="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/mode" \
+            --query 'Parameter.Value' --output text)"
+          echo "Mode: $mode"
+
+          case "$mode" in
+            always-on)
+              echo "::notice::$ENVIRONMENT is always-on."
+              echo "stop=false" >> "$GITHUB_OUTPUT"
+              exit 0
+              ;;
+            store-hours)
+              # Opening hours live in store_settings, which arrives with the M2 pilot. Failing is
+              # deliberate: a silent no-op here would read as "handled" and bill all night.
+              echo "::error::store-hours is not implemented yet; $ENVIRONMENT will not be swept."
+              exit 1
+              ;;
+            on-demand) ;;
+            *)
+              echo "::error::Unknown power mode '$mode' for $ENVIRONMENT."
+              exit 1
+              ;;
+          esac
+
+          stop_after="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/stop-after" \
+            --query 'Parameter.Value' --output text 2>/dev/null || true)"
+          echo "Stop after: ${stop_after:-unset}"
+
+          status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+            --query 'DBInstances[0].DBInstanceStatus' --output text)"
+          echo "Database status: $status"
+
+          # AWS restarts a stopped instance after 7 days, so an environment with no stop time set can
+          # still come back up on its own. Treat that as expired rather than as deliberate.
+          if [[ "$status" != "available" ]]; then
+            echo "stop=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "$stop_after" || "$stop_after" == "None" ]]; then
+            echo "::notice::$ENVIRONMENT is up with no stop time, so it is stopped now."
+            echo "stop=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "$(date -u -d "$stop_after" +%s)" -le "$(date -u +%s)" ]]; then
+            echo "stop=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$ENVIRONMENT runs until $stop_after."
+            echo "stop=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: ./.github/actions/power
+        if: steps.verdict.outputs.stop == 'true'
+        with:
+          environment: ${{ matrix.environment }}
+          state: stop
+
+      - name: Summary
+        env:
+          ENVIRONMENT: ${{ matrix.environment }}
+          STOPPED: ${{ steps.verdict.outputs.stop }}
+        run: |
+          echo "- $ENVIRONMENT stopped=$STOPPED" >> "$GITHUB_STEP_SUMMARY"

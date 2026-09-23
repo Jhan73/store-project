@@ -34,6 +34,64 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@primeuix/*"
         update-types: ["version-update:semver-major"]
+      # Types follow the Node 24 runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Angular pins the TypeScript range; update it only with `ng update`.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      # @angular/build declares the supported Vitest major.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
+      # Removed in M0-04.
+      - dependency-name: "karma*"
+      - dependency-name: "jasmine*"
+      - dependency-name: "@types/jasmine"
+
+  - package-ecosystem: docker
+    directory: /backend
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      # Runtime majors (Java, Node, PostgreSQL) are planned changes; odd Node and non-LTS Java are never used.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker
+    directory: /frontend
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: terraform
+    directories:
+      - /infra/envs/shared
+      - /infra/envs/test
+      - /infra/envs/prod
+    target-branch: develop
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "chore(deps)"
 
   - package-ecosystem: github-actions
     directory: /

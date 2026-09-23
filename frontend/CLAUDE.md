@@ -31,15 +31,16 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 - Avoid hardcoded colors.
 - Tokens are defined once, in the global theme stylesheet, with a light and a dark value each. Components only consume `var(--token)`; they never define colors of their own.
 
-Pending (tech-spec §3): angular-eslint, removing leftover Karma/Jasmine packages from `package.json`, replacing the `**` prerender route, `withEventReplay()` → `withIncrementalHydration()`, and `openapi-typescript` with the `api:generate` script (§6.5).
+Pending: `openapi-typescript` and the `api:generate` script (M1-F1, tech-spec §6.5) — its latest release declares a TypeScript 5 peer, and Angular 22 requires TypeScript 6.
 
 ## Commands
 
 ```bash
 npm start                                   # ng serve on http://localhost:4200
 npm run build                               # production SSR build → dist/frontend
-npm run serve:ssr:frontend                  # run the built SSR server
+NG_ALLOWED_HOSTS=localhost npm run serve:ssr:frontend   # run the built SSR server
 npm test                                    # Vitest via @angular/build:unit-test
+npm run lint                                # angular-eslint, including the i18n rule
 npx ng test --include src/app/app.spec.ts   # single spec file
 npx ng extract-i18n                         # extract UI text
 ```
@@ -78,6 +79,8 @@ Folders are named after business features, never after technical types (`compone
 | `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/staff/**`, `/display`, `/admin/**` | `Client` |
 
 SSR never renders authenticated content, so tokens never exist on the SSR server.
+
+**SSR host allowlist:** Angular rejects SSR requests whose `Host` is not allowed (SSRF protection, HTTP 400). The list comes **only** from the runtime variable `NG_ALLOWED_HOSTS` (comma-separated), set per ECS service — never from `security.allowedHosts` in `angular.json`, because the same image is promoted from `test` to `prod`. `/healthz` is handled by Express before Angular, so ALB health checks (which use the task IP as `Host`) pass.
 
 **Components and state**
 - Container/presentational: route components orchestrate; `shared/ui` components only receive `input()` and emit `output()`.

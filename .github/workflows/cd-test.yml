@@ -1,0 +1,239 @@
+name: CD test
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+# Deploys are serialised and never interrupted.
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      backend: ${{ steps.compare.outputs.backend }}
+      frontend: ${{ steps.compare.outputs.frontend }}
+      backend_image: ${{ steps.compare.outputs.backend_image }}
+      frontend_image: ${{ steps.compare.outputs.frontend_image }}
+      any: ${{ steps.compare.outputs.any }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Compared with the commit last deployed successfully, not with the previous commit,
+      # so a failed run is picked up by the next push instead of being skipped.
+      - name: Apps that differ from what test runs
+        id: compare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          any=false
+          for app in backend frontend; do
+            case "$app" in
+              backend)  paths=(backend db) ;;
+              frontend) paths=(frontend backend/api/openapi.json) ;;
+            esac
+
+            deployed=""
+            image=""
+            while read -r id ref; do
+              if [[ -z "$id" ]]; then
+                continue
+              fi
+              state="$(gh api "repos/$REPOSITORY/deployments/$id/statuses" \
+                --jq 'map(select(.state == "success")) | length')"
+              if [[ "$state" != "0" ]]; then
+                deployed="$ref"
+                image="$(gh api "repos/$REPOSITORY/deployments/$id" --jq '.payload.image // ""')"
+                break
+              fi
+            done < <(gh api "repos/$REPOSITORY/deployments?environment=test&task=deploy:$app&per_page=30" \
+              --jq '.[] | "\(.id) \(.sha)"')
+
+            if [[ -z "$deployed" ]] || ! git cat-file -e "$deployed^{commit}" 2>/dev/null; then
+              echo "::notice::No commit recorded as deployed for $app, treating it as changed."
+              changed=true
+            elif git diff --quiet "$deployed" "$SHA" -- "${paths[@]}"; then
+              changed=false
+            else
+              changed=true
+            fi
+
+            if [[ "$changed" == true ]]; then
+              any=true
+            fi
+            {
+              echo "$app=$changed"
+              echo "${app}_image=$image"
+            } >> "$GITHUB_OUTPUT"
+            echo "$app changed: $changed (deployed commit: ${deployed:-none})"
+          done
+          echo "any=$any" >> "$GITHUB_OUTPUT"
+
+  power-on:
+    name: power on
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: test
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # test is on-demand, so it is usually stopped, and its services scaled to zero, when a
+      # deploy starts.
+      - uses: ./.github/actions/power
+        with:
+          environment: test
+          state: start
+
+  build-backend:
+    name: build backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: backend
+      environment: test
+      image_tag: ${{ github.sha }}
+
+  build-frontend:
+    name: build frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: frontend
+      environment: test
+      image_tag: ${{ github.sha }}
+
+  deploy-backend:
+    name: deploy backend
+    needs: [changes, power-on, build-backend]
+    if: needs.changes.outputs.backend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: backend
+      environment: test
+      image: ${{ needs.build-backend.outputs.image }}
+
+  deploy-frontend:
+    name: deploy frontend
+    needs: [changes, power-on, build-frontend]
+    if: needs.changes.outputs.frontend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: frontend
+      environment: test
+      image: ${{ needs.build-frontend.outputs.image }}
+
+  smoke:
+    name: smoke
+    needs: [changes, deploy-backend, deploy-frontend]
+    if: always() && needs.changes.outputs.any == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: test
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: ./.github/actions/smoke
+        with:
+          environment: test
+
+  record:
+    name: record digests
+    needs: [changes, build-backend, build-frontend, smoke]
+    # Also runs when nothing was deployed: a release promotes whatever commit reaches main, and a
+    # docs-only commit with no record of its own could not be promoted at all.
+    if: always() && needs.changes.result == 'success' && (needs.smoke.result == 'success' || needs.changes.outputs.any != 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      # Every app is recorded, built or not, so a release PR can promote the verified image
+      # of a commit that did not rebuild that app.
+      - name: Record the digest running in test for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BACKEND_IMAGE: ${{ needs.build-backend.outputs.image || needs.changes.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ needs.build-frontend.outputs.image || needs.changes.outputs.frontend_image }}
+        run: |
+          for app in backend frontend; do
+            case "$app" in
+              backend)  image="$BACKEND_IMAGE" ;;
+              frontend) image="$FRONTEND_IMAGE" ;;
+            esac
+            if [[ -z "$image" ]]; then
+              echo "::error::No image known for $app, so the release cannot promote it."
+              exit 1
+            fi
+            # --field cannot express an empty array or a nested payload, so the body is JSON.
+            # The reference is pinned by digest, so a release promotes exactly this image without
+            # having to know the registry account.
+            id="$(jq -nc --arg ref "$SHA" --arg task "deploy:$app" --arg image "$image" \
+              --arg description "$app running in test" \
+              '{ref: $ref, environment: "test", task: $task, description: $description,
+                auto_merge: false, required_contexts: [],
+                payload: {image: $image, digest: ($image | split("@") | last)}}' \
+              | gh api "repos/$REPOSITORY/deployments" --method POST --input - --jq '.id')"
+            gh api "repos/$REPOSITORY/deployments/$id/statuses" --method POST \
+              --field state=success \
+              --field description="Verified by smoke tests" >/dev/null
+            echo "$app -> $image"
+          done

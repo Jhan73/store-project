@@ -1,0 +1,313 @@
+name: CD prod
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Deploys are serialised and never interrupted.
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  resolve:
+    name: resolve images
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      hotfix: ${{ steps.plan.outputs.hotfix }}
+      backend_image: ${{ steps.plan.outputs.backend_image }}
+      frontend_image: ${{ steps.plan.outputs.frontend_image }}
+      backend_build: ${{ steps.plan.outputs.backend_build }}
+      frontend_build: ${{ steps.plan.outputs.frontend_build }}
+      any: ${{ steps.plan.outputs.any }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # A release reuses the images verified on test; only a hotfix builds, and only what it changed.
+      - name: Images this release should run
+        id: plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          recorded() {
+            local environment="$1" task="$2" sha="$3" field="$4"
+            local query="repos/$REPOSITORY/deployments?environment=$environment&task=$task&per_page=30"
+            if [[ -n "$sha" ]]; then
+              query="$query&sha=$sha"
+            fi
+            while read -r id; do
+              if [[ -z "$id" ]]; then
+                continue
+              fi
+              local successes
+              successes="$(gh api "repos/$REPOSITORY/deployments/$id/statuses" \
+                --jq 'map(select(.state == "success")) | length')"
+              if [[ "$successes" != "0" ]]; then
+                gh api "repos/$REPOSITORY/deployments/$id" --jq "$field // \"\""
+                return 0
+              fi
+            done < <(gh api "$query" --jq '.[].id')
+            echo ""
+          }
+
+          merged=""
+          if git rev-parse -q --verify 'HEAD^2' >/dev/null; then
+            merged="$(git rev-parse 'HEAD^2')"
+          fi
+
+          # Identical trees mean main is exactly the develop commit that test verified.
+          hotfix=true
+          if [[ -n "$merged" ]] &&
+             [[ "$(git rev-parse 'HEAD^{tree}')" == "$(git rev-parse "$merged^{tree}")" ]]; then
+            hotfix=false
+          fi
+          echo "hotfix=$hotfix" >> "$GITHUB_OUTPUT"
+          echo "Merged develop commit: ${merged:-none}. Hotfix: $hotfix."
+
+          any=false
+          for app in backend frontend; do
+            image=""
+            build=false
+
+            if [[ "$hotfix" == false ]]; then
+              image="$(recorded test "deploy:$app" "$merged" .payload.image)"
+              if [[ -z "$image" ]]; then
+                echo "::error::No image recorded on test for $app at $merged, so it cannot be promoted."
+                exit 1
+              fi
+              any=true
+            else
+              case "$app" in
+                backend)  paths=(backend db) ;;
+                frontend) paths=(frontend backend/api/openapi.json) ;;
+              esac
+              running="$(recorded prod "deploy:$app" "" .sha)"
+              if [[ -z "$running" ]] || ! git cat-file -e "$running^{commit}" 2>/dev/null; then
+                echo "::notice::No commit recorded as running in prod for $app, so the hotfix builds it."
+                build=true
+              elif ! git diff --quiet "$running" "$SHA" -- "${paths[@]}"; then
+                build=true
+              fi
+              if [[ "$build" == true ]]; then
+                any=true
+              fi
+            fi
+
+            {
+              echo "${app}_image=$image"
+              echo "${app}_build=$build"
+            } >> "$GITHUB_OUTPUT"
+            echo "$app -> image: ${image:-build} (build: $build)"
+          done
+          echo "any=$any" >> "$GITHUB_OUTPUT"
+
+  # Only a hotfix builds. The job enters the prod environment, so its reviewer approves before
+  # anything is built or deployed.
+  build-backend:
+    name: build backend
+    needs: resolve
+    if: needs.resolve.outputs.backend_build == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: backend
+      environment: prod
+      image_tag: ${{ github.sha }}
+
+  build-frontend:
+    name: build frontend
+    needs: resolve
+    if: needs.resolve.outputs.frontend_build == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: frontend
+      environment: prod
+      image_tag: ${{ github.sha }}
+
+  power-on:
+    name: power on
+    needs: resolve
+    if: needs.resolve.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: ./.github/actions/power
+        with:
+          environment: prod
+          state: start
+
+  # The deploy skips an app whose digest prod already runs, so a release only rolls out what differs.
+  deploy-backend:
+    name: deploy backend
+    needs: [resolve, power-on, build-backend]
+    if: always() && needs.power-on.result == 'success' && (needs.resolve.outputs.backend_image != '' || needs.build-backend.result == 'success')
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: backend
+      environment: prod
+      image: ${{ needs.build-backend.outputs.image || needs.resolve.outputs.backend_image }}
+
+  deploy-frontend:
+    name: deploy frontend
+    needs: [resolve, power-on, build-frontend]
+    if: always() && needs.power-on.result == 'success' && (needs.resolve.outputs.frontend_image != '' || needs.build-frontend.result == 'success')
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: frontend
+      environment: prod
+      image: ${{ needs.build-frontend.outputs.image || needs.resolve.outputs.frontend_image }}
+
+  smoke:
+    name: smoke
+    needs: [resolve, deploy-backend, deploy-frontend]
+    if: always() && needs.resolve.outputs.any == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: ./.github/actions/smoke
+        with:
+          environment: prod
+
+  release:
+    name: tag and release
+    needs: [resolve, build-backend, build-frontend, deploy-backend, deploy-frontend, smoke]
+    if: always() && needs.smoke.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      deployments: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # Every production change is traceable: commit, run, image digest, approver.
+      - name: Tag and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          SHA: ${{ github.sha }}
+          HOTFIX: ${{ needs.resolve.outputs.hotfix }}
+          BACKEND_IMAGE: ${{ needs.build-backend.outputs.image || needs.resolve.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ needs.build-frontend.outputs.image || needs.resolve.outputs.frontend_image }}
+        run: |
+          day="$(date -u +%Y.%m.%d)"
+          number=1
+          while git rev-parse -q --verify "refs/tags/v$day-$number" >/dev/null; do
+            number=$((number + 1))
+          done
+          tag="v$day-$number"
+
+          approver="$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/approvals" \
+            --jq '[.[].user.login] | unique | join(", ")' 2>/dev/null || true)"
+          if [[ -z "$approver" ]]; then
+            approver="unknown"
+          fi
+
+          {
+            echo "Approved by: $approver"
+            echo ""
+            echo "Hotfix: $HOTFIX"
+            echo ""
+            echo "Images:"
+            for image in "$BACKEND_IMAGE" "$FRONTEND_IMAGE"; do
+              if [[ -n "$image" ]]; then
+                echo "- \`$image\`"
+              fi
+            done
+            echo ""
+            echo "---"
+            echo ""
+            gh api "repos/$REPOSITORY/releases/generate-notes" --method POST \
+              --field tag_name="$tag" --field target_commitish="$SHA" --jq '.body'
+          } > notes.md
+
+          gh release create "$tag" --target "$SHA" --title "$tag" --notes-file notes.md
+          echo "Released $tag" >> "$GITHUB_STEP_SUMMARY"
+
+      # Recorded so the next release knows what prod runs, and so a rollback has a history.
+      - name: Record what prod runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BACKEND_IMAGE: ${{ needs.build-backend.outputs.image || needs.resolve.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ needs.build-frontend.outputs.image || needs.resolve.outputs.frontend_image }}
+        run: |
+          for app in backend frontend; do
+            case "$app" in
+              backend)  image="$BACKEND_IMAGE" ;;
+              frontend) image="$FRONTEND_IMAGE" ;;
+            esac
+            if [[ -z "$image" ]]; then
+              echo "::notice::$app was not part of this release."
+              continue
+            fi
+            id="$(jq -nc --arg ref "$SHA" --arg task "deploy:$app" --arg image "$image" \
+              --arg description "$app running in prod" \
+              '{ref: $ref, environment: "prod", task: $task, description: $description,
+                auto_merge: false, required_contexts: [],
+                payload: {image: $image, digest: ($image | split("@") | last)}}' \
+              | gh api "repos/$REPOSITORY/deployments" --method POST --input - --jq '.id')"
+            gh api "repos/$REPOSITORY/deployments/$id/statuses" --method POST \
+              --field state=success \
+              --field description="Verified by smoke tests" >/dev/null
+            echo "$app -> $image"
+          done

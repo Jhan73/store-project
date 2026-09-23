@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (pending M0, tech-spec §3): Modulith starters + BOM, Flyway, `spring-boot-starter-security-oauth2-resource-server`, `java-uuid-generator` (UUID v7), ArchUnit, `maven-failsafe-plugin`, Actuator, Validation, Cache + Caffeine, springdoc-openapi, Bucket4j, `spring-boot-docker-compose`, Testcontainers, WireMock. Add them when the first feature needs them, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, `java-uuid-generator` (UUID v7), ArchUnit, Validation, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -33,11 +33,13 @@ Not yet in `pom.xml` (pending M0, tech-spec §3): Modulith starters + BOM, Flywa
 ./mvnw verify -Dit.test=ClassName -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false   # single integration test
 ```
 
-`*IT` classes run through the Maven Failsafe plugin, which is not in `pom.xml` yet (M0). Until it is added, `*IT` classes do not run at all.
+`*IT` classes run through the Maven Failsafe plugin and need Docker (Testcontainers). Without Docker, run `./mvnw verify -DskipITs`.
 
-Local run (tech-spec §8.5): PostgreSQL and Mailpit from `compose.yaml` (created in M0-03; until then, use your local PostgreSQL); product images go to the real bucket `jugueria-dev-media` using short-lived credentials — `aws sso login --profile jugueria-dev`, then start with `AWS_PROFILE=jugueria-dev`. Never put AWS access keys in `.env`.
+Local run (tech-spec §8.5): `./mvnw spring-boot:run` uses the `local` profile, and Spring Boot starts PostgreSQL and Mailpit from the root `compose.yaml` (Docker required; Mailpit UI at http://localhost:8025). Product images go to the real bucket `jugueria-dev-media` using short-lived credentials — `aws sso login --profile jugueria-dev`, then start with `AWS_PROFILE=jugueria-dev`. Never put AWS access keys in `.env`.
 
-Profiles: `application.properties` currently hardcodes `spring.profiles.active=dev`. The target (tech-spec §3) is no hardcoded profile: `SPRING_PROFILES_ACTIVE` is `local` for development and `test`/`prod` in each ECS service. Profile files hold only non-secret differences.
+Profiles: none is hardcoded. `local` for development (set by the Maven plugin for `spring-boot:run`), `test`/`prod` through `SPRING_PROFILES_ACTIVE` in each ECS service; tests run with no profile and get PostgreSQL from Testcontainers. `test`/`prod` read `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (role `app`) and `DB_MIGRATOR_USERNAME`, `DB_MIGRATOR_PASSWORD` (role `migrator`, used by Flyway). Profile files hold only non-secret differences.
+
+Security: until identity is built (M1-B2), `identity/internal/security` exposes only `/actuator/health/**` and denies every other request.
 
 Flyway migrations are **not** in this folder: they live in the root `db/migration/<module>/` and are packaged onto the classpath at build time. Schema and migration rules are in `db/CLAUDE.md`.
 
@@ -227,7 +229,7 @@ Full model and status table in tech-spec §5.1. Rules:
 | Level | Tooling |
 |-------|---------|
 | Unit | JUnit + AssertJ + Mockito — domain rules, state machines, pricing, estimate formula |
-| Module integration | `@ApplicationModuleTest` + Testcontainers PostgreSQL (`@ServiceConnection`); assert events with `PublishedEvents` |
+| Module integration | `@ApplicationModuleTest` + the shared Testcontainers PostgreSQL fixture; assert events with `PublishedEvents` |
 | Architecture | `ApplicationModules.of(<MainClass>.class).verify()` |
 | Adapters | WireMock for Mercado Pago (approved/rejected only, partial refunds, timeouts, bad signature) |
 | Races | Module integration tests with parallel threads for each race listed in tech-spec §11 |
@@ -239,7 +241,8 @@ Conventions (tech-spec §11.1):
 - `*Test` = no Spring context (Surefire, `mvn test`). `*IT` = any Spring context or container (Failsafe, `mvn verify`). Same package as the code under test.
 - Method names describe behavior (`rejectsVoidWhenLineIsReady()`); body as given / when / then.
 - Test data from per-module builders (`OrderFixtures.aPaidOrder()`), never shared across modules.
-- One `postgres:18` Testcontainers container per JVM via `@ServiceConnection` in a shared `@TestConfiguration`.
+- One `postgres:18` Testcontainers container per JVM, in a shared `@TestConfiguration`. It runs `db/least-privilege-roles.sql`, which mirrors the bootstrap runbook, and the context connects as `app` with Flyway as `migrator` through a `JdbcConnectionDetails` bean — not `@ServiceConnection`, which would connect as the database owner. Connecting as the owner hides every missing grant until a deploy: that is how `permission denied for schema public` reached `test`. Keep the script in step with the runbook.
+- Flyway user and password go in `@SpringBootTest(properties = …)`. A `src/test/resources/application.properties` would shadow the main file whole, silently dropping every setting in it.
 - **Integration tests are never `@Transactional`**: the rollback prevents the commit, so after-commit listeners never run and the test passes for the wrong reason. Clean up the tables you wrote instead.
 - Async events: Modulith `Scenario` (`stimulate(…).andWaitForEventOfType(…)`), never `Thread.sleep`.
 - Mock only external-system ports and other modules' APIs, with `@MockitoBean` (`@MockBean` no longer exists in Boot 4). Never mock repositories.

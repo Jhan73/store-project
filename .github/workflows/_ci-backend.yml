@@ -1,0 +1,26 @@
+name: CI backend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-backend
+      - name: Build and test
+        run: ./mvnw -B -ntp verify
+      - name: Container image builds
+        working-directory: .
+        run: docker build --file backend/Dockerfile --tag backend:ci .

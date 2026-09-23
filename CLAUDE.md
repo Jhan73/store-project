@@ -27,9 +27,9 @@ Each area has its own `CLAUDE.md` with local rules — read it before working th
 | `docs/` | PRD, tech-spec, runbooks | — |
 | `.github/` | Workflows, composite actions (planned, tech-spec §10) | — |
 | `e2e/` | Playwright tests (planned) | — |
-| `compose.yaml` | Local PostgreSQL + Mailpit (planned) | — |
+| `compose.yaml` | Local PostgreSQL 18 + Mailpit, started by Spring Boot's Docker Compose support | — |
 
-**Current state:** early scaffold. Most of the tech-spec (Spring Modulith, Flyway, `compose.yaml`, workflows, Terraform, `e2e/`) is not implemented yet; tech-spec §3 "Scaffold changes at M0" lists the pending setup. Never assume a file described in the spec exists — check first.
+**Current state:** early scaffold. CI and the backend and frontend skeletons exist; most of the tech-spec (business modules, CD workflows, Terraform, `e2e/`) is not implemented yet; tech-spec §3 "Scaffold changes at M0" lists the pending setup. Never assume a file described in the spec exists — check first.
 
 ## Deployment overview
 
@@ -59,6 +59,7 @@ Rules:
 - **Never squash `develop → main` or `main → develop`.** Squashing between long-lived branches rewrites their commits, so both branches diverge and every following release PR conflicts.
 - After every hotfix merged into `main`, open the `main → develop` back-merge PR immediately; otherwise the next release reverts the fix.
 - Both `develop` and `main` are protected: PR only, required check `ci-ok` green, no force-push, no deletion. `main` also requires the PR to come from `develop` or `hotfix/*` (checked in CI).
+- **`develop` is the default branch**, so PRs, Dependabot (config and security updates), and scheduled workflows use it.
 - **Build once, promote the digest.** Images are built on `develop` (tagged with the commit SHA) and verified on `test`. A push to `main` deploys the digests already verified for the merged `develop` commit (`HEAD^2`) when its tree is identical to `main`'s; it builds new images only when the trees differ (hotfix). `prod` never gets an image that was rebuilt from the same code.
 
 ## CI/CD in the monorepo
@@ -93,5 +94,5 @@ Full policy in tech-spec §3.
 - Prefer the platform: `Intl`, `crypto.randomUUID()`, `java.time`, `RestClient`.
 - Backend versions come from BOMs; unmanaged ones are declared once in `<properties>`. No version ranges, `SNAPSHOT`, or milestones on `develop`/`main`.
 - Frontend: `package-lock.json` is committed; CI uses `npm ci`.
-- Licenses: MIT, Apache-2.0, BSD, ISC only, with no exceptions. PrimeNG is used in its last MIT line (21); PrimeNG 22+ is not MIT, so never upgrade to it without owner approval (tech-spec §6.7).
+- Licenses: direct dependencies MIT, MIT-0, Apache-2.0, BSD, or ISC, with no exceptions; transitive ones may use the other permissive licenses listed in tech-spec §3. PrimeNG is used in its last MIT line (21); PrimeNG 22+ is not MIT, so never upgrade to it without owner approval (tech-spec §6.7).
 - Already rejected, do not propose again: jjwt, MapStruct, H2, Redis/broker clients, NgRx or any global store, runtime OpenAPI client generators, `uuid`, `lodash`, `moment`.

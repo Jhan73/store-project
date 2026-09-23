@@ -92,8 +92,9 @@ flowchart LR
 - **A new dependency requires the owner's explicit approval.** The proposal states the problem, why the platform (JDK, Spring Boot starters, Angular packages, Web APIs) is not enough, the alternatives considered, license, maintenance activity, and — for the frontend — bundle size impact.
 - Prefer the platform: `Intl` for formatting, `crypto.randomUUID()` for idempotency keys, `java.time` for dates, Spring's `RestClient` for HTTP.
 - Backend versions come from BOMs (Spring Boot parent, `spring-modulith-bom`). Unmanaged libraries declare their version once in `<properties>`. No version ranges, `SNAPSHOT`, or milestone versions on `develop`/`main`.
+- A BOM-managed version may be **overridden in `<properties>` only to take a security patch** the current BOM does not carry yet, and only while no GA release of that BOM line fixes it (a milestone does not count). Each override names the vulnerability it closes in a comment and is removed once the BOM catches up. In force: `tomcat.version` 11.0.26, because Spring Boot 4.1.1 pins 11.0.24 and that release carries an authentication bypass.
 - Frontend: `package-lock.json` is committed and CI installs with `npm ci`, never `npm install`.
-- Licenses: MIT, Apache-2.0, BSD, ISC only, enforced by `actions/dependency-review-action` (`allow-licenses`). GPL/AGPL are rejected.
+- Licenses: **direct dependencies** MIT, MIT-0, Apache-2.0, BSD, or ISC (checked at approval). MIT-0 is MIT without the attribution requirement, so it is listed alongside it rather than carried as an exception. **Transitive dependencies** may also use other permissive licenses common in the npm ecosystem: 0BSD, BlueOak-1.0.0, CC0-1.0, Unlicense, Python-2.0, CC-BY-4.0 (data files). `actions/dependency-review-action` enforces the union of both lists (`allow-licenses`), since it cannot tell direct from transitive. GPL/AGPL are rejected.
 - **No license exceptions are in force.** PrimeNG 22+ (PrimeUI license) would need one, recorded here with its conditions, before it is adopted (§6.7).
 - Updates arrive through Dependabot, one major version at a time. PrimeNG majors are ignored (§6.7).
 - Already rejected — do not propose again without new arguments: jjwt (§7.1), MapStruct (§4.13), H2 (§11.1), Redis or any broker client (§13 D4/D5), NgRx or any global store (§6.2), runtime OpenAPI client generators (§6.5), `uuid`/`lodash`/`moment` (platform APIs cover them).
@@ -555,7 +556,7 @@ Idempotency must live **inside the use-case transaction**, so it cannot be a ser
 
 ### 6.1 Rendering strategy (hybrid, per route)
 
-The scaffold prerenders `**`; that must change — the menu depends on live data.
+Unknown paths return 404 (no client route matches). The SSR server accepts only the hosts in the runtime variable `NG_ALLOWED_HOSTS`, set per environment (Angular's SSRF protection); `/healthz` is served by Express before Angular so ALB health checks pass.
 
 | Route area | Render mode | Reason |
 |------------|-------------|--------|
@@ -612,7 +613,7 @@ src/app/
 
 ### 6.5 API client, money, and time
 
-**API types.** TypeScript types are generated from `backend/api/openapi.json` with `openapi-typescript` into `src/app/core/api/schema.d.ts` (`npm run api:generate`), and the generated file is committed. Only types are generated, not runtime code, so the generator does not tie the app to a specific Angular version. Feature data-access services call `HttpClient` using those types; DTO types are never written by hand. The frontend CI job also runs when `backend/api/openapi.json` changes and fails if the regenerated file differs from the committed one.
+**API types.** TypeScript types are generated from `backend/api/openapi.json` with `openapi-typescript` into `src/app/core/api/schema.d.ts` (`npm run api:generate`), and the generated file is committed. Only types are generated, not runtime code, so the generator does not tie the app to a specific Angular version. Feature data-access services call `HttpClient` using those types; DTO types are never written by hand. The frontend CI job also runs when `backend/api/openapi.json` changes and fails if the regenerated file differs from the committed one. Compatibility note: `openapi-typescript` 7.x declares a TypeScript 5 peer while Angular 22 uses TypeScript 6; M1-F1 resolves it (a compatible release, or running the pinned generator through `npx` with its own TypeScript).
 
 **Money.** The frontend never computes an amount the customer pays: totals, fees, discounts, and bill splits come from the API. For previews (e.g. the cart subtotal before checkout), a `Money` utility in `core/` parses the `amount` string into integer minor units (`"12.50"` → `1250`) without `parseFloat`, adds integers, and formats with `Intl.NumberFormat` using the currency from the API.
 
@@ -706,7 +707,8 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 | Region | `us-east-1` | `us-east-1` |
 | ECS Express service `backend` | 0.5 vCPU / 1 GB, 1 task | 0.5 vCPU / 1 GB, min 1 · max 4 tasks (CPU 60% target) |
 | ECS Express service `frontend` | 0.25 vCPU / 0.5 GB, 1 task | 0.25 vCPU / 0.5 GB, min 1 · max 3 tasks |
-| ALB | **One ALB shared by both environments** (D15): Express Mode host-based rules (`test.<domain>` / `<domain>`), HTTPS via ACM, HTTP→HTTPS redirect | same ALB |
+| ALB | **One ALB shared by both environments** (D15), created and owned by Express Mode: its own generated hostname, its own ACM certificate, host-header listener rules. Not addressable by our domain — see D18 | same ALB |
+| CloudFront (D18) | `test.jugueria.<domain>` → Express endpoint, our ACM certificate | `jugueria.<domain>` → Express endpoint, same certificate |
 | RDS PostgreSQL 18 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection |
 | Power mode (below) | `on-demand` | `on-demand` until launch · `store-hours` during the M2 pilot · `always-on` from launch |
 | S3 + CloudFront (media) | `jugueria-test-media` | `jugueria-prod-media` (versioning on) |
@@ -764,15 +766,16 @@ Plus the shared ALB (D15) and its 2 public IPv4 addresses, billed while they exi
 | Before launch (M0–M4) | **~USD 51** | ~39% |
 | From launch | **~USD 93** | ~72% |
 
-**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`**, tracked with an AWS Budgets alert at 80%. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
+**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`** — the hard ceiling. The AWS Budgets alert is tighter, so drift is noticed early: **USD 70 before launch, USD 120 from launch**, alerting at 80% actual and 100% forecasted. The alert email is passed as `TF_VAR_budget_alert_email` and never committed. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
 
 **Free tier:** do not count on it. Accounts created after 2025-07-15 get USD 100–200 in credits for 6 months instead of the former 12-month free tier (e.g. 750 RDS hours). Credits are a cushion; the budget must hold without them.
 
 ### 8.4 Infrastructure as Code
 
-- `infra/` holds Terraform (S3 backend with native state locking) for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, SSM parameters (placeholders, values set out of band), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
+- `infra/` holds Terraform for: VPC, ECR, RDS, security groups, S3 (including the local-development bucket `jugueria-dev-media`), SES identities, non-secret SSM parameters (secret values are created out of band, because any managed secret would be refreshed into the shared state; the RDS master password is managed by RDS in Secrets Manager, ~USD 0.40/month per environment), Route 53/ACM, GitHub OIDC provider, IAM roles (per environment, least privilege), and the IAM Identity Center permission set `jugueria-dev` for local development (§8.5).
 - The **ECS Express services** are created/updated by the deploy pipeline (`aws-actions/amazon-ecs-deploy-express-service`), not by Terraform, to avoid two tools owning the same resource.
-- Three Terraform roots share modules: `infra/envs/shared` (VPC, ECR, Route 53 hosted zone `jugueria.jhanantezana.com` delegated by NS records from the parent `jhanantezana.com` zone, GitHub OIDC provider, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+- Three Terraform roots share modules: `infra/envs/shared` (VPC `10.40.0.0/16`, ECR, `jugueria*` records in the existing `jhanantezana.com` Route 53 zone of the same account — no delegated zone, Terraform never manages the whole zone —, GitHub OIDC provider, budget, SES domain identity, `jugueria-dev-media`, `jugueria-dev` permission set), `infra/envs/test`, and `infra/envs/prod`. `terraform plan` runs on PRs touching `infra/**`; `apply` runs manually through the protected environment. The shared ALB is provisioned by Express Mode, not by Terraform.
+- State lives in the pre-existing, versioned bucket `acme-tfstate-dev-463470979604-us-east-1`, shared with another project, under keys `jugueria/<root>/terraform.tfstate` (S3 native locking). This project's IAM roles are limited to `jugueria/*`. The first `apply` of each root is local with the admin profile; CI runs `plan` once the OIDC roles exist.
 
 ### 8.5 Local development
 
@@ -823,6 +826,7 @@ hotfix/<name> ─────────── PR (squash) ──────�
 | Rule | Setting |
 |------|---------|
 | Long-lived branches | `develop` (integration, deployed to `test`) and `main` (production, deployed to `prod`). Both always deployable |
+| Default branch | `develop`. PRs target it by default; Dependabot reads its config from it and opens security updates against it (they would otherwise skip `test`); scheduled workflows (`env-autostop.yml`) run the version on `develop`, already exercised in `test` |
 | Work branches | `feature/*`, `fix/*`, `chore/*`, `docs/*`, `refactor/*` — branched from `develop`, merged back within ~2 days, **squash merge** |
 | Release | PR `develop → main` with a **merge commit** (never squash: squashing between long-lived branches makes them diverge and every later release conflicts) |
 | Hotfix | `hotfix/*` branched from `main` → PR → `main` (squash). Immediately afterwards, back-merge PR `main → develop` with a merge commit, so the next release does not revert the fix |
@@ -858,26 +862,32 @@ flowchart LR
   RP --> M[merge to main]
   M --> G{tree == HEAD^2?}
   G -->|yes| RD[reuse digests<br/>verified on test]
-  G -->|no: hotfix| HB[build images]
+  G -->|no: hotfix| HN[plan which apps changed]
   RD --> A{manual approval<br/>environment: prod}
-  HB --> A
-  A --> P[deploy to prod]
+  HN --> A
+  A --> HB[build images<br/>hotfix only]
+  A --> P[deploy apps whose<br/>digest differs from prod]
+  HB --> P
   P --> S[smoke on prod]
   S --> R[tag + GitHub Release]
 ```
+
+Approval comes **before** a hotfix build, not after: pushing an image to ECR needs the `jugueria-deploy-prod` role, whose trust requires the job to declare `environment: prod`, and entering that environment is what asks the reviewer. One gate, and nothing is built or pushed until it opens.
 
 ### 10.2 Workflows
 
 | Workflow | Trigger | Jobs |
 |----------|---------|------|
 | `ci.yml` | Every PR to `develop` or `main` | `changes` (path filter) → `common` (always) + `backend` / `frontend` / `infra` (only if their paths changed) → `ci-ok` (gate) |
-| `_ci-backend.yml` (reusable) | Called by `ci.yml` when `backend/**` or `db/**` changed | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check; dependency review |
+| `_ci-backend.yml` (reusable) | Called by `ci.yml` when `backend/**` or `db/**` changed | `mvn verify`: unit + integration (Testcontainers PostgreSQL, WireMock for Mercado Pago) + Modulith verification + JaCoCo gate + OpenAPI drift check |
 | `_ci-frontend.yml` (reusable) | Called by `ci.yml` when `frontend/**` or `backend/api/openapi.json` changed (API type drift check, §6.5) | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
 | `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
-| `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
-| `cd-prod.yml` | Push to `main` | resolve images (reuse digests of `HEAD^2` if trees match, else build/scan/push the hotfix's changed apps) → keep apps whose digest differs from `prod` → approval → start `prod` if it is off → deploy them to `prod` → smoke → tag + release |
+| `_build-image.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | build (Docker layer cache `type=gha`) → Trivy scan → push to ECR tagged with the commit SHA → provenance attestation; reuses the existing image when that tag is already in ECR, and outputs its digest |
+| `_deploy-ecs.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | read what the service runs now → skip when it already runs this digest → otherwise create or update its Express Mode service with the digest-pinned image (`aws-actions/amazon-ecs-deploy-express-service`, which polls the service deployment until it is `SUCCESSFUL`) → output the endpoint it answers on |
+| `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record the image reference per app for the commit, **also when nothing was deployed** (a commit with no record of its own could never be promoted) |
+| `cd-prod.yml` | Push to `main` | resolve images (promote the references recorded on `test` for `HEAD^2` if trees match, else plan which apps the hotfix changed against the commit recorded as running in `prod`) → **approval** → build the hotfix's apps, start `prod` if it is off → deploy, which skips any app whose digest `prod` already runs → smoke → tag + release + record what `prod` runs |
 
-The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint).
+The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint), and dependency review (vulnerabilities of high severity or above, license allowlist from §3).
 
 #### Path filters and required checks
 
@@ -887,9 +897,9 @@ Path-filtered **workflows** (`on.pull_request.paths`) cannot be required checks:
 - Changes to `.github/**` run **every** area job, because a workflow or composite action change can break any of them.
 - `ci-ok` is the **only** required check in the rulesets. It depends on all jobs, runs with `if: always()`, and fails if any needed job ended in `failure` or `cancelled`. Skipped area jobs count as success.
 - `if: always()` is mandatory on `ci-ok`: without it, a failed area job makes `ci-ok` **skipped**, and a skipped job reports success — the PR would merge with failing tests.
-| `rollback.yml` | `workflow_dispatch` (env, app, image SHA) | Redeploy a previous image digest; requires the same environment approval |
-| `env-control.yml` | `workflow_dispatch` (environment, start/stop, hours) | Start or stop an environment; on start, record the stop time (§8.1) |
-| `env-autostop.yml` | `schedule` (hourly) | Apply each environment's power mode: stop expired `on-demand` environments, follow opening hours for `store-hours` |
+| `rollback.yml` | `workflow_dispatch` (env, app, commit SHA) | resolve that commit's tag in ECR to a digest (fails if it was never published) → **approval** for that environment → deploy → smoke → record what the environment now runs, so the next release does not compare against the image the rollback replaced. Shares the `deploy-<env>` concurrency group, so it cannot race a release |
+| `env-control.yml` | `workflow_dispatch` (environment, start/stop, hours) | Start or stop an environment through the `power` composite action; on start, record the stop time (§8.1) |
+| `env-autostop.yml` | `schedule` (hourly) | Apply each environment's power mode: stop expired `on-demand` environments, follow opening hours for `store-hours`. One job per environment, each in the `deploy-<env>` concurrency group so a sweep cannot stop an environment mid-deploy |
 
 Shared logic lives in **reusable workflows** (`_ci-backend.yml`, `_ci-frontend.yml`, `_ci-infra.yml`, `_build-image.yml`, `_deploy-ecs.yml`) and **composite actions**. `cd-test.yml` and `cd-prod.yml` call `_build-image.yml` and `_deploy-ecs.yml` once per app to deploy, so apps are built and deployed independently.
 
@@ -897,14 +907,14 @@ Shared logic lives in **reusable workflows** (`_ci-backend.yml`, `_ci-frontend.y
 
 | Environment | Deployed by | Protection | Secrets/vars |
 |-------------|-------------|------------|--------------|
-| `test` | Automatic on push to `develop` | Only `develop` can deploy | `AWS_ROLE_ARN_TEST`, service names, URLs |
-| `prod` | After approval | Required reviewer (owner), only `main`, wait timer 0 | `AWS_ROLE_ARN_PROD`, service names, URLs |
+| `test` | Automatic on push to `develop` | Only `develop` can deploy | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, `SUBNET_IDS`, `BACKEND_SECURITY_GROUP_ID`, `FRONTEND_SECURITY_GROUP_ID` |
+| `prod` | After approval | Required reviewer (owner), only `main`, wait timer 0 | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, `SUBNET_IDS`, `BACKEND_SECURITY_GROUP_ID`, `FRONTEND_SECURITY_GROUP_ID` |
 
-Application secrets are **not** GitHub secrets: they live in SSM and are injected into tasks at runtime. GitHub only holds role ARNs and non-sensitive variables. Each ECS service sets `SPRING_PROFILES_ACTIVE` to its environment (`test` or `prod`); `application-test.properties` and `application-prod.properties` hold only non-secret differences.
+Application secrets are **not** GitHub secrets: they live in SSM and are injected into tasks at runtime. GitHub only holds role ARNs and non-sensitive variables; `terraform output github_environment_variables` on each environment root prints the network ones ready to set. `AWS_POWER_ROLE_ARN` is a **repository** variable, not an environment one: the workflows that use it deliberately enter no environment. Variable names carry no environment suffix: every job that assumes a role declares `environment: <env>` (the role trust requires it), so the environment already scopes the variable and one workflow reads the same name for both. Each ECS service sets `SPRING_PROFILES_ACTIVE` to its environment (`test` or `prod`); `application-test.properties` and `application-prod.properties` hold only non-secret differences.
 
 ### 10.4 Pipeline hardening
 
-- OIDC to AWS (`aws-actions/configure-aws-credentials`) — no long-lived keys. Role trust restricted to `repo:<owner>/store-project:environment:<env>`.
+- OIDC to AWS (`aws-actions/configure-aws-credentials`) — no long-lived keys. Role trust is restricted to one GitHub subject. The exception is `jugueria-power`, trusted on `…:ref:refs/heads/develop` instead of an environment, because `env-autostop.yml` runs on a schedule and entering `prod` would leave an approval pending every hour. It may only start and stop environments and scale their services, never touch an image. The repository issues **immutable subject claims**, so that subject is `repo:<owner>@<owner-id>/store-project@<repo-id>:environment:<env>`, not the classic `repo:<owner>/store-project:…`: the numeric IDs mean a repository that is renamed or recreated with the same name cannot assume these roles. The prefix comes from `GET /repos/<owner>/store-project/actions/oidc/customization/sub`.
 - `permissions: contents: read` by default; `id-token: write` only in deploy jobs.
 - Third-party actions pinned by commit SHA; Dependabot updates actions, Maven, npm, Docker base images.
 - Image scanning with Trivy (fail on fixable CRITICAL/HIGH — the automated part of NFR-09; the OWASP Top 10 checklist is a PR-template item for `prod` releases); SBOM and build provenance attestation (`actions/attest-build-provenance`).
@@ -916,7 +926,7 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 
 - ECS rolling deployment with `prod` minimum 1 healthy task, so deploys cause no downtime (NFR-01); the ALB health check targets `/actuator/health/readiness` (backend) and `/healthz` (frontend). A task that fails readiness never receives traffic.
 - Smoke tests after each deploy hit health, menu, and auth endpoints; failure marks the run red and blocks promotion.
-- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9). Safe because migrations follow expand/contract (§4.10).
+- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9), one app at a time. Safe because migrations follow expand/contract (§4.10). Runbook: `docs/runbooks/rollback.md`, which also shows how to find the SHA to go back to.
 - Database restore (disaster, not rollback) is a documented runbook: RDS point-in-time restore to a new instance, switch the SSM endpoint, redeploy. Drill at M4 (NFR-07).
 
 ### 10.6 Course coverage
@@ -1032,12 +1042,13 @@ Runbooks in `docs/runbooks/`: rollback, database restore, payment webhook replay
 | D15 | Load balancer and VPC | One VPC and one Express Mode ALB shared by `test` and `prod`; isolation by security groups, task roles, SSM paths, and separate RDS/S3 | One ALB and VPC per environment (~USD 25/month more: second ALB + its public IPv4 addresses, for isolation this project does not need) |
 | D16 | Email transport | Email port: SMTP adapter (Mailpit, local) + SES API v2 adapter with the ECS task role (`test`/`prod`) | SES SMTP interface everywhere (needs long-lived IAM user credentials stored as a secret); a personal Gmail account (personal credential in the system, sender shown as a personal address, lower deliverability) |
 | D17 | Environment uptime | Power modes: `test` on-demand; `prod` on-demand until launch, store-hours during the pilot, always-on from launch (§8.1) | Both environments always on (~USD 118/month, ~90% of the budget, for ~4 h/day of use); `test` on a fixed daily schedule (still ~16 h/day billed) |
+| D18 | Custom domain in front of Express Mode | CloudFront distribution per environment: viewers get `jugueria.<domain>` / `test.jugueria.<domain>` with our ACM certificate, the origin is the Express endpoint. Express Mode exposes no domain or certificate input — verified against the `create-express-gateway-service` and `update-express-gateway-service` API models, whose only network field is `networkConfiguration.{securityGroups,subnets}`, and against the five Express operations, none of which touch DNS or TLS | Standard ECS services with our own ALB and certificate (full control, but gives up D15 and adds the load balancer, listeners, target groups and health checks to Terraform); serving `test` on the generated Express hostname (no certificate cost, but an unmemorable host and no single place to add WAF or caching later) |
 
 ## 14. Risks and open questions
 
 | # | Risk / question | Mitigation / owner |
 |---|-----------------|--------------------|
-| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing is documented for up to 25 services in one VPC (D15) but must be verified with two environments | Validate in M0 walking skeleton; fall back to standard ECS with the same pipeline if blocked |
+| R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing up to 25 services per VPC is documented and still has to be seen with two environments. **Resolved at M0-06:** Express Mode accepts no domain or certificate, which is why D18 exists. **Still open:** Express deprovisions unused ALBs, so the generated endpoint a CloudFront origin points at may not be stable — power modes scale tasks to zero without deleting the service, which should keep it, but that is read from the documentation, not observed | Validate in M0 walking skeleton; assert the endpoint is unchanged after an autostop cycle; fall back to standard ECS with the same pipeline if blocked |
 | R2 | Single-AZ RDS: an AZ outage means restore time (within NFR-07's 2 h RTO) | Accepted for Release 1; Multi-AZ when revenue justifies (~2× RDS cost) |
 | R3 | Mercado Pago availability/fees depend on the country (PRD Q1) | Confirm with Q1 by M1, before payments work starts in M3; the port allows switching the adapter |
 | R4 | Electronic invoicing may be legally required (PRD Q2) | If yes, add an `invoicing` module and provider before M3 |
