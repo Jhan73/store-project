@@ -197,14 +197,16 @@ jobs:
   record:
     name: record digests
     needs: [changes, build-backend, build-frontend, smoke]
-    if: always() && needs.smoke.result == 'success'
+    # Also runs when nothing was deployed: a release promotes whatever commit reaches main, and a
+    # docs-only commit with no record of its own could not be promoted at all.
+    if: always() && needs.changes.result == 'success' && (needs.smoke.result == 'success' || needs.changes.outputs.any != 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
       deployments: write
     steps:
-      # Every app is recorded, built or not, so a release PR can promote the verified digest
+      # Every app is recorded, built or not, so a release PR can promote the verified image
       # of a commit that did not rebuild that app.
       - name: Record the digest running in test for this commit
         env:
