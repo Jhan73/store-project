@@ -878,6 +878,7 @@ flowchart LR
 | `_ci-frontend.yml` (reusable) | Called by `ci.yml` when `frontend/**` or `backend/api/openapi.json` changed (API type drift check, §6.5) | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
 | `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
 | `_build-image.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | build (Docker layer cache `type=gha`) → Trivy scan → push to ECR tagged with the commit SHA → provenance attestation; reuses the existing image when that tag is already in ECR, and outputs its digest |
+| `_deploy-ecs.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | create or update that app's Express Mode service with the digest-pinned image (`aws-actions/amazon-ecs-deploy-express-service`, which polls the service deployment until it is `SUCCESSFUL`) → output the endpoint it answers on |
 | `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
 | `cd-prod.yml` | Push to `main` | resolve images (reuse digests of `HEAD^2` if trees match, else build/scan/push the hotfix's changed apps) → keep apps whose digest differs from `prod` → approval → start `prod` if it is off → deploy them to `prod` → smoke → tag + release |
 
@@ -901,10 +902,10 @@ Shared logic lives in **reusable workflows** (`_ci-backend.yml`, `_ci-frontend.y
 
 | Environment | Deployed by | Protection | Secrets/vars |
 |-------------|-------------|------------|--------------|
-| `test` | Automatic on push to `develop` | Only `develop` can deploy | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, service names, URLs |
-| `prod` | After approval | Required reviewer (owner), only `main`, wait timer 0 | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, service names, URLs |
+| `test` | Automatic on push to `develop` | Only `develop` can deploy | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, `SUBNET_IDS`, `BACKEND_SECURITY_GROUP_ID`, `FRONTEND_SECURITY_GROUP_ID` |
+| `prod` | After approval | Required reviewer (owner), only `main`, wait timer 0 | `AWS_DEPLOY_ROLE_ARN`, `AWS_INFRA_APPLY_ROLE_ARN`, `SUBNET_IDS`, `BACKEND_SECURITY_GROUP_ID`, `FRONTEND_SECURITY_GROUP_ID` |
 
-Application secrets are **not** GitHub secrets: they live in SSM and are injected into tasks at runtime. GitHub only holds role ARNs and non-sensitive variables. Variable names carry no environment suffix: every job that assumes a role declares `environment: <env>` (the role trust requires it), so the environment already scopes the variable and one workflow reads the same name for both. Each ECS service sets `SPRING_PROFILES_ACTIVE` to its environment (`test` or `prod`); `application-test.properties` and `application-prod.properties` hold only non-secret differences.
+Application secrets are **not** GitHub secrets: they live in SSM and are injected into tasks at runtime. GitHub only holds role ARNs and non-sensitive variables; `terraform output github_environment_variables` on each environment root prints the network ones ready to set. Variable names carry no environment suffix: every job that assumes a role declares `environment: <env>` (the role trust requires it), so the environment already scopes the variable and one workflow reads the same name for both. Each ECS service sets `SPRING_PROFILES_ACTIVE` to its environment (`test` or `prod`); `application-test.properties` and `application-prod.properties` hold only non-secret differences.
 
 ### 10.4 Pipeline hardening
 

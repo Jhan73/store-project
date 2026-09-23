@@ -1,0 +1,255 @@
+name: CD test
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+# Deploys are serialised and never interrupted.
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: read
+    outputs:
+      backend: ${{ steps.compare.outputs.backend }}
+      frontend: ${{ steps.compare.outputs.frontend }}
+      backend_digest: ${{ steps.compare.outputs.backend_digest }}
+      frontend_digest: ${{ steps.compare.outputs.frontend_digest }}
+      any: ${{ steps.compare.outputs.any }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Compared with the commit last deployed successfully, not with the previous commit,
+      # so a failed run is picked up by the next push instead of being skipped.
+      - name: Apps that differ from what test runs
+        id: compare
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          any=false
+          for app in backend frontend; do
+            case "$app" in
+              backend)  paths=(backend db) ;;
+              frontend) paths=(frontend backend/api/openapi.json) ;;
+            esac
+
+            deployed=""
+            digest=""
+            while read -r id ref; do
+              if [[ -z "$id" ]]; then
+                continue
+              fi
+              state="$(gh api "repos/$REPOSITORY/deployments/$id/statuses" \
+                --jq 'map(select(.state == "success")) | length')"
+              if [[ "$state" != "0" ]]; then
+                deployed="$ref"
+                digest="$(gh api "repos/$REPOSITORY/deployments/$id" --jq '.payload.digest // ""')"
+                break
+              fi
+            done < <(gh api "repos/$REPOSITORY/deployments?environment=test&task=deploy:$app&per_page=30" \
+              --jq '.[] | "\(.id) \(.sha)"')
+
+            if [[ -z "$deployed" ]] || ! git cat-file -e "$deployed^{commit}" 2>/dev/null; then
+              echo "::notice::No commit recorded as deployed for $app, treating it as changed."
+              changed=true
+            elif git diff --quiet "$deployed" "$SHA" -- "${paths[@]}"; then
+              changed=false
+            else
+              changed=true
+            fi
+
+            if [[ "$changed" == true ]]; then
+              any=true
+            fi
+            {
+              echo "$app=$changed"
+              echo "${app}_digest=$digest"
+            } >> "$GITHUB_OUTPUT"
+            echo "$app changed: $changed (deployed commit: ${deployed:-none})"
+          done
+          echo "any=$any" >> "$GITHUB_OUTPUT"
+
+  power-on:
+    name: power on
+    needs: changes
+    if: needs.changes.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: test
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # test is on-demand, so it is usually stopped when a deploy starts.
+      - name: Start the database
+        env:
+          INSTANCE: jugueria-test
+        run: |
+          status="$(aws rds describe-db-instances --db-instance-identifier "$INSTANCE" \
+            --query 'DBInstances[0].DBInstanceStatus' --output text)"
+          echo "Database status: $status"
+          if [[ "$status" == "stopped" ]]; then
+            aws rds start-db-instance --db-instance-identifier "$INSTANCE" >/dev/null
+          fi
+          aws rds wait db-instance-available --db-instance-identifier "$INSTANCE"
+
+  build-backend:
+    name: build backend
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: backend
+      environment: test
+      image_tag: ${{ github.sha }}
+
+  build-frontend:
+    name: build frontend
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      app: frontend
+      environment: test
+      image_tag: ${{ github.sha }}
+
+  deploy-backend:
+    name: deploy backend
+    needs: [changes, power-on, build-backend]
+    if: needs.changes.outputs.backend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: backend
+      environment: test
+      image: ${{ needs.build-backend.outputs.image }}
+
+  deploy-frontend:
+    name: deploy frontend
+    needs: [changes, power-on, build-frontend]
+    if: needs.changes.outputs.frontend == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: frontend
+      environment: test
+      image: ${{ needs.build-frontend.outputs.image }}
+
+  smoke:
+    name: smoke
+    needs: [changes, deploy-backend, deploy-frontend]
+    if: always() && needs.changes.outputs.any == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: test
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Whichever app was deployed, both are checked: they share a database and a board.
+      - name: Both services answer
+        run: |
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          failed=false
+          for entry in backend:/actuator/health/readiness frontend:/healthz; do
+            app="${entry%%:*}"
+            path="${entry#*:}"
+            arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-test/jugueria-test-$app"
+            endpoint="$(aws ecs describe-express-gateway-service --service-arn "$arn" \
+              --query 'service.activeConfigurations[0].ingressPaths[0].endpoint' --output text)"
+            if [[ "$endpoint" != http://* && "$endpoint" != https://* ]]; then
+              endpoint="https://$endpoint"
+            fi
+            code="$(curl --silent --show-error --location --retry 5 --retry-delay 10 \
+              --retry-all-errors --max-time 20 --output /dev/null \
+              --write-out '%{http_code}' "${endpoint%/}$path" || echo 000)"
+            echo "$app $path -> $code"
+            if [[ "$code" != 200 ]]; then
+              failed=true
+            fi
+          done
+          if [[ "$failed" == true ]]; then
+            echo "::error::A smoke check did not return 200."
+            exit 1
+          fi
+
+  record:
+    name: record digests
+    needs: [changes, build-backend, build-frontend, smoke]
+    if: always() && needs.smoke.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      # Every app is recorded, built or not, so a release PR can promote the verified digest
+      # of a commit that did not rebuild that app.
+      - name: Record the digest running in test for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BACKEND_DIGEST: ${{ needs.build-backend.outputs.digest || needs.changes.outputs.backend_digest }}
+          FRONTEND_DIGEST: ${{ needs.build-frontend.outputs.digest || needs.changes.outputs.frontend_digest }}
+        run: |
+          for app in backend frontend; do
+            case "$app" in
+              backend)  digest="$BACKEND_DIGEST" ;;
+              frontend) digest="$FRONTEND_DIGEST" ;;
+            esac
+            if [[ -z "$digest" ]]; then
+              echo "::error::No digest known for $app, so the release cannot promote it."
+              exit 1
+            fi
+            # --field cannot express an empty array or a nested payload, so the body is JSON.
+            id="$(jq -nc --arg ref "$SHA" --arg task "deploy:$app" --arg digest "$digest" \
+              --arg description "$app running in test" \
+              '{ref: $ref, environment: "test", task: $task, description: $description,
+                auto_merge: false, required_contexts: [], payload: {digest: $digest}}' \
+              | gh api "repos/$REPOSITORY/deployments" --method POST --input - --jq '.id')"
+            gh api "repos/$REPOSITORY/deployments/$id/statuses" --method POST \
+              --field state=success \
+              --field description="Verified by smoke tests" >/dev/null
+            echo "$app -> $digest"
+          done

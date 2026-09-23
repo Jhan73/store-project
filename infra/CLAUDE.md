@@ -8,7 +8,7 @@ This folder is empty today; the layout below is the target.
 
 | Owned by Terraform (`infra/`) | Owned by the deploy pipelines (`cd-test.yml`, `cd-prod.yml`) | Owned by Express Mode |
 |-------------------------------|---------------------------------------------------------------|-----------------------|
-| VPC, ECR, RDS, security groups, S3 + CloudFront, SES identity, SSM parameters (placeholders only), Route 53 / ACM, GitHub OIDC provider, IAM roles, Identity Center permission set `jugueria-dev` | ECS Express Mode services `backend` and `frontend` (`aws-actions/amazon-ecs-deploy-express-service`) | The shared ALB and its listener rules |
+| VPC, ECR, RDS, security groups, S3 + CloudFront, SES identity, SSM parameters (placeholders only), CloudWatch log groups, Route 53 / ACM, GitHub OIDC provider, IAM roles, Identity Center permission set `jugueria-dev` | ECS Express Mode services `backend` and `frontend` (`aws-actions/amazon-ecs-deploy-express-service`) | The shared ALB and its listener rules |
 
 Never manage ECS Express services or their ALB in Terraform — two tools owning the same resource causes drift.
 
