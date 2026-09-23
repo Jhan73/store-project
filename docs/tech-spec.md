@@ -897,7 +897,7 @@ Path-filtered **workflows** (`on.pull_request.paths`) cannot be required checks:
 - Changes to `.github/**` run **every** area job, because a workflow or composite action change can break any of them.
 - `ci-ok` is the **only** required check in the rulesets. It depends on all jobs, runs with `if: always()`, and fails if any needed job ended in `failure` or `cancelled`. Skipped area jobs count as success.
 - `if: always()` is mandatory on `ci-ok`: without it, a failed area job makes `ci-ok` **skipped**, and a skipped job reports success — the PR would merge with failing tests.
-| `rollback.yml` | `workflow_dispatch` (env, app, image SHA) | Redeploy a previous image digest; requires the same environment approval |
+| `rollback.yml` | `workflow_dispatch` (env, app, commit SHA) | resolve that commit's tag in ECR to a digest (fails if it was never published) → **approval** for that environment → deploy → smoke → record what the environment now runs, so the next release does not compare against the image the rollback replaced. Shares the `deploy-<env>` concurrency group, so it cannot race a release |
 | `env-control.yml` | `workflow_dispatch` (environment, start/stop, hours) | Start or stop an environment; on start, record the stop time (§8.1) |
 | `env-autostop.yml` | `schedule` (hourly) | Apply each environment's power mode: stop expired `on-demand` environments, follow opening hours for `store-hours` |
 
@@ -926,7 +926,7 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 
 - ECS rolling deployment with `prod` minimum 1 healthy task, so deploys cause no downtime (NFR-01); the ALB health check targets `/actuator/health/readiness` (backend) and `/healthz` (frontend). A task that fails readiness never receives traffic.
 - Smoke tests after each deploy hit health, menu, and auth endpoints; failure marks the run red and blocks promotion.
-- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9). Safe because migrations follow expand/contract (§4.10).
+- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9), one app at a time. Safe because migrations follow expand/contract (§4.10). Runbook: `docs/runbooks/rollback.md`, which also shows how to find the SHA to go back to.
 - Database restore (disaster, not rollback) is a documented runbook: RDS point-in-time restore to a new instance, switch the SSM endpoint, redeploy. Drill at M4 (NFR-07).
 
 ### 10.6 Course coverage
