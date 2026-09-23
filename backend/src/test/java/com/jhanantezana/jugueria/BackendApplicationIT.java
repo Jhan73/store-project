@@ -11,7 +11,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
-@SpringBootTest
+// Set here, not in a test application.properties: that file would shadow the main one whole.
+@SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 class BackendApplicationIT {
