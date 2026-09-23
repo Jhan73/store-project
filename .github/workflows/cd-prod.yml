@@ -212,36 +212,18 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Both services answer
-        run: |
-          account="$(aws sts get-caller-identity --query Account --output text)"
-          failed=false
-          for entry in backend:/actuator/health/readiness frontend:/healthz; do
-            app="${entry%%:*}"
-            path="${entry#*:}"
-            arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-prod/jugueria-prod-$app"
-            endpoint="$(aws ecs describe-express-gateway-service --service-arn "$arn" \
-              --query 'service.activeConfigurations[0].ingressPaths[0].endpoint' --output text)"
-            if [[ "$endpoint" != http://* && "$endpoint" != https://* ]]; then
-              endpoint="https://$endpoint"
-            fi
-            code="$(curl --silent --show-error --location --retry 5 --retry-delay 10 \
-              --retry-all-errors --max-time 20 --output /dev/null \
-              --write-out '%{http_code}' "${endpoint%/}$path" || echo 000)"
-            echo "$app $path -> $code"
-            if [[ "$code" != 200 ]]; then
-              failed=true
-            fi
-          done
-          if [[ "$failed" == true ]]; then
-            echo "::error::A smoke check did not return 200."
-            exit 1
-          fi
+      - uses: ./.github/actions/smoke
+        with:
+          environment: prod
 
   release:
     name: tag and release

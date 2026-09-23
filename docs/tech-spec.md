@@ -884,7 +884,7 @@ Approval comes **before** a hotfix build, not after: pushing an image to ECR nee
 | `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
 | `_build-image.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | build (Docker layer cache `type=gha`) → Trivy scan → push to ECR tagged with the commit SHA → provenance attestation; reuses the existing image when that tag is already in ECR, and outputs its digest |
 | `_deploy-ecs.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | read what the service runs now → skip when it already runs this digest → otherwise create or update its Express Mode service with the digest-pinned image (`aws-actions/amazon-ecs-deploy-express-service`, which polls the service deployment until it is `SUCCESSFUL`) → output the endpoint it answers on |
-| `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
+| `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record the image reference per app for the commit, **also when nothing was deployed** (a commit with no record of its own could never be promoted) |
 | `cd-prod.yml` | Push to `main` | resolve images (promote the references recorded on `test` for `HEAD^2` if trees match, else plan which apps the hotfix changed against the commit recorded as running in `prod`) → **approval** → build the hotfix's apps, start `prod` if it is off → deploy, which skips any app whose digest `prod` already runs → smoke → tag + release + record what `prod` runs |
 
 The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint), and dependency review (vulnerabilities of high severity or above, license allowlist from §3).
@@ -897,7 +897,7 @@ Path-filtered **workflows** (`on.pull_request.paths`) cannot be required checks:
 - Changes to `.github/**` run **every** area job, because a workflow or composite action change can break any of them.
 - `ci-ok` is the **only** required check in the rulesets. It depends on all jobs, runs with `if: always()`, and fails if any needed job ended in `failure` or `cancelled`. Skipped area jobs count as success.
 - `if: always()` is mandatory on `ci-ok`: without it, a failed area job makes `ci-ok` **skipped**, and a skipped job reports success — the PR would merge with failing tests.
-| `rollback.yml` | `workflow_dispatch` (env, app, image SHA) | Redeploy a previous image digest; requires the same environment approval |
+| `rollback.yml` | `workflow_dispatch` (env, app, commit SHA) | resolve that commit's tag in ECR to a digest (fails if it was never published) → **approval** for that environment → deploy → smoke → record what the environment now runs, so the next release does not compare against the image the rollback replaced. Shares the `deploy-<env>` concurrency group, so it cannot race a release |
 | `env-control.yml` | `workflow_dispatch` (environment, start/stop, hours) | Start or stop an environment; on start, record the stop time (§8.1) |
 | `env-autostop.yml` | `schedule` (hourly) | Apply each environment's power mode: stop expired `on-demand` environments, follow opening hours for `store-hours` |
 
@@ -926,7 +926,7 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 
 - ECS rolling deployment with `prod` minimum 1 healthy task, so deploys cause no downtime (NFR-01); the ALB health check targets `/actuator/health/readiness` (backend) and `/healthz` (frontend). A task that fails readiness never receives traffic.
 - Smoke tests after each deploy hit health, menu, and auth endpoints; failure marks the run red and blocks promotion.
-- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9). Safe because migrations follow expand/contract (§4.10).
+- Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9), one app at a time. Safe because migrations follow expand/contract (§4.10). Runbook: `docs/runbooks/rollback.md`, which also shows how to find the SHA to go back to.
 - Database restore (disaster, not rollback) is a documented runbook: RDS point-in-time restore to a new instance, switch the SSM endpoint, redeploy. Drill at M4 (NFR-07).
 
 ### 10.6 Course coverage

@@ -1,0 +1,134 @@
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to roll back.
+        required: true
+        type: choice
+        options: [test, prod]
+      app:
+        description: Application to roll back.
+        required: true
+        type: choice
+        options: [backend, frontend]
+      sha:
+        description: Full commit SHA whose image to redeploy.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# Shares the deploy group, so a rollback never races a release into the same environment.
+concurrency:
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  resolve:
+    name: resolve image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image: ${{ steps.image.outputs.reference }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Resolved to a digest rather than redeployed by tag: the tag is what a rollback distrusts.
+      - name: Image published for that commit
+        id: image
+        env:
+          APP: ${{ inputs.app }}
+          SHA: ${{ inputs.sha }}
+        run: |
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::'$SHA' is not a full 40-character commit SHA."
+            exit 1
+          fi
+          account="$(aws sts get-caller-identity --query Account --output text)"
+          digest="$(aws ecr describe-images --repository-name "jugueria/$APP" \
+            --image-ids "imageTag=$SHA" \
+            --query 'imageDetails[0].imageDigest' --output text 2>/dev/null || true)"
+          if [[ "$digest" != sha256:* ]]; then
+            echo "::error::No $APP image is tagged $SHA in ECR, so there is nothing to roll back to."
+            exit 1
+          fi
+          echo "reference=$account.dkr.ecr.$AWS_REGION.amazonaws.com/jugueria/$APP@$digest" \
+            >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: deploy
+    needs: resolve
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/_deploy-ecs.yml
+    with:
+      app: ${{ inputs.app }}
+      environment: ${{ inputs.environment }}
+      image: ${{ needs.resolve.outputs.image }}
+
+  smoke:
+    name: smoke
+    needs: [resolve, deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: ./.github/actions/smoke
+        with:
+          environment: ${{ inputs.environment }}
+
+  record:
+    name: record
+    needs: [resolve, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      # Without this the next release would compare against the image the rollback replaced.
+      - name: Record what the environment runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          APP: ${{ inputs.app }}
+          SHA: ${{ inputs.sha }}
+          IMAGE: ${{ needs.resolve.outputs.image }}
+        run: |
+          id="$(jq -nc --arg ref "$SHA" --arg environment "$ENVIRONMENT" --arg task "deploy:$APP" \
+            --arg image "$IMAGE" --arg description "$APP rolled back in $ENVIRONMENT" \
+            '{ref: $ref, environment: $environment, task: $task, description: $description,
+              auto_merge: false, required_contexts: [],
+              payload: {image: $image, digest: ($image | split("@") | last)}}' \
+            | gh api "repos/$REPOSITORY/deployments" --method POST --input - --jq '.id')"
+          gh api "repos/$REPOSITORY/deployments/$id/statuses" --method POST \
+            --field state=success \
+            --field description="Verified by smoke tests" >/dev/null
+          echo "$APP -> $IMAGE" >> "$GITHUB_STEP_SUMMARY"
