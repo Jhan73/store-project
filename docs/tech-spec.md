@@ -909,7 +909,7 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 
 ### 10.4 Pipeline hardening
 
-- OIDC to AWS (`aws-actions/configure-aws-credentials`) — no long-lived keys. Role trust restricted to `repo:<owner>/store-project:environment:<env>`.
+- OIDC to AWS (`aws-actions/configure-aws-credentials`) — no long-lived keys. Role trust is restricted to one GitHub subject. The repository issues **immutable subject claims**, so that subject is `repo:<owner>@<owner-id>/store-project@<repo-id>:environment:<env>`, not the classic `repo:<owner>/store-project:…`: the numeric IDs mean a repository that is renamed or recreated with the same name cannot assume these roles. The prefix comes from `GET /repos/<owner>/store-project/actions/oidc/customization/sub`.
 - `permissions: contents: read` by default; `id-token: write` only in deploy jobs.
 - Third-party actions pinned by commit SHA; Dependabot updates actions, Maven, npm, Docker base images.
 - Image scanning with Trivy (fail on fixable CRITICAL/HIGH — the automated part of NFR-09; the OWASP Top 10 checklist is a PR-template item for `prod` releases); SBOM and build provenance attestation (`actions/attest-build-provenance`).
