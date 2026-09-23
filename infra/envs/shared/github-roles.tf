@@ -214,3 +214,95 @@ resource "aws_iam_role_policy" "deploy" {
   role   = each.value.id
   policy = data.aws_iam_policy_document.deploy[each.key].json
 }
+
+# env-autostop.yml runs on a schedule, so it cannot enter the prod environment: a required reviewer
+# would leave an approval pending every hour. It gets its own role, trusted on the default branch.
+data "aws_iam_policy_document" "github_develop_assume" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["${local.github_subject_prefix}:ref:refs/heads/develop"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "power" {
+  statement {
+    sid     = "ReadAndWritePowerState"
+    actions = ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter"]
+    resources = [
+      for environment in ["test", "prod"] :
+      "arn:aws:ssm:${var.region}:${var.account_id}:parameter/jugueria/${environment}/power/*"
+    ]
+  }
+
+  statement {
+    sid     = "StartAndStopDatabases"
+    actions = ["rds:StartDBInstance", "rds:StopDBInstance"]
+    resources = [
+      for environment in ["test", "prod"] :
+      "arn:aws:rds:${var.region}:${var.account_id}:db:jugueria-${environment}"
+    ]
+  }
+
+  statement {
+    sid       = "ReadDatabaseState"
+    actions   = ["rds:DescribeDBInstances"]
+    resources = ["*"]
+  }
+
+  # Scaling an Express service to zero and back goes through the Express API, never the task count.
+  statement {
+    sid = "ScaleExpressServices"
+    actions = [
+      "ecs:DescribeExpressGatewayService",
+      "ecs:UpdateExpressGatewayService",
+      "ecs:DescribeServices",
+      "ecs:DescribeClusters",
+    ]
+    resources = ["*"]
+  }
+
+  # Express re-validates the roles it already holds on every update.
+  statement {
+    sid     = "PassEnvironmentRoles"
+    actions = ["iam:PassRole"]
+    resources = [
+      for environment in ["test", "prod"] :
+      "arn:aws:iam::${var.account_id}:role/jugueria-${environment}-*"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com", "ecs.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "power" {
+  name                 = "jugueria-power"
+  description          = "Start and stop both environments from scheduled and manual workflows"
+  assume_role_policy   = data.aws_iam_policy_document.github_develop_assume.json
+  max_session_duration = 3600
+}
+
+resource "aws_iam_role_policy" "power" {
+  name   = "power"
+  role   = aws_iam_role.power.id
+  policy = data.aws_iam_policy_document.power.json
+}
