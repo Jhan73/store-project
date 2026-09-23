@@ -26,8 +26,8 @@ jobs:
     outputs:
       backend: ${{ steps.compare.outputs.backend }}
       frontend: ${{ steps.compare.outputs.frontend }}
-      backend_digest: ${{ steps.compare.outputs.backend_digest }}
-      frontend_digest: ${{ steps.compare.outputs.frontend_digest }}
+      backend_image: ${{ steps.compare.outputs.backend_image }}
+      frontend_image: ${{ steps.compare.outputs.frontend_image }}
       any: ${{ steps.compare.outputs.any }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,7 +52,7 @@ jobs:
             esac
 
             deployed=""
-            digest=""
+            image=""
             while read -r id ref; do
               if [[ -z "$id" ]]; then
                 continue
@@ -61,7 +61,7 @@ jobs:
                 --jq 'map(select(.state == "success")) | length')"
               if [[ "$state" != "0" ]]; then
                 deployed="$ref"
-                digest="$(gh api "repos/$REPOSITORY/deployments/$id" --jq '.payload.digest // ""')"
+                image="$(gh api "repos/$REPOSITORY/deployments/$id" --jq '.payload.image // ""')"
                 break
               fi
             done < <(gh api "repos/$REPOSITORY/deployments?environment=test&task=deploy:$app&per_page=30" \
@@ -81,7 +81,7 @@ jobs:
             fi
             {
               echo "$app=$changed"
-              echo "${app}_digest=$digest"
+              echo "${app}_image=$image"
             } >> "$GITHUB_OUTPUT"
             echo "$app changed: $changed (deployed commit: ${deployed:-none})"
           done
@@ -230,26 +230,29 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
           SHA: ${{ github.sha }}
-          BACKEND_DIGEST: ${{ needs.build-backend.outputs.digest || needs.changes.outputs.backend_digest }}
-          FRONTEND_DIGEST: ${{ needs.build-frontend.outputs.digest || needs.changes.outputs.frontend_digest }}
+          BACKEND_IMAGE: ${{ needs.build-backend.outputs.image || needs.changes.outputs.backend_image }}
+          FRONTEND_IMAGE: ${{ needs.build-frontend.outputs.image || needs.changes.outputs.frontend_image }}
         run: |
           for app in backend frontend; do
             case "$app" in
-              backend)  digest="$BACKEND_DIGEST" ;;
-              frontend) digest="$FRONTEND_DIGEST" ;;
+              backend)  image="$BACKEND_IMAGE" ;;
+              frontend) image="$FRONTEND_IMAGE" ;;
             esac
-            if [[ -z "$digest" ]]; then
-              echo "::error::No digest known for $app, so the release cannot promote it."
+            if [[ -z "$image" ]]; then
+              echo "::error::No image known for $app, so the release cannot promote it."
               exit 1
             fi
             # --field cannot express an empty array or a nested payload, so the body is JSON.
-            id="$(jq -nc --arg ref "$SHA" --arg task "deploy:$app" --arg digest "$digest" \
+            # The reference is pinned by digest, so a release promotes exactly this image without
+            # having to know the registry account.
+            id="$(jq -nc --arg ref "$SHA" --arg task "deploy:$app" --arg image "$image" \
               --arg description "$app running in test" \
               '{ref: $ref, environment: "test", task: $task, description: $description,
-                auto_merge: false, required_contexts: [], payload: {digest: $digest}}' \
+                auto_merge: false, required_contexts: [],
+                payload: {image: $image, digest: ($image | split("@") | last)}}' \
               | gh api "repos/$REPOSITORY/deployments" --method POST --input - --jq '.id')"
             gh api "repos/$REPOSITORY/deployments/$id/statuses" --method POST \
               --field state=success \
               --field description="Verified by smoke tests" >/dev/null
-            echo "$app -> $digest"
+            echo "$app -> $image"
           done
