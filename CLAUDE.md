@@ -94,5 +94,5 @@ Full policy in tech-spec §3.
 - Prefer the platform: `Intl`, `crypto.randomUUID()`, `java.time`, `RestClient`.
 - Backend versions come from BOMs; unmanaged ones are declared once in `<properties>`. No version ranges, `SNAPSHOT`, or milestones on `develop`/`main`.
 - Frontend: `package-lock.json` is committed; CI uses `npm ci`.
-- Licenses: direct dependencies MIT, Apache-2.0, BSD, or ISC, with no exceptions; transitive ones may use the other permissive licenses listed in tech-spec §3. PrimeNG is used in its last MIT line (21); PrimeNG 22+ is not MIT, so never upgrade to it without owner approval (tech-spec §6.7).
+- Licenses: direct dependencies MIT, MIT-0, Apache-2.0, BSD, or ISC, with no exceptions; transitive ones may use the other permissive licenses listed in tech-spec §3. PrimeNG is used in its last MIT line (21); PrimeNG 22+ is not MIT, so never upgrade to it without owner approval (tech-spec §6.7).
 - Already rejected, do not propose again: jjwt, MapStruct, H2, Redis/broker clients, NgRx or any global store, runtime OpenAPI client generators, `uuid`, `lodash`, `moment`.
