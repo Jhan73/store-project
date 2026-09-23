@@ -862,13 +862,17 @@ flowchart LR
   RP --> M[merge to main]
   M --> G{tree == HEAD^2?}
   G -->|yes| RD[reuse digests<br/>verified on test]
-  G -->|no: hotfix| HB[build images]
+  G -->|no: hotfix| HN[plan which apps changed]
   RD --> A{manual approval<br/>environment: prod}
-  HB --> A
-  A --> P[deploy to prod]
+  HN --> A
+  A --> HB[build images<br/>hotfix only]
+  A --> P[deploy apps whose<br/>digest differs from prod]
+  HB --> P
   P --> S[smoke on prod]
   S --> R[tag + GitHub Release]
 ```
+
+Approval comes **before** a hotfix build, not after: pushing an image to ECR needs the `jugueria-deploy-prod` role, whose trust requires the job to declare `environment: prod`, and entering that environment is what asks the reviewer. One gate, and nothing is built or pushed until it opens.
 
 ### 10.2 Workflows
 
@@ -879,9 +883,9 @@ flowchart LR
 | `_ci-frontend.yml` (reusable) | Called by `ci.yml` when `frontend/**` or `backend/api/openapi.json` changed (API type drift check, §6.5) | lint (angular-eslint), Vitest with coverage gate, production build (SSR) |
 | `_ci-infra.yml` (reusable) | Called by `ci.yml` when `infra/**` changed | `terraform fmt -check`, `validate`, `plan` per environment (plan posted as PR comment) |
 | `_build-image.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | build (Docker layer cache `type=gha`) → Trivy scan → push to ECR tagged with the commit SHA → provenance attestation; reuses the existing image when that tag is already in ECR, and outputs its digest |
-| `_deploy-ecs.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | create or update that app's Express Mode service with the digest-pinned image (`aws-actions/amazon-ecs-deploy-express-service`, which polls the service deployment until it is `SUCCESSFUL`) → output the endpoint it answers on |
+| `_deploy-ecs.yml` (reusable) | Called by `cd-test.yml` and `cd-prod.yml`, once per app | read what the service runs now → skip when it already runs this digest → otherwise create or update its Express Mode service with the digest-pinned image (`aws-actions/amazon-ecs-deploy-express-service`, which polls the service deployment until it is `SUCCESSFUL`) → output the endpoint it answers on |
 | `cd-test.yml` | Push to `develop` | detect apps changed since their last successful `test` deploy → build/scan/push those images → start `test` if it is off (§8.1 power modes) → deploy changed apps to `test` → smoke + Playwright E2E (whole system) → record digests per app for the commit |
-| `cd-prod.yml` | Push to `main` | resolve images (reuse digests of `HEAD^2` if trees match, else build/scan/push the hotfix's changed apps) → keep apps whose digest differs from `prod` → approval → start `prod` if it is off → deploy them to `prod` → smoke → tag + release |
+| `cd-prod.yml` | Push to `main` | resolve images (promote the references recorded on `test` for `HEAD^2` if trees match, else plan which apps the hotfix changed against the commit recorded as running in `prod`) → **approval** → build the hotfix's apps, start `prod` if it is off → deploy, which skips any app whose digest `prod` already runs → smoke → tag + release + record what `prod` runs |
 
 The `common` job runs on every PR: PR-title lint (Conventional Commits), source-branch check for `main` (`develop` or `hotfix/*` only), secret scan (gitleaks), workflow lint (actionlint), and dependency review (vulnerabilities of high severity or above, license allowlist from §3).
 

@@ -124,18 +124,26 @@ jobs:
 
       # Angular rejects a Host that is not allowed, and the host exists only once the service
       # does, so the first ever deploy of the frontend has no host to allow yet.
-      - name: Host the service already answers on
+      - name: What the service runs now
         id: known
         env:
           SERVICE_ARN: ${{ steps.config.outputs.service_arn }}
         run: |
-          endpoint="$(aws ecs describe-express-gateway-service --service-arn "$SERVICE_ARN" \
-            --query 'service.activeConfigurations[0].ingressPaths[0].endpoint' \
+          current="$(aws ecs describe-express-gateway-service --service-arn "$SERVICE_ARN" \
+            --query 'service.activeConfigurations[0].[ingressPaths[0].endpoint, primaryContainer.image]' \
             --output text 2>/dev/null || true)"
+          endpoint="$(cut -f1 <<< "$current")"
+          image="$(cut -f2 <<< "$current")"
           if [[ "$endpoint" == "None" ]]; then
             endpoint=""
           fi
-          echo "endpoint=$endpoint" >> "$GITHUB_OUTPUT"
+          if [[ "$image" == "None" ]]; then
+            image=""
+          fi
+          {
+            echo "endpoint=$endpoint"
+            echo "image=$image"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Allowed hosts
         id: hosts
@@ -156,6 +164,7 @@ jobs:
       # until it is SUCCESSFUL and fails the step on FAILED or STOPPED.
       - name: Deploy
         id: deploy
+        if: steps.known.outputs.image != inputs.image
         uses: aws-actions/amazon-ecs-deploy-express-service@7c48a2de16441d528a3c89829831968dc1455010 # v1.2.2
         with:
           cluster: ${{ steps.config.outputs.cluster }}
@@ -181,7 +190,7 @@ jobs:
 
       - name: Allowed hosts for the host just created
         id: new_hosts
-        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == ''
+        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == '' && steps.known.outputs.image != inputs.image
         env:
           ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
           VARIABLES: ${{ steps.config.outputs.environment_variables }}
@@ -192,7 +201,7 @@ jobs:
             | sed 's/^/variables=/' >> "$GITHUB_OUTPUT"
 
       - name: Allow the new host
-        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == ''
+        if: inputs.app == 'frontend' && steps.known.outputs.endpoint == '' && steps.known.outputs.image != inputs.image
         uses: aws-actions/amazon-ecs-deploy-express-service@7c48a2de16441d528a3c89829831968dc1455010 # v1.2.2
         with:
           cluster: ${{ steps.config.outputs.cluster }}
@@ -205,8 +214,9 @@ jobs:
       - name: Endpoint
         id: endpoint
         env:
-          ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
+          ENDPOINT: ${{ steps.deploy.outputs.endpoint || steps.known.outputs.endpoint }}
           APP: ${{ inputs.app }}
+          UNCHANGED: ${{ steps.known.outputs.image == inputs.image }}
         run: |
           if [[ -z "$ENDPOINT" ]]; then
             echo "::error::The deploy returned no endpoint."
@@ -217,4 +227,8 @@ jobs:
             url="https://$url"
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "- $APP: $url" >> "$GITHUB_STEP_SUMMARY"
+          note=""
+          if [[ "$UNCHANGED" == true ]]; then
+            note=" (already running this image)"
+          fi
+          echo "- $APP: $url$note" >> "$GITHUB_STEP_SUMMARY"
