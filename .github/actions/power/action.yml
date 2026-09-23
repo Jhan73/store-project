@@ -1,0 +1,126 @@
+name: Start or stop an environment
+description: Scale both Express services and the database. Needs AWS credentials already configured.
+
+inputs:
+  environment:
+    description: Environment to act on, test or prod.
+    required: true
+  state:
+    description: start or stop.
+    required: true
+  hours:
+    description: Hours before env-autostop turns an on-demand environment off. Ignored on stop.
+    required: false
+    default: "4"
+
+runs:
+  using: composite
+  steps:
+    # Scaled to zero through the Express API: the task count alone would be pushed back up by the
+    # scaling target, and lowering that target is what the power role is allowed to do.
+    - name: Scale the services down
+      if: inputs.state == 'stop'
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        account="$(aws sts get-caller-identity --query Account --output text)"
+        saved='{}'
+        for app in backend frontend; do
+          arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
+          target="$(aws ecs describe-express-gateway-service --service-arn "$arn" \
+            --query 'service.activeConfigurations[0].scalingTarget' --output json 2>/dev/null || echo null)"
+          minimum="$(jq -r '.minTaskCount // 0' <<< "$target")"
+          maximum="$(jq -r '.maxTaskCount // 0' <<< "$target")"
+          if [[ "$maximum" != "0" ]]; then
+            saved="$(jq -c --arg app "$app" --argjson min "$minimum" --argjson max "$maximum" \
+              '.[$app] = {minTaskCount: $min, maxTaskCount: $max}' <<< "$saved")"
+          fi
+          aws ecs update-express-gateway-service --service-arn "$arn" \
+            --scaling-target minTaskCount=0,maxTaskCount=0 --query 'service.status.statusCode' --output text
+          echo "$app scaled to 0 (was $minimum..$maximum)"
+        done
+        # Remembered rather than hardcoded, so the sizes stay defined only where a deploy sets them.
+        if [[ "$saved" != "{}" ]]; then
+          aws ssm put-parameter --name "/jugueria/$ENVIRONMENT/power/scaling" --type String \
+            --value "$saved" --overwrite >/dev/null
+          echo "Saved scaling: $saved"
+        fi
+
+    - name: Stop the database
+      if: inputs.state == 'stop'
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+          --query 'DBInstances[0].DBInstanceStatus' --output text)"
+        echo "Database status: $status"
+        if [[ "$status" == "available" ]]; then
+          aws rds stop-db-instance --db-instance-identifier "jugueria-$ENVIRONMENT" >/dev/null
+          echo "Stopping."
+        fi
+        aws ssm put-parameter --name "/jugueria/$ENVIRONMENT/power/stop-after" --type String \
+          --value "" --overwrite >/dev/null || true
+
+    # The database comes up first: a task that starts without it fails readiness and is replaced.
+    - name: Start the database
+      if: inputs.state == 'start'
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+          --query 'DBInstances[0].DBInstanceStatus' --output text)"
+        echo "Database status: $status"
+        if [[ "$status" == "stopped" ]]; then
+          aws rds start-db-instance --db-instance-identifier "jugueria-$ENVIRONMENT" >/dev/null
+        fi
+        aws rds wait db-instance-available --db-instance-identifier "jugueria-$ENVIRONMENT"
+
+    - name: Scale the services up
+      if: inputs.state == 'start'
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        account="$(aws sts get-caller-identity --query Account --output text)"
+        saved="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/scaling" \
+          --query 'Parameter.Value' --output text 2>/dev/null || echo '{}')"
+        for app in backend frontend; do
+          arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
+          if ! aws ecs describe-express-gateway-service --service-arn "$arn" >/dev/null 2>&1; then
+            echo "::notice::$app has no service in $ENVIRONMENT yet, so there is nothing to scale up."
+            continue
+          fi
+          minimum="$(jq -r --arg app "$app" '.[$app].minTaskCount // 1' <<< "$saved")"
+          maximum="$(jq -r --arg app "$app" '.[$app].maxTaskCount // 1' <<< "$saved")"
+          aws ecs update-express-gateway-service --service-arn "$arn" \
+            --scaling-target "minTaskCount=$minimum,maxTaskCount=$maximum" \
+            --query 'service.status.statusCode' --output text
+          echo "$app scaled to $minimum..$maximum"
+        done
+
+    # Written on every start, so an environment a deploy brought up is swept like any other instead
+    # of billing until someone remembers it.
+    - name: Record when it should turn off
+      if: inputs.state == 'start'
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        HOURS: ${{ inputs.hours }}
+      run: |
+        if [[ ! "$HOURS" =~ ^[0-9]+$ ]] || (( HOURS < 1 || HOURS > 24 )); then
+          echo "::error::hours must be a whole number between 1 and 24, not '$HOURS'."
+          exit 1
+        fi
+        mode="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/mode" \
+          --query 'Parameter.Value' --output text)"
+        if [[ "$mode" != "on-demand" ]]; then
+          echo "::notice::$ENVIRONMENT is $mode, so no stop time applies."
+          exit 0
+        fi
+        stop_after="$(date -u -d "+$HOURS hours" +%Y-%m-%dT%H:%M:%SZ)"
+        aws ssm put-parameter --name "/jugueria/$ENVIRONMENT/power/stop-after" --type String \
+          --value "$stop_after" --overwrite >/dev/null
+        echo "- $ENVIRONMENT stops after $stop_after" >> "$GITHUB_STEP_SUMMARY"
