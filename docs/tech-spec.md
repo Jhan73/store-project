@@ -766,7 +766,12 @@ Plus the shared ALB (D15) and its 2 public IPv4 addresses, billed while they exi
 | Before launch (M0–M4) | **~USD 51** | ~39% |
 | From launch | **~USD 93** | ~72% |
 
-**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`** — the hard ceiling. The AWS Budgets alert is tighter, so drift is noticed early: **USD 70 before launch, USD 120 from launch**, alerting at 80% actual and 100% forecasted. The alert email is passed as `TF_VAR_budget_alert_email` and never committed. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
+**Budget (NFR-13): ≤ USD 130/month for `test` + `prod`** — the hard ceiling. The AWS Budgets alert is tighter, so drift is noticed early: **USD 70 before launch, USD 120 from launch**, alerting at 80% actual and 100% forecasted. The alert email is passed as `TF_VAR_budget_alert_email` and never committed. Stopping never goes below a floor of **~USD 30**: the ALB and its addresses, RDS storage, the RDS-managed master passwords in Secrets Manager (~USD 0.40 each), and Route 53. Further levers if needed: Fargate Graviton (ARM64) once Express Mode support is confirmed (R1).
+
+**Validated at M0 (2026-09-24).** Unit prices were read from the AWS Price List API (the data behind the Pricing Calculator) and match every rate above: Fargate USD 0.04048 per vCPU-hour and 0.004445 per GB-hour, `db.t4g.micro` PostgreSQL 0.016/h, gp3 0.115 per GB-month, ALB 0.0225/h, public IPv4 0.005/h. Recomputed at 730 h/month (always-on) and ~122 h/month (on-demand), each line lands within USD 1 of the table, except always-on RDS: ~USD 14 before backup storage, so the table's 16 is conservative. Cost Explorer agrees with the measured days: a fully stopped day costs ~USD 0.18 before the ALB exists, and the ALB bills exactly 0.0225/h once it does. Two limits of that check:
+
+- **Attribution.** The account also hosts other projects, and about 70% of this cost (Fargate, the Express-owned ALB and its addresses) carries no `Project` tag, so the check relies on per-service totals rather than a tag filter.
+- **Sweep lag.** Scheduled runs of `env-autostop.yml` were observed ~3.5 h apart rather than hourly, so an `on-demand` environment can bill up to ~3.5 h past its stop time: at most ~USD 7/month per environment, still under the USD 70 alert.
 
 **Free tier:** do not count on it. Accounts created after 2025-07-15 get USD 100–200 in credits for 6 months instead of the former 12-month free tier (e.g. 750 RDS hours). Credits are a cushion; the budget must hold without them.
 
