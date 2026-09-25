@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.shared.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.system.CapturedOutput;
@@ -12,6 +13,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import com.jhanantezana.probe.ProbeController;
 
@@ -22,6 +24,12 @@ class ProblemDetailsAdviceTest {
 		.setControllerAdvice(new ProblemDetailsAdvice())
 		.addFilters(new CorrelationIdFilter())
 		.build());
+
+	// MockMvc restores the request attributes only when the request completes, not when it throws.
+	@AfterEach
+	void releaseTheRequest() {
+		RequestContextHolder.resetRequestAttributes();
+	}
 
 	@Test
 	void rendersABusinessExceptionWithItsCodeAndProperties() {
