@@ -54,7 +54,7 @@ Credentials come from SSM; never commit real passwords.
 | Concern | Convention |
 |---------|------------|
 | Primary keys | `uuid`, UUID v7 generated in the application |
-| Money | `numeric(12,2)` + ISO-4217 currency column |
+| Money | `<attribute>_amount numeric(12,2)` + `<attribute>_currency char(3)` (ISO-4217), e.g. `unit_price_amount`, `unit_price_currency` |
 | Timestamps | `timestamptz`, stored in UTC |
 | Optimistic locking | `version` column on mutable aggregates |
 | Snapshots | Order/ticket lines store product name, chosen options with price deltas, and line total |
