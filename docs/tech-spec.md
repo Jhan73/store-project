@@ -623,7 +623,7 @@ src/app/
 
 Release 1 ships only Spanish, but every text is externalized so a translation is a new file, not a code change.
 
-- The **source locale is Spanish**: `i18n.sourceLocale` in `angular.json` is `es`, or its regional variant (e.g. `es-PE`) once PRD Q1 confirms the country. Source text is written in Spanish directly in templates and `$localize` strings.
+- The **source locale is Spanish**: `i18n.sourceLocale` in `angular.json` is `es-PE`. Source text is written in Spanish directly in templates and `$localize` strings.
 - **Every user-facing text has a custom ID**: `i18n="@@<feature>.<screen>.<element>"` in templates (`@@checkout.summary.payButton`), `` $localize`:@@<id>:Pagar` `` in TypeScript. IDs are stable: rewording a text keeps its ID. Without custom IDs, Angular derives IDs from the text, and every rewording would orphan its translations.
 - Attributes that users read or hear (`aria-label`, `title`, `placeholder`, `alt`) are marked with `i18n-<attribute>` too.
 - Short or ambiguous texts carry a description for translators: `i18n="Button that confirms the payment|@@checkout.summary.payButton"`.
@@ -1035,7 +1035,7 @@ Runbooks in `docs/runbooks/`: rollback, database restore, payment webhook replay
 | D3 | Database | PostgreSQL, one RDS instance per env | Shared instance for test + prod (test load and migrations could hit prod); Aurora Serverless v2 (higher minimum cost at this scale); NoSQL (stock/payment consistency needs transactions) |
 | D4 | Real-time | STOMP + `LISTEN/NOTIFY` fan-out | External broker relay (RabbitMQ/Redis: extra infrastructure); SSE (fine, but the WebSocket starter is already chosen and STOMP gives per-user destinations) |
 | D5 | Cache | Caffeine + cluster-wide eviction | Redis/ElastiCache (extra cost and infra; not needed until cached data outgrows memory) |
-| D6 | Payments | Port + Mercado Pago Checkout Pro (provisional until PRD Q1 confirms the country) | Stripe (weaker local payment method coverage in LatAm); Checkout API/Bricks (larger PCI scope); provider SDK in domain (lock-in) |
+| D6 | Payments | Port + Mercado Pago Checkout Pro (Peru, PEN; confirmed by PRD Q1): no setup or monthly fee, accepts local cards and Yape | Stripe (weaker local payment method coverage in LatAm); Culqi (fixed minimum fee per sale, too high for juice-sized tickets); Izipay (viable fallback; fixed fee not published); Checkout API/Bricks (larger PCI scope); provider SDK in domain (lock-in) |
 | D7 | Frontend version | Upgrade to Angular 22 at M0 | Stay on 20 (LTS ends 2026-11-28) |
 | D8 | Branching | `develop` → `test`, `main` → `prod`, release PRs, `hotfix/*` + back-merge; digests promoted from `develop` so "build once" holds | Trunk-based + promotion (one branch for both environments; no explicit release PR between `test` and `prod`); full Gitflow (extra `release/*` branches not needed with two environments) |
 | D9 | Environments | `test` + `prod` | Add `staging` (cost and effort not justified for one developer; `test` fulfils pre-prod role) |
@@ -1055,7 +1055,7 @@ Runbooks in `docs/runbooks/`: rollback, database restore, payment webhook replay
 |---|-----------------|--------------------|
 | R1 | ECS Express Mode is recent; some features (ARM64, deployment circuit breaker) are unconfirmed. ALB sharing up to 25 services per VPC is documented and still has to be seen with two environments. **Resolved at M0-06:** Express Mode accepts no domain or certificate, which is why D18 exists. **Still open:** Express deprovisions unused ALBs, so the generated endpoint a CloudFront origin points at may not be stable — power modes scale tasks to zero without deleting the service, which should keep it, but that is read from the documentation, not observed | Validate in M0 walking skeleton; assert the endpoint is unchanged after an autostop cycle; fall back to standard ECS with the same pipeline if blocked |
 | R2 | Single-AZ RDS: an AZ outage means restore time (within NFR-07's 2 h RTO) | Accepted for Release 1; Multi-AZ when revenue justifies (~2× RDS cost) |
-| R3 | Mercado Pago availability/fees depend on the country (PRD Q1) | Confirm with Q1 by M1, before payments work starts in M3; the port allows switching the adapter |
+| R3 | Mercado Pago in Peru: public fees include a fixed charge per sale (about S/1 + IGV), heavy on tickets of S/15–25; Yape is documented for Checkout API, not confirmed in Checkout Pro | Before M3: confirm Yape in a Checkout Pro sandbox preference and get real quotes from Mercado Pago and Izipay for the average ticket; the port allows switching the adapter |
 | R4 | Electronic invoicing may be legally required (PRD Q2) | If yes, add an `invoicing` module and provider before M3 |
 | R5 | SES production access requires AWS approval | Request at M1 |
 | R6 | Terraform AWS provider support for Express Mode resources may lag | Services owned by the deploy action (§8.4) |
