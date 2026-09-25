@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, ArchUnit, Validation, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, ArchUnit, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -216,7 +216,7 @@ Full design in tech-spec §7.1. Rules:
 Full model and status table in tech-spec §5.1. Rules:
 
 - Every error is RFC 9457 Problem Details with `code` (`<module>.<kebab-case-reason>`) and `correlationId`. Codes are public API: never rename, remove, or reuse one.
-- Throw `BusinessException(ErrorCode, properties)`. Each module declares its codes in a public enum implementing `ErrorCode`, with the wire code written explicitly.
+- Throw `BusinessException(ErrorCode, detail, properties)`. Use Spring 7's status names (`UNPROCESSABLE_CONTENT` for 422, not the deprecated `UNPROCESSABLE_ENTITY`). Each module declares its codes in a public enum implementing `ErrorCode`, with the wire code written explicitly.
 - **409 vs 422:** could the same request succeed later because someone else changes the state? `409`. Must the request itself change? `422`. A conditional update that affected 0 rows is a `409` with a module-specific code.
 - Error bodies are built **only** by the global `@RestControllerAdvice` in `shared` plus the Security `AuthenticationEntryPoint`/`AccessDeniedHandler`. Never write `@ExceptionHandler`/`@ControllerAdvice` in a module, never catch an exception to build a `ResponseEntity` error, never use `ResponseStatusException`.
 - Translate expected persistence exceptions to a code inside the module (unique email → `identity.email-already-registered`); let unexpected ones become `500`.
