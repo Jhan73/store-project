@@ -652,7 +652,7 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 | Concern | Control |
 |---------|---------|
 | Authentication | Email + password (delegating encoder, bcrypt default); email verification; account lockout after 5 failed attempts for 15 min, stored in `identity.user_account` so it holds across all tasks; Bucket4j throttling on `/auth/*` as a secondary layer |
-| Tokens | JWT signed with RS256 (key pair in SSM, `kid` for rotation). Asymmetric so a future extracted service validates tokens without sharing a secret |
+| Tokens | JWT signed with RS256 (PKCS#8 private key in SSM, public key derived from it, `kid` header). Asymmetric so a future extracted service validates tokens without sharing a secret. Rotation replaces the key: access tokens signed with the old one get `401` and clients refresh, because refresh tokens are opaque database rows, not JWTs — so no multi-key decoder is needed (runbook `jwt-signing-keys.md`) |
 | Session revocation | Deactivation/role change revokes refresh tokens; access tokens expire ≤ 15 min (FR-ADM-01); WebSocket sessions closed |
 | Authorization | Role-based (`CUSTOMER`, `SERVER`, `CASHIER`, `ADMIN`) with method security; ownership checks for customer data; matrix = PRD §4; implementation in §7.1 |
 | First admin | Created by a one-off bootstrap command using credentials from SSM; no default accounts in code |
@@ -667,8 +667,8 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 
 **Tokens — Spring Security only, no JWT library or custom filter.**
 
-- Issuing: `identity` signs access tokens with Spring Security's `NimbusJwtEncoder` (RS256, key pair from SSM, `kid` header).
-- Validating: `spring-boot-starter-security-oauth2-resource-server` with a `NimbusJwtDecoder` built from the public key(s). It validates signature, algorithm, `exp`, `iss`, and `aud`. Libraries such as jjwt and hand-written JWT filters are not allowed.
+- Issuing: `identity` signs access tokens with Spring Security's `NimbusJwtEncoder` (RS256, key from SSM through `JWT_PRIVATE_KEY`/`JWT_KEY_ID`, `kid` header). An in-memory key generated at startup is allowed only where `jugueria.identity.jwt.ephemeral-key-allowed=true` (the `local` profile and the Testcontainers fixture); anywhere else a missing **or blank** key stops the startup, instead of letting each task sign with its own key.
+- Validating: `spring-boot-starter-security-oauth2-resource-server` with a `NimbusJwtDecoder` built from the public key. It validates signature, algorithm, `exp`, `iss`, and `aud`. Libraries such as jjwt and hand-written JWT filters are not allowed.
 - Claims: `sub` (user ID), `roles` (e.g. `["CASHIER"]`), `iss`, `aud`, `iat`, `exp`, `jti`. A `JwtAuthenticationConverter` maps `roles` to authorities `ROLE_<ROLE>`. No personal data in claims.
 
 **One `SecurityFilterChain`**, owned by `identity` (`identity/internal/security`):

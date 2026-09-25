@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -39,7 +39,7 @@ Local run (tech-spec §8.5): `./mvnw spring-boot:run` uses the `local` profile, 
 
 Profiles: none is hardcoded. `local` for development (set by the Maven plugin for `spring-boot:run`), `test`/`prod` through `SPRING_PROFILES_ACTIVE` in each ECS service; tests run with no profile and get PostgreSQL from Testcontainers. `test`/`prod` read `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (role `app`) and `DB_MIGRATOR_USERNAME`, `DB_MIGRATOR_PASSWORD` (role `migrator`, used by Flyway). Profile files hold only non-secret differences.
 
-Security: until identity is built (M1-B2), `identity/internal/security` exposes only `/actuator/health/**` and denies every other request.
+Security: `identity/internal/security` owns the filter chain, the JWT encoder/decoder, and the 401/403 Problem Details handlers. Locally and in tests the signing key is generated in memory (`jugueria.identity.jwt.ephemeral-key-allowed=true`, off by default); `test`/`prod` read it from SSM and refuse to start without it (`docs/runbooks/jwt-signing-keys.md`).
 
 Flyway migrations are **not** in this folder: they live in the root `db/migration/<module>/` and are packaged onto the classpath at build time. Schema and migration rules are in `db/CLAUDE.md`.
 

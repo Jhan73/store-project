@@ -35,14 +35,14 @@ class BackendApplicationIT {
 	}
 
 	@Test
-	void deniesEverythingOutsideTheHealthEndpoints() {
-		assertThat(mvc.get().uri("/actuator/env")).hasStatus(HttpStatus.FORBIDDEN);
-		assertThat(mvc.get().uri("/api/v1/anything")).hasStatus(HttpStatus.FORBIDDEN);
+	void requiresAuthenticationOutsideThePublicRoutes() {
+		assertThat(mvc.get().uri("/actuator/env")).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.get().uri("/api/v1/anything")).hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
 	void tagsEveryResponseWithACorrelationIdBeforeSecurityRuns() {
-		assertThat(mvc.get().uri("/api/v1/anything")).hasStatus(HttpStatus.FORBIDDEN).containsHeader("X-Request-Id");
+		assertThat(mvc.get().uri("/api/v1/anything")).hasStatus(HttpStatus.UNAUTHORIZED).containsHeader("X-Request-Id");
 	}
 
 	@Test

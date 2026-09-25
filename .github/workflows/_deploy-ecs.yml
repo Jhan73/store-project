@@ -73,7 +73,9 @@ jobs:
                 {name: "DB_USERNAME",          valueFrom: "\($p)/db/app/username"},
                 {name: "DB_PASSWORD",          valueFrom: "\($p)/db/app/password"},
                 {name: "DB_MIGRATOR_USERNAME", valueFrom: "\($p)/db/migrator/username"},
-                {name: "DB_MIGRATOR_PASSWORD", valueFrom: "\($p)/db/migrator/password"}
+                {name: "DB_MIGRATOR_PASSWORD", valueFrom: "\($p)/db/migrator/password"},
+                {name: "JWT_KEY_ID",           valueFrom: "\($p)/identity/jwt/key-id"},
+                {name: "JWT_PRIVATE_KEY",      valueFrom: "\($p)/identity/jwt/private-key"}
               ]')"
               ;;
             frontend)
