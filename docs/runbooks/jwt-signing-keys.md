@@ -48,14 +48,33 @@ Remove-Variable PrivateKey
 
 ## Verify
 
-Without printing the key:
+Without printing the key — only its shape:
 
 ```powershell
 aws ssm get-parameter --name "/jugueria/$EnvName/identity/jwt/key-id" --query Parameter.Value --output text
-(aws ssm get-parameter --name "/jugueria/$EnvName/identity/jwt/private-key" --with-decryption --query Parameter.Value --output text).Contains("BEGIN PRIVATE KEY")
+
+$v = aws ssm get-parameter --name "/jugueria/$EnvName/identity/jwt/private-key" --with-decryption --query Parameter.Value --output text
+$v.GetType().FullName
+$v.Count
+$v[0]
+$v[-1]
+Remove-Variable v
+
+aws ssm get-parameter --name "/jugueria/$EnvName/identity/jwt/private-key" --query "Parameter.[Type,Version]" --output text
 ```
 
-Expected: the key ID, then `True`. After the next deploy, the backend log has no `No JWT signing key configured` warning.
+| Line | Expected |
+|------|----------|
+| Key ID | The value of `$KeyId`, e.g. `2026-09` |
+| Type | `System.Object[]` — PowerShell splits a native command's output into one string per line |
+| Count | About 28 lines for a 2048-bit key |
+| First line | The PEM header: `BEGIN PRIVATE KEY` between five dashes on each side |
+| Last line | The PEM footer: `END PRIVATE KEY` between five dashes on each side |
+| Type and version | `SecureString` and the version number |
+
+Do not test the value with `.Contains(...)`: on an array it compares whole lines, so it returns `False` even for a correct key. A header that says `RSA PRIVATE KEY` means a PKCS#1 key, which the backend rejects: generate it again with `genpkey`.
+
+After the next deploy, the backend log has no `No JWT signing key configured` warning.
 
 ## Rotate
 
