@@ -502,14 +502,16 @@ API responses never contain user-facing text: the frontend maps `code` to a Span
 | Same `Idempotency-Key` with a different body | 422 | `common.idempotency-key-reused` |
 | Throttled by Bucket4j | 429 | `common.rate-limited` (+ `Retry-After`) |
 | External provider unavailable or timed out | 503 | `<module>.provider-unavailable` |
+| Other Spring MVC errors: unknown route, method not allowed, not acceptable, unsupported media type, content too large, async timeout | 404 / 405 / 406 / 415 / 413 / 503 | `common.not-found`, `common.method-not-allowed`, `common.not-acceptable`, `common.unsupported-media-type`, `common.content-too-large`, `common.service-unavailable` |
 | Anything unexpected | 500 | `common.internal-error` (generic `detail`) |
 
 Rule of thumb for 409 vs 422: if the same request could succeed later without changing it (someone else changed the state), it is `409`; if the request itself must change, it is `422`.
 
 **Backend implementation**
 
-- `shared` exposes `ErrorCode` (interface: `code()`, `status()`) and one exception, `BusinessException(ErrorCode, Map<String, Object> properties)`. Each module declares its codes in a public enum (`OrderingError implements ErrorCode`) with the wire code written explicitly — never derived from the constant name.
+- `shared` exposes `ErrorCode` (interface: `code()`, `status()`), the framework-level codes in `CommonError`, and one exception, `BusinessException(ErrorCode, String detail, Map<String, Object> properties)`. Statuses use Spring Framework 7's RFC 9110 names (`UNPROCESSABLE_CONTENT`, `CONTENT_TOO_LARGE`), not the deprecated ones. Each module declares its codes in a public enum (`OrderingError implements ErrorCode`) with the wire code written explicitly — never derived from the constant name.
 - One global `@RestControllerAdvice` in `shared` (extending `ResponseEntityExceptionHandler`, so Spring MVC exceptions also become Problem Details) builds every error body. Modules never declare `@ExceptionHandler`/`@ControllerAdvice`, never catch exceptions to build error responses, and never use `ResponseStatusException`.
+- The advice rethrows Spring Security's `AccessDeniedException` and `AuthenticationException` (from `@PreAuthorize`) so the filter chain turns them into `401`/`403`; a catch-all would make them `500`.
 - Spring Security filter-level errors never reach the advice: a custom `AuthenticationEntryPoint` (401) and `AccessDeniedHandler` (403) write the same Problem Details body.
 - Expected persistence exceptions are translated inside the module into a code (e.g. unique violation on email → `identity.email-already-registered`); unexpected ones become `500`.
 - Logging: `4xx` at `INFO` without stack trace; `5xx` at `ERROR` with stack trace. Both include `code` and `correlationId`.

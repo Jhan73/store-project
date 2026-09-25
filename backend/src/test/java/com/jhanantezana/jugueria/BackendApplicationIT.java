@@ -41,6 +41,11 @@ class BackendApplicationIT {
 	}
 
 	@Test
+	void tagsEveryResponseWithACorrelationIdBeforeSecurityRuns() {
+		assertThat(mvc.get().uri("/api/v1/anything")).hasStatus(HttpStatus.FORBIDDEN).containsHeader("X-Request-Id");
+	}
+
+	@Test
 	void packagesMigrationsFromTheRepositoryRootOnTheClasspath() {
 		assertThat(new ClassPathResource("db/migration").exists()).isTrue();
 	}
