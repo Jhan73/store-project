@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @TestConfiguration(proxyBeanMethods = false)
@@ -18,6 +19,11 @@ public class TestcontainersConfiguration {
 
 	static {
 		POSTGRES.start();
+	}
+
+	@Bean
+	DynamicPropertyRegistrar ephemeralSigningKey() {
+		return registry -> registry.add("jugueria.identity.jwt.ephemeral-key-allowed", () -> true);
 	}
 
 	@Bean
