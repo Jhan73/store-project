@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, ArchUnit, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -203,11 +203,11 @@ Full design in tech-spec §7.1. Rules:
 | May this role call this endpoint? | Controller method in `web/` | `@PreAuthorize("hasAnyRole(...)")` per the PRD §4 matrix |
 | May this actor act on this resource in its current state? | Service / domain in `internal/` | Business rule with `CurrentActor`, throws `BusinessException` |
 
-- **Every controller method has `@PreAuthorize`** unless its route is in the allowlist (an ArchUnit test fails the build otherwise).
+- **Every controller method has `@PreAuthorize`**, or `@PermitAll` when its route is in the allowlist (an ArchUnit test fails the build otherwise).
 - Never put `@PreAuthorize` on module APIs or services: event listeners and jobs call them without a user.
 - Rules that depend on data (e.g. SERVER may void a line only while `PENDING`) are domain rules, never SpEL.
 - Ownership is part of the query (`findByIdAndCustomerId`). Someone else's resource is `404`, not `403`.
-- Read the actor only through `CurrentActor` (`shared`). Code in `internal/` never touches `SecurityContextHolder`. Jobs and `@ApplicationModuleListener`s get `SYSTEM`; events that need attribution carry `actorId`/`actorRole` explicitly.
+- Read the actor only through `CurrentActor` (`shared`). Code in `internal/` never touches `SecurityContextHolder`. Jobs and `@ApplicationModuleListener`s get `SYSTEM`; a request without a user is anonymous (`id()`/`role()` null, not `SYSTEM`); events that need attribution carry `actorId`/`actorRole` explicitly.
 - Refresh tokens are hashed, rotated, and family-revoked on reuse. Lockout counters live in PostgreSQL; Bucket4j is only coarse throttling.
 - Tests: one allowed-role and one denied-role test per endpoint (`jwt()` post-processor from `spring-security-test`).
 

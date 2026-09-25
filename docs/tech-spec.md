@@ -106,7 +106,7 @@ flowchart LR
 
 | Where | Change |
 |-------|--------|
-| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `spring-boot-starter-security-oauth2-resource-server` (§7.1; Boot 4 name — the old `spring-boot-starter-oauth2-resource-server` is deprecated); `com.fasterxml.uuid:java-uuid-generator` (UUID v7, §4.11); ArchUnit (test, §7.1 and §4.12 rules); `maven-failsafe-plugin` bound to `verify` for `*IT` tests (§11.1); AWS SDK for Java v2 `s3` and `sesv2`, plus `sso`/`ssooidc` for local SSO profiles (§8.5), added with the first WP that needs them; `springdoc-openapi-starter-webmvc-ui`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
+| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `spring-boot-starter-security-oauth2-resource-server` (§7.1; Boot 4 name — the old `spring-boot-starter-oauth2-resource-server` is deprecated); `com.fasterxml.uuid:java-uuid-generator` (UUID v7, §4.11); ArchUnit for the §7.1 and §4.12 rules, used as Spring Modulith brings it (not declared: a test-scoped declaration would take it off the runtime classpath Modulith needs); `maven-failsafe-plugin` bound to `verify` for `*IT` tests (§11.1); AWS SDK for Java v2 `s3` and `sesv2`, plus `sso`/`ssooidc` for local SSO profiles (§8.5), added with the first WP that needs them; `springdoc-openapi-starter-webmvc-ui`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
 | `application.properties` | Remove `spring.profiles.active=dev`. No profile is hardcoded: `SPRING_PROFILES_ACTIVE` is `test` or `prod` in each ECS service, and `local` for development |
 | `frontend/` | Remove leftover Karma/Jasmine packages (Angular 22 and Vitest are already in place); replace `RenderMode.Prerender` on `**` (§6.1); `withEventReplay()` → `withIncrementalHydration()`; add angular-eslint |
 
@@ -689,13 +689,13 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 | 3. Ownership and state | May *this* actor act on *this* resource in its *current* state? | Application service / domain (`internal/`) | Business rules using `CurrentActor`; they throw `BusinessException` (§5.1) |
 
 - Role checks go on controllers, not on module APIs or services: those are also called by event listeners and scheduled jobs that have no user, and must not be blocked.
-- Every controller method has `@PreAuthorize` unless its route is in the allowlist. An architecture test (ArchUnit) enforces it, so a forgotten annotation fails the build instead of opening an endpoint.
+- Every controller method has `@PreAuthorize`, or `@PermitAll` when its route is in the allowlist. An architecture test (ArchUnit) enforces it, so a forgotten annotation fails the build instead of opening an endpoint. `@PermitAll` only marks the decision at the method; the filter chain's allowlist still decides what is public.
 - Rules that depend on data are layer 3, never SpEL expressions: "SERVER may void a line only while it is `PENDING`" is a domain rule.
 - Ownership is enforced in the query (`findByIdAndCustomerId`), returning `404` for someone else's resource (§5.1).
 
 **`CurrentActor`** (public, `shared`) is the only way business code reads who is acting: `id()`, `role()`, `isSystem()`. Code in `internal/` never touches `SecurityContextHolder`.
 
-- Scheduled jobs and asynchronous listeners (`@ApplicationModuleListener`) run without a request user: `CurrentActor` returns `SYSTEM` there.
+- `CurrentActor` resolves in this order: an authenticated user → that user; a request without one → anonymous (`id()` and `role()` are `null`, `isSystem()` is `false`); no request at all → `SYSTEM`. Scheduled jobs and asynchronous listeners (`@ApplicationModuleListener`) therefore run as `SYSTEM`, while a public request such as registration is never attributed to the system.
 - Events whose consumers need attribution carry `actorId` and `actorRole` explicitly; the security context does not travel with asynchronous events. The synchronous `audit` listener (§4.7) runs in the publisher's thread and reads `CurrentActor` directly.
 
 **Tests:** each endpoint has at least one allowed-role and one denied-role test (`spring-security-test`'s `jwt()` request post-processor), plus the ArchUnit rule above.
