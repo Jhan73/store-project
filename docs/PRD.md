@@ -310,7 +310,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 
 | # | Question | Needed by |
 |---|----------|-----------|
-| Q1 | Country and currency (drives payment methods, the payment provider choice, and tax wording)? | M1 |
+| Q1 | Country and currency (drives payment methods, the payment provider choice, and tax wording)? **Answered: Peru, PEN (soles); payment provider Mercado Pago** | M1 |
 | Q2 | Is electronic invoicing legally required for online sales from day one? | M3 |
 | Q3 | Audit-record retention period required by the accountant? | M4 |
 | Q4 | Domain name for the storefront? **Answered: `jugueria.jhanantezana.com`** (subdomain of `jhanantezana.com`) | M0 |

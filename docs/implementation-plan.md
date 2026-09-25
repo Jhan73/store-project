@@ -65,7 +65,7 @@ M0 is the only milestone that is not backend → frontend: the pipeline comes fi
 
 ## M1 — Catalog & staff
 
-**Before starting:** Q1 answered (country, currency, payment provider). **During M1:** request SES production access (tech-spec R5).
+**Before starting:** Q1 answered (country, currency, payment provider) — done: Peru, PEN, Mercado Pago. **During M1:** request SES production access (tech-spec R5).
 
 ### Backend
 
