@@ -29,6 +29,7 @@
 	<properties>
 		<java.version>25</java.version>
 		<spring-modulith.version>2.1.1</spring-modulith.version>
+		<java-uuid-generator.version>5.2.0</java-uuid-generator.version>
 		<!-- Ahead of the Spring Boot BOM: 11.0.24 carries an authentication bypass. -->
 		<tomcat.version>11.0.26</tomcat.version>
 	</properties>
@@ -75,6 +76,11 @@
 		<dependency>
 			<groupId>org.springframework.modulith</groupId>
 			<artifactId>spring-modulith-starter-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.uuid</groupId>
+			<artifactId>java-uuid-generator</artifactId>
+			<version>${java-uuid-generator.version}</version>
 		</dependency>
 
 		<dependency>
