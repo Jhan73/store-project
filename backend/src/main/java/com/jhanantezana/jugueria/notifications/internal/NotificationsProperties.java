@@ -1,5 +1,6 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -21,7 +22,7 @@ public record NotificationsProperties(@NotBlank String senderAddress, List<Strin
 				: recipientAllowlist.stream().filter(entry -> !entry.isBlank()).toList();
 	}
 
-	public record Ses(@NotBlank String region) {
+	public record Ses(@NotBlank String region, @NotNull Duration apiCallTimeout, @NotNull Duration apiCallAttemptTimeout) {
 	}
 
 }

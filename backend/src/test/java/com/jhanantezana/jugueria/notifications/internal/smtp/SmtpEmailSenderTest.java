@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.notifications.internal.smtp;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ class SmtpEmailSenderTest {
 	@BeforeEach
 	void setUp() {
 		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(),
-				new NotificationsProperties.Ses("us-east-1"));
+				new NotificationsProperties.Ses("us-east-1", Duration.ofSeconds(10), Duration.ofSeconds(5)));
 		sender = new SmtpEmailSender(mailSender, properties);
 	}
 

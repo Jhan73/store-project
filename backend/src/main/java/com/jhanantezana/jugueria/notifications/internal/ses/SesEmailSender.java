@@ -19,8 +19,10 @@ import software.amazon.awssdk.services.sesv2.model.Message;
 import software.amazon.awssdk.services.sesv2.model.SendEmailRequest;
 
 @Component
-@Profile("!local")
+@Profile({ "test", "prod" })
 class SesEmailSender implements EmailSender {
+
+	private static final String CHARSET = "UTF-8";
 
 	private static final Logger log = LoggerFactory.getLogger(SesEmailSender.class);
 
@@ -47,8 +49,8 @@ class SesEmailSender implements EmailSender {
 			.destination(Destination.builder().toAddresses(message.to()).build())
 			.content(EmailContent.builder()
 				.simple(Message.builder()
-					.subject(Content.builder().data(message.subject()).build())
-					.body(Body.builder().text(Content.builder().data(message.body()).build()).build())
+					.subject(Content.builder().data(message.subject()).charset(CHARSET).build())
+					.body(Body.builder().text(Content.builder().data(message.body()).charset(CHARSET).build()).build())
 					.build())
 				.build())
 			.build());

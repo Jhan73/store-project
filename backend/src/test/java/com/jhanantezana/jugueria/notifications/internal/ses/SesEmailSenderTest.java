@@ -8,6 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -28,6 +29,9 @@ import software.amazon.awssdk.services.sesv2.SesV2Client;
 class SesEmailSenderTest {
 
 	static final String SEND_EMAIL_PATH = "/v2/email/outbound-emails";
+
+	static final NotificationsProperties.Ses SES = new NotificationsProperties.Ses("us-east-1", Duration.ofSeconds(10),
+			Duration.ofSeconds(5));
 
 	WireMockServer wireMock;
 
@@ -56,8 +60,7 @@ class SesEmailSenderTest {
 			.willReturn(aResponse().withStatus(200)
 				.withHeader("Content-Type", "application/json")
 				.withBody("{\"MessageId\":\"test-message-id\"}")));
-		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(),
-				new NotificationsProperties.Ses("us-east-1"));
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES);
 		var sender = new SesEmailSender(client, properties);
 
 		sender.send(new EmailMessage("new-staff@jugueria.pe", "Set your password", "body"));
@@ -66,13 +69,35 @@ class SesEmailSenderTest {
 			.withRequestBody(matchingJsonPath("$.FromEmailAddress", equalTo("no-reply@jugueria.jhanantezana.com")))
 			.withRequestBody(matchingJsonPath("$.Destination.ToAddresses[0]", equalTo("new-staff@jugueria.pe")))
 			.withRequestBody(matchingJsonPath("$.Content.Simple.Subject.Data", equalTo("Set your password")))
-			.withRequestBody(matchingJsonPath("$.Content.Simple.Body.Text.Data", equalTo("body"))));
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Subject.Charset", equalTo("UTF-8")))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Body.Text.Data", equalTo("body")))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Body.Text.Charset", equalTo("UTF-8"))));
+	}
+
+	@Test
+	void sendsUtf8EncodedSpanishContent() {
+		wireMock.stubFor(post(urlEqualTo(SEND_EMAIL_PATH))
+			.willReturn(aResponse().withStatus(200)
+				.withHeader("Content-Type", "application/json")
+				.withBody("{\"MessageId\":\"test-message-id\"}")));
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES);
+		var sender = new SesEmailSender(client, properties);
+		var subject = "Configuración de tu contraseña";
+		var body = "Hola, aquí tienes el enlace para el año que viene. ¡Éxitos!";
+
+		sender.send(new EmailMessage("new-staff@jugueria.pe", subject, body));
+
+		wireMock.verify(postRequestedFor(urlEqualTo(SEND_EMAIL_PATH))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Subject.Data", equalTo(subject)))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Subject.Charset", equalTo("UTF-8")))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Body.Text.Data", equalTo(body)))
+			.withRequestBody(matchingJsonPath("$.Content.Simple.Body.Text.Charset", equalTo("UTF-8"))));
 	}
 
 	@Test
 	void skipsSendingWhenTheRecipientIsOutsideTheAllowlist() {
 		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com",
-				List.of("owner@jugueria.pe"), new NotificationsProperties.Ses("us-east-1"));
+				List.of("owner@jugueria.pe"), SES);
 		var sender = new SesEmailSender(client, properties);
 
 		sender.send(new EmailMessage("someone-else@example.com", "Set your password", "body"));
