@@ -5,12 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.identity.UserCreated;
@@ -33,6 +38,13 @@ class RecordAuditOnUserCreatedIT {
 	@Autowired
 	TransactionTemplate transactionTemplate;
 
+	// Guards both directions: a leftover request context from another test must never leak in or out.
+	@BeforeEach
+	@AfterEach
+	void clearRequestContext() {
+		RequestContextHolder.resetRequestAttributes();
+	}
+
 	@Test
 	void attributesAnEventWithNoActorToSystem() {
 		var userId = UUID.randomUUID();
@@ -46,6 +58,20 @@ class RecordAuditOnUserCreatedIT {
 		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
 		assertThat(entry.getAction()).isEqualTo("USER_CREATED");
 		assertThat(entry.getAfter()).containsEntry("email", "system-created@jugueria.pe");
+	}
+
+	@Test
+	void attributesAnEventWithNoActorToAnonymousDuringARequest() {
+		var userId = UUID.randomUUID();
+		RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+
+		transactionTemplate.executeWithoutResult(
+				status -> events.publishEvent(new UserCreated(userId, "self-registered@jugueria.pe", Role.CUSTOMER,
+						null, null, NOW)));
+
+		var entry = findByEntityId(userId);
+		assertThat(entry.getActorId()).isNull();
+		assertThat(entry.getActorRole()).isEqualTo("ANONYMOUS");
 	}
 
 	@Test

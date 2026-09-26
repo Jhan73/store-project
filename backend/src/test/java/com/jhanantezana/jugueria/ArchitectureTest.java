@@ -27,4 +27,9 @@ class ArchitectureTest {
 		ArchitectureRules.NO_HIBERNATE_GENERATED_TIMESTAMPS.check(APPLICATION);
 	}
 
+	@Test
+	void theRequestAndSecurityContextStayBehindTheirAbstractions() {
+		ArchitectureRules.REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS.check(APPLICATION);
+	}
+
 }
