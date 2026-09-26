@@ -3,7 +3,9 @@ package com.jhanantezana.jugueria.audit.web;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +14,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
+import com.jayway.jsonpath.JsonPath;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.audit.internal.AuditLog;
 import com.jhanantezana.jugueria.audit.internal.AuditLogRepository;
@@ -100,6 +104,77 @@ class AuditControllerIT {
 
 		assertThat(result).hasStatusOk();
 		assertThat(result).bodyJson().extractingPath("$.content.length()").isEqualTo(0);
+	}
+
+	@Test
+	void ordersEqualTimestampsStablyAcrossPagesWithNoDuplicatesOrSkips() {
+		var actorId = UUID.randomUUID();
+		var ids = Stream.generate(() -> auditLogs
+			.save(new AuditLog(NOW, actorId, "ADMIN", "USER_CREATED", "USER", UUID.randomUUID(), null, null, null,
+					null, null, null))
+			.getId())
+			.limit(3)
+			.toList();
+
+		var page0 = mvc.get()
+			.uri(AUDIT_ENTRIES + "?actorId=" + actorId + "&size=1&page=0")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+		var page1 = mvc.get()
+			.uri(AUDIT_ENTRIES + "?actorId=" + actorId + "&size=1&page=1")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+		var page2 = mvc.get()
+			.uri(AUDIT_ENTRIES + "?actorId=" + actorId + "&size=1&page=2")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		var seenIds = Stream.of(page0, page1, page2).map(this::firstEntryId).toList();
+		assertThat(seenIds).containsExactlyInAnyOrderElementsOf(ids);
+		assertThat(Set.copyOf(seenIds)).hasSize(3);
+	}
+
+	private UUID firstEntryId(MvcTestResult result) {
+		try {
+			String json = result.getResponse().getContentAsString();
+			return UUID.fromString(JsonPath.read(json, "$.content[0].id"));
+		}
+		catch (Exception e) {
+			throw new AssertionError(e);
+		}
+	}
+
+	@Test
+	void rejectsAMalformedActorIdAsBadRequest() {
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?actorId=not-a-uuid")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.malformed-request");
+	}
+
+	@Test
+	void rejectsAMalformedFromAsBadRequest() {
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?from=not-a-date")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.malformed-request");
+	}
+
+	@Test
+	void rejectsAMalformedToAsBadRequest() {
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?to=not-a-date")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.malformed-request");
 	}
 
 	@Test

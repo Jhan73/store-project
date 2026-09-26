@@ -26,7 +26,10 @@ class AuditController {
 		this.auditLog = auditLog;
 	}
 
-	// Sort is always occurredAt desc, which is also the partition key: no client-chosen sort field.
+	// occurredAt desc, id desc as a tiebreak (UUID v7, so it stays time-ordered): equal timestamps
+	// would otherwise sort arbitrarily between pages, causing duplicates or skips. No client-chosen sort field.
+	private static final Sort SORT = Sort.by("occurredAt").descending().and(Sort.by("id").descending());
+
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	PageResponse<AuditEntryResponse> search(@RequestParam(required = false) UUID actorId,
@@ -35,7 +38,7 @@ class AuditController {
 			@RequestParam(required = false) Instant to, @RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "20") int size) {
 		var bounded = Math.min(size, MAX_PAGE_SIZE);
-		var pageable = PageRequest.of(page, bounded, Sort.by("occurredAt").descending());
+		var pageable = PageRequest.of(page, bounded, SORT);
 		return PageResponse.from(auditLog.search(actorId, entityType, entityId, action, from, to, pageable),
 				AuditEntryResponse::from);
 	}
