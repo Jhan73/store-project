@@ -34,7 +34,7 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void roundTripsAnAccountAndFindsItByEmailIgnoringCase() {
-		var saved = accounts.save(new UserAccount("Cashier@Jugueria.pe", "hash", Role.CASHIER));
+		var saved = accounts.save(new UserAccount("Cashier@Jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 
 		var found = accounts.findByEmailIgnoreCase("cashier@jugueria.pe").orElseThrow();
 
@@ -45,15 +45,15 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void rejectsTwoAccountsWithTheSameEmailRegardlessOfCase() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER));
+		accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 
 		assertThatExceptionOfType(DataIntegrityViolationException.class)
-			.isThrownBy(() -> accounts.saveAndFlush(new UserAccount("CASHIER@jugueria.pe", "hash", Role.CASHIER)));
+			.isThrownBy(() -> accounts.saveAndFlush(new UserAccount("CASHIER@jugueria.pe", "hash", Role.CASHIER, Instant.now())));
 	}
 
 	@Test
 	void accumulatesConcurrentFailedAttemptsWithoutLosingAnUpdate() throws InterruptedException {
-		var account = accounts.save(new UserAccount("racer@jugueria.pe", "hash", Role.CASHIER));
+		var account = accounts.save(new UserAccount("racer@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 		var attempts = 8;
 		var ready = new CountDownLatch(attempts);
 		var go = new CountDownLatch(1);
@@ -80,7 +80,7 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void locksTheAccountOnceItReachesTheMaxAttempts() {
-		var account = accounts.save(new UserAccount("locked@jugueria.pe", "hash", Role.CASHIER));
+		var account = accounts.save(new UserAccount("locked@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 		var lockedUntil = Instant.parse("2026-09-25T12:15:00Z");
 
 		accounts.registerFailedAttempt(account.getId(), 1, lockedUntil);
@@ -92,7 +92,7 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void resetsFailedAttemptsAndTheLock() {
-		var account = accounts.save(new UserAccount("reset@jugueria.pe", "hash", Role.CASHIER));
+		var account = accounts.save(new UserAccount("reset@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 		accounts.registerFailedAttempt(account.getId(), 1, Instant.parse("2026-09-25T12:15:00Z"));
 
 		accounts.resetFailedAttempts(account.getId());

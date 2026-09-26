@@ -2,6 +2,8 @@ package com.jhanantezana.jugueria.identity.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +46,7 @@ class AuthControllerIT {
 
 	@Test
 	void issuesAnAccessTokenForTheRightCredentials() {
-		var account = accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER));
+		var account = accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		var result = login("cashier@jugueria.pe", PASSWORD);
 
@@ -61,21 +63,21 @@ class AuthControllerIT {
 
 	@Test
 	void rejectsTheWrongPasswordWithTheSameCodeAsAnUnknownEmail() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER));
+		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		assertInvalidCredentials(login("cashier@jugueria.pe", "wrong-password"));
 	}
 
 	@Test
 	void rejectsAnInactiveAccountWithTheSameCode() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, false));
+		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now(), false));
 
 		assertInvalidCredentials(login("cashier@jugueria.pe", PASSWORD));
 	}
 
 	@Test
 	void locksTheAccountAfterFiveFailedAttemptsAndAnswersEvenTheCorrectPassword() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER));
+		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		for (int i = 0; i < 5; i++) {
 			assertInvalidCredentials(login("cashier@jugueria.pe", "wrong-password"));
@@ -89,7 +91,7 @@ class AuthControllerIT {
 
 	@Test
 	void resetsTheFailedAttemptCounterOnASuccessfulLogin() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER));
+		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 		login("cashier@jugueria.pe", "wrong-password");
 		login("cashier@jugueria.pe", "wrong-password");
 

@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import com.jhanantezana.archfixtures.ClockBypass;
 import com.jhanantezana.archfixtures.ClockUser;
 import com.jhanantezana.archfixtures.GuardedController;
+import com.jhanantezana.archfixtures.HibernateTimestampBypass;
+import com.jhanantezana.archfixtures.PlainTimestampFields;
 import com.jhanantezana.archfixtures.UnguardedController;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 
@@ -43,6 +45,22 @@ class ArchitectureRulesTest {
 	void acceptsTimeReadThroughAClock() {
 		var result = ArchitectureRules.TIME_IS_READ_THROUGH_THE_CLOCK
 			.evaluate(importer.importClasses(ClockUser.class));
+
+		assertThat(result.hasViolation()).isFalse();
+	}
+
+	@Test
+	void flagsAFieldStampedByAHibernateGenerator() {
+		var result = ArchitectureRules.NO_HIBERNATE_GENERATED_TIMESTAMPS
+			.evaluate(importer.importClasses(HibernateTimestampBypass.class));
+
+		assertThat(result.getFailureReport().getDetails()).hasSize(2);
+	}
+
+	@Test
+	void acceptsAClassWithoutHibernateGeneratedTimestamps() {
+		var result = ArchitectureRules.NO_HIBERNATE_GENERATED_TIMESTAMPS
+			.evaluate(importer.importClasses(PlainTimestampFields.class));
 
 		assertThat(result.hasViolation()).isFalse();
 	}

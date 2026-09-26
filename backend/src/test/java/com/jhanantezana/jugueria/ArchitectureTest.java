@@ -22,4 +22,9 @@ class ArchitectureTest {
 		ArchitectureRules.TIME_IS_READ_THROUGH_THE_CLOCK.check(APPLICATION);
 	}
 
+	@Test
+	void noEntityUsesAHibernateGeneratedTimestamp() {
+		ArchitectureRules.NO_HIBERNATE_GENERATED_TIMESTAMPS.check(APPLICATION);
+	}
+
 }

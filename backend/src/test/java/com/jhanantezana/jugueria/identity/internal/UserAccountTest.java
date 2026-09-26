@@ -15,21 +15,23 @@ class UserAccountTest {
 
 	@Test
 	void isNotLockedWithoutALockedUntil() {
-		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER);
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW);
 
 		assertThat(account.isLocked(NOW)).isFalse();
 	}
 
 	@Test
 	void isLockedWhileLockedUntilIsInTheFuture() {
-		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW.plus(Duration.ofMinutes(15)));
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, 5,
+				NOW.plus(Duration.ofMinutes(15)));
 
 		assertThat(account.isLocked(NOW)).isTrue();
 	}
 
 	@Test
 	void isNoLongerLockedOnceLockedUntilHasPassed() {
-		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW.minus(Duration.ofSeconds(1)));
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, 5,
+				NOW.minus(Duration.ofSeconds(1)));
 
 		assertThat(account.isLocked(NOW)).isFalse();
 	}
