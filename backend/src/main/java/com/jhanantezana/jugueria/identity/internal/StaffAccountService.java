@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.identity.IdentityError;
+import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.identity.UserReactivated;
@@ -82,6 +83,8 @@ public class StaffAccountService {
 		rejectSelf(id);
 		var account = findStaffOrThrow(id);
 		var issued = setPasswordTokens.issue(account.getId());
+		var now = Instant.now(clock);
+		events.publishEvent(new SetPasswordLinkReissued(account.getId(), currentActor.id(), currentActor.role(), now));
 		return new StaffProvisioned(account, issued.rawToken(), issued.expiresAt());
 	}
 

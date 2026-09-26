@@ -27,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.jhanantezana.jugueria.identity.IdentityError;
+import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.identity.UserReactivated;
@@ -154,15 +155,21 @@ class StaffAccountServiceTest {
 	}
 
 	@Test
-	void reissueSetPasswordTokenIssuesANewToken() {
+	void reissueSetPasswordTokenIssuesANewTokenAndPublishesSetPasswordLinkReissued() {
 		var account = new UserAccount("cashier@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
 		when(accounts.findById(account.getId())).thenReturn(Optional.of(account));
 		when(setPasswordTokens.issue(account.getId())).thenReturn(new IssuedSetPasswordToken("raw", NOW.plusSeconds(1)));
+		when(currentActor.id()).thenReturn(ADMIN_ID);
+		when(currentActor.role()).thenReturn(Role.ADMIN);
 
 		var provisioned = service.reissueSetPasswordToken(account.getId());
 
 		assertThat(provisioned.rawSetPasswordToken()).isEqualTo("raw");
 		verify(setPasswordTokens).issue(account.getId());
+		var captor = ArgumentCaptor.forClass(SetPasswordLinkReissued.class);
+		verify(events).publishEvent(captor.capture());
+		assertThat(captor.getValue().userId()).isEqualTo(account.getId());
+		assertThat(captor.getValue().actorId()).isEqualTo(ADMIN_ID);
 	}
 
 	@Test
