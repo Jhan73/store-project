@@ -46,7 +46,10 @@ public class SetPasswordService {
 		if (tokens.markUsed(token.getId(), now) == 0) {
 			throw invalidToken();
 		}
-		account.changePassword(passwordEncoder.encode(newPassword), now);
+		// markUsed clears the persistence context, so the account loaded above is detached by now.
+		accounts.findById(token.getUserId())
+			.orElseThrow(SetPasswordService::invalidToken)
+			.changePassword(passwordEncoder.encode(newPassword), now);
 	}
 
 	private static BusinessException invalidToken() {
