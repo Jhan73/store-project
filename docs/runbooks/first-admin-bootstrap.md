@@ -8,9 +8,9 @@ The backend never ships a default account. The first `ADMIN` is created by runni
 2. Otherwise creates the account with no usable password, issues a single-use set-password token (default expiry 48h, `jugueria.identity.set-password.token-ttl`), and prints the set-password link to **stdout only** — never through the application logger, in any profile.
 3. Exits the process (`SpringApplication.exit`), so the run does not stay up serving traffic.
 
-## Why stdout only
+## Why stdout too
 
-Every other adapter in `notifications` refuses to expose a set-password link (`UnavailableEmailSender`, tech-spec §3 — no SMTP/SES dependency is approved yet). The bootstrap command is the one deliberate exception, scoped to this one-off run: whoever runs it reads the link directly from the command's own output, copies it somewhere safe, and the process then exits. The link is a bearer credential for 48 hours — treat it like a password.
+Email transport is real (D16, docs/runbooks/ses-setup.md): the bootstrap command reuses the same staff-creation path as `POST /api/v1/staff`, so the link also arrives at the given address through SES, same as any other staff invite. Printing it to stdout as well stays a deliberate fallback for this one-off run — the account is being created before anyone has confirmed the environment can deliver mail (SES sandbox, DNS not yet verified, allowlist misconfigured), so the operator is never locked out of the very first admin. Whoever runs it can read the link directly from the command's own output if the email does not arrive, copy it somewhere safe, and the process then exits. The link is a bearer credential for 48 hours — treat it like a password, from whichever channel it arrived.
 
 ## Prerequisites
 

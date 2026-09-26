@@ -3,14 +3,14 @@ package com.jhanantezana.jugueria.notifications.internal;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-// Fails loudly instead of pretending to deliver, and logs nothing so no address or content leaks.
+// Covers any context that is neither local, test, nor prod (e.g. the no-profile default tests run with).
 @Component
-@Profile("!local")
+@Profile("!local & !test & !prod")
 class UnavailableEmailSender implements EmailSender {
 
 	@Override
 	public void send(EmailMessage message) {
-		throw new IllegalStateException("Email transport is not available yet");
+		throw new IllegalStateException("Email transport is not available in this profile");
 	}
 
 }
