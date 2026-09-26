@@ -63,7 +63,7 @@ Console, since the CLI operation (`sesv2 put-account-details`) asks for the same
 5. Submit. AWS typically answers within 24 hours; check status with:
 
 ```powershell
-aws sesv2 get-account --query "{ProductionAccessEnabled:ProductionAccessEnabled,SendingEnabled:SendQuota}"
+aws sesv2 get-account --query "{ProductionAccessEnabled:ProductionAccessEnabled,SendingEnabled:SendingEnabled,SendQuota:SendQuota}"
 ```
 
 Once `ProductionAccessEnabled` is `true`, the sandbox restriction is gone for the whole account (`test` included) — the `test` allowlist becomes the only thing keeping `test` from emailing real people, exactly as tech-spec §8.1 describes.
