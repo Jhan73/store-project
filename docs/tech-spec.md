@@ -491,9 +491,11 @@ API responses never contain user-facing text: the frontend maps `code` to a Span
 | Bean Validation failure | 400 | `common.validation-failed` (+ `errors`) |
 | Missing `Idempotency-Key` on a command that requires it | 400 | `common.idempotency-key-required` |
 | Missing, invalid, or expired access token | 401 | `auth.unauthenticated` |
+| Login: unknown email, wrong password, or inactive account (never reveal which) | 401 | `auth.invalid-credentials` |
 | Authenticated, role not allowed | 403 | `auth.forbidden` |
 | Resource does not exist, **or belongs to another customer** (never reveal existence) | 404 | `<module>.<entity>-not-found` |
 | Request conflicts with the **current state** of a resource, which may change (race lost, conditional update affected 0 rows, invalid state transition, insufficient stock) | 409 | module-specific |
+| Login: account locked out after too many failed attempts (safe to disclose; resolves once `lockedUntil` passes) | 409 | `auth.account-locked` (+ `lockedUntil`) |
 | Optimistic lock failure (`@Version`) | 409 | `common.concurrent-modification` |
 | Same `Idempotency-Key` while the first request is still running | 409 | `common.idempotency-in-progress` |
 | `If-Match` does not match the current `ETag` | 412 | `common.precondition-failed` |
@@ -699,6 +701,17 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 - Events whose consumers need attribution carry `actorId` and `actorRole` explicitly; the security context does not travel with asynchronous events. The synchronous `audit` listener (§4.7) runs in the publisher's thread and reads `CurrentActor` directly.
 
 **Tests:** each endpoint has at least one allowed-role and one denied-role test (`spring-security-test`'s `jwt()` request post-processor), plus the ArchUnit rule above.
+
+**Login and lockout** (`POST /api/v1/auth/login`, M1-B2):
+
+- Request `{ email, password }`; response `{ accessToken, tokenType, userId, role }`. No refresh token or cookie yet — that lands with rotation in a later slice.
+- Password check via the platform's `PasswordEncoderFactories.createDelegatingPasswordEncoder()` (BCrypt by default, per §7).
+- `jugueria.identity.lockout.max-failed-attempts` (default 5) and `.lockout-duration` (default 15m) configure the thresholds; both live in `IdentityProperties`, next to the JWT settings, because they are security parameters, not merchant-tunable `store_settings`.
+- The failed-attempt counter (`identity.user_account.failed_attempts`/`locked_until`) is updated with a conditional atomic `UPDATE` (native SQL — a JPQL `CASE ... ELSE null` left PostgreSQL unable to infer `locked_until`'s type), not `@Version` optimistic locking: two concurrent failed attempts on the same account must both be counted, and optimistic locking would instead reject the second one as a `409 common.concurrent-modification`, which is the wrong answer for a login attempt. The update — and the `BusinessException` that follows it — happen in the same transaction, marked `noRollbackFor` that exception so the recorded failure survives the login being rejected. `@Transactional` stays only on `LoginService`, never on the repository, per §4.11; a repository test that needs a standalone transaction uses `TransactionTemplate`.
+- **Lock expiry restarts the count, it does not resume it.** If `locked_until` has already passed when a new failure is recorded, the atomic update sets `failed_attempts` back to 1 instead of incrementing the stale value — otherwise a single failed attempt right after expiry would immediately relock the account for another full lockout window, and the lockout would never actually end under light, continuous traffic.
+- **Unknown email, wrong password, and an inactive account cost the same BCrypt work.** `LoginService` always calls `passwordEncoder.matches(...)`, even when there is no account to check against — in that case against a dummy hash computed once at construction with the same encoder. Skipping the check for an unknown or inactive account would make those branches measurably faster than a wrong password on a real, active account, leaking through response timing exactly the distinction `auth.invalid-credentials` is meant to hide.
+- **RFC 9728** (`GET /.well-known/oauth-protected-resource`): Spring Security 7's resource server always registers this endpoint once `oauth2ResourceServer()` is configured; there is no supported flag to disable it. `SecurityConfiguration` instead corrects the one claim it gets wrong for us, `tls_client_certificate_bound_access_tokens` (we do not do mTLS), via `.protectedResourceMetadata(...)`. The endpoint stays public and truthful rather than hidden.
+- `created_at`/`updated_at` on `user_account` are set from the injected `Clock`, in the constructor and in the same atomic `UPDATE`s that touch the row — never a Hibernate `@CreationTimestamp`/`@UpdateTimestamp` generator, which stamps from its own internal clock and would drift out of step with a `Clock` the tests can fix or advance. An ArchUnit rule (`NO_HIBERNATE_GENERATED_TIMESTAMPS`) forbids both annotations anywhere in `src/main`.
 
 ## 8. Infrastructure (AWS)
 

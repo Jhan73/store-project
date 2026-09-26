@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.probe.SecuredProbeController;
+import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 
@@ -121,6 +122,26 @@ class SecurityIT {
 		var token = encode(forger, claims(properties.jwt().issuer(), properties.jwt().audience()));
 
 		assertProblem(call(token), HttpStatus.UNAUTHORIZED, "auth.unauthenticated");
+	}
+
+	@Test
+	void letsAnAllowedRoleThroughUsingTheReusableAuthTestHelper() {
+		var id = UUID.randomUUID();
+
+		var result = mvc.get().uri(PROTECTED).with(AuthenticatedAs.user(id, Role.CASHIER)).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.id").isEqualTo(id.toString());
+	}
+
+	@Test
+	void answersTheProtectedResourceMetadataEndpointTruthfully() {
+		var result = mvc.get().uri("/.well-known/oauth-protected-resource").exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson()
+			.extractingPath("$.tls_client_certificate_bound_access_tokens")
+			.isEqualTo(false);
 	}
 
 	@Test
