@@ -21,32 +21,48 @@ Email transport is real (D16, docs/runbooks/ses-setup.md): the bootstrap command
 
 ## Run it (ECS one-off task)
 
-Express Mode generates the task definition, so it does not necessarily name the container `backend` — read the real name from the task definition rather than assuming it, or the container override silently matches nothing and `run-task` fails.
+Express Mode keeps the task definition and network configuration on the service's deployments, not on the service itself (`services[0].taskDefinition` is `null`), and names the container `Main`. Read all three from the `PRIMARY` deployment rather than assuming them.
 
 ```powershell
 $env:AWS_PROFILE = "jugueria-admin"
 $EnvName = "test"      # or "prod"
 $Service = "jugueria-$EnvName-backend"
+$Primary = "services[0].deployments[?status=='PRIMARY'] | [0]"
 
-$TaskDef = aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].taskDefinition" --output text
+$TaskDef = aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "$Primary.taskDefinition" --output text
 $ContainerName = aws ecs describe-task-definition --task-definition $TaskDef --query "taskDefinition.containerDefinitions[0].name" --output text
-$Subnets = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].networkConfiguration.awsvpcConfiguration.subnets" --output json | ConvertFrom-Json) -join ","
-$Sgs     = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].networkConfiguration.awsvpcConfiguration.securityGroups" --output json | ConvertFrom-Json) -join ","
+$Subnets = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "$Primary.networkConfiguration.awsvpcConfiguration.subnets" --output json | ConvertFrom-Json) -join ","
+$Sgs     = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "$Primary.networkConfiguration.awsvpcConfiguration.securityGroups" --output json | ConvertFrom-Json) -join ","
+"$TaskDef | $ContainerName | $Subnets | $Sgs"   # none of these may be empty or "None"
+```
 
-aws ecs run-task `
+The task needs a public IP: there is no NAT gateway, so without one it cannot pull the image, read SSM, or reach SES.
+
+The overrides go through a file because PowerShell mangles JSON quotes passed to native commands.
+
+```powershell
+$AdminEmail = "owner@example.com"
+@{ containerOverrides = @(@{ name = $ContainerName; command = @("--bootstrap-first-admin", "--admin-email=$AdminEmail") }) } |
+  ConvertTo-Json -Depth 5 | Set-Content -Encoding ascii overrides.json
+
+$TaskArn = aws ecs run-task `
   --cluster "jugueria-$EnvName" `
   --task-definition $TaskDef `
   --launch-type FARGATE `
-  --network-configuration "awsvpcConfiguration={subnets=[$Subnets],securityGroups=[$Sgs],assignPublicIp=DISABLED}" `
-  --overrides "{\"containerOverrides\":[{\"name\":\"$ContainerName\",\"command\":[\"--bootstrap-first-admin\",\"--admin-email=owner@example.com\"]}]}"
+  --network-configuration "awsvpcConfiguration={subnets=[$Subnets],securityGroups=[$Sgs],assignPublicIp=ENABLED}" `
+  --overrides file://overrides.json `
+  --query "tasks[0].taskArn" --output text
+Remove-Item overrides.json
+$TaskArn
 ```
 
-Replace `owner@example.com` with the real owner's address before running. Watch the task's CloudWatch log group (`/ecs/jugueria-<env>-backend` — confirm with `aws ecs describe-task-definition --task-definition $TaskDef --query "taskDefinition.containerDefinitions[0].logConfiguration"`) for the two `System.out` lines — `First ADMIN created: ...` and `Set-password link (expires ...): ...` — then open the link before it expires. CloudWatch retains the log group like any other backend output, so remove or expire that stream's entries afterward if the link's exposure window matters for your compliance posture; this is a known trade-off of printing to stdout under ECS rather than to an interactive terminal only.
+Replace `owner@example.com` with the real owner's address before running. In `test` it must also be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST`, and while SES is in the sandbox it must be a verified identity, or only the stdout fallback delivers the link. Watch the task's CloudWatch log group (`/ecs/jugueria-<env>-backend` — confirm with `aws ecs describe-task-definition --task-definition $TaskDef --query "taskDefinition.containerDefinitions[0].logConfiguration"`) for the two `System.out` lines — `First ADMIN created: ...` and `Set-password link (expires ...): ...` — then open the link before it expires. CloudWatch retains the log group like any other backend output, so remove or expire that stream's entries afterward if the link's exposure window matters for your compliance posture; this is a known trade-off of printing to stdout under ECS rather than to an interactive terminal only.
 
 ## Verify
 
 ```powershell
-aws ecs describe-tasks --cluster "jugueria-$EnvName" --tasks <task-arn> --query "tasks[0].containers[0].exitCode"
+aws ecs wait tasks-stopped --cluster "jugueria-$EnvName" --tasks $TaskArn
+aws ecs describe-tasks --cluster "jugueria-$EnvName" --tasks $TaskArn --query "tasks[0].containers[0].exitCode"
 ```
 
 Expected: `0`. A non-zero exit means either the admin email argument was missing (see the task's log for `Missing required --admin-email=<email> argument.`) or the account creation failed (duplicate email, etc.).
