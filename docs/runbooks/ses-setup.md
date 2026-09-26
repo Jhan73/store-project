@@ -9,7 +9,7 @@ You end up with:
 | Created | Where | Used by |
 |---------|-------|---------|
 | SES domain identity `jugueria.jhanantezana.com`, DKIM (2048-bit), custom MAIL FROM, DMARC `p=none` | `infra/envs/shared` (already applied at M0-05) | Every environment — SES is account-level, shared by `test` and `prod` |
-| `ses:SendEmail` on the backend task role, scoped to the identity ARN | `infra/envs/<env>` (this slice) | The backend's SES v2 adapter |
+| `ses:SendEmail` on the backend task role, limited to `ses:FromAddress = no-reply@jugueria.jhanantezana.com` (any identity: in the sandbox SES also authorizes against the recipient's identity) | `infra/envs/<env>` | The backend's SES v2 adapter |
 | SES production access | Requested manually in the SES console (tech-spec R5) | `prod` only |
 | `NOTIFICATIONS_RECIPIENT_ALLOWLIST` GitHub environment variable | `test` only | Keeps `test` from emailing real people while the account is in the sandbox, and afterward |
 
