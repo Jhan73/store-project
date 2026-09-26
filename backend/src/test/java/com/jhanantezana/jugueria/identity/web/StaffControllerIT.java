@@ -4,21 +4,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.identity.internal.RefreshToken;
 import com.jhanantezana.jugueria.identity.internal.RefreshTokenRepository;
+import com.jhanantezana.jugueria.identity.internal.SetPasswordToken;
 import com.jhanantezana.jugueria.identity.internal.SetPasswordTokenRepository;
 import com.jhanantezana.jugueria.identity.internal.UserAccount;
 import com.jhanantezana.jugueria.identity.internal.UserAccountRepository;
@@ -204,8 +211,86 @@ class StaffControllerIT {
 		assertThat(result).bodyJson().extractingPath("$.active").isEqualTo(true);
 	}
 
-	private MvcTestResult create(String email, Role role,
-			org.springframework.test.web.servlet.request.RequestPostProcessor auth) {
+	@Test
+	void resendsTheSetPasswordLinkAndRevokesTheEarlierToken() {
+		var staff = accounts.save(new UserAccount("resend@jugueria.pe", "unusable-hash", Role.CASHIER, Instant.now()));
+		var oldRaw = RefreshTokens.newRawToken();
+		var oldToken = setPasswordTokens.save(new SetPasswordToken(staff.getId(), RefreshTokens.hash(oldRaw), Instant.now(),
+				Instant.now().plusSeconds(3600)));
+
+		var result = mvc.post().uri(STAFF + "/" + staff.getId() + "/set-password-link").with(admin()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
+		assertThat(setPasswordTokens.findById(oldToken.getId()).orElseThrow().getRevokedAt()).isNotNull();
+		var remaining = setPasswordTokens.findAll().stream().filter(token -> !token.getId().equals(oldToken.getId())).toList();
+		assertThat(remaining).hasSize(1);
+		assertThat(remaining.getFirst().getRevokedAt()).isNull();
+	}
+
+	@Test
+	void rejectsResendingOnesOwnSetPasswordLink() {
+		var self = accounts.save(new UserAccount("self-admin-resend@jugueria.pe", "hash", Role.ADMIN, Instant.now()));
+
+		var result = mvc.post()
+			.uri(STAFF + "/" + self.getId() + "/set-password-link")
+			.with(AuthenticatedAs.user(self.getId(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.cannot-modify-own-account");
+	}
+
+	@ParameterizedTest
+	@MethodSource("staffRoutes")
+	void rejectsWhenAnonymous(RouteCase route) {
+		var staff = accounts.save(new UserAccount("route-anon@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		var result = exchange(route, staff.getId(), null);
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@ParameterizedTest
+	@MethodSource("staffRoutes")
+	void rejectsForANonAdminRole(RouteCase route) {
+		var staff = accounts.save(new UserAccount("route-denied@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		var result = exchange(route, staff.getId(), AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER));
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	record RouteCase(String name, HttpMethod method, String pathTemplate, @Nullable String body) {
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+
+	static Stream<RouteCase> staffRoutes() {
+		return Stream.of(
+				new RouteCase("create", HttpMethod.POST, STAFF, "{\"email\":\"route@jugueria.pe\",\"role\":\"CASHIER\"}"),
+				new RouteCase("list", HttpMethod.GET, STAFF, null),
+				new RouteCase("get", HttpMethod.GET, STAFF + "/{id}", null),
+				new RouteCase("changeRole", HttpMethod.PATCH, STAFF + "/{id}/role", "{\"role\":\"SERVER\"}"),
+				new RouteCase("deactivate", HttpMethod.POST, STAFF + "/{id}/deactivate", null),
+				new RouteCase("reactivate", HttpMethod.POST, STAFF + "/{id}/reactivate", null),
+				new RouteCase("resendSetPasswordLink", HttpMethod.POST, STAFF + "/{id}/set-password-link", null));
+	}
+
+	private MvcTestResult exchange(RouteCase route, UUID id, @Nullable RequestPostProcessor auth) {
+		var uri = route.pathTemplate().replace("{id}", id.toString());
+		var builder = mvc.method(route.method()).uri(uri);
+		if (route.body() != null) {
+			builder = builder.contentType(MediaType.APPLICATION_JSON).content(route.body());
+		}
+		if (auth != null) {
+			builder = builder.with(auth);
+		}
+		return builder.exchange();
+	}
+
+	private MvcTestResult create(String email, Role role, RequestPostProcessor auth) {
 		return mvc.post()
 			.uri(STAFF)
 			.with(auth)
@@ -214,8 +299,7 @@ class StaffControllerIT {
 			.exchange();
 	}
 
-	private MvcTestResult changeRole(UUID id, Role role,
-			org.springframework.test.web.servlet.request.RequestPostProcessor auth) {
+	private MvcTestResult changeRole(UUID id, Role role, RequestPostProcessor auth) {
 		return mvc.patch()
 			.uri(STAFF + "/" + id + "/role")
 			.with(auth)
@@ -230,7 +314,7 @@ class StaffControllerIT {
 				Instant.now().plusSeconds(3600), Instant.now()));
 	}
 
-	private static org.springframework.test.web.servlet.request.RequestPostProcessor admin() {
+	private static RequestPostProcessor admin() {
 		return AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN);
 	}
 

@@ -5,12 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,6 +70,40 @@ class StaffProvisioningServiceTest {
 			.sendStaffSetPasswordEmail(any(), any(), any());
 
 		assertThatCode(() -> service.createStaff("new-staff@jugueria.pe", Role.CASHIER)).doesNotThrowAnyException();
+	}
+
+	@Test
+	void createFirstAdminSendsTheEmailOnlyWhenAnAccountWasCreated() {
+		var account = new UserAccount("owner@jugueria.pe", "hash", Role.ADMIN, NOW);
+		when(staffAccounts.createFirstAdminAccountAndToken("owner@jugueria.pe"))
+			.thenReturn(Optional.of(new StaffProvisioned(account, "raw-token", NOW.plus(Duration.ofHours(48)))));
+
+		var provisioned = service.createFirstAdmin("owner@jugueria.pe");
+
+		assertThat(provisioned).isPresent();
+		verify(notifications).sendStaffSetPasswordEmail(eq("owner@jugueria.pe"), any(), any());
+	}
+
+	@Test
+	void createFirstAdminIsANoOpWithoutSendingAnyEmail() {
+		when(staffAccounts.createFirstAdminAccountAndToken("owner@jugueria.pe")).thenReturn(Optional.empty());
+
+		var provisioned = service.createFirstAdmin("owner@jugueria.pe");
+
+		assertThat(provisioned).isEmpty();
+		verify(notifications, never()).sendStaffSetPasswordEmail(any(), any(), any());
+	}
+
+	@Test
+	void resendSetPasswordLinkReissuesAndSendsTheEmail() {
+		var account = new UserAccount("cashier@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
+		var id = account.getId();
+		when(staffAccounts.reissueSetPasswordToken(id))
+			.thenReturn(new StaffProvisioned(account, "new-raw-token", NOW.plus(Duration.ofHours(48))));
+
+		service.resendSetPasswordLink(id);
+
+		verify(notifications).sendStaffSetPasswordEmail(eq("cashier@jugueria.pe"), any(), any());
 	}
 
 }

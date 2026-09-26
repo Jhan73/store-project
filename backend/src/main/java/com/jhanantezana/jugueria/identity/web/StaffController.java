@@ -76,4 +76,11 @@ class StaffController {
 		return StaffResponse.from(staffAccounts.reactivate(id));
 	}
 
+	@PostMapping("/{id}/set-password-link")
+	@PreAuthorize("hasRole('ADMIN')")
+	ResponseEntity<Void> resendSetPasswordLink(@PathVariable UUID id) {
+		provisioning.resendSetPasswordLink(id);
+		return ResponseEntity.noContent().build();
+	}
+
 }
