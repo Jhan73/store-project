@@ -29,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.jhanantezana.jugueria.identity.IdentityError;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
+import com.jhanantezana.jugueria.identity.UserReactivated;
 import com.jhanantezana.jugueria.identity.UserRoleChanged;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CommonError;
@@ -290,15 +291,20 @@ class StaffAccountServiceTest {
 	}
 
 	@Test
-	void reactivateSetsActiveWithoutPublishingAnEvent() {
+	void reactivateSetsActiveAndPublishesUserReactivated() {
 		var targetId = UUID.randomUUID();
+		when(currentActor.id()).thenReturn(ADMIN_ID);
+		when(currentActor.role()).thenReturn(Role.ADMIN);
 		when(accounts.findById(targetId))
 			.thenReturn(Optional.of(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, false)));
 
 		var updated = service.reactivate(targetId);
 
 		assertThat(updated.isActive()).isTrue();
-		verify(events, never()).publishEvent(any());
+		var captor = ArgumentCaptor.forClass(UserReactivated.class);
+		verify(events).publishEvent(captor.capture());
+		assertThat(captor.getValue().userId()).isEqualTo(targetId);
+		assertThat(captor.getValue().actorId()).isEqualTo(ADMIN_ID);
 	}
 
 	@Test

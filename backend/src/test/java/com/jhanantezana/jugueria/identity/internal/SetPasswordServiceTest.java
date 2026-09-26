@@ -17,10 +17,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.jhanantezana.jugueria.identity.UserPasswordSet;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
@@ -41,11 +44,14 @@ class SetPasswordServiceTest {
 	@Mock
 	PasswordEncoder passwordEncoder;
 
+	@Mock
+	ApplicationEventPublisher events;
+
 	SetPasswordService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new SetPasswordService(tokens, accounts, passwordEncoder, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new SetPasswordService(tokens, accounts, passwordEncoder, events, Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test
@@ -105,6 +111,10 @@ class SetPasswordServiceTest {
 		assertThat(account.getPasswordHash()).isEqualTo("encoded-hash");
 		assertThat(account.getFailedAttempts()).isZero();
 		assertThat(account.getLockedUntil()).isNull();
+		var captor = ArgumentCaptor.forClass(UserPasswordSet.class);
+		verify(events).publishEvent(captor.capture());
+		assertThat(captor.getValue().userId()).isEqualTo(account.getId());
+		assertThat(captor.getValue().role()).isEqualTo(Role.CASHIER);
 	}
 
 	@Test
