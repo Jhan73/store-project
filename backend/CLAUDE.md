@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, Cache + Caffeine, springdoc-openapi, Bucket4j, AWS SDK `s3`/`sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests). Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 

@@ -1,4 +1,4 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
-record EmailMessage(String to, String subject, String body) {
+public record EmailMessage(String to, String subject, String body) {
 }
