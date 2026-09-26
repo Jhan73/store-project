@@ -78,6 +78,6 @@ After the next deploy, the backend log has no `No JWT signing key configured` wa
 
 ## Rotate
 
-Run the same steps with a new `$KeyId`, then redeploy the backend (`cd-test.yml` or `cd-prod.yml`, or `rollback.yml` to the running commit).
+Run the same steps with a new `$KeyId`, then redeploy the backend: in `test`, `gh workflow run cd-test.yml --ref develop -f redeploy=backend`; in `prod`, `rollback.yml` to the running commit, which always redeploys even when the image is unchanged.
 
 Nobody is logged out. Access tokens signed with the old key fail with `401` from the moment the new tasks run, and the frontend answers a `401` by refreshing: refresh tokens are opaque rows in the database, not JWTs, so they survive the rotation and the new access token is signed with the new key. Rotate right away if the key may have leaked; there is no need to rotate on a schedule.
