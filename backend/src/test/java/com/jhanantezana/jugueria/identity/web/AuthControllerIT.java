@@ -29,6 +29,7 @@ import com.jhanantezana.jugueria.identity.internal.RefreshToken;
 import com.jhanantezana.jugueria.identity.internal.RefreshTokenRepository;
 import com.jhanantezana.jugueria.identity.internal.UserAccount;
 import com.jhanantezana.jugueria.identity.internal.UserAccountRepository;
+import com.jhanantezana.jugueria.identity.internal.security.IdentityProperties;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -58,6 +59,9 @@ class AuthControllerIT {
 
 	@Autowired
 	PasswordEncoder passwordEncoder;
+
+	@Autowired
+	IdentityProperties identityProperties;
 
 	@AfterEach
 	void cleanUp() {
@@ -359,7 +363,8 @@ class AuthControllerIT {
 		return result.getResponse().getCookie(RefreshTokenCookie.NAME).getValue();
 	}
 
-	private static void assertRefreshCookieIssued(MvcTestResult result) {
+	private void assertRefreshCookieIssued(MvcTestResult result) {
+		var maxAgeSeconds = identityProperties.refreshToken().ttl().toSeconds();
 		assertThat(result).headers()
 			.hasHeaderSatisfying(HttpHeaders.SET_COOKIE,
 					values -> assertThat(values).singleElement()
@@ -368,7 +373,8 @@ class AuthControllerIT {
 						.contains("HttpOnly")
 						.contains("Secure")
 						.contains("SameSite=Strict")
-						.contains("Path=/"));
+						.contains("Path=/")
+						.contains("Max-Age=" + maxAgeSeconds));
 	}
 
 	private static void assertInvalidRefreshToken(MvcTestResult result) {
