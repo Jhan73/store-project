@@ -51,6 +51,7 @@ jobs:
           BACKEND_SECURITY_GROUP_ID: ${{ vars.BACKEND_SECURITY_GROUP_ID }}
           FRONTEND_SECURITY_GROUP_ID: ${{ vars.FRONTEND_SECURITY_GROUP_ID }}
           SUBNET_IDS: ${{ vars.SUBNET_IDS }}
+          NOTIFICATIONS_RECIPIENT_ALLOWLIST: ${{ vars.NOTIFICATIONS_RECIPIENT_ALLOWLIST }}
         run: |
           account="$(aws sts get-caller-identity --query Account --output text)"
           parameters="arn:aws:ssm:$AWS_REGION:$account:parameter/jugueria/$ENVIRONMENT"
@@ -66,8 +67,9 @@ jobs:
               if [[ "$ENVIRONMENT" == prod ]]; then max_tasks=4; else max_tasks=1; fi
               security_groups="$BACKEND_SECURITY_GROUP_ID"
               task_role_arn="arn:aws:iam::$account:role/jugueria-$ENVIRONMENT-backend-task"
-              environment_variables="$(jq -nc --arg value "$ENVIRONMENT" \
-                '[{name: "SPRING_PROFILES_ACTIVE", value: $value}]')"
+              environment_variables="$(jq -nc --arg value "$ENVIRONMENT" --arg allowlist "$NOTIFICATIONS_RECIPIENT_ALLOWLIST" \
+                '[{name: "SPRING_PROFILES_ACTIVE", value: $value},
+                  {name: "NOTIFICATIONS_RECIPIENT_ALLOWLIST", value: $allowlist}]')"
               secrets="$(jq -nc --arg p "$parameters" '[
                 {name: "DB_URL",               valueFrom: "\($p)/db/url"},
                 {name: "DB_USERNAME",          valueFrom: "\($p)/db/app/username"},
