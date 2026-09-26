@@ -17,13 +17,16 @@ import jakarta.validation.constraints.Positive;
 @ConfigurationProperties("jugueria.identity")
 @Validated
 public record IdentityProperties(@NotEmpty List<String> allowedOrigins, @Valid @NotNull Jwt jwt,
-		@Valid @NotNull Lockout lockout) {
+		@Valid @NotNull Lockout lockout, @Valid @NotNull RefreshToken refreshToken) {
 
 	public record Jwt(@NotBlank String issuer, @NotBlank String audience, @NotBlank String keyId,
 			@Nullable String privateKey, boolean ephemeralKeyAllowed, @NotNull Duration accessTokenTtl) {
 	}
 
 	public record Lockout(@Positive int maxFailedAttempts, @NotNull Duration lockoutDuration) {
+	}
+
+	public record RefreshToken(@NotNull Duration ttl) {
 	}
 
 }

@@ -22,6 +22,8 @@ public class LoginService {
 
 	private final AccessTokenIssuer tokenIssuer;
 
+	private final RefreshTokenService refreshTokens;
+
 	private final IdentityProperties.Lockout lockout;
 
 	private final Clock clock;
@@ -30,10 +32,11 @@ public class LoginService {
 	private final String dummyPasswordHash;
 
 	LoginService(UserAccountRepository accounts, PasswordEncoder passwordEncoder, AccessTokenIssuer tokenIssuer,
-			IdentityProperties properties, Clock clock) {
+			RefreshTokenService refreshTokens, IdentityProperties properties, Clock clock) {
 		this.accounts = accounts;
 		this.passwordEncoder = passwordEncoder;
 		this.tokenIssuer = tokenIssuer;
+		this.refreshTokens = refreshTokens;
 		this.lockout = properties.lockout();
 		this.clock = clock;
 		this.dummyPasswordHash = passwordEncoder.encode("no-such-account-password");
@@ -58,8 +61,9 @@ public class LoginService {
 			throw invalidCredentials();
 		}
 		accounts.resetFailedAttempts(account.getId(), now);
-		return new LoginResult(tokenIssuer.issue(account.getId(), account.getRole()), account.getId(),
-				account.getRole());
+		var issued = refreshTokens.issueFamily(account.getId());
+		return new LoginResult(tokenIssuer.issue(account.getId(), account.getRole()), issued.rawToken(),
+				issued.expiresAt(), account.getId(), account.getRole());
 	}
 
 	private static BusinessException invalidCredentials() {

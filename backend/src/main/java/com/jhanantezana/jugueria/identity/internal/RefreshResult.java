@@ -5,6 +5,6 @@ import java.util.UUID;
 
 import com.jhanantezana.jugueria.shared.Role;
 
-public record LoginResult(String accessToken, String refreshToken, Instant refreshTokenExpiresAt, UUID userId,
+public record RefreshResult(String accessToken, String refreshToken, Instant refreshTokenExpiresAt, UUID userId,
 		Role role) {
 }

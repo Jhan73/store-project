@@ -11,7 +11,9 @@ public enum AuthError implements ErrorCode {
 	// Shared by unknown user, wrong password, and inactive account so none is revealed.
 	INVALID_CREDENTIALS("auth.invalid-credentials", HttpStatus.UNAUTHORIZED),
 	// Disclosed so the client can tell the user when to retry.
-	ACCOUNT_LOCKED("auth.account-locked", HttpStatus.CONFLICT);
+	ACCOUNT_LOCKED("auth.account-locked", HttpStatus.CONFLICT),
+	// Shared by unknown, expired, revoked, reused, and refused (inactive/locked) tokens so none is revealed.
+	INVALID_REFRESH_TOKEN("auth.invalid-refresh-token", HttpStatus.UNAUTHORIZED);
 
 	private final String code;
 
