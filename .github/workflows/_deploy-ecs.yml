@@ -15,6 +15,11 @@ on:
         description: Image reference pinned by digest.
         required: true
         type: string
+      force:
+        description: Deploy even if the service already runs this image, so it picks up new configuration.
+        required: false
+        type: boolean
+        default: false
     outputs:
       endpoint:
         description: Base URL the Express service answers on.
@@ -168,7 +173,7 @@ jobs:
       # until it is SUCCESSFUL and fails the step on FAILED or STOPPED.
       - name: Deploy
         id: deploy
-        if: steps.known.outputs.image != inputs.image
+        if: inputs.force || steps.known.outputs.image != inputs.image
         uses: aws-actions/amazon-ecs-deploy-express-service@7c48a2de16441d528a3c89829831968dc1455010 # v1.2.2
         with:
           cluster: ${{ steps.config.outputs.cluster }}
@@ -220,7 +225,7 @@ jobs:
         env:
           ENDPOINT: ${{ steps.deploy.outputs.endpoint || steps.known.outputs.endpoint }}
           APP: ${{ inputs.app }}
-          UNCHANGED: ${{ steps.known.outputs.image == inputs.image }}
+          UNCHANGED: ${{ !inputs.force && steps.known.outputs.image == inputs.image }}
         run: |
           if [[ -z "$ENDPOINT" ]]; then
             echo "::error::The deploy returned no endpoint."

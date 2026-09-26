@@ -79,6 +79,8 @@ jobs:
       app: ${{ inputs.app }}
       environment: ${{ inputs.environment }}
       image: ${{ needs.resolve.outputs.image }}
+      # Rolling back to the running image is how an operator redeploys it with new configuration.
+      force: true
 
   smoke:
     name: smoke

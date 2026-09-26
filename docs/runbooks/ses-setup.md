@@ -88,4 +88,4 @@ SES is billed per email (first 62,000 outbound emails/month effectively free fro
 
 ## Next step
 
-Redeploy the backend (`cd-test.yml` / `cd-prod.yml`) so the new task role policy and `NOTIFICATIONS_RECIPIENT_ALLOWLIST` take effect, then send a real set-password link (`POST /api/v1/staff`) and confirm it arrives.
+The task role policy applies without a redeploy. A changed `NOTIFICATIONS_RECIPIENT_ALLOWLIST` only reaches the container on a new deployment: in `test`, run `gh workflow run cd-test.yml --ref develop -f redeploy=backend`; in `prod`, run `rollback.yml` to the running commit, which always redeploys. Then send a real set-password link (`POST /api/v1/staff`) and confirm it arrives.
