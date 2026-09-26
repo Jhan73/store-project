@@ -1,6 +1,8 @@
 package com.jhanantezana.jugueria.identity.internal.security;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
@@ -17,6 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 // Filter-level failures never reach the MVC advice on their own, so they are handed to it.
 @Component
+@ConditionalOnWebApplication(type = Type.SERVLET)
 class ProblemSecurityHandlers implements AuthenticationEntryPoint, AccessDeniedHandler {
 
 	private final BearerTokenAuthenticationEntryPoint bearer = new BearerTokenAuthenticationEntryPoint();
