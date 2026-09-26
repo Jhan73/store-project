@@ -33,8 +33,8 @@ class SecurityConfiguration {
 	static final List<PublicRoute> PUBLIC_ROUTES = List.of(
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/login", true),
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/register", false),
-			new PublicRoute(HttpMethod.POST, "/api/v1/auth/refresh", false),
-			new PublicRoute(HttpMethod.POST, "/api/v1/auth/logout", false),
+			new PublicRoute(HttpMethod.POST, "/api/v1/auth/refresh", true),
+			new PublicRoute(HttpMethod.POST, "/api/v1/auth/logout", true),
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/verify", false),
 			new PublicRoute(HttpMethod.GET, "/api/v1/catalog/menu", false),
 			new PublicRoute(HttpMethod.GET, "/api/v1/store/status", false));
