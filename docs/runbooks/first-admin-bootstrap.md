@@ -16,28 +16,32 @@ Every other adapter in `notifications` refuses to expose a set-password link (`U
 
 | Requirement | How to check | Expected |
 |-------------|--------------|----------|
-| Environment deployed and migrated | `aws ecs describe-services --cluster jugueria-<env> --services backend --query "services[0].runningCount"` | `1` or more |
+| Environment deployed and migrated | `aws ecs describe-services --cluster jugueria-<env> --services jugueria-<env>-backend --query "services[0].runningCount"` | `1` or more |
 | Admin SSO session | `aws sts get-caller-identity --profile jugueria-admin` | An ARN, not an error |
 
 ## Run it (ECS one-off task)
 
+Express Mode generates the task definition, so it does not necessarily name the container `backend` — read the real name from the task definition rather than assuming it, or the container override silently matches nothing and `run-task` fails.
+
 ```powershell
 $env:AWS_PROFILE = "jugueria-admin"
 $EnvName = "test"      # or "prod"
+$Service = "jugueria-$EnvName-backend"
 
-$TaskDef = aws ecs describe-services --cluster "jugueria-$EnvName" --services backend --query "services[0].taskDefinition" --output text
-$Subnets = (aws ecs describe-services --cluster "jugueria-$EnvName" --services backend --query "services[0].networkConfiguration.awsvpcConfiguration.subnets" --output json | ConvertFrom-Json) -join ","
-$Sgs     = (aws ecs describe-services --cluster "jugueria-$EnvName" --services backend --query "services[0].networkConfiguration.awsvpcConfiguration.securityGroups" --output json | ConvertFrom-Json) -join ","
+$TaskDef = aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].taskDefinition" --output text
+$ContainerName = aws ecs describe-task-definition --task-definition $TaskDef --query "taskDefinition.containerDefinitions[0].name" --output text
+$Subnets = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].networkConfiguration.awsvpcConfiguration.subnets" --output json | ConvertFrom-Json) -join ","
+$Sgs     = (aws ecs describe-services --cluster "jugueria-$EnvName" --services $Service --query "services[0].networkConfiguration.awsvpcConfiguration.securityGroups" --output json | ConvertFrom-Json) -join ","
 
 aws ecs run-task `
   --cluster "jugueria-$EnvName" `
   --task-definition $TaskDef `
   --launch-type FARGATE `
   --network-configuration "awsvpcConfiguration={subnets=[$Subnets],securityGroups=[$Sgs],assignPublicIp=DISABLED}" `
-  --overrides '{"containerOverrides":[{"name":"backend","command":["--bootstrap-first-admin","--admin-email=owner@example.com"]}]}'
+  --overrides "{\"containerOverrides\":[{\"name\":\"$ContainerName\",\"command\":[\"--bootstrap-first-admin\",\"--admin-email=owner@example.com\"]}]}"
 ```
 
-Replace `owner@example.com` with the real owner's address before running. Watch the task's CloudWatch log stream (`/ecs/jugueria-<env>/backend`) for the two `System.out` lines — `First ADMIN created: ...` and `Set-password link (expires ...): ...` — then open the link before it expires. CloudWatch retains the log group like any other backend output, so remove or expire that stream's entries afterward if the link's exposure window matters for your compliance posture; this is a known trade-off of printing to stdout under ECS rather than to an interactive terminal only.
+Replace `owner@example.com` with the real owner's address before running. Watch the task's CloudWatch log group (`/ecs/jugueria-<env>-backend` — confirm with `aws ecs describe-task-definition --task-definition $TaskDef --query "taskDefinition.containerDefinitions[0].logConfiguration"`) for the two `System.out` lines — `First ADMIN created: ...` and `Set-password link (expires ...): ...` — then open the link before it expires. CloudWatch retains the log group like any other backend output, so remove or expire that stream's entries afterward if the link's exposure window matters for your compliance posture; this is a known trade-off of printing to stdout under ECS rather than to an interactive terminal only.
 
 ## Verify
 
