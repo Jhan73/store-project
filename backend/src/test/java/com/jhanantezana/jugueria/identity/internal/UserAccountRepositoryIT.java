@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
@@ -136,6 +137,25 @@ class UserAccountRepositoryIT {
 		var reloaded = accounts.findById(account.getId()).orElseThrow();
 		assertThat(reloaded.getFailedAttempts()).isEqualTo(1);
 		assertThat(reloaded.getLockedUntil()).isEqualTo(newLockedUntil);
+	}
+
+	@Test
+	void findsByRoleNotExcludingCustomers() {
+		var cashier = accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW));
+		accounts.save(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, NOW));
+
+		var page = accounts.findByRoleNot(Role.CUSTOMER, PageRequest.of(0, 10));
+
+		assertThat(page.getContent()).extracting(UserAccount::getId).containsExactly(cashier.getId());
+	}
+
+	@Test
+	void countsOnlyActiveAdmins() {
+		accounts.save(new UserAccount("admin1@jugueria.pe", "hash", Role.ADMIN, NOW));
+		accounts.save(new UserAccount("admin2@jugueria.pe", "hash", Role.ADMIN, NOW, false));
+		accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW));
+
+		assertThat(accounts.countByRoleAndActiveTrue(Role.ADMIN)).isEqualTo(1);
 	}
 
 	private void registerFailedAttempt(UUID id, Instant now, int maxAttempts, Instant lockUntil) {
