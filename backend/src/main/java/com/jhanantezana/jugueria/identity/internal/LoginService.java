@@ -48,11 +48,11 @@ public class LoginService {
 			throw locked(account.getLockedUntil());
 		}
 		if (!account.isActive() || !passwordEncoder.matches(rawPassword, account.getPasswordHash())) {
-			accounts.registerFailedAttempt(account.getId(), lockout.maxFailedAttempts(),
+			accounts.registerFailedAttempt(account.getId(), now, lockout.maxFailedAttempts(),
 					now.plus(lockout.lockoutDuration()));
 			throw invalidCredentials();
 		}
-		accounts.resetFailedAttempts(account.getId());
+		accounts.resetFailedAttempts(account.getId(), now);
 		return new LoginResult(tokenIssuer.issue(account.getId(), account.getRole()), account.getId(),
 				account.getRole());
 	}

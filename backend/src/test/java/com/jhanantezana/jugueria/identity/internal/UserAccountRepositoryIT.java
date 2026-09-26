@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
@@ -24,8 +26,15 @@ import com.jhanantezana.jugueria.shared.Role;
 @Import(TestcontainersConfiguration.class)
 class UserAccountRepositoryIT {
 
+	static final Instant NOW = Instant.parse("2026-09-25T12:00:00Z");
+
 	@Autowired
 	UserAccountRepository accounts;
+
+	// registerFailedAttempt/resetFailedAttempts have no @Transactional of their own (that belongs only
+	// on LoginService); a standalone call from this test needs its own transaction.
+	@Autowired
+	TransactionTemplate transactionTemplate;
 
 	@AfterEach
 	void cleanUp() {
@@ -34,26 +43,26 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void roundTripsAnAccountAndFindsItByEmailIgnoringCase() {
-		var saved = accounts.save(new UserAccount("Cashier@Jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		var saved = accounts.save(new UserAccount("Cashier@Jugueria.pe", "hash", Role.CASHIER, NOW));
 
 		var found = accounts.findByEmailIgnoreCase("cashier@jugueria.pe").orElseThrow();
 
 		assertThat(found.getId()).isEqualTo(saved.getId());
-		assertThat(found.getCreatedAt()).isNotNull();
-		assertThat(found.getUpdatedAt()).isNotNull();
+		assertThat(found.getCreatedAt()).isEqualTo(NOW);
+		assertThat(found.getUpdatedAt()).isEqualTo(NOW);
 	}
 
 	@Test
 	void rejectsTwoAccountsWithTheSameEmailRegardlessOfCase() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW));
 
-		assertThatExceptionOfType(DataIntegrityViolationException.class)
-			.isThrownBy(() -> accounts.saveAndFlush(new UserAccount("CASHIER@jugueria.pe", "hash", Role.CASHIER, Instant.now())));
+		assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(
+				() -> accounts.saveAndFlush(new UserAccount("CASHIER@jugueria.pe", "hash", Role.CASHIER, NOW)));
 	}
 
 	@Test
 	void accumulatesConcurrentFailedAttemptsWithoutLosingAnUpdate() throws InterruptedException {
-		var account = accounts.save(new UserAccount("racer@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		var account = accounts.save(new UserAccount("racer@jugueria.pe", "hash", Role.CASHIER, NOW));
 		var attempts = 8;
 		var ready = new CountDownLatch(attempts);
 		var go = new CountDownLatch(1);
@@ -63,7 +72,7 @@ class UserAccountRepositoryIT {
 				pool.submit(() -> {
 					ready.countDown();
 					await(go);
-					accounts.registerFailedAttempt(account.getId(), 100, null);
+					registerFailedAttempt(account.getId(), NOW, 100, null);
 				});
 			}
 			ready.await();
@@ -80,26 +89,63 @@ class UserAccountRepositoryIT {
 
 	@Test
 	void locksTheAccountOnceItReachesTheMaxAttempts() {
-		var account = accounts.save(new UserAccount("locked@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
-		var lockedUntil = Instant.parse("2026-09-25T12:15:00Z");
+		var account = accounts.save(new UserAccount("locked@jugueria.pe", "hash", Role.CASHIER, NOW));
+		var lockedUntil = NOW.plus(Duration.ofMinutes(15));
 
-		accounts.registerFailedAttempt(account.getId(), 1, lockedUntil);
+		registerFailedAttempt(account.getId(), NOW, 1, lockedUntil);
 
 		var reloaded = accounts.findById(account.getId()).orElseThrow();
 		assertThat(reloaded.getFailedAttempts()).isEqualTo(1);
 		assertThat(reloaded.getLockedUntil()).isEqualTo(lockedUntil);
+		assertThat(reloaded.getUpdatedAt()).isEqualTo(NOW);
 	}
 
 	@Test
 	void resetsFailedAttemptsAndTheLock() {
-		var account = accounts.save(new UserAccount("reset@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
-		accounts.registerFailedAttempt(account.getId(), 1, Instant.parse("2026-09-25T12:15:00Z"));
+		var account = accounts.save(new UserAccount("reset@jugueria.pe", "hash", Role.CASHIER, NOW));
+		registerFailedAttempt(account.getId(), NOW, 1, NOW.plus(Duration.ofMinutes(15)));
 
-		accounts.resetFailedAttempts(account.getId());
+		var resetAt = NOW.plus(Duration.ofMinutes(20));
+		resetFailedAttempts(account.getId(), resetAt);
 
 		var reloaded = accounts.findById(account.getId()).orElseThrow();
 		assertThat(reloaded.getFailedAttempts()).isZero();
 		assertThat(reloaded.getLockedUntil()).isNull();
+		assertThat(reloaded.getUpdatedAt()).isEqualTo(resetAt);
+	}
+
+	@Test
+	void restartsTheCountAtOneOnceThePreviousLockHasExpired() {
+		var lockedInThePast = NOW.minus(Duration.ofMinutes(1));
+		var account = accounts.save(new UserAccount("expired@jugueria.pe", "hash", Role.CASHIER, NOW, 5, lockedInThePast));
+
+		registerFailedAttempt(account.getId(), NOW, 5, NOW.plus(Duration.ofMinutes(15)));
+
+		var reloaded = accounts.findById(account.getId()).orElseThrow();
+		assertThat(reloaded.getFailedAttempts()).isEqualTo(1);
+		assertThat(reloaded.getLockedUntil()).isNull();
+	}
+
+	@Test
+	void locksAgainImmediatelyWhenMaxAttemptsIsOneAndThePreviousLockHasExpired() {
+		var lockedInThePast = NOW.minus(Duration.ofMinutes(1));
+		var account = accounts.save(new UserAccount("relocked@jugueria.pe", "hash", Role.CASHIER, NOW, 5, lockedInThePast));
+		var newLockedUntil = NOW.plus(Duration.ofMinutes(15));
+
+		registerFailedAttempt(account.getId(), NOW, 1, newLockedUntil);
+
+		var reloaded = accounts.findById(account.getId()).orElseThrow();
+		assertThat(reloaded.getFailedAttempts()).isEqualTo(1);
+		assertThat(reloaded.getLockedUntil()).isEqualTo(newLockedUntil);
+	}
+
+	private void registerFailedAttempt(UUID id, Instant now, int maxAttempts, Instant lockUntil) {
+		transactionTemplate
+			.executeWithoutResult(status -> accounts.registerFailedAttempt(id, now, maxAttempts, lockUntil));
+	}
+
+	private void resetFailedAttempts(UUID id, Instant now) {
+		transactionTemplate.executeWithoutResult(status -> accounts.resetFailedAttempts(id, now));
 	}
 
 	private static void await(CountDownLatch latch) {

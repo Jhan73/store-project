@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.identity.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import org.junit.jupiter.api.AfterEach;
@@ -46,7 +47,8 @@ class AuthControllerIT {
 
 	@Test
 	void issuesAnAccessTokenForTheRightCredentials() {
-		var account = accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+		var account = accounts
+			.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		var result = login("cashier@jugueria.pe", PASSWORD);
 
@@ -63,21 +65,24 @@ class AuthControllerIT {
 
 	@Test
 	void rejectsTheWrongPasswordWithTheSameCodeAsAnUnknownEmail() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+		accounts
+			.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		assertInvalidCredentials(login("cashier@jugueria.pe", "wrong-password"));
 	}
 
 	@Test
 	void rejectsAnInactiveAccountWithTheSameCode() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now(), false));
+		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER,
+				Instant.now(), false));
 
 		assertInvalidCredentials(login("cashier@jugueria.pe", PASSWORD));
 	}
 
 	@Test
 	void locksTheAccountAfterFiveFailedAttemptsAndAnswersEvenTheCorrectPassword() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+		accounts
+			.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 
 		for (int i = 0; i < 5; i++) {
 			assertInvalidCredentials(login("cashier@jugueria.pe", "wrong-password"));
@@ -91,7 +96,8 @@ class AuthControllerIT {
 
 	@Test
 	void resetsTheFailedAttemptCounterOnASuccessfulLogin() {
-		accounts.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+		accounts
+			.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
 		login("cashier@jugueria.pe", "wrong-password");
 		login("cashier@jugueria.pe", "wrong-password");
 
@@ -103,6 +109,40 @@ class AuthControllerIT {
 			.bodyJson()
 			.extractingPath("$.code")
 			.isEqualTo("auth.invalid-credentials");
+	}
+
+	@Test
+	void oneFailureRightAfterTheLockExpiresDoesNotRelockTheAccount() {
+		var account = accounts.save(new UserAccount("expired@jugueria.pe", passwordEncoder.encode(PASSWORD),
+				Role.CASHIER, Instant.now(), 5, Instant.now().minus(Duration.ofSeconds(1))));
+
+		assertInvalidCredentials(login("expired@jugueria.pe", "wrong-password"));
+
+		var reloaded = accounts.findById(account.getId()).orElseThrow();
+		assertThat(reloaded.getFailedAttempts()).isEqualTo(1);
+		assertThat(reloaded.getLockedUntil()).isNull();
+	}
+
+	@Test
+	void logsInWithTheCorrectPasswordOnceThePreviousLockHasExpired() {
+		accounts.save(new UserAccount("expired@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER,
+				Instant.now(), 5, Instant.now().minus(Duration.ofSeconds(1))));
+
+		assertThat(login("expired@jugueria.pe", PASSWORD)).hasStatusOk();
+	}
+
+	@Test
+	void locksAgainAfterMaxFailuresFollowingAnExpiredLock() {
+		accounts.save(new UserAccount("expired@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER,
+				Instant.now(), 5, Instant.now().minus(Duration.ofSeconds(1))));
+
+		for (int i = 0; i < 5; i++) {
+			assertInvalidCredentials(login("expired@jugueria.pe", "wrong-password"));
+		}
+		var result = login("expired@jugueria.pe", PASSWORD);
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.account-locked");
 	}
 
 	@Test
