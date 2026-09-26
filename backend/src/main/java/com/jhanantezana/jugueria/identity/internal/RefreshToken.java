@@ -47,9 +47,9 @@ public class RefreshToken extends BaseEntity {
 		this.expiresAt = expiresAt;
 	}
 
-	// Test fixtures only; public because the tests live in other sub-packages.
-	public RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt,
-			Instant usedAt, Instant revokedAt) {
+	// Test fixture: builds a token already used or revoked, without going through rotation.
+	RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt, Instant usedAt,
+			Instant revokedAt) {
 		this(familyId, userId, tokenHash, issuedAt, expiresAt);
 		this.usedAt = usedAt;
 		this.revokedAt = revokedAt;

@@ -81,7 +81,6 @@ public class RefreshTokenService {
 			.ifPresent(token -> tokens.revokeFamily(token.getFamilyId(), Instant.now(clock)));
 	}
 
-	// Slice 4 (deactivation/role change) calls this so every active session ends immediately.
 	@Transactional
 	public void revokeAllForUser(UUID userId) {
 		tokens.revokeAllForUser(userId, Instant.now(clock));

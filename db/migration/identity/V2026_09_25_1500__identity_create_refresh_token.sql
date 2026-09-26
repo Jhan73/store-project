@@ -13,5 +13,5 @@ CREATE TABLE identity.refresh_token (
 CREATE UNIQUE INDEX refresh_token_token_hash_key ON identity.refresh_token (token_hash);
 -- Reuse detection revokes every token sharing a family in one statement.
 CREATE INDEX refresh_token_family_id_idx ON identity.refresh_token (family_id);
--- Deactivation (FR-ADM-01) revokes every token of a user in one statement.
+-- Deactivation revokes every token of a user in one statement.
 CREATE INDEX refresh_token_user_id_idx ON identity.refresh_token (user_id);

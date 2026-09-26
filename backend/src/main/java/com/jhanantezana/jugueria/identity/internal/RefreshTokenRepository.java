@@ -28,7 +28,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 			value = "update identity.refresh_token set revoked_at = :now where family_id = :familyId and revoked_at is null")
 	int revokeFamily(@Param("familyId") UUID familyId, @Param("now") Instant now);
 
-	// Slice 4 (deactivation/role change) calls this through RefreshTokenService.
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(nativeQuery = true,
 			value = "update identity.refresh_token set revoked_at = :now where user_id = :userId and revoked_at is null")
