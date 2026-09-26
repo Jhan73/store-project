@@ -124,6 +124,16 @@ class SecurityIT {
 	}
 
 	@Test
+	void answersTheProtectedResourceMetadataEndpointTruthfully() {
+		var result = mvc.get().uri("/.well-known/oauth-protected-resource").exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson()
+			.extractingPath("$.tls_client_certificate_bound_access_tokens")
+			.isEqualTo(false);
+	}
+
+	@Test
 	void answersCorsPreflightsOnlyForTheFrontendOrigin() {
 		var allowed = preflight(properties.allowedOrigins().getFirst());
 		var foreign = preflight("https://evil.example");
