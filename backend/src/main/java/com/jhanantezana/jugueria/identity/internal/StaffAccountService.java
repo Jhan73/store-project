@@ -56,7 +56,7 @@ public class StaffAccountService {
 		this.clock = clock;
 	}
 
-	// The account starts with no usable password: this hash is never given to anyone (owner decision).
+	// The account starts with no usable password: this random hash is never given to anyone.
 	@Transactional
 	StaffProvisioned createAccountAndToken(String email, Role role) {
 		if (role == Role.CUSTOMER) {
