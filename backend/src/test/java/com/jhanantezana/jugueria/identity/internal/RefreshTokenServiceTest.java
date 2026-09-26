@@ -54,7 +54,8 @@ class RefreshTokenServiceTest {
 		var properties = new IdentityProperties(java.util.List.of("http://localhost"),
 				new IdentityProperties.Jwt("issuer", "audience", "kid", null, true, Duration.ofMinutes(15)),
 				new IdentityProperties.Lockout(5, Duration.ofMinutes(15)),
-				new IdentityProperties.RefreshToken(IDLE_TTL, ABSOLUTE_TTL));
+				new IdentityProperties.RefreshToken(IDLE_TTL, ABSOLUTE_TTL),
+				new IdentityProperties.SetPassword("http://localhost:4200", "/set-password", Duration.ofHours(48)));
 		service = new RefreshTokenService(tokens, accounts, accessTokens, properties, Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 

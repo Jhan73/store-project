@@ -76,4 +76,27 @@ public class UserAccount extends BaseEntity {
 		return lockedUntil != null && lockedUntil.isAfter(now);
 	}
 
+	public void changeRole(Role newRole, Instant now) {
+		this.role = newRole;
+		this.updatedAt = now;
+	}
+
+	public void deactivate(Instant now) {
+		this.active = false;
+		this.updatedAt = now;
+	}
+
+	public void reactivate(Instant now) {
+		this.active = true;
+		this.updatedAt = now;
+	}
+
+	// Consuming a set-password token also clears any lockout, since the account had no working password before.
+	public void changePassword(String newPasswordHash, Instant now) {
+		this.passwordHash = newPasswordHash;
+		this.failedAttempts = 0;
+		this.lockedUntil = null;
+		this.updatedAt = now;
+	}
+
 }

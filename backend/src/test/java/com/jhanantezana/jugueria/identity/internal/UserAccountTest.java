@@ -36,4 +36,51 @@ class UserAccountTest {
 		assertThat(account.isLocked(NOW)).isFalse();
 	}
 
+	@Test
+	void changesRoleAndStampsUpdatedAt() {
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW);
+		var later = NOW.plusSeconds(60);
+
+		account.changeRole(Role.ADMIN, later);
+
+		assertThat(account.getRole()).isEqualTo(Role.ADMIN);
+		assertThat(account.getUpdatedAt()).isEqualTo(later);
+	}
+
+	@Test
+	void deactivateClearsActiveAndStampsUpdatedAt() {
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW);
+		var later = NOW.plusSeconds(60);
+
+		account.deactivate(later);
+
+		assertThat(account.isActive()).isFalse();
+		assertThat(account.getUpdatedAt()).isEqualTo(later);
+	}
+
+	@Test
+	void reactivateSetsActiveAndStampsUpdatedAt() {
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, false);
+		var later = NOW.plusSeconds(60);
+
+		account.reactivate(later);
+
+		assertThat(account.isActive()).isTrue();
+		assertThat(account.getUpdatedAt()).isEqualTo(later);
+	}
+
+	@Test
+	void changePasswordAlsoClearsAnyLockout() {
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, 5,
+				NOW.plus(Duration.ofMinutes(15)));
+		var later = NOW.plusSeconds(60);
+
+		account.changePassword("new-hash", later);
+
+		assertThat(account.getPasswordHash()).isEqualTo("new-hash");
+		assertThat(account.getFailedAttempts()).isZero();
+		assertThat(account.getLockedUntil()).isNull();
+		assertThat(account.getUpdatedAt()).isEqualTo(later);
+	}
+
 }

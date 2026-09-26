@@ -35,6 +35,7 @@ class SecurityConfiguration {
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/register", false),
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/refresh", true),
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/logout", true),
+			new PublicRoute(HttpMethod.POST, "/api/v1/auth/set-password", true),
 			new PublicRoute(HttpMethod.POST, "/api/v1/auth/verify", false),
 			new PublicRoute(HttpMethod.GET, "/api/v1/catalog/menu", false),
 			new PublicRoute(HttpMethod.GET, "/api/v1/store/status", false));

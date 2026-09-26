@@ -17,7 +17,8 @@ import jakarta.validation.constraints.Positive;
 @ConfigurationProperties("jugueria.identity")
 @Validated
 public record IdentityProperties(@NotEmpty List<String> allowedOrigins, @Valid @NotNull Jwt jwt,
-		@Valid @NotNull Lockout lockout, @Valid @NotNull RefreshToken refreshToken) {
+		@Valid @NotNull Lockout lockout, @Valid @NotNull RefreshToken refreshToken,
+		@Valid @NotNull SetPassword setPassword) {
 
 	public record Jwt(@NotBlank String issuer, @NotBlank String audience, @NotBlank String keyId,
 			@Nullable String privateKey, boolean ephemeralKeyAllowed, @NotNull Duration accessTokenTtl) {
@@ -27,6 +28,11 @@ public record IdentityProperties(@NotEmpty List<String> allowedOrigins, @Valid @
 	}
 
 	public record RefreshToken(@NotNull Duration idleTtl, @NotNull Duration absoluteTtl) {
+	}
+
+	// No frontend page consumes ?token= yet; that is deliberate, not an oversight.
+	public record SetPassword(@NotBlank String frontendBaseUrl, @NotBlank String frontendPath,
+			@NotNull Duration tokenTtl) {
 	}
 
 }
