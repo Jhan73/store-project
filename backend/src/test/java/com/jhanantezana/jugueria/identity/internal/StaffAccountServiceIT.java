@@ -14,8 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
+import com.jhanantezana.jugueria.notifications.NotificationsApi;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -37,6 +39,10 @@ class StaffAccountServiceIT {
 
 	@Autowired
 	SetPasswordTokenRepository setPasswordTokens;
+
+	// Another module's API: the real adapter would otherwise call AWS SES.
+	@MockitoBean
+	NotificationsApi notifications;
 
 	@AfterEach
 	void cleanUp() {

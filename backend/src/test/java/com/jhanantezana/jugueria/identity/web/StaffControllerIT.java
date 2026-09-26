@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -30,6 +31,7 @@ import com.jhanantezana.jugueria.identity.internal.SetPasswordTokenRepository;
 import com.jhanantezana.jugueria.identity.internal.UserAccount;
 import com.jhanantezana.jugueria.identity.internal.UserAccountRepository;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
+import com.jhanantezana.jugueria.notifications.NotificationsApi;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 
@@ -51,6 +53,10 @@ class StaffControllerIT {
 
 	@Autowired
 	SetPasswordTokenRepository setPasswordTokens;
+
+	// Another module's API: the real adapter would otherwise call AWS SES.
+	@MockitoBean
+	NotificationsApi notifications;
 
 	@AfterEach
 	void cleanUp() {
