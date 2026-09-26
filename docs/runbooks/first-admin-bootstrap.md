@@ -69,7 +69,73 @@ Expected: `0`. A non-zero exit means either the admin email argument was missing
 
 Rerunning after a successful bootstrap prints `An active ADMIN already exists; nothing to do.` and exits `0` — safe to rerun by mistake.
 
+## Set the password, sign in, and add staff
+
+The link points to the frontend's `/set-password` page. Until the frontend has it (and a sign-in page), do these steps against the API. They are the same for every staff member, not only the first admin.
+
+Find the backend's base URL:
+
+```powershell
+$env:AWS_PROFILE = "jugueria-admin"
+$EnvName = "test"      # or "prod"
+$BackendHost = aws ecs describe-express-gateway-service `
+  --service-arn "arn:aws:ecs:us-east-1:$(aws sts get-caller-identity --query Account --output text):service/jugueria-$EnvName/jugueria-$EnvName-backend" `
+  --query "service.activeConfigurations[0].ingressPaths[0].endpoint" --output text
+$Api = "https://$BackendHost/api/v1"
+```
+
+### 1. Set the password
+
+Take the `token` from the link in the email. If the email did not arrive, read it from this run's log instead:
+
+```powershell
+$TaskId = $TaskArn.Split("/")[-1]
+$Line = aws logs get-log-events --log-group-name "/ecs/jugueria-$EnvName-backend" `
+  --log-stream-name "ecs/Main/$TaskId" --query "events[].message" --output text | Select-String "Set-password link"
+$Token = [regex]::Match($Line, "token=([A-Za-z0-9_\-]+)").Groups[1].Value
+```
+
+```powershell
+Invoke-RestMethod -Method Post "$Api/auth/set-password" -ContentType "application/json" `
+  -Headers @{ "X-Requested-With" = "XMLHttpRequest" } `
+  -Body (@{ token = $Token; newPassword = "<12 to 100 characters>" } | ConvertTo-Json)
+```
+
+No output means success (`204`). A `401 auth.invalid-set-password-token` means the link expired, was already used, or was replaced by a newer one.
+
+### 2. Sign in
+
+```powershell
+$Login = Invoke-RestMethod -Method Post "$Api/auth/login" -ContentType "application/json" `
+  -Body (@{ email = "<admin email>"; password = "<password>" } | ConvertTo-Json)
+$Auth = @{ Authorization = "Bearer $($Login.accessToken)" }
+$Login.role    # ADMIN
+```
+
+The access token lasts 15 minutes; sign in again on a `401 auth.unauthenticated`. Five wrong passwords lock the account for 15 minutes (`409 auth.account-locked`).
+
+### 3. Add a staff member
+
+```powershell
+Invoke-RestMethod -Method Post "$Api/staff" -ContentType "application/json" -Headers $Auth `
+  -Body (@{ email = "<staff email>"; role = "CASHIER" } | ConvertTo-Json)
+```
+
+Staff roles: `ADMIN`, `CASHIER`, `SERVER` (`CUSTOMER` is rejected). The new member receives their own set-password link and repeats step 1. If a link expires, reissue it with `POST $Api/staff/<id>/set-password-link` (not for your own account).
+
+In `test`, the address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` (then redeploy, see `ses-setup.md`), and while SES is in the sandbox it must also be a verified identity.
+
+### Troubleshooting the email
+
+The account is still created when the email fails; the link can be reissued.
+
+| Backend log (`/ecs/jugueria-<env>-backend`) | Cause | Fix |
+|---|---|---|
+| `Failed to send the set-password email` + `not authorized to perform 'ses:SendEmail'` | Recipient not a verified identity while SES is in the sandbox, or the task role policy is missing | `aws sesv2 create-email-identity --email-identity <address>` and click the link; check `terraform apply` ran |
+| `Skipped an email outside the test recipient allowlist` | Address not in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` of the running deployment | Add it, then `gh workflow run cd-test.yml --ref develop -f redeploy=backend` |
+| No error, no email | Spam folder, or SES delivered it | `aws sesv2 get-account --query SendQuota.SentLast24Hours` counts messages SES accepted |
+
 ## Risk and expiry
 
 - The link is a bearer credential valid for the configured `token-ttl` (48h by default) and single-use: opening it and setting a password consumes it; a second attempt with the same link fails with `auth.invalid-set-password-token`.
-- Only stdout of this one-off run ever contains the link. If it leaks (shared terminal, unredacted log export), rerun the command after deactivating the compromised account, or use `PATCH /api/v1/staff/{id}/role` / `POST /api/v1/staff/{id}/deactivate` once a working ADMIN session exists.
+- Only the email and this one-off run's stdout contain the link. If it leaks (shared terminal, unredacted log export), rerun the command after deactivating the compromised account, or use `PATCH /api/v1/staff/{id}/role` / `POST /api/v1/staff/{id}/deactivate` once a working ADMIN session exists.
