@@ -6,9 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Component;
 
-// Run as a one-off, e.g. an ECS run-task overriding the container command with
-// "--bootstrap-first-admin --admin-email=<email>" (docs/runbooks/first-admin-bootstrap.md).
-// A no-op on every normal start, so this bean is always registered but never fires in the running service.
+// A no-op unless --bootstrap-first-admin is passed, so this bean is harmless in the running service.
 @Component
 class FirstAdminBootstrapRunner implements ApplicationRunner {
 

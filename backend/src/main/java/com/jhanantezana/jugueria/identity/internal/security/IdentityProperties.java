@@ -30,7 +30,7 @@ public record IdentityProperties(@NotEmpty List<String> allowedOrigins, @Valid @
 	public record RefreshToken(@NotNull Duration idleTtl, @NotNull Duration absoluteTtl) {
 	}
 
-	// The frontend page that consumes ?token= does not exist yet (owner decision, tech-spec §7.1).
+	// No frontend page consumes ?token= yet; that is deliberate, not an oversight.
 	public record SetPassword(@NotBlank String frontendBaseUrl, @NotBlank String frontendPath,
 			@NotNull Duration tokenTtl) {
 	}

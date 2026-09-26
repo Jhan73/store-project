@@ -11,8 +11,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 
-// No text in Java: the subject and body live in this template file (tech-spec §6.6), read at render time.
-// The full engine decision (M2-B6) is still open; plain substitution is the simplest compliant option until then.
+// Subject/body live in a template file, not Java, so editing the copy needs no code change.
 @Component
 class StaffSetPasswordEmailTemplate {
 
