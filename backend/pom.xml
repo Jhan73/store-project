@@ -34,10 +34,6 @@
 		<tomcat.version>11.0.26</tomcat.version>
 		<aws-sdk.version>2.55.6</aws-sdk.version>
 		<wiremock.version>3.13.2</wiremock.version>
-		<!-- Matches the Jetty line wiremock-jetty12 3.13.2 is built against; its core and EE10 modules
-			 otherwise resolve to different minor versions, and 12.1.x dropped an IO class it still calls.
-			 Not named jetty.version: that property is Spring Boot's own, for its unrelated ee11 Jetty BOM. -->
-		<wiremock-jetty.version>12.0.30</wiremock-jetty.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -54,29 +50,6 @@
 				<version>${aws-sdk.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.jetty</groupId>
-				<artifactId>jetty-bom</artifactId>
-				<version>${wiremock-jetty.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<!-- jetty-bom does not manage the ee10 group; pinned separately to match. -->
-			<dependency>
-				<groupId>org.eclipse.jetty.ee10</groupId>
-				<artifactId>jetty-ee10-servlet</artifactId>
-				<version>${wiremock-jetty.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.jetty.ee10</groupId>
-				<artifactId>jetty-ee10-servlets</artifactId>
-				<version>${wiremock-jetty.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.eclipse.jetty.ee10</groupId>
-				<artifactId>jetty-ee10-webapp</artifactId>
-				<version>${wiremock-jetty.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -197,35 +170,10 @@
 			<artifactId>testcontainers-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Shaded jar (own Jetty + Jackson relocated) so it needs no version alignment with the app's own dependencies. -->
 		<dependency>
 			<groupId>org.wiremock</groupId>
-			<artifactId>wiremock</artifactId>
-			<version>${wiremock.version}</version>
-			<scope>test</scope>
-			<exclusions>
-				<!-- Legacy unqualified Jetty 11 artifacts that conflict at runtime with wiremock-jetty12's Jetty 12 stack. -->
-				<exclusion>
-					<groupId>org.eclipse.jetty</groupId>
-					<artifactId>jetty-servlet</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.eclipse.jetty</groupId>
-					<artifactId>jetty-servlets</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.eclipse.jetty</groupId>
-					<artifactId>jetty-webapp</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.eclipse.jetty.http2</groupId>
-					<artifactId>http2-server</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<!-- wiremock (core) ships no embedded HTTP server; this supplies the Jetty 12 HttpServerFactory. -->
-		<dependency>
-			<groupId>org.wiremock</groupId>
-			<artifactId>wiremock-jetty12</artifactId>
+			<artifactId>wiremock-standalone</artifactId>
 			<version>${wiremock.version}</version>
 			<scope>test</scope>
 		</dependency>
