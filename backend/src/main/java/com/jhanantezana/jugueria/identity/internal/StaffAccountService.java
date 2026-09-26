@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.identity.internal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,7 +24,6 @@ import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Role;
 
-// ADMIN-only staff administration: create, list, get, role change, deactivate, reactivate (PRD FR-ADM-01).
 @Service
 public class StaffAccountService {
 
@@ -39,17 +39,20 @@ public class StaffAccountService {
 
 	private final CurrentActor currentActor;
 
+	private final ActiveAdminLock activeAdminLock;
+
 	private final Clock clock;
 
 	StaffAccountService(UserAccountRepository accounts, SetPasswordTokenService setPasswordTokens,
 			RefreshTokenService refreshTokens, PasswordEncoder passwordEncoder, ApplicationEventPublisher events,
-			CurrentActor currentActor, Clock clock) {
+			CurrentActor currentActor, ActiveAdminLock activeAdminLock, Clock clock) {
 		this.accounts = accounts;
 		this.setPasswordTokens = setPasswordTokens;
 		this.refreshTokens = refreshTokens;
 		this.passwordEncoder = passwordEncoder;
 		this.events = events;
 		this.currentActor = currentActor;
+		this.activeAdminLock = activeAdminLock;
 		this.clock = clock;
 	}
 
@@ -59,8 +62,29 @@ public class StaffAccountService {
 		if (role == Role.CUSTOMER) {
 			throw invalidStaffRole();
 		}
-		var normalizedEmail = normalize(email);
-		var now = Instant.now(clock);
+		return createAccount(normalize(email), role, Instant.now(clock));
+	}
+
+	// Checking "no active admin yet" and creating one must be one atomic decision, or two concurrent runs both pass.
+	@Transactional
+	Optional<StaffProvisioned> createFirstAdminAccountAndToken(String email) {
+		activeAdminLock.acquire();
+		if (accounts.countByRoleAndActiveTrue(Role.ADMIN) > 0) {
+			return Optional.empty();
+		}
+		return Optional.of(createAccount(normalize(email), Role.ADMIN, Instant.now(clock)));
+	}
+
+	// An admin resending a link for someone stuck without a working password (missed link, reactivated account).
+	@Transactional
+	StaffProvisioned reissueSetPasswordToken(UUID id) {
+		rejectSelf(id);
+		var account = findStaffOrThrow(id);
+		var issued = setPasswordTokens.issue(account.getId());
+		return new StaffProvisioned(account, issued.rawToken(), issued.expiresAt());
+	}
+
+	private StaffProvisioned createAccount(String normalizedEmail, Role role, Instant now) {
 		UserAccount account;
 		try {
 			account = accounts.saveAndFlush(
@@ -87,6 +111,7 @@ public class StaffAccountService {
 
 	@Transactional
 	public UserAccount changeRole(UUID id, Role newRole) {
+		activeAdminLock.acquire();
 		if (newRole == Role.CUSTOMER) {
 			throw invalidStaffRole();
 		}
@@ -108,6 +133,7 @@ public class StaffAccountService {
 
 	@Transactional
 	public UserAccount deactivate(UUID id) {
+		activeAdminLock.acquire();
 		rejectSelf(id);
 		var account = findStaffOrThrow(id);
 		if (!account.isActive()) {
@@ -124,7 +150,7 @@ public class StaffAccountService {
 		return account;
 	}
 
-	// No dedicated event: the tech-spec lists only UserCreated, UserDeactivated, and UserRoleChanged for identity.
+	// Reactivation has no event of its own; the module only defines the other three.
 	@Transactional
 	public UserAccount reactivate(UUID id) {
 		var account = findStaffOrThrow(id);

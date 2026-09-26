@@ -60,12 +60,15 @@ class StaffAccountServiceTest {
 	@Mock
 	CurrentActor currentActor;
 
+	@Mock
+	ActiveAdminLock activeAdminLock;
+
 	StaffAccountService service;
 
 	@BeforeEach
 	void setUp() {
 		service = new StaffAccountService(accounts, setPasswordTokens, refreshTokens, passwordEncoder, events,
-				currentActor, Clock.fixed(NOW, ZoneOffset.UTC));
+				currentActor, activeAdminLock, Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test
@@ -102,6 +105,63 @@ class StaffAccountServiceTest {
 		assertThatExceptionOfType(BusinessException.class)
 			.isThrownBy(() -> service.createAccountAndToken("dup@jugueria.pe", Role.CASHIER))
 			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.EMAIL_ALREADY_REGISTERED));
+	}
+
+	@Test
+	void createFirstAdminAcquiresTheLockBeforeCounting() {
+		when(accounts.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(0L);
+		when(passwordEncoder.encode(any())).thenReturn("unusable-hash");
+		when(accounts.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+		when(setPasswordTokens.issue(any())).thenReturn(new IssuedSetPasswordToken("raw", NOW.plusSeconds(1)));
+
+		var provisioned = service.createFirstAdminAccountAndToken("owner@jugueria.pe");
+
+		assertThat(provisioned).isPresent();
+		assertThat(provisioned.orElseThrow().account().getRole()).isEqualTo(Role.ADMIN);
+		verify(activeAdminLock).acquire();
+	}
+
+	@Test
+	void createFirstAdminIsANoOpWhenAnActiveAdminAlreadyExists() {
+		when(accounts.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(1L);
+
+		var provisioned = service.createFirstAdminAccountAndToken("owner@jugueria.pe");
+
+		assertThat(provisioned).isEmpty();
+		verify(accounts, never()).saveAndFlush(any());
+	}
+
+	@Test
+	void reissueSetPasswordTokenRejectsActingOnOnesOwnAccount() {
+		when(currentActor.id()).thenReturn(ADMIN_ID);
+
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> service.reissueSetPasswordToken(ADMIN_ID))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.CANNOT_MODIFY_OWN_ACCOUNT));
+
+		verify(setPasswordTokens, never()).issue(any());
+	}
+
+	@Test
+	void reissueSetPasswordTokenHidesACustomerAccountAsNotFound() {
+		var id = UUID.randomUUID();
+		when(accounts.findById(id))
+			.thenReturn(Optional.of(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, NOW)));
+
+		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.reissueSetPasswordToken(id))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(CommonError.NOT_FOUND));
+	}
+
+	@Test
+	void reissueSetPasswordTokenIssuesANewToken() {
+		var account = new UserAccount("cashier@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
+		when(accounts.findById(account.getId())).thenReturn(Optional.of(account));
+		when(setPasswordTokens.issue(account.getId())).thenReturn(new IssuedSetPasswordToken("raw", NOW.plusSeconds(1)));
+
+		var provisioned = service.reissueSetPasswordToken(account.getId());
+
+		assertThat(provisioned.rawSetPasswordToken()).isEqualTo("raw");
+		verify(setPasswordTokens).issue(account.getId());
 	}
 
 	@Test
@@ -156,6 +216,7 @@ class StaffAccountServiceTest {
 		var updated = service.changeRole(targetId, Role.SERVER);
 
 		assertThat(updated.getRole()).isEqualTo(Role.SERVER);
+		verify(activeAdminLock).acquire();
 		verify(refreshTokens).revokeAllForUser(targetId);
 		var captor = ArgumentCaptor.forClass(UserRoleChanged.class);
 		verify(events).publishEvent(captor.capture());
@@ -207,6 +268,7 @@ class StaffAccountServiceTest {
 		var updated = service.deactivate(targetId);
 
 		assertThat(updated.isActive()).isFalse();
+		verify(activeAdminLock).acquire();
 		verify(refreshTokens).revokeAllForUser(targetId);
 		verify(setPasswordTokens).revokeAllUnused(targetId);
 		var captor = ArgumentCaptor.forClass(UserDeactivated.class);

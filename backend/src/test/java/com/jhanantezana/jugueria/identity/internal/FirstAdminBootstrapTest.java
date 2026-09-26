@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,50 +24,41 @@ class FirstAdminBootstrapTest {
 	static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
 
 	@Mock
-	UserAccountRepository accounts;
-
-	@Mock
 	StaffProvisioningService provisioning;
 
 	FirstAdminBootstrap bootstrap;
 
 	@BeforeEach
 	void setUp() {
-		bootstrap = new FirstAdminBootstrap(accounts, provisioning);
+		bootstrap = new FirstAdminBootstrap(provisioning);
 	}
 
 	@Test
 	void doesNothingWhenAnActiveAdminAlreadyExists() {
-		when(accounts.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(1L);
+		when(provisioning.createFirstAdmin("owner@jugueria.pe")).thenReturn(Optional.empty());
 
 		var exitCode = bootstrap.run("owner@jugueria.pe");
 
 		assertThat(exitCode).isZero();
-		verify(provisioning, never()).createStaff(any(), any());
 	}
 
 	@Test
 	void failsWithoutAnAdminEmailArgument() {
-		when(accounts.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(0L);
-
 		var exitCode = bootstrap.run(null);
 
 		assertThat(exitCode).isEqualTo(1);
-		verify(provisioning, never()).createStaff(any(), any());
+		verify(provisioning, never()).createFirstAdmin(any());
 	}
 
 	@Test
 	void createsTheFirstAdminWhenNoneExists() {
-		when(accounts.countByRoleAndActiveTrue(Role.ADMIN)).thenReturn(0L);
 		var account = new UserAccount("owner@jugueria.pe", "hash", Role.ADMIN, NOW);
-		when(provisioning.createStaff("owner@jugueria.pe", Role.ADMIN))
-			.thenReturn(new ProvisionedStaff(account, URI.create("https://jugueria.jhanantezana.com/set-password?token=x"),
-					NOW.plusSeconds(1)));
+		when(provisioning.createFirstAdmin("owner@jugueria.pe")).thenReturn(Optional.of(new ProvisionedStaff(account,
+				URI.create("https://jugueria.jhanantezana.com/set-password?token=x"), NOW.plusSeconds(1))));
 
 		var exitCode = bootstrap.run("owner@jugueria.pe");
 
 		assertThat(exitCode).isZero();
-		verify(provisioning).createStaff("owner@jugueria.pe", Role.ADMIN);
 	}
 
 }
