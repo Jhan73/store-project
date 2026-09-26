@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.identity.internal;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,9 @@ class LoginServiceTest {
 	@Mock
 	AccessTokenIssuer tokenIssuer;
 
+	@Mock
+	RefreshTokenService refreshTokens;
+
 	LoginService service;
 
 	@BeforeEach
@@ -49,8 +53,11 @@ class LoginServiceTest {
 		when(passwordEncoder.encode(any())).thenReturn(DUMMY_HASH);
 		var lockout = new IdentityProperties.Lockout(5, Duration.ofMinutes(15));
 		var jwt = new IdentityProperties.Jwt("issuer", "audience", "kid", null, true, Duration.ofMinutes(15));
-		var properties = new IdentityProperties(List.of("http://localhost"), jwt, lockout);
-		service = new LoginService(accounts, passwordEncoder, tokenIssuer, properties,
+		var refreshToken = new IdentityProperties.RefreshToken(Duration.ofDays(7), Duration.ofDays(30));
+		var properties = new IdentityProperties(List.of("http://localhost"), jwt, lockout, refreshToken);
+		lenient().when(refreshTokens.issueFamily(any())).thenReturn(
+				new IssuedRefreshToken("raw-refresh-token", NOW.plus(Duration.ofDays(7)), Duration.ofDays(7)));
+		service = new LoginService(accounts, passwordEncoder, tokenIssuer, refreshTokens, properties,
 				Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
