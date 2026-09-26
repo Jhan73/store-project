@@ -67,6 +67,11 @@ public class UserAccount extends BaseEntity {
 		this.lockedUntil = lockedUntil;
 	}
 
+	public UserAccount(String email, String passwordHash, Role role, boolean active) {
+		this(email, passwordHash, role);
+		this.active = active;
+	}
+
 	public boolean isLocked(Instant now) {
 		return lockedUntil != null && lockedUntil.isAfter(now);
 	}

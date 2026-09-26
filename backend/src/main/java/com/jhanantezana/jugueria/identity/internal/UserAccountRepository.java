@@ -10,7 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-interface UserAccountRepository extends JpaRepository<UserAccount, UUID> {
+// Public: identity.web integration tests seed accounts directly through this repository.
+public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> {
 
 	Optional<UserAccount> findByEmailIgnoreCase(String email);
 
