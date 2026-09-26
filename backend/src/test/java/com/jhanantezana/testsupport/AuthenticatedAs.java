@@ -9,8 +9,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 
 import com.jhanantezana.jugueria.shared.Role;
 
-// Reusable MockMvc auth for tests that only need "a CASHIER" without issuing and signing a real
-// token; SecurityIT covers the real token path (signing, expiry, issuer/audience) end to end.
+// Skips real token signing; SecurityIT covers that path.
 public final class AuthenticatedAs {
 
 	private AuthenticatedAs() {

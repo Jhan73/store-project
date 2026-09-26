@@ -46,8 +46,7 @@ final class ArchitectureRules {
 		.accessTargetWhere(readsTheSystemClock())
 		.because("time must come from the injected Clock so tests can control it");
 
-	// Hibernate's generators stamp with their own internal clock, bypassing the injected Clock just
-	// like a direct Instant.now() call would, only harder to spot in a review.
+	// Hibernate's timestamp generators read their own clock, bypassing the injected one.
 	static final ArchRule NO_HIBERNATE_GENERATED_TIMESTAMPS = noFields().should()
 		.beAnnotatedWith(CreationTimestamp.class)
 		.orShould()

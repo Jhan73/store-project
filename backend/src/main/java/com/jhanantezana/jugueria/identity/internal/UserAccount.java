@@ -40,9 +40,7 @@ public class UserAccount extends BaseEntity {
 	@Column(name = "locked_until")
 	private Instant lockedUntil;
 
-	// Set from the injected Clock at construction, never a Hibernate-generated timestamp: every other
-	// persisted moment in this codebase comes from Clock, and a generator would be untestable and
-	// silently out of step with the failed-attempt bookkeeping, which also stamps updatedAt itself.
+	// Stamped from the injected Clock, never by a Hibernate generator.
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -66,8 +64,7 @@ public class UserAccount extends BaseEntity {
 		this.active = active;
 	}
 
-	// Only for tests (identity.internal and identity.web ITs) that need a locked fixture without going
-	// through the repository's atomic update; public because those ITs live in different sub-packages.
+	// Test fixtures only; public because the ITs live in other sub-packages.
 	public UserAccount(String email, String passwordHash, Role role, Instant now, int failedAttempts,
 			Instant lockedUntil) {
 		this(email, passwordHash, role, now);

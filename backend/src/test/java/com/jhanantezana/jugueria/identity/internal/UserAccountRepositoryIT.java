@@ -31,8 +31,7 @@ class UserAccountRepositoryIT {
 	@Autowired
 	UserAccountRepository accounts;
 
-	// registerFailedAttempt/resetFailedAttempts have no @Transactional of their own (that belongs only
-	// on LoginService); a standalone call from this test needs its own transaction.
+	// The repository has no transaction of its own; standalone calls need one.
 	@Autowired
 	TransactionTemplate transactionTemplate;
 

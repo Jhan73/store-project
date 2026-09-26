@@ -19,8 +19,6 @@ import com.tngtech.archunit.core.importer.ImportOption;
 
 import jakarta.annotation.security.PermitAll;
 
-// Cross-checks SecurityConfiguration.PUBLIC_ROUTES against @PermitAll handler methods in both
-// directions, so the filter-chain allowlist and the controllers it lets through cannot drift apart.
 class PermitAllAllowlistTest {
 
 	static final JavaClasses APPLICATION = new ClassFileImporter()

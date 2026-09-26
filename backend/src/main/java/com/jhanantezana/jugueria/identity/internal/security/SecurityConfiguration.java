@@ -26,10 +26,7 @@ import com.jhanantezana.jugueria.shared.CorrelationId;
 @EnableMethodSecurity
 class SecurityConfiguration {
 
-	// The single source of truth for the public-route allowlist. A route marked backedByController is
-	// cross-checked against @PermitAll handler methods in both directions (see PermitAllAllowlistTest);
-	// routes authenticated elsewhere (webhook signature, STOMP CONNECT, actuator) are not, since they
-	// have no @PermitAll handler method to compare against.
+	// Routes without backedByController are authenticated elsewhere, so they have no @PermitAll handler.
 	record PublicRoute(HttpMethod method, String path, boolean backedByController) {
 	}
 
@@ -64,9 +61,7 @@ class SecurityConfiguration {
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
 				.authenticationEntryPoint(problems)
 				.accessDeniedHandler(problems)
-				// Spring Security always serves this RFC 9728 endpoint; there is no flag to turn it off,
-				// so the truthful fix is to correct the one claim it gets wrong for us: we never bind
-				// tokens to a client TLS certificate.
+				// This endpoint cannot be turned off; correct the one claim it gets wrong for us.
 				.protectedResourceMetadata(metadata -> metadata.protectedResourceMetadataCustomizer(
 						builder -> builder.tlsClientCertificateBoundAccessTokens(false))))
 			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(problems).accessDeniedHandler(problems))

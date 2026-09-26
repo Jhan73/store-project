@@ -25,8 +25,7 @@ import com.jhanantezana.jugueria.identity.internal.security.IdentityProperties;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
 
-// Mockito unit test (no Spring context): verifies the timing-parity fix by interaction, not timing —
-// a timing-based test would be flaky and would not actually prove the encoder ran on every branch.
+// Timing parity is verified by interaction; a timing-based test would be flaky.
 @ExtendWith(MockitoExtension.class)
 class LoginServiceTest {
 
