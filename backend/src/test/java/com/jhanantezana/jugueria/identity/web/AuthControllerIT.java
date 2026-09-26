@@ -411,6 +411,17 @@ class AuthControllerIT {
 	}
 
 	@Test
+	void setPasswordRejectsAnInactiveAccountsTokenWithoutConsumingIt() {
+		var account = accounts.save(new UserAccount("inactive-token@jugueria.pe", "unusable-hash", Role.CASHIER,
+				Instant.now(), false));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
+
+		assertInvalidSetPasswordToken(setPassword(raw, "a-brand-new-password"));
+
+		assertThat(setPasswordTokens.findByTokenHash(RefreshTokens.hash(raw)).orElseThrow().getUsedAt()).isNull();
+	}
+
+	@Test
 	void setPasswordRejectsAnAlreadyUsedToken() {
 		var account = accounts.save(new UserAccount("used-token@jugueria.pe", "unusable-hash", Role.CASHIER,
 				Instant.now()));

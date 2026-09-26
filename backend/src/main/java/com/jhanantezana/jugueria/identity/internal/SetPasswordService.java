@@ -31,8 +31,7 @@ public class SetPasswordService {
 		this.clock = clock;
 	}
 
-	// Consumes the token atomically (conditional UPDATE + row count) before touching the account, so a raced
-	// or replayed token never sets a password twice.
+	// Account state is checked before consuming the token, so an incidental rejection never burns a valid one.
 	@Transactional
 	public void setPassword(@Nullable String rawToken, String newPassword) {
 		if (rawToken == null) {
@@ -40,10 +39,13 @@ public class SetPasswordService {
 		}
 		var now = Instant.now(clock);
 		var token = tokens.findByTokenHash(RefreshTokens.hash(rawToken)).orElseThrow(SetPasswordService::invalidToken);
+		var account = accounts.findById(token.getUserId()).orElseThrow(SetPasswordService::invalidToken);
+		if (!account.isActive()) {
+			throw invalidToken();
+		}
 		if (tokens.markUsed(token.getId(), now) == 0) {
 			throw invalidToken();
 		}
-		var account = accounts.findById(token.getUserId()).orElseThrow(SetPasswordService::invalidToken);
 		account.changePassword(passwordEncoder.encode(newPassword), now);
 	}
 
