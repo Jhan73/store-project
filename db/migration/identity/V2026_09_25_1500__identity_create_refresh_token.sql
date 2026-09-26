@@ -1,12 +1,14 @@
 CREATE TABLE identity.refresh_token (
-    id          uuid          PRIMARY KEY,
-    family_id   uuid          NOT NULL,
-    user_id     uuid          NOT NULL REFERENCES identity.user_account (id),
-    token_hash  varchar(64)   NOT NULL,
-    issued_at   timestamptz   NOT NULL,
-    expires_at  timestamptz   NOT NULL,
-    used_at     timestamptz,
-    revoked_at  timestamptz
+    id                  uuid          PRIMARY KEY,
+    family_id           uuid          NOT NULL,
+    user_id             uuid          NOT NULL REFERENCES identity.user_account (id),
+    token_hash          varchar(64)   NOT NULL,
+    issued_at           timestamptz   NOT NULL,
+    expires_at          timestamptz   NOT NULL,
+    -- Shared by every token in a family; bounds the family's absolute lifetime regardless of rotation.
+    family_started_at   timestamptz   NOT NULL,
+    used_at             timestamptz,
+    revoked_at          timestamptz
 );
 
 -- Looked up on every refresh; never store the raw token, only this hash.

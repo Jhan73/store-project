@@ -1,5 +1,6 @@
 package com.jhanantezana.jugueria.identity.internal;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -33,30 +34,39 @@ public class RefreshToken extends BaseEntity {
 	@Column(name = "expires_at", nullable = false)
 	private Instant expiresAt;
 
+	@Column(name = "family_started_at", nullable = false)
+	private Instant familyStartedAt;
+
 	@Column(name = "used_at")
 	private Instant usedAt;
 
 	@Column(name = "revoked_at")
 	private Instant revokedAt;
 
-	public RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt) {
+	public RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt,
+			Instant familyStartedAt) {
 		this.familyId = familyId;
 		this.userId = userId;
 		this.tokenHash = tokenHash;
 		this.issuedAt = issuedAt;
 		this.expiresAt = expiresAt;
+		this.familyStartedAt = familyStartedAt;
 	}
 
 	// Test fixture: builds a token already used or revoked, without going through rotation.
-	RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt, Instant usedAt,
-			Instant revokedAt) {
-		this(familyId, userId, tokenHash, issuedAt, expiresAt);
+	RefreshToken(UUID familyId, UUID userId, String tokenHash, Instant issuedAt, Instant expiresAt,
+			Instant familyStartedAt, Instant usedAt, Instant revokedAt) {
+		this(familyId, userId, tokenHash, issuedAt, expiresAt, familyStartedAt);
 		this.usedAt = usedAt;
 		this.revokedAt = revokedAt;
 	}
 
 	public boolean isExpired(Instant now) {
 		return !expiresAt.isAfter(now);
+	}
+
+	public boolean exceedsAbsoluteLifetime(Instant now, Duration absoluteTtl) {
+		return !familyStartedAt.plus(absoluteTtl).isAfter(now);
 	}
 
 }

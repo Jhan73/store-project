@@ -26,7 +26,7 @@ public record IdentityProperties(@NotEmpty List<String> allowedOrigins, @Valid @
 	public record Lockout(@Positive int maxFailedAttempts, @NotNull Duration lockoutDuration) {
 	}
 
-	public record RefreshToken(@NotNull Duration ttl) {
+	public record RefreshToken(@NotNull Duration idleTtl, @NotNull Duration absoluteTtl) {
 	}
 
 }

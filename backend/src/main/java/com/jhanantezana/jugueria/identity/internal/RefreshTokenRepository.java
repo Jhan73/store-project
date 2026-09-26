@@ -15,13 +15,15 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 	Optional<RefreshToken> findByTokenHash(String tokenHash);
 
 	// Atomic: the row count is the only safe way to detect a concurrent reuse of the same token.
+	// absoluteFloor = now - absoluteTtl, so family_started_at > absoluteFloor enforces the family's absolute lifetime.
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(nativeQuery = true, value = """
 			update identity.refresh_token
 			set used_at = :now
 			where id = :id and used_at is null and revoked_at is null and expires_at > :now
+			  and family_started_at > :absoluteFloor
 			""")
-	int markUsed(@Param("id") UUID id, @Param("now") Instant now);
+	int markUsed(@Param("id") UUID id, @Param("now") Instant now, @Param("absoluteFloor") Instant absoluteFloor);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query(nativeQuery = true,

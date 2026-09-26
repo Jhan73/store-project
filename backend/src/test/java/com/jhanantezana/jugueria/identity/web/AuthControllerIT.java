@@ -216,11 +216,56 @@ class AuthControllerIT {
 	}
 
 	@Test
-	void refreshRejectsAnExpiredToken() {
+	void refreshRejectsAnIdleExpiredTokenWithinTheAbsoluteWindow() {
 		var user = accounts.save(new UserAccount("expired-refresh@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
-		var raw = seedToken(user.getId(), Instant.now().minus(Duration.ofDays(31)), Instant.now().minusSeconds(1));
+		var now = Instant.now();
+		var raw = seedToken(user.getId(), now.minus(Duration.ofDays(1)), now.minusSeconds(1), now);
 
 		assertInvalidRefreshToken(refresh(raw));
+	}
+
+	@Test
+	void refreshRejectsAfterTheAbsoluteLifetimeEvenWithinTheIdleWindow() {
+		var absoluteTtl = identityProperties.refreshToken().absoluteTtl();
+		var user = accounts.save(new UserAccount("stale-family@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		var now = Instant.now();
+		var familyStartedAt = now.minus(absoluteTtl).minusSeconds(1);
+		var raw = seedToken(user.getId(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), familyStartedAt);
+
+		assertInvalidRefreshToken(refresh(raw));
+	}
+
+	@Test
+	void refreshCapsExpiresAtAndMaxAgeNearTheAbsoluteLimit() {
+		var absoluteTtl = identityProperties.refreshToken().absoluteTtl();
+		var idleTtl = identityProperties.refreshToken().idleTtl();
+		var user = accounts.save(new UserAccount("nearcap@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		var now = Instant.now();
+		var familyStartedAt = now.minus(absoluteTtl).plus(Duration.ofDays(5));
+		var raw = seedToken(user.getId(), now.minus(Duration.ofHours(1)), now.plus(Duration.ofDays(1)), familyStartedAt);
+
+		var result = refresh(raw);
+
+		assertThat(result).hasStatusOk();
+		var expectedMaxAgeSeconds = Duration.between(Instant.now(), familyStartedAt.plus(absoluteTtl)).toSeconds();
+		var actualMaxAge = result.getResponse().getCookie(RefreshTokenCookie.NAME).getMaxAge();
+		assertThat(Math.abs(actualMaxAge - expectedMaxAgeSeconds)).isLessThanOrEqualTo(5);
+		assertThat(actualMaxAge).isLessThan((int) idleTtl.toSeconds());
+		var newToken = refreshTokens.findByTokenHash(RefreshTokens.hash(cookieValue(result))).orElseThrow();
+		assertThat(Math.abs(Duration.between(newToken.getExpiresAt(), familyStartedAt.plus(absoluteTtl)).getSeconds()))
+			.isLessThanOrEqualTo(5);
+	}
+
+	@Test
+	void loginStartsANewFamilyWithAFreshStart() {
+		accounts.save(
+				new UserAccount("fresh-family@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+
+		var result = login("fresh-family@jugueria.pe", PASSWORD);
+
+		var token = refreshTokens.findByTokenHash(RefreshTokens.hash(cookieValue(result))).orElseThrow();
+		assertThat(Math.abs(Duration.between(token.getFamilyStartedAt(), Instant.now()).getSeconds()))
+			.isLessThanOrEqualTo(5);
 	}
 
 	@Test
@@ -354,8 +399,13 @@ class AuthControllerIT {
 	}
 
 	private String seedToken(UUID userId, Instant issuedAt, Instant expiresAt) {
+		return seedToken(userId, issuedAt, expiresAt, issuedAt);
+	}
+
+	private String seedToken(UUID userId, Instant issuedAt, Instant expiresAt, Instant familyStartedAt) {
 		var raw = RefreshTokens.newRawToken();
-		refreshTokens.save(new RefreshToken(UUID.randomUUID(), userId, RefreshTokens.hash(raw), issuedAt, expiresAt));
+		refreshTokens.save(new RefreshToken(UUID.randomUUID(), userId, RefreshTokens.hash(raw), issuedAt, expiresAt,
+				familyStartedAt));
 		return raw;
 	}
 
@@ -364,7 +414,7 @@ class AuthControllerIT {
 	}
 
 	private void assertRefreshCookieIssued(MvcTestResult result) {
-		var maxAgeSeconds = identityProperties.refreshToken().ttl().toSeconds();
+		var maxAgeSeconds = identityProperties.refreshToken().idleTtl().toSeconds();
 		assertThat(result).headers()
 			.hasHeaderSatisfying(HttpHeaders.SET_COOKIE,
 					values -> assertThat(values).singleElement()

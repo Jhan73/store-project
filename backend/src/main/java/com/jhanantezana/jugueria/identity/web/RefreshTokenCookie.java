@@ -12,8 +12,8 @@ final class RefreshTokenCookie {
 	private RefreshTokenCookie() {
 	}
 
-	static ResponseCookie issued(String rawToken, Duration ttl) {
-		return build(rawToken, ttl);
+	static ResponseCookie issued(String rawToken, Duration maxAge) {
+		return build(rawToken, maxAge);
 	}
 
 	static ResponseCookie cleared() {

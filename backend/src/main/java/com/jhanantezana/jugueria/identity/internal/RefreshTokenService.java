@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -39,7 +40,8 @@ public class RefreshTokenService {
 
 	@Transactional
 	public IssuedRefreshToken issueFamily(UUID userId) {
-		return issue(Ids.newId(), userId);
+		var now = Instant.now(clock);
+		return issue(Ids.newId(), userId, now, now);
 	}
 
 	// The revocation triggered by a rejection must survive that same rejection.
@@ -50,7 +52,7 @@ public class RefreshTokenService {
 		}
 		var now = Instant.now(clock);
 		var token = tokens.findByTokenHash(RefreshTokens.hash(rawToken)).orElseThrow(RefreshTokenService::invalidRefreshToken);
-		if (token.getRevokedAt() != null || token.isExpired(now)) {
+		if (token.getRevokedAt() != null || token.isExpired(now) || token.exceedsAbsoluteLifetime(now, properties.absoluteTtl())) {
 			throw invalidRefreshToken();
 		}
 		if (token.getUsedAt() != null) {
@@ -62,14 +64,15 @@ public class RefreshTokenService {
 		if (!account.isActive() || account.isLocked(now)) {
 			throw invalidRefreshToken();
 		}
-		if (tokens.markUsed(token.getId(), now) == 0) {
-			// Lost the race: a concurrent request rotated this token first.
+		var absoluteFloor = now.minus(properties.absoluteTtl());
+		if (tokens.markUsed(token.getId(), now, absoluteFloor) == 0) {
+			// Lost the race, or the absolute lifetime lapsed between the checks above and this update.
 			tokens.revokeFamily(token.getFamilyId(), now);
 			throw invalidRefreshToken();
 		}
-		var issued = issue(token.getFamilyId(), account.getId());
+		var issued = issue(token.getFamilyId(), account.getId(), token.getFamilyStartedAt(), now);
 		return new RefreshResult(accessTokens.issue(account.getId(), account.getRole()), issued.rawToken(),
-				issued.expiresAt(), account.getId(), account.getRole());
+				issued.expiresAt(), issued.maxAge(), account.getId(), account.getRole());
 	}
 
 	@Transactional
@@ -86,12 +89,13 @@ public class RefreshTokenService {
 		tokens.revokeAllForUser(userId, Instant.now(clock));
 	}
 
-	private IssuedRefreshToken issue(UUID familyId, UUID userId) {
-		var now = Instant.now(clock);
-		var expiresAt = now.plus(properties.ttl());
+	private IssuedRefreshToken issue(UUID familyId, UUID userId, Instant familyStartedAt, Instant now) {
+		var idleExpiry = now.plus(properties.idleTtl());
+		var absoluteExpiry = familyStartedAt.plus(properties.absoluteTtl());
+		var expiresAt = idleExpiry.isBefore(absoluteExpiry) ? idleExpiry : absoluteExpiry;
 		var raw = RefreshTokens.newRawToken();
-		tokens.save(new RefreshToken(familyId, userId, RefreshTokens.hash(raw), now, expiresAt));
-		return new IssuedRefreshToken(raw, expiresAt);
+		tokens.save(new RefreshToken(familyId, userId, RefreshTokens.hash(raw), now, expiresAt, familyStartedAt));
+		return new IssuedRefreshToken(raw, expiresAt, Duration.between(now, expiresAt));
 	}
 
 	private static BusinessException invalidRefreshToken() {
