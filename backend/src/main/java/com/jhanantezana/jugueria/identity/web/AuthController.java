@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.identity.internal.LoginService;
 import com.jhanantezana.jugueria.identity.internal.RefreshTokenService;
+import com.jhanantezana.jugueria.identity.internal.SetPasswordService;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
@@ -26,9 +27,13 @@ class AuthController {
 
 	private final RefreshTokenService refreshTokenService;
 
-	AuthController(LoginService loginService, RefreshTokenService refreshTokenService) {
+	private final SetPasswordService setPasswordService;
+
+	AuthController(LoginService loginService, RefreshTokenService refreshTokenService,
+			SetPasswordService setPasswordService) {
 		this.loginService = loginService;
 		this.refreshTokenService = refreshTokenService;
+		this.setPasswordService = setPasswordService;
 	}
 
 	@PostMapping("/login")
@@ -46,6 +51,15 @@ class AuthController {
 			@RequestHeader("X-Requested-With") String requestedWith) {
 		var result = refreshTokenService.rotate(refreshToken);
 		return withRefreshCookie(LoginResponse.from(result), result.refreshToken(), result.refreshTokenMaxAge());
+	}
+
+	// X-Requested-With required for the same reason as refresh/logout: forces a CORS preflight.
+	@PostMapping("/set-password")
+	@PermitAll
+	ResponseEntity<Void> setPassword(@Valid @RequestBody SetPasswordRequest request,
+			@RequestHeader("X-Requested-With") String requestedWith) {
+		setPasswordService.setPassword(request.token(), request.newPassword());
+		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping("/logout")

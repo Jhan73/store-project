@@ -27,6 +27,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.identity.internal.RefreshToken;
 import com.jhanantezana.jugueria.identity.internal.RefreshTokenRepository;
+import com.jhanantezana.jugueria.identity.internal.SetPasswordToken;
+import com.jhanantezana.jugueria.identity.internal.SetPasswordTokenRepository;
 import com.jhanantezana.jugueria.identity.internal.UserAccount;
 import com.jhanantezana.jugueria.identity.internal.UserAccountRepository;
 import com.jhanantezana.jugueria.identity.internal.security.IdentityProperties;
@@ -46,6 +48,8 @@ class AuthControllerIT {
 
 	static final String LOGOUT = "/api/v1/auth/logout";
 
+	static final String SET_PASSWORD = "/api/v1/auth/set-password";
+
 	static final String PASSWORD = "correct-horse-battery-staple";
 
 	@Autowired
@@ -58,6 +62,9 @@ class AuthControllerIT {
 	RefreshTokenRepository refreshTokens;
 
 	@Autowired
+	SetPasswordTokenRepository setPasswordTokens;
+
+	@Autowired
 	PasswordEncoder passwordEncoder;
 
 	@Autowired
@@ -66,6 +73,7 @@ class AuthControllerIT {
 	@AfterEach
 	void cleanUp() {
 		refreshTokens.deleteAll();
+		setPasswordTokens.deleteAll();
 		accounts.deleteAll();
 	}
 
@@ -372,6 +380,89 @@ class AuthControllerIT {
 
 		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
 		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.malformed-request");
+	}
+
+	@Test
+	void setPasswordSucceedsAndDoesNotLogIn() {
+		var account = accounts.save(new UserAccount("new-staff@jugueria.pe", "unusable-hash", Role.CASHIER,
+				Instant.now(), 3, null));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
+
+		var result = setPassword(raw, "a-brand-new-password");
+
+		assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
+		var reloaded = accounts.findById(account.getId()).orElseThrow();
+		assertThat(passwordEncoder.matches("a-brand-new-password", reloaded.getPasswordHash())).isTrue();
+		assertThat(reloaded.getFailedAttempts()).isZero();
+	}
+
+	@Test
+	void setPasswordRejectsAnUnknownToken() {
+		assertInvalidSetPasswordToken(setPassword("not-a-real-token", "a-brand-new-password"));
+	}
+
+	@Test
+	void setPasswordRejectsAnExpiredToken() {
+		var account = accounts.save(new UserAccount("expired-token@jugueria.pe", "unusable-hash", Role.CASHIER,
+				Instant.now()));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().minusSeconds(1));
+
+		assertInvalidSetPasswordToken(setPassword(raw, "a-brand-new-password"));
+	}
+
+	@Test
+	void setPasswordRejectsAnAlreadyUsedToken() {
+		var account = accounts.save(new UserAccount("used-token@jugueria.pe", "unusable-hash", Role.CASHIER,
+				Instant.now()));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
+		assertThat(setPassword(raw, "a-brand-new-password")).hasStatus(HttpStatus.NO_CONTENT);
+
+		assertInvalidSetPasswordToken(setPassword(raw, "another-new-password"));
+	}
+
+	@Test
+	void setPasswordRejectsATooShortPassword() {
+		var result = mvc.post()
+			.uri(SET_PASSWORD)
+			.header("X-Requested-With", "XMLHttpRequest")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"token\":\"whatever\",\"newPassword\":\"short\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.validation-failed");
+	}
+
+	@Test
+	void setPasswordRejectsWithoutTheRequestedWithHeader() {
+		var result = mvc.post()
+			.uri(SET_PASSWORD)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"token\":\"whatever\",\"newPassword\":\"a-brand-new-password\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.malformed-request");
+	}
+
+	private MvcTestResult setPassword(String token, String newPassword) {
+		return mvc.post()
+			.uri(SET_PASSWORD)
+			.header("X-Requested-With", "XMLHttpRequest")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"token\":\"%s\",\"newPassword\":\"%s\"}".formatted(token, newPassword))
+			.exchange();
+	}
+
+	private String seedSetPasswordToken(UUID userId, Instant expiresAt) {
+		var raw = RefreshTokens.newRawToken();
+		setPasswordTokens.save(new SetPasswordToken(userId, RefreshTokens.hash(raw), Instant.now(), expiresAt));
+		return raw;
+	}
+
+	private static void assertInvalidSetPasswordToken(MvcTestResult result) {
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED).hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.invalid-set-password-token");
 	}
 
 	private MvcTestResult login(String email, String password) {
