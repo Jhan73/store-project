@@ -76,6 +76,9 @@ Credentials come from SSM; never commit real passwords.
   a write instead of failing loudly. The partition key must be part of any primary key, so the table's PK is
   `(id, occurred_at)` rather than `id` alone — `id` stays globally unique (UUID v7) without a DB constraint enforcing
   it. New yearly partitions arrive as an ordinary migration (`app` has no DDL rights to create one itself at runtime).
+  `AuditPartitionCoverageIT` and `AuditAppendOnlyGrantsIT` (backend test suite) fail in CI, a year ahead of time, if a
+  partition or its revoke is ever missed; `docs/runbooks/audit-partitions.md` covers adding one and recovering rows
+  that already landed in `DEFAULT`.
 
 ## Capacity
 
