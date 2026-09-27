@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.shared.BusinessException;
+import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.ErrorCode;
+import com.jhanantezana.jugueria.shared.ETags;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -47,6 +49,11 @@ public class ProbeController {
 			return status;
 		}
 
+	}
+
+	@GetMapping("/probe/stale")
+	void stale() {
+		throw new BusinessException(CommonError.PRECONDITION_FAILED, "stale", Map.of("currentETag", ETags.format(5)));
 	}
 
 	record Line(@NotNull @Positive Integer quantity) {

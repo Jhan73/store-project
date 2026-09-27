@@ -107,6 +107,15 @@ class ProblemDetailsAdviceTest {
 	}
 
 	@Test
+	void carriesTheCurrentETagOnAPreconditionFailure() {
+		var result = mvc.get().uri("/probe/stale").exchange();
+
+		assertProblem(result, HttpStatus.PRECONDITION_FAILED, "common.precondition-failed");
+		assertThat(result).hasHeader("ETag", "\"5\"");
+		assertThat(result).bodyJson().extractingPath("$.currentETag").isEqualTo("\"5\"");
+	}
+
+	@Test
 	void hidesTheCauseOfAnUnexpectedError() {
 		var result = mvc.get().uri("/probe/boom").exchange();
 

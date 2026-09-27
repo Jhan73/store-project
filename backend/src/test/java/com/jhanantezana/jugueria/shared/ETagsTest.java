@@ -27,4 +27,9 @@ class ETagsTest {
 		assertThatThrownBy(() -> ETags.parse("not-a-number")).isInstanceOf(IllegalArgumentException.class);
 	}
 
+	@Test
+	void parsesAWeakETag() {
+		assertThat(ETags.parse("W/\"3\"")).isEqualTo(3L);
+	}
+
 }
