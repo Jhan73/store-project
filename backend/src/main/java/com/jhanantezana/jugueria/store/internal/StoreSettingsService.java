@@ -9,6 +9,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jhanantezana.jugueria.notifications.NotificationsApi;
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
@@ -26,13 +28,16 @@ public class StoreSettingsService {
 
 	private final CurrentActor currentActor;
 
+	private final NotificationsApi notifications;
+
 	private final Clock clock;
 
 	StoreSettingsService(StoreSettingsRepository settings, ApplicationEventPublisher events,
-			CurrentActor currentActor, Clock clock) {
+			CurrentActor currentActor, NotificationsApi notifications, Clock clock) {
 		this.settings = settings;
 		this.events = events;
 		this.currentActor = currentActor;
+		this.notifications = notifications;
 		this.clock = clock;
 	}
 
@@ -57,6 +62,9 @@ public class StoreSettingsService {
 		var after = current.snapshot();
 		events.publishEvent(
 				new StoreSettingsChanged(current.getId(), before, after, currentActor.id(), currentActor.role(), now));
+		// Same transaction as the change above: NOTIFY only reaches other instances once it commits.
+		notifications.publish(RealtimeTopic.STORE_STATUS, "STORE_SETTINGS_CHANGED",
+				Map.of("settingsId", current.getId().toString()));
 		return current;
 	}
 

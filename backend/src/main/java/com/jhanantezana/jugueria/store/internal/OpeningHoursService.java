@@ -12,6 +12,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jhanantezana.jugueria.notifications.NotificationsApi;
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
@@ -35,14 +37,18 @@ public class OpeningHoursService {
 
 	private final CurrentActor currentActor;
 
+	private final NotificationsApi notifications;
+
 	private final Clock clock;
 
 	OpeningHoursService(OpeningHourRepository hours, StoreSettingsRepository settings,
-			ApplicationEventPublisher events, CurrentActor currentActor, Clock clock) {
+			ApplicationEventPublisher events, CurrentActor currentActor, NotificationsApi notifications,
+			Clock clock) {
 		this.hours = hours;
 		this.settings = settings;
 		this.events = events;
 		this.currentActor = currentActor;
+		this.notifications = notifications;
 		this.clock = clock;
 	}
 
@@ -73,6 +79,9 @@ public class OpeningHoursService {
 		}
 		events.publishEvent(
 				new OpeningHoursChanged(settingsRow.getId(), before, after, currentActor.id(), currentActor.role(), now));
+		// Same transaction as the change above: NOTIFY only reaches other instances once it commits.
+		notifications.publish(RealtimeTopic.STORE_STATUS, "OPENING_HOURS_CHANGED",
+				Map.of("settingsId", settingsRow.getId().toString()));
 		return new OpeningHoursResult(sorted(hours.findAll()), expectedVersion + 1);
 	}
 
