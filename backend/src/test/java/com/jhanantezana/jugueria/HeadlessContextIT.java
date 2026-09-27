@@ -25,4 +25,12 @@ class HeadlessContextIT {
 		assertThat(context.containsBean("firstAdminBootstrapRunner")).isTrue();
 	}
 
+	// The bootstrap serves no requests: no broker, no channel interceptor, no dedicated LISTEN connection.
+	@Test
+	void opensNoStompBrokerOrListenConnection() {
+		assertThat(context.containsBean("stompConfiguration")).isFalse();
+		assertThat(context.containsBean("appEventsListener")).isFalse();
+		assertThat(context.containsBean("stompAuthChannelInterceptor")).isFalse();
+	}
+
 }

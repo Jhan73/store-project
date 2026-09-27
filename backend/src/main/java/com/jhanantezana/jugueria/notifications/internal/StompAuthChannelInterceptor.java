@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.http.HttpHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -24,7 +26,9 @@ import com.jhanantezana.jugueria.notifications.RealtimeTopic;
  * frames. The HTTP filter chain already permits the {@code /ws} handshake itself (tech-spec §7.1); this
  * is where the actual identity check happens.
  */
+// Absent in a headless run such as the first-admin bootstrap, which opens no channel to intercept.
 @Component
+@ConditionalOnWebApplication(type = Type.SERVLET)
 class StompAuthChannelInterceptor implements ChannelInterceptor {
 
 	// Only the two topics this work package wires are allowed; anything else (board, tables, display,

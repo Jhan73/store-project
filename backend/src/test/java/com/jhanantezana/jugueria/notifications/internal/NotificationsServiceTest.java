@@ -10,6 +10,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationsServiceTest {
@@ -29,11 +32,21 @@ class NotificationsServiceTest {
 	@Mock
 	StaffSetPasswordEmailTemplate template;
 
+	@Mock
+	AppEventsPublisher appEvents;
+
 	NotificationsService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new NotificationsService(emailSender, template, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new NotificationsService(emailSender, template, appEvents, Clock.fixed(NOW, ZoneOffset.UTC));
+	}
+
+	@Test
+	void delegatesPublishToTheAppEventsPublisher() {
+		service.publish(RealtimeTopic.STORE_STATUS, "STORE_SETTINGS_CHANGED", Map.of("settingsId", "abc"));
+
+		verify(appEvents).publish(RealtimeTopic.STORE_STATUS, "STORE_SETTINGS_CHANGED", Map.of("settingsId", "abc"));
 	}
 
 	@Test
