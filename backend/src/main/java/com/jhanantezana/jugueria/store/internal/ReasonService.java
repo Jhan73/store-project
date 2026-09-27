@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.store.internal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -11,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.shared.BusinessException;
+import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
+import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.store.ReasonCreated;
 import com.jhanantezana.jugueria.store.ReasonStatusChanged;
 import com.jhanantezana.jugueria.store.ReasonType;
@@ -56,8 +59,9 @@ public class ReasonService {
 	}
 
 	@Transactional
-	public Reason deactivate(UUID id) {
+	public Reason deactivate(UUID id, long expectedVersion) {
 		var reason = findOrThrow(id);
+		requireMatchingVersion(reason, expectedVersion);
 		if (!reason.isActive()) {
 			return reason;
 		}
@@ -68,8 +72,9 @@ public class ReasonService {
 	}
 
 	@Transactional
-	public Reason reactivate(UUID id) {
+	public Reason reactivate(UUID id, long expectedVersion) {
 		var reason = findOrThrow(id);
+		requireMatchingVersion(reason, expectedVersion);
 		if (reason.isActive()) {
 			return reason;
 		}
@@ -83,6 +88,13 @@ public class ReasonService {
 		return reasons.findById(id).orElseThrow(ReasonService::notFound);
 	}
 
+	// Short-circuits the common case; Hibernate's own version-guarded UPDATE at flush is the real race guard.
+	private static void requireMatchingVersion(Reason reason, long expectedVersion) {
+		if (reason.getVersion() != expectedVersion) {
+			throw preconditionFailed(reason.getVersion());
+		}
+	}
+
 	private static BusinessException notFound() {
 		return new BusinessException(StoreError.REASON_NOT_FOUND, "Reason not found");
 	}
@@ -90,6 +102,11 @@ public class ReasonService {
 	private static BusinessException codeAlreadyUsed() {
 		return new BusinessException(StoreError.REASON_CODE_ALREADY_USED,
 				"A reason with this code already exists for this type");
+	}
+
+	private static BusinessException preconditionFailed(long currentVersion) {
+		return new BusinessException(CommonError.PRECONDITION_FAILED, "If-Match does not match the current ETag",
+				Map.of("currentETag", ETags.format(currentVersion)));
 	}
 
 }

@@ -8,4 +8,5 @@ CREATE TABLE store.reason (
     version    bigint       NOT NULL DEFAULT 0
 );
 
+-- Unconditional (not WHERE active): a deactivated code stays reserved so historical entries referencing it stay unambiguous.
 CREATE UNIQUE INDEX reason_type_code_key ON store.reason (type, lower(code));
