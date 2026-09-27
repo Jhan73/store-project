@@ -1,17 +1,13 @@
 package com.jhanantezana.jugueria;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.reflect.Type;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,17 +24,18 @@ import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import com.jhanantezana.jugueria.identity.internal.security.AccessTokenIssuer;
 import com.jhanantezana.jugueria.shared.Role;
 
-/**
- * WP M1-B5's own acceptance test: a change committed on instance A must reach a subscriber connected to
- * instance B within 5 seconds (NFR-04), across the LISTEN/NOTIFY bridge, not the in-memory broker alone.
- */
+// A change committed on instance A must reach a subscriber connected to instance B within 5 seconds,
+// across the LISTEN/NOTIFY bridge, not the in-memory broker alone.
 class RealtimeTwoInstanceIT {
 
 	static ConfigurableApplicationContext contextA;
@@ -49,8 +46,7 @@ class RealtimeTwoInstanceIT {
 
 	static int portB;
 
-	// Marks when B's own dedicated LISTEN connection could have opened, to find its PID unambiguously.
-	static Instant beforeBStarted;
+	static final String LISTENER_APPLICATION_NAME_B = "jugueria-listen-b-it";
 
 	static final String SETTINGS_JSON = """
 			{
@@ -67,16 +63,24 @@ class RealtimeTwoInstanceIT {
 			}
 			""";
 
-	private record Connection(StompSession session, CompletableFuture<Throwable> errors) {
+	// session fails exceptionally on a rejected CONNECT. errorFrame carries the STOMP ERROR frame's own
+	// text (from handleException); transportClosed is the generic close that can race ahead of it and
+	// never carries the frame's message, so a test wanting the actual rejection reason waits on errorFrame.
+	private record Connection(CompletableFuture<StompSession> session, CompletableFuture<Throwable> errorFrame,
+			CompletableFuture<Throwable> transportClosed) {
+
+		CompletableFuture<Throwable> anyRejection() {
+			return errorFrame.applyToEither(transportClosed, throwable -> throwable);
+		}
+
 	}
 
 	@BeforeAll
-	static void startBothInstances() throws SQLException {
-		contextA = build().run();
+	static void startBothInstances() {
+		contextA = build("jugueria-listen-a-it").run();
 		portA = contextA.getEnvironment().getProperty("local.server.port", Integer.class);
 
-		beforeBStarted = databaseNow();
-		contextB = build().run();
+		contextB = build(LISTENER_APPLICATION_NAME_B).run();
 		portB = contextB.getEnvironment().getProperty("local.server.port", Integer.class);
 	}
 
@@ -92,10 +96,11 @@ class RealtimeTwoInstanceIT {
 
 	@Test
 	void aChangeCommittedOnInstanceAReachesASubscriberOnInstanceBWithinFiveSeconds() throws Exception {
-		var connection = connect(portB, null).get(5, TimeUnit.SECONDS);
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
 			var received = new CompletableFuture<String>();
-			connection.session().subscribe("/topic/store-status", stringHandler(received));
+			session.subscribe("/topic/store-status", stringHandler(received));
 
 			updateStoreSettingsOnA();
 
@@ -103,44 +108,91 @@ class RealtimeTwoInstanceIT {
 			assertThat(payload).contains("\"type\":\"STORE_SETTINGS_CHANGED\"").contains("settingsId");
 		}
 		finally {
-			disconnectQuietly(connection.session());
+			disconnectQuietly(session);
 		}
 	}
 
+	// Bypasses the STOMP client abstraction: DefaultStompSession never surfaces a pre-CONNECTED ERROR
+	// frame's own text through handleException, only a generic "Connection closed" transport failure.
+	// Reading the raw frame is the only way to assert the server's actual rejection reason.
 	@Test
-	void rejectsConnectWithAnInvalidToken() {
-		var headers = new StompHeaders();
-		headers.add(HttpHeaders.AUTHORIZATION, "Bearer not-a-real-token");
+	void rejectsConnectWithAnInvalidTokenViaAnErrorFrame() throws Exception {
+		var received = new CompletableFuture<String>();
+		var handler = new TextWebSocketHandler() {
 
-		var connectFuture = connect(portB, headers);
+			@Override
+			protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+				received.complete(message.getPayload());
+			}
 
-		assertThatThrownBy(() -> connectFuture.get(5, TimeUnit.SECONDS))
-			.isInstanceOfAny(ExecutionException.class, TimeoutException.class);
+		};
+		var client = new StandardWebSocketClient();
+		var session = client.execute(handler, "ws://localhost:" + portB + "/ws").get(5, TimeUnit.SECONDS);
+		try {
+			var connectFrame = "CONNECT\naccept-version:1.2\nhost:localhost\nAuthorization:Bearer not-a-real-token\n\n\u0000";
+			session.sendMessage(new TextMessage(connectFrame));
+
+			var frame = received.get(5, TimeUnit.SECONDS);
+			assertThat(frame).startsWith("ERROR").contains("Invalid or expired token");
+		}
+		finally {
+			session.close();
+		}
 	}
 
 	@Test
 	void rejectsSubscribingToADestinationOutsideThisWorkPackage() throws Exception {
-		var connection = connect(portB, null).get(5, TimeUnit.SECONDS);
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
-			connection.session().subscribe("/topic/board", stringHandler(new CompletableFuture<>()));
+			session.subscribe("/topic/board", stringHandler(new CompletableFuture<>()));
 
-			assertThat(connection.errors().get(5, TimeUnit.SECONDS)).isNotNull();
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
 		}
 		finally {
-			disconnectQuietly(connection.session());
+			disconnectQuietly(session);
 		}
 	}
 
 	@Test
 	void rejectsAClientSendToABrokerDestination() throws Exception {
-		var connection = connect(portB, null).get(5, TimeUnit.SECONDS);
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
-			connection.session().send("/topic/catalog", "not allowed");
+			session.send("/topic/catalog", "not allowed");
 
-			assertThat(connection.errors().get(5, TimeUnit.SECONDS)).isNotNull();
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
 		}
 		finally {
-			disconnectQuietly(connection.session());
+			disconnectQuietly(session);
+		}
+	}
+
+	@Test
+	void rejectsAClientSendToAnApplicationDestination() throws Exception {
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
+		try {
+			session.send("/app/whatever", "not allowed");
+
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
+		}
+		finally {
+			disconnectQuietly(session);
+		}
+	}
+
+	@Test
+	void rejectsAClientSendToAnArbitraryDestination() throws Exception {
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
+		try {
+			session.send("/something/else", "not allowed");
+
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
+		}
+		finally {
+			disconnectQuietly(session);
 		}
 	}
 
@@ -148,10 +200,11 @@ class RealtimeTwoInstanceIT {
 	void theListenerReconnectsAfterItsBackendIsTerminatedAndStillDelivers() throws Exception {
 		terminateInstanceBsListenerBackend();
 
-		var connection = connect(portB, null).get(5, TimeUnit.SECONDS);
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
 			var received = new CompletableFuture<String>();
-			connection.session().subscribe("/topic/store-status", stringHandler(received));
+			session.subscribe("/topic/store-status", stringHandler(received));
 
 			updateStoreSettingsOnA();
 
@@ -160,33 +213,32 @@ class RealtimeTwoInstanceIT {
 			assertThat(payload).contains("\"type\":\"STORE_SETTINGS_CHANGED\"");
 		}
 		finally {
-			disconnectQuietly(connection.session());
+			disconnectQuietly(session);
 		}
 	}
 
 	private static void terminateInstanceBsListenerBackend() throws SQLException {
+		var pid = awaitListenerBackendPid(LISTENER_APPLICATION_NAME_B);
 		try (var connection = DriverManager.getConnection(TestcontainersConfiguration.POSTGRES.getJdbcUrl(), "app",
 				"app"); var statement = connection.createStatement()) {
-			var pid = -1;
-			try (var rs = statement.executeQuery(
-					"select pid from pg_stat_activity where query = 'LISTEN app_events' and backend_start >= '"
-							+ beforeBStarted + "' order by backend_start asc limit 1")) {
-				if (rs.next()) {
-					pid = rs.getInt("pid");
-				}
-			}
-			assertThat(pid).isPositive();
 			statement.execute("select pg_terminate_backend(" + pid + ")");
 		}
 	}
 
-	private static Instant databaseNow() throws SQLException {
+	// The LISTEN connection opens on its own virtual thread after context startup, so the row can lag briefly.
+	private static int awaitListenerBackendPid(String applicationName) throws SQLException {
 		try (var connection = DriverManager.getConnection(TestcontainersConfiguration.POSTGRES.getJdbcUrl(), "app",
-				"app");
-				var statement = connection.createStatement();
-				var rs = statement.executeQuery("select now()")) {
-			rs.next();
-			return rs.getTimestamp(1).toInstant();
+				"app"); var statement = connection.createStatement()) {
+			var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+			while (System.nanoTime() < deadline) {
+				try (var rs = statement.executeQuery(
+						"select pid from pg_stat_activity where application_name = '" + applicationName + "'")) {
+					if (rs.next()) {
+						return rs.getInt("pid");
+					}
+				}
+			}
+			throw new AssertionError("No pg_stat_activity row for application_name=" + applicationName + " after 10s");
 		}
 	}
 
@@ -210,11 +262,15 @@ class RealtimeTwoInstanceIT {
 			.toBodilessEntity();
 	}
 
-	private static CompletableFuture<Connection> connect(int port, StompHeaders connectHeaders) {
+	// Returns immediately with independent futures, rather than one future for the whole exchange: a
+	// rejected CONNECT can race a transport close, and a caller wanting the real rejection reason needs
+	// the ERROR frame's own text specifically, not whichever callback happens to fire first.
+	private static Connection connect(int port, StompHeaders connectHeaders) {
 		var stompClient = new WebSocketStompClient(new StandardWebSocketClient());
 		stompClient.setMessageConverter(new StringMessageConverter());
 		var connected = new CompletableFuture<StompSession>();
-		var errors = new CompletableFuture<Throwable>();
+		var errorFrame = new CompletableFuture<Throwable>();
+		var transportClosed = new CompletableFuture<Throwable>();
 		var handler = new StompSessionHandlerAdapter() {
 
 			@Override
@@ -226,13 +282,13 @@ class RealtimeTwoInstanceIT {
 			public void handleException(StompSession session, StompCommand command, StompHeaders headers,
 					byte[] payload, Throwable exception) {
 				failConnectIfPending(exception);
-				errors.complete(exception);
+				errorFrame.complete(exception);
 			}
 
 			@Override
 			public void handleTransportError(StompSession session, Throwable exception) {
 				failConnectIfPending(exception);
-				errors.complete(exception);
+				transportClosed.complete(exception);
 			}
 
 			private void failConnectIfPending(Throwable exception) {
@@ -244,7 +300,7 @@ class RealtimeTwoInstanceIT {
 		};
 		stompClient.connectAsync("ws://localhost:" + port + "/ws", new WebSocketHttpHeaders(),
 				connectHeaders != null ? connectHeaders : new StompHeaders(), handler);
-		return connected.thenApply(session -> new Connection(session, errors));
+		return new Connection(connected, errorFrame, transportClosed);
 	}
 
 	private static StompFrameHandler stringHandler(CompletableFuture<String> received) {
@@ -272,14 +328,15 @@ class RealtimeTwoInstanceIT {
 		}
 	}
 
-	private static SpringApplicationBuilder build() {
+	private static SpringApplicationBuilder build(String listenerApplicationName) {
 		return new SpringApplicationBuilder(BackendApplication.class)
 			.initializers(new ServerPortInfoApplicationContextInitializer())
 			.properties("server.port=0", "spring.datasource.url=" + TestcontainersConfiguration.POSTGRES.getJdbcUrl(),
 					"spring.datasource.username=app", "spring.datasource.password=app",
 					"spring.flyway.user=migrator", "spring.flyway.password=migrator",
 					"jugueria.identity.jwt.ephemeral-key-allowed=true",
-					"jugueria.identity.allowed-origins=http://localhost:4200");
+					"jugueria.web.allowed-origins=http://localhost:4200",
+					"jugueria.notifications.listener-application-name=" + listenerApplicationName);
 	}
 
 }

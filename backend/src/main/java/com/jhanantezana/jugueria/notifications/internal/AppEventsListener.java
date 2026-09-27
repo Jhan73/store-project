@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.Properties;
 
 import org.postgresql.PGConnection;
 import org.slf4j.Logger;
@@ -19,12 +20,8 @@ import org.springframework.util.MimeTypeUtils;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * One dedicated, non-pooled connection per task that {@code LISTEN}s on {@code app_events} and
- * forwards each notification to this instance's local STOMP subscribers (tech-spec §4.4). Deliberately
- * outside the Hikari pool (§8.1's connection budget already accounts for it) so a slow or blocked
- * listener thread can never starve the pool the rest of the app needs.
- */
+// One dedicated, non-pooled connection per task: a slow or blocked listener thread must never starve the
+// Hikari pool the rest of the app needs.
 @Component
 @ConditionalOnWebApplication(type = Type.SERVLET)
 class AppEventsListener implements SmartLifecycle {
@@ -47,6 +44,8 @@ class AppEventsListener implements SmartLifecycle {
 
 	private final JsonMapper mapper;
 
+	private final String applicationName;
+
 	private volatile boolean running;
 
 	private volatile Connection connection;
@@ -54,10 +53,11 @@ class AppEventsListener implements SmartLifecycle {
 	private Thread worker;
 
 	AppEventsListener(JdbcConnectionDetails connectionDetails, SimpMessagingTemplate messagingTemplate,
-			JsonMapper mapper) {
+			JsonMapper mapper, NotificationsProperties properties) {
 		this.connectionDetails = connectionDetails;
 		this.messagingTemplate = messagingTemplate;
 		this.mapper = mapper;
+		this.applicationName = properties.listenerApplicationName();
 	}
 
 	@Override
@@ -112,8 +112,12 @@ class AppEventsListener implements SmartLifecycle {
 	}
 
 	private void connect() throws SQLException {
-		var conn = DriverManager.getConnection(connectionDetails.getJdbcUrl(), connectionDetails.getUsername(),
-				connectionDetails.getPassword());
+		var props = new Properties();
+		props.setProperty("user", connectionDetails.getUsername());
+		props.setProperty("password", connectionDetails.getPassword());
+		// Lets tests identify this instance's own backend in pg_stat_activity, unambiguously and across reconnects.
+		props.setProperty("ApplicationName", applicationName);
+		var conn = DriverManager.getConnection(connectionDetails.getJdbcUrl(), props);
 		try (var statement = conn.createStatement()) {
 			statement.execute("LISTEN " + CHANNEL);
 		}

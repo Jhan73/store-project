@@ -7,6 +7,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.time.Duration;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -21,7 +24,14 @@ class AppEventsListenerTest {
 
 	private final JdbcConnectionDetails connectionDetails = mock(JdbcConnectionDetails.class);
 
-	private final AppEventsListener listener = new AppEventsListener(connectionDetails, messagingTemplate, mapper);
+	private final NotificationsProperties.Ses ses = new NotificationsProperties.Ses("us-east-1", Duration.ofSeconds(10),
+			Duration.ofSeconds(5));
+
+	private final NotificationsProperties properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com",
+			List.of(), ses, "jugueria-backend");
+
+	private final AppEventsListener listener = new AppEventsListener(connectionDetails, messagingTemplate, mapper,
+			properties);
 
 	@Test
 	void forwardsANotificationToItsTopicDestinationWithoutTheTopicField() {
