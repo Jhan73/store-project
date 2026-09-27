@@ -67,8 +67,8 @@ public class StoreSettings extends BaseEntity {
 	@Version
 	private long version;
 
-	// Independent from the row's own version: opening_hour is a separate resource with its own ETag.
-	@Column(name = "opening_hours_version", nullable = false)
+	// insertable/updatable false: Hibernate's own entity UPDATE writes every column, which would revert a concurrent bump.
+	@Column(name = "opening_hours_version", nullable = false, insertable = false, updatable = false)
 	private long openingHoursVersion;
 
 	// Test fixtures only; the real singleton row is seeded by migration, never created by the app.
