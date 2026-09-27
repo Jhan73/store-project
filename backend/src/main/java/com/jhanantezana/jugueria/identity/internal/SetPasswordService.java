@@ -4,11 +4,13 @@ import java.time.Clock;
 import java.time.Instant;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.identity.AuthError;
+import com.jhanantezana.jugueria.identity.UserPasswordSet;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
 import com.jhanantezana.jugueria.shared.BusinessException;
 
@@ -21,13 +23,16 @@ public class SetPasswordService {
 
 	private final PasswordEncoder passwordEncoder;
 
+	private final ApplicationEventPublisher events;
+
 	private final Clock clock;
 
 	SetPasswordService(SetPasswordTokenRepository tokens, UserAccountRepository accounts,
-			PasswordEncoder passwordEncoder, Clock clock) {
+			PasswordEncoder passwordEncoder, ApplicationEventPublisher events, Clock clock) {
 		this.tokens = tokens;
 		this.accounts = accounts;
 		this.passwordEncoder = passwordEncoder;
+		this.events = events;
 		this.clock = clock;
 	}
 
@@ -47,9 +52,9 @@ public class SetPasswordService {
 			throw invalidToken();
 		}
 		// markUsed clears the persistence context, so the account loaded above is detached by now.
-		accounts.findById(token.getUserId())
-			.orElseThrow(SetPasswordService::invalidToken)
-			.changePassword(passwordEncoder.encode(newPassword), now);
+		var reloaded = accounts.findById(token.getUserId()).orElseThrow(SetPasswordService::invalidToken);
+		reloaded.changePassword(passwordEncoder.encode(newPassword), now);
+		events.publishEvent(new UserPasswordSet(reloaded.getId(), reloaded.getRole(), now));
 	}
 
 	private static BusinessException invalidToken() {

@@ -9,6 +9,7 @@ import com.jhanantezana.archfixtures.ClockUser;
 import com.jhanantezana.archfixtures.GuardedController;
 import com.jhanantezana.archfixtures.HibernateTimestampBypass;
 import com.jhanantezana.archfixtures.PlainTimestampFields;
+import com.jhanantezana.archfixtures.RequestContextBypass;
 import com.jhanantezana.archfixtures.UnguardedController;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 
@@ -61,6 +62,22 @@ class ArchitectureRulesTest {
 	void acceptsAClassWithoutHibernateGeneratedTimestamps() {
 		var result = ArchitectureRules.NO_HIBERNATE_GENERATED_TIMESTAMPS
 			.evaluate(importer.importClasses(PlainTimestampFields.class));
+
+		assertThat(result.hasViolation()).isFalse();
+	}
+
+	@Test
+	void flagsARequestOrSecurityContextReadOutsideItsOwnerPackages() {
+		var result = ArchitectureRules.REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS
+			.evaluate(importer.importClasses(RequestContextBypass.class));
+
+		assertThat(result.hasViolation()).isTrue();
+	}
+
+	@Test
+	void acceptsAClassThatNeverTouchesTheRequestOrSecurityContext() {
+		var result = ArchitectureRules.REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS
+			.evaluate(importer.importClasses(ClockUser.class));
 
 		assertThat(result.hasViolation()).isFalse();
 	}

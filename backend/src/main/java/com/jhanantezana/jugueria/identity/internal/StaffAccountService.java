@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.identity.IdentityError;
+import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
+import com.jhanantezana.jugueria.identity.UserReactivated;
 import com.jhanantezana.jugueria.identity.UserRoleChanged;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
 import com.jhanantezana.jugueria.shared.BusinessException;
@@ -81,6 +83,8 @@ public class StaffAccountService {
 		rejectSelf(id);
 		var account = findStaffOrThrow(id);
 		var issued = setPasswordTokens.issue(account.getId());
+		var now = Instant.now(clock);
+		events.publishEvent(new SetPasswordLinkReissued(account.getId(), currentActor.id(), currentActor.role(), now));
 		return new StaffProvisioned(account, issued.rawToken(), issued.expiresAt());
 	}
 
@@ -150,14 +154,15 @@ public class StaffAccountService {
 		return account;
 	}
 
-	// Reactivation has no event of its own; the module only defines the other three.
 	@Transactional
 	public UserAccount reactivate(UUID id) {
 		var account = findStaffOrThrow(id);
 		if (account.isActive()) {
 			return account;
 		}
-		account.reactivate(Instant.now(clock));
+		var now = Instant.now(clock);
+		account.reactivate(now);
+		events.publishEvent(new UserReactivated(id, currentActor.id(), currentActor.role(), now));
 		return account;
 	}
 

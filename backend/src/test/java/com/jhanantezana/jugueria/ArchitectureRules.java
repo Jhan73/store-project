@@ -53,6 +53,14 @@ final class ArchitectureRules {
 		.beAnnotatedWith(UpdateTimestamp.class)
 		.because("timestamps must come from the injected Clock, like every other persisted moment");
 
+	// Everyone else reads the actor through CurrentActor and the request through RequestOrigin.
+	static final ArchRule REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS = noClasses().that()
+		.resideOutsideOfPackages("com.jhanantezana.jugueria.shared.internal..",
+				"com.jhanantezana.jugueria.identity.internal.security..")
+		.should()
+		.dependOnClassesThat(isRequestOrSecurityContextHolder())
+		.because("code must read the actor or the request origin through their shared abstractions");
+
 	private record Signature(Class<?> owner, String name, List<Class<?>> parameters) {
 
 		boolean matches(CodeUnitAccessTarget target) {
@@ -82,6 +90,15 @@ final class ArchitectureRules {
 		return DescribedPredicate.describe("reads the system clock",
 				access -> access.getTarget() instanceof CodeUnitAccessTarget target
 						&& SYSTEM_CLOCK_READS.stream().anyMatch(read -> read.matches(target)));
+	}
+
+	private static final List<String> CONTEXT_HOLDER_TYPES = List.of(
+			"org.springframework.web.context.request.RequestContextHolder",
+			"org.springframework.security.core.context.SecurityContextHolder");
+
+	private static DescribedPredicate<JavaClass> isRequestOrSecurityContextHolder() {
+		return DescribedPredicate.describe("is RequestContextHolder or SecurityContextHolder",
+				javaClass -> CONTEXT_HOLDER_TYPES.contains(javaClass.getName()));
 	}
 
 	private ArchitectureRules() {
