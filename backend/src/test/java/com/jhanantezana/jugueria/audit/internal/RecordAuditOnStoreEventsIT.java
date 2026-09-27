@@ -31,8 +31,7 @@ import com.jhanantezana.jugueria.store.ReasonType;
 import com.jhanantezana.jugueria.store.StoreSettingsChanged;
 import com.jhanantezana.jugueria.store.StoreSettingsSnapshot;
 
-// One listener class per store event (mirrors identity's audit listeners); this file exercises all of
-// them against real Postgres without duplicating a whole Spring context per event type.
+// One listener class per store event; this file exercises all of them against real Postgres in one Spring context.
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @Import(TestcontainersConfiguration.class)
 class RecordAuditOnStoreEventsIT {
