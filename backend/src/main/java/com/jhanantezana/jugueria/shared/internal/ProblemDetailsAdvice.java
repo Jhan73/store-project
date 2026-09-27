@@ -43,7 +43,16 @@ class ProblemDetailsAdvice extends ResponseEntityExceptionHandler {
 	ResponseEntity<Object> handleBusiness(BusinessException ex, WebRequest request) {
 		var body = problem(ex.errorCode(), ex.getMessage());
 		ex.properties().forEach(body::setProperty);
-		return handleExceptionInternal(ex, body, new HttpHeaders(), ex.errorCode().status(), request);
+		return handleExceptionInternal(ex, body, headersFor(ex), ex.errorCode().status(), request);
+	}
+
+	// A stale If-Match client needs the current ETag to retry without a round trip to re-fetch it.
+	private static HttpHeaders headersFor(BusinessException ex) {
+		var headers = new HttpHeaders();
+		if (ex.errorCode() == CommonError.PRECONDITION_FAILED && ex.properties().get("currentETag") instanceof String etag) {
+			headers.setETag(etag);
+		}
+		return headers;
 	}
 
 	@ExceptionHandler(OptimisticLockingFailureException.class)

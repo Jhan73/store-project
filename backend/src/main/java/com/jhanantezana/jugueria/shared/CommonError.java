@@ -10,6 +10,8 @@ public enum CommonError implements ErrorCode {
 	METHOD_NOT_ALLOWED("common.method-not-allowed", HttpStatus.METHOD_NOT_ALLOWED),
 	NOT_ACCEPTABLE("common.not-acceptable", HttpStatus.NOT_ACCEPTABLE),
 	CONCURRENT_MODIFICATION("common.concurrent-modification", HttpStatus.CONFLICT),
+	PRECONDITION_REQUIRED("common.precondition-required", HttpStatus.PRECONDITION_REQUIRED),
+	PRECONDITION_FAILED("common.precondition-failed", HttpStatus.PRECONDITION_FAILED),
 	CONTENT_TOO_LARGE("common.content-too-large", HttpStatus.CONTENT_TOO_LARGE),
 	UNSUPPORTED_MEDIA_TYPE("common.unsupported-media-type", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
 	INTERNAL_ERROR("common.internal-error", HttpStatus.INTERNAL_SERVER_ERROR),
