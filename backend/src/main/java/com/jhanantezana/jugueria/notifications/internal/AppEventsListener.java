@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.Map;
 
 import org.postgresql.PGConnection;
 import org.slf4j.Logger;
@@ -136,9 +135,11 @@ class AppEventsListener implements SmartLifecycle {
 	void forward(String json) {
 		try {
 			var signal = mapper.readValue(json, RealtimeSignal.class);
-			var payload = mapper.writeValueAsString(Map.of("type", signal.type(), "ids", signal.ids()));
+			var payload = mapper.writeValueAsString(signal.outbound());
+			// text/plain, not application/json: the body is JSON text, but StringMessageConverter (the
+			// simplest client-side converter for a signal client code just re-parses) only accepts text/plain.
 			var headers = SimpMessageHeaderAccessor.create();
-			headers.setContentType(MimeTypeUtils.APPLICATION_JSON);
+			headers.setContentType(MimeTypeUtils.TEXT_PLAIN);
 			headers.setLeaveMutable(true);
 			messagingTemplate.convertAndSend("/topic/" + signal.topic(), payload, headers.getMessageHeaders());
 		}
