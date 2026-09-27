@@ -21,18 +21,12 @@ import org.springframework.stereotype.Component;
 
 import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
-/**
- * Authenticates the STOMP {@code CONNECT} frame and authorizes {@code SUBSCRIBE}/client {@code SEND}
- * frames. The HTTP filter chain already permits the {@code /ws} handshake itself (tech-spec §7.1); this
- * is where the actual identity check happens.
- */
 // Absent in a headless run such as the first-admin bootstrap, which opens no channel to intercept.
 @Component
 @ConditionalOnWebApplication(type = Type.SERVLET)
 class StompAuthChannelInterceptor implements ChannelInterceptor {
 
-	// Only the two topics this work package wires are allowed; anything else (board, tables, display,
-	// user queues) is denied until its own work package defines who may subscribe to it.
+	// Only these two are wired and public; every other destination is denied by default until it has its own rule.
 	private static final Set<String> PUBLIC_DESTINATIONS = Arrays.stream(RealtimeTopic.values())
 		.map(RealtimeTopic::destination)
 		.collect(Collectors.toUnmodifiableSet());
@@ -58,7 +52,7 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 		switch (command) {
 			case CONNECT -> authenticate(accessor);
 			case SUBSCRIBE -> authorizeSubscribe(accessor);
-			case SEND -> rejectClientSend(accessor);
+			case SEND -> rejectClientSend();
 			default -> {
 				// UNSUBSCRIBE/DISCONNECT/ACK/etc. need no extra check here.
 			}
@@ -91,13 +85,9 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 		}
 	}
 
-	// The simple broker also relays client SEND frames addressed to a broker destination; only server
-	// code (SimpMessagingTemplate) may publish to /topic/**.
-	private void rejectClientSend(StompHeaderAccessor accessor) {
-		var destination = accessor.getDestination();
-		if (destination != null && destination.startsWith("/topic/")) {
-			throw new MessagingException("Clients may not publish to broker destinations");
-		}
+	// No @MessageMapping destinations exist, so no client SEND has anywhere legitimate to go; deny all of them.
+	private void rejectClientSend() {
+		throw new MessagingException("Clients may not send messages");
 	}
 
 }

@@ -9,6 +9,7 @@ import com.jhanantezana.archfixtures.ClockUser;
 import com.jhanantezana.archfixtures.GuardedController;
 import com.jhanantezana.archfixtures.HibernateTimestampBypass;
 import com.jhanantezana.archfixtures.PlainTimestampFields;
+import com.jhanantezana.archfixtures.PostgresDriverBypass;
 import com.jhanantezana.archfixtures.RequestContextBypass;
 import com.jhanantezana.archfixtures.UnguardedController;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
@@ -77,6 +78,22 @@ class ArchitectureRulesTest {
 	@Test
 	void acceptsAClassThatNeverTouchesTheRequestOrSecurityContext() {
 		var result = ArchitectureRules.REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS
+			.evaluate(importer.importClasses(ClockUser.class));
+
+		assertThat(result.hasViolation()).isFalse();
+	}
+
+	@Test
+	void flagsThePostgresDriverUsedOutsideNotificationsInternal() {
+		var result = ArchitectureRules.POSTGRES_DRIVER_STAYS_IN_NOTIFICATIONS_INTERNAL
+			.evaluate(importer.importClasses(PostgresDriverBypass.class));
+
+		assertThat(result.hasViolation()).isTrue();
+	}
+
+	@Test
+	void acceptsAClassThatNeverTouchesThePostgresDriver() {
+		var result = ArchitectureRules.POSTGRES_DRIVER_STAYS_IN_NOTIFICATIONS_INTERNAL
 			.evaluate(importer.importClasses(ClockUser.class));
 
 		assertThat(result.hasViolation()).isFalse();

@@ -92,6 +92,29 @@ class StompAuthChannelInterceptorTest {
 	}
 
 	@Test
+	void rejectsClientSendToAnApplicationDestination() {
+		var accessor = StompHeaderAccessor.create(StompCommand.SEND);
+		accessor.setDestination("/app/whatever");
+
+		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@Test
+	void rejectsClientSendToAnyOtherDestination() {
+		var accessor = StompHeaderAccessor.create(StompCommand.SEND);
+		accessor.setDestination("/something/else");
+
+		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@Test
+	void rejectsClientSendWithNoDestinationAtAll() {
+		var accessor = StompHeaderAccessor.create(StompCommand.SEND);
+
+		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@Test
 	void leavesOtherFrameTypesAlone() {
 		var accessor = StompHeaderAccessor.create(StompCommand.DISCONNECT);
 
