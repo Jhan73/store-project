@@ -27,8 +27,7 @@ import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 
-// store_settings is a singleton row shared by the whole suite, so every test re-establishes a known
-// baseline first (via GET+PUT) instead of assuming a fixed starting ETag or field values.
+// store_settings is a singleton shared by the whole suite, so every test re-establishes a known baseline first.
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)

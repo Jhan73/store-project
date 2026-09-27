@@ -14,6 +14,7 @@ import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.Money;
+import com.jhanantezana.jugueria.shared.Singletons;
 import com.jhanantezana.jugueria.store.StoreSettingsChanged;
 
 @Service
@@ -40,8 +41,7 @@ public class StoreSettingsService {
 		return singleton();
 	}
 
-	// This check only short-circuits the common case; Hibernate's own version-guarded UPDATE at flush is
-	// what actually stops a writer that commits between this check and the flush.
+	// Short-circuits the common case; Hibernate's own version-guarded UPDATE at flush is the real race guard.
 	@Transactional
 	public StoreSettings update(String timeZone, Currency currency, int basePrepMinutes, int queueMinutesPerOrder,
 			int busyModeMinutes, int boardWarningMinutes, int boardLateMinutes, Money registerDifferenceThreshold,
@@ -61,7 +61,7 @@ public class StoreSettingsService {
 	}
 
 	private StoreSettings singleton() {
-		return settings.findAll().getFirst();
+		return Singletons.requireOne(settings.findAll());
 	}
 
 	private static BusinessException preconditionFailed(long currentVersion) {
