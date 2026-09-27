@@ -19,7 +19,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
-import com.jhanantezana.jugueria.notifications.NotificationsApi;
 import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
 // Verifies PostgreSQL's own commit-gated NOTIFY delivery, without a running STOMP broker.
@@ -28,7 +27,7 @@ import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 class AppEventsPublisherIT {
 
 	@Autowired
-	NotificationsApi notifications;
+	AppEventsPublisher appEvents;
 
 	@Autowired
 	PlatformTransactionManager transactionManager;
@@ -50,8 +49,8 @@ class AppEventsPublisherIT {
 		listen();
 		var template = new TransactionTemplate(transactionManager);
 
-		template.executeWithoutResult(status -> notifications.publish(RealtimeTopic.STORE_STATUS,
-				"STORE_SETTINGS_CHANGED", Map.of("settingsId", "committed-1")));
+		template.executeWithoutResult(status -> appEvents.publish(RealtimeTopic.STORE_STATUS, "STORE_SETTINGS_CHANGED",
+				Map.of("settingsId", "committed-1")));
 
 		var notification = awaitNotification();
 		assertThat(notification)
@@ -64,8 +63,7 @@ class AppEventsPublisherIT {
 		var template = new TransactionTemplate(transactionManager);
 
 		template.execute(status -> {
-			notifications.publish(RealtimeTopic.CATALOG, "PRODUCT_AVAILABILITY_CHANGED",
-					Map.of("productId", "rolled-back-1"));
+			appEvents.publish(RealtimeTopic.CATALOG, "PRODUCT_AVAILABILITY_CHANGED", Map.of("productId", "rolled-back-1"));
 			status.setRollbackOnly();
 			return null;
 		});

@@ -43,4 +43,15 @@ class AppEventsPublisherTest {
 		verifyNoInteractions(jdbc);
 	}
 
+	@Test
+	void failsLoudlyWhenNoTransactionIsActive() {
+		var jdbc = mock(JdbcClient.class);
+		var publisher = new AppEventsPublisher(jdbc, mapper);
+
+		assertThatThrownBy(
+				() -> publisher.publish(RealtimeTopic.CATALOG, "PRODUCT_AVAILABILITY_CHANGED", Map.of("id", "1")))
+			.isInstanceOf(IllegalStateException.class);
+		verifyNoInteractions(jdbc);
+	}
+
 }

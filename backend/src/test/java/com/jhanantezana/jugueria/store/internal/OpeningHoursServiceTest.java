@@ -12,7 +12,6 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Currency;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.jhanantezana.jugueria.notifications.NotificationsApi;
-import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Money;
 
@@ -45,9 +42,6 @@ class OpeningHoursServiceTest {
 	@Mock
 	CurrentActor currentActor;
 
-	@Mock
-	NotificationsApi notifications;
-
 	OpeningHoursService service;
 
 	StoreSettings settingsRow;
@@ -58,20 +52,18 @@ class OpeningHoursServiceTest {
 		when(settingsRepository.findAll()).thenReturn(List.of(settingsRow));
 		when(hours.findAll()).thenReturn(aWeek());
 		when(settingsRepository.bumpOpeningHoursVersion(settingsRow.getId(), 0)).thenReturn(1);
-		service = new OpeningHoursService(hours, settingsRepository, events, currentActor, notifications,
+		service = new OpeningHoursService(hours, settingsRepository, events, currentActor,
 				Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test
-	void signalsStoreStatusAfterReplacingOpeningHours() {
+	void publishesAnEventAfterReplacingOpeningHours() {
 		var updates = Arrays.stream(DayOfWeek.values())
 			.map(day -> new OpeningHourUpdate(day, false, LocalTime.of(8, 0), LocalTime.of(20, 0)))
 			.toList();
 
 		service.replaceAll(updates, 0);
 
-		verify(notifications).publish(RealtimeTopic.STORE_STATUS, "OPENING_HOURS_CHANGED",
-				Map.of("settingsId", settingsRow.getId().toString()));
 		verify(events).publishEvent(any(Object.class));
 	}
 

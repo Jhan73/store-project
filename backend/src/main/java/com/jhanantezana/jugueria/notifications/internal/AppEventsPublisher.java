@@ -5,17 +5,13 @@ import java.util.Map;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Sends {@code NOTIFY app_events} for cross-instance fan-out (tech-spec §4.4). {@code JdbcClient} runs
- * on whatever connection Spring's transaction manager already bound to the calling thread, so calling
- * this from inside an ongoing {@code @Transactional} method makes PostgreSQL defer delivery until that
- * transaction commits — no after-commit hook needed.
- */
+// Runs pg_notify on the caller's own transactional connection so PostgreSQL defers delivery until commit.
 @Component
 class AppEventsPublisher {
 
@@ -39,6 +35,10 @@ class AppEventsPublisher {
 		if (bytes > MAX_PAYLOAD_BYTES) {
 			throw new IllegalArgumentException(
 					"Realtime signal payload is " + bytes + " bytes, over the NOTIFY 8000-byte limit");
+		}
+		// Without an active transaction the defer-until-commit guarantee this whole design relies on is gone.
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			throw new IllegalStateException("AppEventsPublisher.publish must run inside an active transaction");
 		}
 		// pg_notify(text, text) is the parameterized form; NOTIFY's own grammar only accepts a literal.
 		jdbc.sql("select pg_notify(:channel, :payload)").param("channel", CHANNEL).param("payload", payload).query().listOfRows();
