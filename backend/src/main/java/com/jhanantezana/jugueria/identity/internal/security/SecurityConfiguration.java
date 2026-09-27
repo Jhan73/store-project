@@ -21,6 +21,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.jhanantezana.jugueria.shared.CorrelationId;
+import com.jhanantezana.jugueria.shared.WebOriginsProperties;
 
 // Absent in a headless run such as the first-admin bootstrap, which serves no requests.
 @Configuration(proxyBeanMethods = false)
@@ -79,7 +80,7 @@ class SecurityConfiguration {
 	}
 
 	@Bean
-	CorsConfigurationSource corsConfigurationSource(IdentityProperties properties) {
+	CorsConfigurationSource corsConfigurationSource(WebOriginsProperties properties) {
 		var cors = new CorsConfiguration();
 		cors.setAllowedOrigins(properties.allowedOrigins());
 		cors.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE"));

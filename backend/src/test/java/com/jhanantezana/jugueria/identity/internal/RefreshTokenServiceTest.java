@@ -51,7 +51,7 @@ class RefreshTokenServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		var properties = new IdentityProperties(java.util.List.of("http://localhost"),
+		var properties = new IdentityProperties(
 				new IdentityProperties.Jwt("issuer", "audience", "kid", null, true, Duration.ofMinutes(15)),
 				new IdentityProperties.Lockout(5, Duration.ofMinutes(15)),
 				new IdentityProperties.RefreshToken(IDLE_TTL, ABSOLUTE_TTL),
