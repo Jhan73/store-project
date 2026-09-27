@@ -67,6 +67,7 @@ Credentials come from SSM; never commit real passwords.
 - **Conditional atomic updates** decide business outcomes (0 rows ⇒ rejected):
   `UPDATE inventory.stock_item SET reserved = reserved + :qty, version = version + 1 WHERE product_id = :id AND on_hand - reserved >= :qty;`
 - **Partial unique indexes** for invariants, e.g. one open ticket per table: `ticket(table_id) WHERE status = 'OPEN'`.
+- **Singleton row**: a constant boolean guard column with a `UNIQUE`/`CHECK` constraint pair (`guard boolean NOT NULL DEFAULT true`, `UNIQUE (guard)`, `CHECK (guard)`) makes a second row impossible, e.g. `store.store_settings`. The row is seeded by migration with working defaults; the application only updates it.
 - **Job claiming** with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`.
 - **Idempotency** rows in `shared.idempotency_key` (unique on `actor_id` + `key`, `request_hash`, `response`, `expires_at`), inserted with `ON CONFLICT DO NOTHING` inside the use-case transaction (tech-spec §5.2).
 - **Idempotent listeners** rely on unique constraints on the effect (e.g. one `stock_movement` per reason + reference + product) or on state-guarded updates (tech-spec §4.11).

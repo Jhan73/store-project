@@ -260,6 +260,13 @@ The `instore`/`ordering` command and the board update run in the **same transact
 - While a shift is open, the API never returns expected cash to CASHIER. `POST /shifts/{id}/close` takes the counted cash; the response returns expected cash and difference. If the difference exceeds the threshold and no note is sent, the API answers `409` with the difference, and the cashier resubmits with a note (the counted value cannot change after it is revealed).
 - `ShiftClosed` triggers the summary email to ADMIN (FR-REG-06).
 
+#### Store settings, hours, zones, and reason lists (FR-ADM-02, FR-INS-14)
+
+- `store_settings` is a singleton row (partial unique index on a constant guard column), seeded by migration with working defaults (`America/Lima`, `PEN`) so the store runs before ADMIN tunes it. `GET /admin/settings` returns it with an `ETag` derived from `@Version`; `PUT` requires `If-Match` (`428` missing, `412` stale) and re-checks the version inside the transaction before mutating, with Hibernate's own version-guarded `UPDATE` as the actual race guard at flush.
+- `ETag`/`If-Match` is exposed only on this singleton resource (tech-spec gap filled here, owner decision): opening hours, delivery zones, and reasons are collections of independently versioned rows, so their optimistic concurrency is enforced by `@Version` at the JPA layer (surfacing as `409 common.concurrent-modification`) without an API-level `ETag`, which would need a composite key with no clear client use case yet.
+- Opening hours are exactly 7 rows (one per `DayOfWeek`), seeded by migration and never inserted or deleted afterwards; `PUT /admin/settings/opening-hours` replaces all 7 atomically and rejects a request missing any day. A row's `closesAt` before `opensAt` marks an overnight span.
+- Delivery zones and reason lists (`VOID`/`COMP`/`CASH_OUT`/`STOCK_ADJUSTMENT`) are ADMIN-managed lookups referenced by ID from other modules once they land; deactivating a zone frees its name for reuse (partial unique index on `active`), while a reason's code stays reserved per type even once deactivated.
+
 #### Online load, estimates, and scheduling
 
 - **Online mode** (`store_settings.online_mode`: `OPEN`, `BUSY`, `PAUSED`) is checked at checkout. Auto-pause (S): checkout counts online board orders not yet Ready and rejects new orders when the count reaches the limit — no background job needed. `OnlineModeChanged` is pushed to storefronts.
@@ -459,7 +466,7 @@ Main resources:
 | In-store | `/tables`, `/tickets`, `/tickets/{id}/lines`, `/tickets/{id}/send`, `/tickets/{id}/transfer`, `/tickets/{id}/merge`, `/tickets/{id}/lines/{lineId}/void`, `…/comp`, `/tickets/{id}/payments`, `/quick-sales`, `/sales/{id}/void` |
 | Register | `/shifts`, `/shifts/{id}/cash-movements`, `/shifts/{id}/close` |
 | Board | `/board` (views: `tickets`, `all-day`, `ready`; `?station=`), `/board/orders/{id}/start|ready|recall|handover`, `/board/lines/{id}/ready|flag|resolve`, `/board/markers/{id}/ack`, `/store/online-mode` |
-| Admin | `/admin/products`, `/admin/modifier-groups`, `/admin/allergens`, `/admin/stations`, `/admin/tables`, `/admin/reasons`, `/admin/stock`, `/admin/users`, `/admin/settings`, `/admin/orders/{id}/refunds` |
+| Admin | `/admin/products`, `/admin/modifier-groups`, `/admin/allergens`, `/admin/stations`, `/admin/tables`, `/admin/reasons`, `/admin/stock`, `/admin/users`, `/admin/settings`, `/admin/settings/opening-hours`, `/admin/delivery-zones`, `/admin/orders/{id}/refunds` |
 | Reports | `/reports/dashboard`, `/reports/heatmap`, `/reports/sales`, `/reports/shifts`, `/reports/exceptions`, `/audit` |
 | Integration | `/payments/webhooks/mercadopago` |
 
