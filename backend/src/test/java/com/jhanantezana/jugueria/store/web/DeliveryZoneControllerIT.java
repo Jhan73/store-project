@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
@@ -45,8 +47,10 @@ class DeliveryZoneControllerIT {
 
 		assertThat(result).hasStatus(HttpStatus.CREATED);
 		assertThat(result).headers().hasHeaderSatisfying("Location", values -> assertThat(values).singleElement());
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
 		assertThat(result).bodyJson().extractingPath("$.name").isEqualTo(name);
 		assertThat(result).bodyJson().extractingPath("$.active").isEqualTo(true);
+		assertThat(result).bodyJson().extractingPath("$.etag").isEqualTo("\"0\"");
 	}
 
 	@Test
@@ -61,6 +65,23 @@ class DeliveryZoneControllerIT {
 
 		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
 		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("store.invalid-delivery-zone");
+	}
+
+	@Test
+	void rejectsACurrencyMismatch() {
+		var name = "Zone-" + UUID.randomUUID();
+		var result = mvc.post()
+			.uri(ZONES)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{ "name": "%s", "fee": { "amount": "5.00", "currency": "USD" }, "deliveryMinutes": 20,
+					  "minimumOrder": null, "freeDeliveryThreshold": null }
+					""".formatted(name))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("store.delivery-zone-currency-mismatch");
 	}
 
 	@Test
@@ -83,40 +104,115 @@ class DeliveryZoneControllerIT {
 	void updatesAZone() {
 		var name = "Zone-" + UUID.randomUUID();
 		var created = create(name);
-		var id = assertThat(created).bodyJson().extractingPath("$.id").actual().toString();
+		var id = idOf(created);
 
-		var result = mvc.patch()
-			.uri(ZONES + "/" + id)
-			.with(admin())
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(zoneJson(name, "9.00", 30, "20.00", "60.00"))
-			.exchange();
+		var result = change(id, etagOf(created), name, "9.00", 30, "20.00", "60.00");
 
 		assertThat(result).hasStatusOk();
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
 		assertThat(result).bodyJson().extractingPath("$.fee.amount").isEqualTo("9.00");
 		assertThat(result).bodyJson().extractingPath("$.deliveryMinutes").isEqualTo(30);
 	}
 
 	@Test
+	void rejectsAChangeWithoutIfMatch() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.patch()
+			.uri(ZONES + "/" + id)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson("Zone-" + UUID.randomUUID(), "9.00", 30, null, null))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
+	@Test
+	void rejectsAChangeWithAMismatchedIfMatch() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = change(id, "\"999999\"", "New name", "9.00", 30, null, null);
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_FAILED);
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
+	}
+
+	// A and B both read the same zone; A writes first, then B's write with the stale ETag must not overwrite A's change.
+	@Test
+	void aStaleChangeIsRejectedAndTheOtherAdminsChangeIsKept() {
+		var name = "Zone-" + UUID.randomUUID();
+		var created = create(name);
+		var id = idOf(created);
+		var staleEtag = etagOf(created);
+
+		var winner = change(id, staleEtag, name, "9.00", 30, null, null);
+		assertThat(winner).hasStatusOk();
+
+		var loser = change(id, staleEtag, name, "50.00", 45, null, null);
+		assertThat(loser).hasStatus(HttpStatus.PRECONDITION_FAILED);
+
+		var current = mvc.get().uri(ZONES).with(admin()).exchange();
+		assertThat(current).bodyJson().extractingPath("$[?(@.id=='" + id + "')].fee.amount").asList()
+			.containsExactly("9.00");
+	}
+
+	@Test
 	void deactivatesAndReactivatesAZone() {
 		var created = create("Zone-" + UUID.randomUUID());
-		var id = assertThat(created).bodyJson().extractingPath("$.id").actual().toString();
+		var id = idOf(created);
 
-		var deactivated = mvc.post().uri(ZONES + "/" + id + "/deactivate").with(admin()).exchange();
+		var deactivated = mvc.post()
+			.uri(ZONES + "/" + id + "/deactivate")
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
 		assertThat(deactivated).hasStatusOk();
 		assertThat(deactivated).bodyJson().extractingPath("$.active").isEqualTo(false);
 
-		var reactivated = mvc.post().uri(ZONES + "/" + id + "/reactivate").with(admin()).exchange();
+		var reactivated = mvc.post()
+			.uri(ZONES + "/" + id + "/reactivate")
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etagOf(deactivated))
+			.exchange();
 		assertThat(reactivated).hasStatusOk();
 		assertThat(reactivated).bodyJson().extractingPath("$.active").isEqualTo(true);
+	}
+
+	@Test
+	void rejectsADeactivateWithoutIfMatch() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.post().uri(ZONES + "/" + id + "/deactivate").with(admin()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
+	@Test
+	void rejectsADeactivateWithAStaleIfMatch() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+		var staleEtag = etagOf(created);
+		mvc.post().uri(ZONES + "/" + id + "/deactivate").with(admin()).header(HttpHeaders.IF_MATCH, staleEtag).exchange();
+
+		var result = mvc.post()
+			.uri(ZONES + "/" + id + "/reactivate")
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, staleEtag)
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_FAILED);
 	}
 
 	@Test
 	void aDeactivatedZoneFreesItsNameForReuse() {
 		var name = "Reusable-" + UUID.randomUUID();
 		var created = create(name);
-		var id = assertThat(created).bodyJson().extractingPath("$.id").actual().toString();
-		mvc.post().uri(ZONES + "/" + id + "/deactivate").with(admin()).exchange();
+		var id = idOf(created);
+		mvc.post().uri(ZONES + "/" + id + "/deactivate").with(admin()).header(HttpHeaders.IF_MATCH, etagOf(created)).exchange();
 
 		var result = create(name);
 
@@ -124,20 +220,141 @@ class DeliveryZoneControllerIT {
 	}
 
 	@Test
-	void rejectsWhenAnonymous() {
+	void rejectsListWhenAnonymous() {
 		var result = mvc.get().uri(ZONES).exchange();
 
 		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
-	void rejectsForANonAdminRole() {
+	void rejectsListForANonAdminRole() {
 		var result = mvc.get().uri(ZONES).with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER)).exchange();
 
 		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
-	private org.springframework.test.web.servlet.assertj.MvcTestResult create(String name) {
+	@Test
+	void rejectsCreateWhenAnonymous() {
+		var result = mvc.post()
+			.uri(ZONES)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson("Zone-" + UUID.randomUUID(), "5.00", 20, null, null))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	void rejectsCreateForANonAdminRole() {
+		var result = mvc.post()
+			.uri(ZONES)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson("Zone-" + UUID.randomUUID(), "5.00", 20, null, null))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void rejectsChangeWhenAnonymous() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.patch()
+			.uri(ZONES + "/" + id)
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson("Zone-" + UUID.randomUUID(), "5.00", 20, null, null))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	void rejectsChangeForANonAdminRole() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.patch()
+			.uri(ZONES + "/" + id)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson("Zone-" + UUID.randomUUID(), "5.00", 20, null, null))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void rejectsDeactivateWhenAnonymous() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.post().uri(ZONES + "/" + id + "/deactivate").header(HttpHeaders.IF_MATCH, etagOf(created)).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	void rejectsDeactivateForANonAdminRole() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.post()
+			.uri(ZONES + "/" + id + "/deactivate")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void rejectsReactivateWhenAnonymous() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.post().uri(ZONES + "/" + id + "/reactivate").header(HttpHeaders.IF_MATCH, etagOf(created)).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	void rejectsReactivateForANonAdminRole() {
+		var created = create("Zone-" + UUID.randomUUID());
+		var id = idOf(created);
+
+		var result = mvc.post()
+			.uri(ZONES + "/" + id + "/reactivate")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	private MvcTestResult change(String id, String ifMatch, String name, String fee, int deliveryMinutes,
+			String minimumOrder, String freeThreshold) {
+		return mvc.patch()
+			.uri(ZONES + "/" + id)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, ifMatch)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(zoneJson(name, fee, deliveryMinutes, minimumOrder, freeThreshold))
+			.exchange();
+	}
+
+	private static String idOf(MvcTestResult result) {
+		return assertThat(result).bodyJson().extractingPath("$.id").actual().toString();
+	}
+
+	private static String etagOf(MvcTestResult result) {
+		return result.getResponse().getHeader(HttpHeaders.ETAG);
+	}
+
+	private MvcTestResult create(String name) {
 		return mvc.post()
 			.uri(ZONES)
 			.with(admin())

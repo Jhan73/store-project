@@ -12,6 +12,7 @@ public enum StoreError implements ErrorCode {
 	INVALID_DELIVERY_ZONE("store.invalid-delivery-zone", HttpStatus.UNPROCESSABLE_CONTENT),
 	DELIVERY_ZONE_NOT_FOUND("store.delivery-zone-not-found", HttpStatus.NOT_FOUND),
 	DELIVERY_ZONE_NAME_ALREADY_USED("store.delivery-zone-name-already-used", HttpStatus.CONFLICT),
+	DELIVERY_ZONE_CURRENCY_MISMATCH("store.delivery-zone-currency-mismatch", HttpStatus.UNPROCESSABLE_CONTENT),
 	REASON_NOT_FOUND("store.reason-not-found", HttpStatus.NOT_FOUND),
 	REASON_CODE_ALREADY_USED("store.reason-code-already-used", HttpStatus.CONFLICT);
 
