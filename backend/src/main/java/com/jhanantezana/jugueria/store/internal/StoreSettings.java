@@ -67,6 +67,10 @@ public class StoreSettings extends BaseEntity {
 	@Version
 	private long version;
 
+	// Independent from the row's own version: opening_hour is a separate resource with its own ETag.
+	@Column(name = "opening_hours_version", nullable = false)
+	private long openingHoursVersion;
+
 	// Test fixtures only; the real singleton row is seeded by migration, never created by the app.
 	public StoreSettings(String timeZone, Currency currency, int basePrepMinutes, int queueMinutesPerOrder,
 			int busyModeMinutes, int boardWarningMinutes, int boardLateMinutes, Money registerDifferenceThreshold,

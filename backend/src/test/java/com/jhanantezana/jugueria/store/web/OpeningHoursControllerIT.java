@@ -11,17 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 
-// The 7 rows are seeded once by migration and shared by the whole suite: every test restores the
-// standard week afterwards instead of assuming a fixed starting state.
+// The 7 rows and their counter are shared by the whole suite: every test restores the standard week afterwards.
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -37,6 +38,7 @@ class OpeningHoursControllerIT {
 		mvc.put()
 			.uri(OPENING_HOURS)
 			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(standardWeekJson())
 			.exchange();
@@ -47,24 +49,83 @@ class OpeningHoursControllerIT {
 		var result = mvc.get().uri(OPENING_HOURS).with(admin()).exchange();
 
 		assertThat(result).hasStatusOk();
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
 		assertThat(result).bodyJson().extractingPath("$.length()").isEqualTo(7);
 	}
 
 	@Test
 	void replacesTheWholeWeek() {
+		var etag = currentETag();
+
 		var result = mvc.put()
 			.uri(OPENING_HOURS)
 			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etag)
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(weekJsonWithSundayClosed())
 			.exchange();
 
 		assertThat(result).hasStatusOk();
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
+		assertThat(result.getResponse().getHeader(HttpHeaders.ETAG)).isNotEqualTo(etag);
 		var sunday = mvc.get().uri(OPENING_HOURS).with(admin()).exchange();
 		assertThat(sunday).bodyJson()
 			.extractingPath("$[?(@.dayOfWeek=='SUNDAY')].closed")
 			.asList()
 			.containsExactly(true);
+	}
+
+	@Test
+	void rejectsAPutWithoutIfMatch() {
+		var result = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(standardWeekJson())
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
+	@Test
+	void rejectsAPutWithAMismatchedIfMatch() {
+		var result = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, "\"999999\"")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(standardWeekJson())
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_FAILED);
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ETAG, values -> assertThat(values).singleElement());
+	}
+
+	// A and B both read the current week; A writes first, then B's stale write must not overwrite A's change.
+	@Test
+	void aStalePutIsRejectedAndTheOtherAdminsChangeIsKept() {
+		var staleEtag = currentETag();
+
+		var winner = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, staleEtag)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(weekJsonWithSundayClosed())
+			.exchange();
+		assertThat(winner).hasStatusOk();
+
+		var loser = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, staleEtag)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(standardWeekJson())
+			.exchange();
+		assertThat(loser).hasStatus(HttpStatus.PRECONDITION_FAILED);
+
+		var current = mvc.get().uri(OPENING_HOURS).with(admin()).exchange();
+		assertThat(current).bodyJson().extractingPath("$[?(@.dayOfWeek=='SUNDAY')].closed").asList().containsExactly(true);
 	}
 
 	@Test
@@ -83,8 +144,27 @@ class OpeningHoursControllerIT {
 		var result = mvc.put()
 			.uri(OPENING_HOURS)
 			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(missingSunday)
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("store.invalid-opening-hours");
+	}
+
+	@Test
+	void rejectsAWeekWithADuplicateDay() {
+		var duplicateMonday = standardWeekJson().replace(
+				"{\"dayOfWeek\":\"SUNDAY\",\"closed\":false,\"opensAt\":\"08:00:00\",\"closesAt\":\"22:00:00\"}",
+				"{\"dayOfWeek\":\"MONDAY\",\"closed\":false,\"opensAt\":\"09:00:00\",\"closesAt\":\"21:00:00\"}");
+
+		var result = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(duplicateMonday)
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
@@ -100,6 +180,7 @@ class OpeningHoursControllerIT {
 		var result = mvc.put()
 			.uri(OPENING_HOURS)
 			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(invalidMonday)
 			.exchange();
@@ -109,20 +190,50 @@ class OpeningHoursControllerIT {
 	}
 
 	@Test
-	void rejectsWhenAnonymous() {
+	void rejectsListWhenAnonymous() {
 		var result = mvc.get().uri(OPENING_HOURS).exchange();
 
 		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
-	void rejectsForANonAdminRole() {
+	void rejectsListForANonAdminRole() {
 		var result = mvc.get()
 			.uri(OPENING_HOURS)
 			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER))
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void rejectsPutWhenAnonymous() {
+		var result = mvc.put()
+			.uri(OPENING_HOURS)
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(standardWeekJson())
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
+	}
+
+	@Test
+	void rejectsPutForANonAdminRole() {
+		var result = mvc.put()
+			.uri(OPENING_HOURS)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER))
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(standardWeekJson())
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	private String currentETag() {
+		MvcTestResult result = mvc.get().uri(OPENING_HOURS).with(admin()).exchange();
+		return result.getResponse().getHeader(HttpHeaders.ETAG);
 	}
 
 	private static String weekJsonWithSundayClosed() {

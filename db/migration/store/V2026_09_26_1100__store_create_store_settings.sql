@@ -2,6 +2,7 @@ CREATE SCHEMA store;
 GRANT USAGE ON SCHEMA store TO app;
 
 -- Singleton row: singleton_guard is always true and unique, so a second row can never be inserted.
+-- opening_hours_version is its own counter (not the row's own version) since opening_hour is a separate resource.
 CREATE TABLE store.store_settings (
     id                                      uuid          PRIMARY KEY,
     time_zone                               varchar(50)   NOT NULL,
@@ -18,6 +19,7 @@ CREATE TABLE store.store_settings (
     created_at                              timestamptz   NOT NULL,
     updated_at                              timestamptz   NOT NULL,
     version                                 bigint        NOT NULL DEFAULT 0,
+    opening_hours_version                   bigint        NOT NULL DEFAULT 0,
     singleton_guard                         boolean       NOT NULL DEFAULT true,
     CONSTRAINT store_settings_singleton_key UNIQUE (singleton_guard),
     CONSTRAINT store_settings_singleton_check CHECK (singleton_guard),
