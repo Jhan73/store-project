@@ -136,7 +136,7 @@ class AuditRollbackIT {
 			.uri("/api/v1/auth/set-password")
 			.header("X-Requested-With", "XMLHttpRequest")
 			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"token\":\"%s\",\"newPassword\":\"a-brand-new-password\"}".formatted(raw))
+			.content("{\"token\":\"%s\",\"newPassword\":\"A-brand-new-passw0rd\"}".formatted(raw))
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);

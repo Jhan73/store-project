@@ -98,7 +98,7 @@ $Token = [regex]::Match($Line, "token=([A-Za-z0-9_\-]+)").Groups[1].Value
 ```powershell
 Invoke-RestMethod -Method Post "$Api/auth/set-password" -ContentType "application/json" `
   -Headers @{ "X-Requested-With" = "XMLHttpRequest" } `
-  -Body (@{ token = $Token; newPassword = "<12 to 100 characters>" } | ConvertTo-Json)
+  -Body (@{ token = $Token; newPassword = "<8-50 chars: upper, lower, digit, special>" } | ConvertTo-Json)
 ```
 
 No output means success (`204`). A `401 auth.invalid-set-password-token` means the link expired, was already used, or was replaced by a newer one.

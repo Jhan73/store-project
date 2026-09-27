@@ -388,17 +388,17 @@ class AuthControllerIT {
 				Instant.now(), 3, null));
 		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
 
-		var result = setPassword(raw, "a-brand-new-password");
+		var result = setPassword(raw, "A-brand-new-passw0rd");
 
 		assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
 		var reloaded = accounts.findById(account.getId()).orElseThrow();
-		assertThat(passwordEncoder.matches("a-brand-new-password", reloaded.getPasswordHash())).isTrue();
+		assertThat(passwordEncoder.matches("A-brand-new-passw0rd", reloaded.getPasswordHash())).isTrue();
 		assertThat(reloaded.getFailedAttempts()).isZero();
 	}
 
 	@Test
 	void setPasswordRejectsAnUnknownToken() {
-		assertInvalidSetPasswordToken(setPassword("not-a-real-token", "a-brand-new-password"));
+		assertInvalidSetPasswordToken(setPassword("not-a-real-token", "A-brand-new-passw0rd"));
 	}
 
 	@Test
@@ -407,7 +407,7 @@ class AuthControllerIT {
 				Instant.now()));
 		var raw = seedSetPasswordToken(account.getId(), Instant.now().minusSeconds(1));
 
-		assertInvalidSetPasswordToken(setPassword(raw, "a-brand-new-password"));
+		assertInvalidSetPasswordToken(setPassword(raw, "A-brand-new-passw0rd"));
 	}
 
 	@Test
@@ -416,7 +416,7 @@ class AuthControllerIT {
 				Instant.now(), false));
 		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
 
-		assertInvalidSetPasswordToken(setPassword(raw, "a-brand-new-password"));
+		assertInvalidSetPasswordToken(setPassword(raw, "A-brand-new-passw0rd"));
 
 		assertThat(setPasswordTokens.findByTokenHash(RefreshTokens.hash(raw)).orElseThrow().getUsedAt()).isNull();
 	}
@@ -426,9 +426,9 @@ class AuthControllerIT {
 		var account = accounts.save(new UserAccount("used-token@jugueria.pe", "unusable-hash", Role.CASHIER,
 				Instant.now()));
 		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
-		assertThat(setPassword(raw, "a-brand-new-password")).hasStatus(HttpStatus.NO_CONTENT);
+		assertThat(setPassword(raw, "A-brand-new-passw0rd")).hasStatus(HttpStatus.NO_CONTENT);
 
-		assertInvalidSetPasswordToken(setPassword(raw, "another-new-password"));
+		assertInvalidSetPasswordToken(setPassword(raw, "Another-new-passw0rd"));
 	}
 
 	@Test
@@ -449,7 +449,7 @@ class AuthControllerIT {
 		var result = mvc.post()
 			.uri(SET_PASSWORD)
 			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"token\":\"whatever\",\"newPassword\":\"a-brand-new-password\"}")
+			.content("{\"token\":\"whatever\",\"newPassword\":\"A-brand-new-passw0rd\"}")
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
