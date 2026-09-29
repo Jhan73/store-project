@@ -198,7 +198,11 @@ class RealtimeTwoInstanceIT {
 
 	@Test
 	void theListenerReconnectsAfterItsBackendIsTerminatedAndStillDelivers() throws Exception {
-		terminateInstanceBsListenerBackend();
+		var oldPid = terminateInstanceBsListenerBackend();
+		// PostgreSQL never re-delivers a NOTIFY to a listener that wasn't connected at the moment it was
+		// sent; publishing before the new LISTEN is active would lose the signal for good, not just delay
+		// it. Waiting for a new pid (distinct from the terminated one) proves the reconnect actually landed.
+		awaitListenerBackendPid(LISTENER_APPLICATION_NAME_B, oldPid);
 
 		var connection = connect(portB, null);
 		var session = connection.session().get(5, TimeUnit.SECONDS);
@@ -208,8 +212,7 @@ class RealtimeTwoInstanceIT {
 
 			updateStoreSettingsOnA();
 
-			// Generous budget: reconnect uses exponential backoff (0.5s to 30s) before the LISTEN resumes.
-			var payload = received.get(35, TimeUnit.SECONDS);
+			var payload = received.get(5, TimeUnit.SECONDS);
 			assertThat(payload).contains("\"type\":\"STORE_SETTINGS_CHANGED\"");
 		}
 		finally {
@@ -217,16 +220,19 @@ class RealtimeTwoInstanceIT {
 		}
 	}
 
-	private static void terminateInstanceBsListenerBackend() throws SQLException {
-		var pid = awaitListenerBackendPid(LISTENER_APPLICATION_NAME_B);
+	private static int terminateInstanceBsListenerBackend() throws SQLException {
+		var pid = awaitListenerBackendPid(LISTENER_APPLICATION_NAME_B, null);
 		try (var connection = DriverManager.getConnection(TestcontainersConfiguration.POSTGRES.getJdbcUrl(), "app",
 				"app"); var statement = connection.createStatement()) {
 			statement.execute("select pg_terminate_backend(" + pid + ")");
 		}
+		return pid;
 	}
 
-	// The LISTEN connection opens on its own virtual thread after context startup, so the row can lag briefly.
-	private static int awaitListenerBackendPid(String applicationName) throws SQLException {
+	// The LISTEN connection opens on its own virtual thread after context startup (or after a reconnect),
+	// so the row can lag briefly. excludedPid filters out a just-terminated backend that PostgreSQL may
+	// not have dropped from pg_stat_activity yet, so a caller waiting for reconnection doesn't see it.
+	private static int awaitListenerBackendPid(String applicationName, Integer excludedPid) throws SQLException {
 		try (var connection = DriverManager.getConnection(TestcontainersConfiguration.POSTGRES.getJdbcUrl(), "app",
 				"app"); var statement = connection.createStatement()) {
 			var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
@@ -234,11 +240,15 @@ class RealtimeTwoInstanceIT {
 				try (var rs = statement.executeQuery(
 						"select pid from pg_stat_activity where application_name = '" + applicationName + "'")) {
 					if (rs.next()) {
-						return rs.getInt("pid");
+						var pid = rs.getInt("pid");
+						if (excludedPid == null || pid != excludedPid) {
+							return pid;
+						}
 					}
 				}
 			}
-			throw new AssertionError("No pg_stat_activity row for application_name=" + applicationName + " after 10s");
+			throw new AssertionError("No pg_stat_activity row for application_name=" + applicationName
+					+ (excludedPid != null ? " other than pid=" + excludedPid : "") + " after 10s");
 		}
 	}
 
