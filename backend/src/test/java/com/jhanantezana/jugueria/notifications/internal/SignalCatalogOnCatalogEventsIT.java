@@ -133,6 +133,50 @@ class SignalCatalogOnCatalogEventsIT {
 	}
 
 	@Test
+	void deliveringTheSameStationEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
+		var id = UUID.randomUUID();
+
+		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, null, NOW), id);
+	}
+
+	@Test
+	void deliveringTheSameProductEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
+		var id = UUID.randomUUID();
+		var snapshot = new ProductSnapshot("Mango", null, UUID.randomUUID(), Money.of("5.00", PEN), 0, false, true,
+				null, Set.of(), List.of());
+
+		assertSignalsTwice(scenario, new ProductChanged(id, null, snapshot, null, null, NOW), id);
+	}
+
+	@Test
+	void deliveringTheSameModifierGroupEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario)
+			throws SQLException {
+		var id = UUID.randomUUID();
+
+		assertSignalsTwice(scenario, new ModifierGroupChanged(id, null, null, null, null, NOW), id);
+	}
+
+	@Test
+	void deliveringTheSameAvailabilityEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario)
+			throws SQLException {
+		var id = UUID.randomUUID();
+
+		assertSignalsTwice(scenario, new AvailabilityChanged(id, AvailabilityTarget.PRODUCT, false, null, null, NOW),
+				id);
+	}
+
+	private void assertSignalsTwice(Scenario scenario, Object event, UUID id) throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var marker = id.toString();
+
+		scenario.publish(event).andWaitForStateChange(() -> probe.countMatching(marker), count -> count >= 1).andVerify(count -> {
+		});
+		scenario.publish(event)
+			.andWaitForStateChange(() -> probe.countMatching(marker), count -> count >= 2)
+			.andVerify(count -> assertThat(probe.matching(marker)).hasSizeGreaterThanOrEqualTo(2));
+	}
+
+	@Test
 	void deliveringTheSameCategoryEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		probe = new AppEventsProbe(connectionDetails);
 		var categoryId = UUID.randomUUID();
