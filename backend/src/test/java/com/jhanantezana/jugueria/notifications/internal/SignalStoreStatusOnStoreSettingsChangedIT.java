@@ -10,18 +10,16 @@ import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.postgresql.PGConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.modulith.test.ApplicationModuleTest;
+import org.springframework.modulith.test.Scenario;
+import org.springframework.test.context.TestPropertySource;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Money;
@@ -29,20 +27,18 @@ import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.jugueria.store.StoreSettingsChanged;
 import com.jhanantezana.jugueria.store.StoreSettingsSnapshot;
 
+// identity is force-included: StompAuthChannelInterceptor needs its JwtDecoder/JwtAuthenticationConverter
+// beans, a dependency Modulith's static analysis can't see since those are framework types, not identity's
+// own; shared is force-included because identity's own beans need its Clock.
 // No STOMP broker involved: just proves the listener signals /topic/store-status after its event commits.
-@SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
+@ApplicationModuleTest(extraIncludes = { "identity", "shared" })
+@TestPropertySource(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @Import({ TestcontainersConfiguration.class, CurrentActorProbe.class })
 class SignalStoreStatusOnStoreSettingsChangedIT {
 
 	static final Instant NOW = Instant.parse("2026-09-27T09:00:00Z");
 
 	static final Currency PEN = Currency.getInstance("PEN");
-
-	@Autowired
-	ApplicationEventPublisher events;
-
-	@Autowired
-	PlatformTransactionManager transactionManager;
 
 	@Autowired
 	JdbcConnectionDetails connectionDetails;
@@ -52,6 +48,10 @@ class SignalStoreStatusOnStoreSettingsChangedIT {
 
 	Connection listenProbe;
 
+	// Other tests in this class can leave a stray, unconsumed notification behind (their own async
+	// listener fires after their own probe already closed); every assertion filters by its own settingsId.
+	final List<String> received = new ArrayList<>();
+
 	@AfterEach
 	void closeProbe() throws SQLException {
 		if (listenProbe != null) {
@@ -60,36 +60,42 @@ class SignalStoreStatusOnStoreSettingsChangedIT {
 	}
 
 	@Test
-	void deliversTheSignalAfterTheEventsTransactionCommits() throws SQLException {
+	void deliversTheSignalAfterTheEventsTransactionCommits(Scenario scenario) throws SQLException {
 		listen();
 		var settingsId = UUID.randomUUID();
+		var marker = settingsId.toString();
 
-		commit(aStoreSettingsChanged(settingsId));
-
-		var notifications = awaitNotifications(1);
-		assertThat(notifications).singleElement()
-			.satisfies(n -> assertThat(n).contains("\"type\":\"STORE_SETTINGS_CHANGED\"").contains(settingsId.toString()));
+		scenario.publish(aStoreSettingsChanged(settingsId))
+			.andWaitForStateChange(() -> countMatching(marker), count -> count >= 1)
+			.andVerify(count -> assertThat(matching(marker)).singleElement()
+				.satisfies(n -> assertThat(n).contains("\"type\":\"STORE_SETTINGS_CHANGED\"")));
 	}
 
 	@Test
-	void deliveringTheSameEventTwiceStillSignalsBothTimesWithoutFailing() throws SQLException {
+	void deliveringTheSameEventTwiceStillSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		listen();
 		var settingsId = UUID.randomUUID();
+		var marker = settingsId.toString();
 		var event = aStoreSettingsChanged(settingsId);
 
-		commit(event);
-		commit(event);
-
-		var notifications = awaitNotifications(2);
-		assertThat(notifications).hasSizeGreaterThanOrEqualTo(2).allMatch(n -> n.contains(settingsId.toString()));
+		scenario.publish(event).andWaitForStateChange(() -> countMatching(marker), count -> count >= 1).andVerify(count -> {
+		});
+		scenario.publish(event)
+			.andWaitForStateChange(() -> countMatching(marker), count -> count >= 2)
+			.andVerify(count -> assertThat(matching(marker)).hasSizeGreaterThanOrEqualTo(2));
 	}
 
 	@Test
-	void theListenerSeesCurrentActorAsSystemRatherThanTheOriginalActor() throws Exception {
-		var event = new StoreSettingsChanged(UUID.randomUUID(), snapshot(10), snapshot(12), UUID.randomUUID(),
-				Role.ADMIN, NOW);
+	void theListenerSeesCurrentActorAsSystemRatherThanTheOriginalActor(Scenario scenario) throws Exception {
+		listen();
+		var settingsId = UUID.randomUUID();
+		var marker = settingsId.toString();
+		var event = new StoreSettingsChanged(settingsId, snapshot(10), snapshot(12), UUID.randomUUID(), Role.ADMIN,
+				NOW);
 
-		commit(event);
+		// Drains this test's own notification too, so it never leaks into a later test's fresh LISTEN.
+		scenario.publish(event).andWaitForStateChange(() -> countMatching(marker), count -> count >= 1).andVerify(count -> {
+		});
 
 		assertThat(probe.awaitSawSystemActor()).isTrue();
 	}
@@ -103,10 +109,6 @@ class SignalStoreStatusOnStoreSettingsChangedIT {
 				20);
 	}
 
-	private void commit(StoreSettingsChanged event) {
-		new TransactionTemplate(transactionManager).executeWithoutResult(status -> events.publishEvent(event));
-	}
-
 	private void listen() throws SQLException {
 		listenProbe = DriverManager.getConnection(connectionDetails.getJdbcUrl(), connectionDetails.getUsername(),
 				connectionDetails.getPassword());
@@ -115,21 +117,24 @@ class SignalStoreStatusOnStoreSettingsChangedIT {
 		}
 	}
 
-	// One getNotifications() call can return several pending notifications at once; poll until minCount arrive.
-	private List<String> awaitNotifications(int minCount) throws SQLException {
-		var pg = listenProbe.unwrap(PGConnection.class);
-		var received = new ArrayList<String>();
-		var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-		while (received.size() < minCount && System.nanoTime() < deadline) {
-			var remainingMillis = (int) Math.max(1, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime()));
-			var notifications = pg.getNotifications(remainingMillis);
+	private List<String> matching(String marker) {
+		return received.stream().filter(n -> n.contains(marker)).toList();
+	}
+
+	// One getNotifications() call can return several pending notifications at once; accumulate across polls.
+	private long countMatching(String marker) {
+		try {
+			var notifications = listenProbe.unwrap(PGConnection.class).getNotifications(200);
 			if (notifications != null) {
 				for (var notification : notifications) {
 					received.add(notification.getParameter());
 				}
 			}
+			return matching(marker).size();
 		}
-		return received;
+		catch (SQLException e) {
+			throw new IllegalStateException("Failed to poll for a notification", e);
+		}
 	}
 
 }

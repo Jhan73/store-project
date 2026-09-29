@@ -11,40 +11,38 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.postgresql.PGConnection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.modulith.test.ApplicationModuleTest;
+import org.springframework.modulith.test.Scenario;
+import org.springframework.test.context.TestPropertySource;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.store.OpeningHourSnapshot;
 import com.jhanantezana.jugueria.store.OpeningHoursChanged;
 
+// identity/shared are force-included: see SignalStoreStatusOnStoreSettingsChangedIT for why.
 // No STOMP broker involved: just proves the listener signals /topic/store-status after its event commits.
-@SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
+@ApplicationModuleTest(extraIncludes = { "identity", "shared" })
+@TestPropertySource(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @Import(TestcontainersConfiguration.class)
 class SignalStoreStatusOnOpeningHoursChangedIT {
 
 	static final Instant NOW = Instant.parse("2026-09-27T09:00:00Z");
 
 	@Autowired
-	ApplicationEventPublisher events;
-
-	@Autowired
-	PlatformTransactionManager transactionManager;
-
-	@Autowired
 	JdbcConnectionDetails connectionDetails;
 
 	Connection listenProbe;
+
+	// Another test in this class can leave a stray, unconsumed notification behind; every assertion
+	// filters by its own settingsId.
+	final List<String> received = new ArrayList<>();
 
 	@AfterEach
 	void closeProbe() throws SQLException {
@@ -54,38 +52,35 @@ class SignalStoreStatusOnOpeningHoursChangedIT {
 	}
 
 	@Test
-	void deliversTheSignalAfterTheEventsTransactionCommits() throws SQLException {
+	void deliversTheSignalAfterTheEventsTransactionCommits(Scenario scenario) throws SQLException {
 		listen();
 		var settingsId = UUID.randomUUID();
+		var marker = settingsId.toString();
 
-		commit(anOpeningHoursChanged(settingsId));
-
-		var notifications = awaitNotifications(1);
-		assertThat(notifications).singleElement()
-			.satisfies(n -> assertThat(n).contains("\"type\":\"OPENING_HOURS_CHANGED\"").contains(settingsId.toString()));
+		scenario.publish(anOpeningHoursChanged(settingsId))
+			.andWaitForStateChange(() -> countMatching(marker), count -> count >= 1)
+			.andVerify(count -> assertThat(matching(marker)).singleElement()
+				.satisfies(n -> assertThat(n).contains("\"type\":\"OPENING_HOURS_CHANGED\"")));
 	}
 
 	@Test
-	void deliveringTheSameEventTwiceStillSignalsBothTimesWithoutFailing() throws SQLException {
+	void deliveringTheSameEventTwiceStillSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		listen();
 		var settingsId = UUID.randomUUID();
+		var marker = settingsId.toString();
 		var event = anOpeningHoursChanged(settingsId);
 
-		commit(event);
-		commit(event);
-
-		var notifications = awaitNotifications(2);
-		assertThat(notifications).hasSizeGreaterThanOrEqualTo(2).allMatch(n -> n.contains(settingsId.toString()));
+		scenario.publish(event).andWaitForStateChange(() -> countMatching(marker), count -> count >= 1).andVerify(count -> {
+		});
+		scenario.publish(event)
+			.andWaitForStateChange(() -> countMatching(marker), count -> count >= 2)
+			.andVerify(count -> assertThat(matching(marker)).hasSizeGreaterThanOrEqualTo(2));
 	}
 
 	private OpeningHoursChanged anOpeningHoursChanged(UUID settingsId) {
 		var before = List.of(new OpeningHourSnapshot(DayOfWeek.MONDAY, false, LocalTime.of(8, 0), LocalTime.of(20, 0)));
 		var after = List.of(new OpeningHourSnapshot(DayOfWeek.MONDAY, true, null, null));
 		return new OpeningHoursChanged(settingsId, before, after, null, null, NOW);
-	}
-
-	private void commit(OpeningHoursChanged event) {
-		new TransactionTemplate(transactionManager).executeWithoutResult(status -> events.publishEvent(event));
 	}
 
 	private void listen() throws SQLException {
@@ -96,21 +91,24 @@ class SignalStoreStatusOnOpeningHoursChangedIT {
 		}
 	}
 
-	// One getNotifications() call can return several pending notifications at once; poll until minCount arrive.
-	private List<String> awaitNotifications(int minCount) throws SQLException {
-		var pg = listenProbe.unwrap(PGConnection.class);
-		var received = new ArrayList<String>();
-		var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-		while (received.size() < minCount && System.nanoTime() < deadline) {
-			var remainingMillis = (int) Math.max(1, TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime()));
-			var notifications = pg.getNotifications(remainingMillis);
+	private List<String> matching(String marker) {
+		return received.stream().filter(n -> n.contains(marker)).toList();
+	}
+
+	// One getNotifications() call can return several pending notifications at once; accumulate across polls.
+	private long countMatching(String marker) {
+		try {
+			var notifications = listenProbe.unwrap(PGConnection.class).getNotifications(200);
 			if (notifications != null) {
 				for (var notification : notifications) {
 					received.add(notification.getParameter());
 				}
 			}
+			return matching(marker).size();
 		}
-		return received;
+		catch (SQLException e) {
+			throw new IllegalStateException("Failed to poll for a notification", e);
+		}
 	}
 
 }

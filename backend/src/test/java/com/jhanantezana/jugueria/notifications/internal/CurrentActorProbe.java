@@ -28,8 +28,9 @@ class CurrentActorProbe {
 		sawSystemActor.complete(currentActor.isSystem());
 	}
 
+	// Generous: the JDBC event publication registry adds a couple of extra round-trips before dispatch.
 	boolean awaitSawSystemActor() throws Exception {
-		return sawSystemActor.get(5, TimeUnit.SECONDS);
+		return sawSystemActor.get(15, TimeUnit.SECONDS);
 	}
 
 }
