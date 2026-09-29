@@ -43,10 +43,13 @@ class AllergenControllerIT {
 	@Test
 	void theApplicationRoleCannotChangeTheFixedList() {
 		assertThatThrownBy(() -> jdbc.sql("insert into catalog.allergen (code) values ('DUST')").update())
+			.rootCause()
 			.hasMessageContaining("permission denied");
 		assertThatThrownBy(() -> jdbc.sql("delete from catalog.allergen where code = 'MILK'").update())
+			.rootCause()
 			.hasMessageContaining("permission denied");
 		assertThatThrownBy(() -> jdbc.sql("update catalog.allergen set code = 'DUST' where code = 'MILK'").update())
+			.rootCause()
 			.hasMessageContaining("permission denied");
 	}
 
