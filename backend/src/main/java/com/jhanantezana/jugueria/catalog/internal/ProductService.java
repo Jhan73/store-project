@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.catalog.internal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -120,6 +121,22 @@ public class ProductService {
 		var before = product.snapshot();
 		var now = Instant.now(clock);
 		product.reactivate(now);
+		products.flush();
+		publish(product, before, now);
+		return ProductDetails.from(product);
+	}
+
+	// A null key removes the image.
+	@Transactional
+	public ProductDetails setImage(UUID id, @Nullable String imageKey, long expectedVersion) {
+		var product = findOrThrow(id);
+		EntityVersions.requireMatching(product.getVersion(), expectedVersion);
+		if (Objects.equals(product.getImageKey(), imageKey)) {
+			return ProductDetails.from(product);
+		}
+		var before = product.snapshot();
+		var now = Instant.now(clock);
+		product.changeImage(imageKey, now);
 		products.flush();
 		publish(product, before, now);
 		return ProductDetails.from(product);

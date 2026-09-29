@@ -24,6 +24,8 @@ public enum CatalogError implements ErrorCode {
 	PRODUCT_NAME_ALREADY_USED("catalog.product-name-already-used", HttpStatus.CONFLICT),
 	PRODUCT_UNAVAILABLE("catalog.product-unavailable", HttpStatus.CONFLICT),
 	INVALID_PRODUCT("catalog.invalid-product", HttpStatus.UNPROCESSABLE_CONTENT),
+	INVALID_IMAGE("catalog.invalid-image", HttpStatus.UNPROCESSABLE_CONTENT),
+	PROVIDER_UNAVAILABLE("catalog.provider-unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 	INVALID_PRICE("catalog.invalid-price", HttpStatus.UNPROCESSABLE_CONTENT),
 	CURRENCY_MISMATCH("catalog.currency-mismatch", HttpStatus.UNPROCESSABLE_CONTENT);
 
