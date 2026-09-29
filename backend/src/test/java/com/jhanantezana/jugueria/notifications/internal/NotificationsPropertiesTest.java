@@ -15,14 +15,16 @@ class NotificationsPropertiesTest {
 
 	@Test
 	void treatsAMissingListAsEmpty() {
-		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", null, SES);
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", null, SES,
+				"jugueria-backend");
 
 		assertThat(properties.recipientAllowlist()).isEmpty();
 	}
 
 	@Test
 	void dropsBlankEntriesLeftByAnUnsetEnvironmentVariable() {
-		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", Arrays.asList(""), SES);
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", Arrays.asList(""), SES,
+				"jugueria-backend");
 
 		assertThat(properties.recipientAllowlist()).isEmpty();
 	}
@@ -30,7 +32,7 @@ class NotificationsPropertiesTest {
 	@Test
 	void keepsRealEntries() {
 		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com",
-				List.of("owner@jugueria.pe"), SES);
+				List.of("owner@jugueria.pe"), SES, "jugueria-backend");
 
 		assertThat(properties.recipientAllowlist()).containsExactly("owner@jugueria.pe");
 	}

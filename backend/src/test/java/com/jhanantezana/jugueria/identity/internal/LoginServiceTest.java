@@ -11,7 +11,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +55,7 @@ class LoginServiceTest {
 		var refreshToken = new IdentityProperties.RefreshToken(Duration.ofDays(7), Duration.ofDays(30));
 		var setPassword = new IdentityProperties.SetPassword("http://localhost:4200", "/set-password",
 				Duration.ofHours(48));
-		var properties = new IdentityProperties(List.of("http://localhost"), jwt, lockout, refreshToken, setPassword);
+		var properties = new IdentityProperties(jwt, lockout, refreshToken, setPassword);
 		lenient().when(refreshTokens.issueFamily(any())).thenReturn(
 				new IssuedRefreshToken("raw-refresh-token", NOW.plus(Duration.ofDays(7)), Duration.ofDays(7)));
 		service = new LoginService(accounts, passwordEncoder, tokenIssuer, refreshTokens, properties,

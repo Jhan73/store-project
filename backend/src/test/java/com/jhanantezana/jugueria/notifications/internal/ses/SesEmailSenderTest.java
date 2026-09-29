@@ -60,7 +60,7 @@ class SesEmailSenderTest {
 			.willReturn(aResponse().withStatus(200)
 				.withHeader("Content-Type", "application/json")
 				.withBody("{\"MessageId\":\"test-message-id\"}")));
-		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES);
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES, "jugueria-backend");
 		var sender = new SesEmailSender(client, properties);
 
 		sender.send(new EmailMessage("new-staff@jugueria.pe", "Set your password", "body"));
@@ -80,7 +80,7 @@ class SesEmailSenderTest {
 			.willReturn(aResponse().withStatus(200)
 				.withHeader("Content-Type", "application/json")
 				.withBody("{\"MessageId\":\"test-message-id\"}")));
-		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES);
+		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(), SES, "jugueria-backend");
 		var sender = new SesEmailSender(client, properties);
 		var subject = "Configuración de tu contraseña";
 		var body = "Hola, aquí tienes el enlace para el año que viene. ¡Éxitos!";
@@ -97,7 +97,7 @@ class SesEmailSenderTest {
 	@Test
 	void skipsSendingWhenTheRecipientIsOutsideTheAllowlist() {
 		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com",
-				List.of("owner@jugueria.pe"), SES);
+				List.of("owner@jugueria.pe"), SES, "jugueria-backend");
 		var sender = new SesEmailSender(client, properties);
 
 		sender.send(new EmailMessage("someone-else@example.com", "Set your password", "body"));

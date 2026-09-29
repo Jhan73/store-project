@@ -61,6 +61,15 @@ final class ArchitectureRules {
 		.dependOnClassesThat(isRequestOrSecurityContextHolder())
 		.because("code must read the actor or the request origin through their shared abstractions");
 
+	// Only the LISTEN/NOTIFY bridge unwraps the JDBC driver directly; everywhere else goes through Spring's
+	// DataSource/JdbcClient abstractions.
+	static final ArchRule POSTGRES_DRIVER_STAYS_IN_NOTIFICATIONS_INTERNAL = noClasses().that()
+		.resideOutsideOfPackage("com.jhanantezana.jugueria.notifications.internal..")
+		.should()
+		.dependOnClassesThat()
+		.resideInAPackage("org.postgresql..")
+		.because("only the dedicated LISTEN connection needs the raw pgjdbc driver");
+
 	private record Signature(Class<?> owner, String name, List<Class<?>> parameters) {
 
 		boolean matches(CodeUnitAccessTarget target) {

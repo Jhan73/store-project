@@ -29,7 +29,7 @@ class SmtpEmailSenderTest {
 	@BeforeEach
 	void setUp() {
 		var properties = new NotificationsProperties("no-reply@jugueria.jhanantezana.com", List.of(),
-				new NotificationsProperties.Ses("us-east-1", Duration.ofSeconds(10), Duration.ofSeconds(5)));
+				new NotificationsProperties.Ses("us-east-1", Duration.ofSeconds(10), Duration.ofSeconds(5)), "jugueria-backend");
 		sender = new SmtpEmailSender(mailSender, properties);
 	}
 

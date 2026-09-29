@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +43,7 @@ class StaffProvisioningServiceTest {
 		var refreshToken = new IdentityProperties.RefreshToken(Duration.ofDays(7), Duration.ofDays(30));
 		var setPassword = new IdentityProperties.SetPassword("https://jugueria.jhanantezana.com", "/set-password",
 				Duration.ofHours(48));
-		var properties = new IdentityProperties(List.of("http://localhost"), jwt, lockout, refreshToken, setPassword);
+		var properties = new IdentityProperties(jwt, lockout, refreshToken, setPassword);
 		service = new StaffProvisioningService(staffAccounts, notifications, properties);
 	}
 

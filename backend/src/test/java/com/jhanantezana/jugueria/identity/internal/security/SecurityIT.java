@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
+import com.jhanantezana.jugueria.shared.WebOriginsProperties;
 import com.jhanantezana.probe.SecuredProbeController;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -53,6 +54,9 @@ class SecurityIT {
 
 	@Autowired
 	IdentityProperties properties;
+
+	@Autowired
+	WebOriginsProperties webOrigins;
 
 	@Test
 	void rejectsARequestWithoutATokenAsProblemDetails() {
@@ -146,11 +150,11 @@ class SecurityIT {
 
 	@Test
 	void answersCorsPreflightsOnlyForTheFrontendOrigin() {
-		var allowed = preflight(properties.allowedOrigins().getFirst());
+		var allowed = preflight(webOrigins.allowedOrigins().getFirst());
 		var foreign = preflight("https://evil.example");
 
 		assertThat(allowed).hasStatusOk()
-			.hasHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, properties.allowedOrigins().getFirst())
+			.hasHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, webOrigins.allowedOrigins().getFirst())
 			.hasHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
 		assertThat(foreign).hasStatus(HttpStatus.FORBIDDEN);
 	}

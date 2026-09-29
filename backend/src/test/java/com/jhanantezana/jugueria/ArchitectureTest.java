@@ -32,4 +32,9 @@ class ArchitectureTest {
 		ArchitectureRules.REQUEST_AND_SECURITY_CONTEXT_STAY_BEHIND_THEIR_ABSTRACTIONS.check(APPLICATION);
 	}
 
+	@Test
+	void thePostgresDriverStaysInNotificationsInternal() {
+		ArchitectureRules.POSTGRES_DRIVER_STAYS_IN_NOTIFICATIONS_INTERNAL.check(APPLICATION);
+	}
+
 }
