@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.catalog.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -37,6 +38,16 @@ class AllergenControllerIT {
 		var seeded = jdbc.sql("select code from catalog.allergen").query(String.class).list();
 
 		assertThat(seeded).containsExactlyInAnyOrderElementsOf(Arrays.stream(Allergen.values()).map(Enum::name).toList());
+	}
+
+	@Test
+	void theApplicationRoleCannotChangeTheFixedList() {
+		assertThatThrownBy(() -> jdbc.sql("insert into catalog.allergen (code) values ('DUST')").update())
+			.hasMessageContaining("permission denied");
+		assertThatThrownBy(() -> jdbc.sql("delete from catalog.allergen where code = 'MILK'").update())
+			.hasMessageContaining("permission denied");
+		assertThatThrownBy(() -> jdbc.sql("update catalog.allergen set code = 'DUST' where code = 'MILK'").update())
+			.hasMessageContaining("permission denied");
 	}
 
 	@Test

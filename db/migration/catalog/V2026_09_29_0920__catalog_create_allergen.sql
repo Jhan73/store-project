@@ -18,3 +18,6 @@ INSERT INTO catalog.allergen (code) VALUES
     ('SOY'),
     ('SULPHITES'),
     ('TREE_NUTS');
+
+-- Default privileges give app DML on every new table; the list is fixed, so only migrations may change it.
+REVOKE INSERT, UPDATE, DELETE ON catalog.allergen FROM app;
