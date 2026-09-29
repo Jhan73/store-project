@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.MenuCache;
-import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
 
 import jakarta.annotation.security.PermitAll;
 
@@ -17,11 +16,11 @@ class MenuController {
 
 	private final MenuCache menuCache;
 
-	private final ProductImageUrls imageUrls;
+	private final MenuRenderer renderer;
 
-	MenuController(MenuCache menuCache, ProductImageUrls imageUrls) {
+	MenuController(MenuCache menuCache, MenuRenderer renderer) {
 		this.menuCache = menuCache;
-		this.imageUrls = imageUrls;
+		this.renderer = renderer;
 	}
 
 	// no-cache makes the browser revalidate every time; the ETag turns that into a cheap 304 (Spring answers a
@@ -29,11 +28,8 @@ class MenuController {
 	@GetMapping("/menu")
 	@PermitAll
 	ResponseEntity<MenuResponse> menu() {
-		var snapshot = menuCache.menu();
-		return ResponseEntity.ok()
-			.cacheControl(CacheControl.noCache())
-			.eTag(snapshot.etag())
-			.body(MenuResponse.from(snapshot.menu(), imageUrls));
+		var rendered = renderer.render(menuCache.menu());
+		return ResponseEntity.ok().cacheControl(CacheControl.noCache()).eTag(rendered.etag()).body(rendered.body());
 	}
 
 }
