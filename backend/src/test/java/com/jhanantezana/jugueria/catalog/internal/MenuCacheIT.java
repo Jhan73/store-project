@@ -84,6 +84,7 @@ class MenuCacheIT {
 		transactions.executeWithoutResult(status -> {
 			menuCache.evictAfterCommit();
 			menuCache.menu();
+			verify(queries, times(1)).load();
 		});
 		menuCache.menu();
 
