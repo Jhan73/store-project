@@ -19,6 +19,8 @@ import org.springframework.modulith.test.Scenario;
 import org.springframework.test.context.TestPropertySource;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
+import com.jhanantezana.jugueria.catalog.AvailabilityChanged;
+import com.jhanantezana.jugueria.catalog.AvailabilityTarget;
 import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
 import com.jhanantezana.jugueria.catalog.CategoryChanged;
 import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
@@ -100,6 +102,33 @@ class SignalCatalogOnCatalogEventsIT {
 			.andVerify(count -> assertThat(probe.matching(productId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
 				assertThat(n).contains("\"type\":\"PRODUCT_CHANGED\"");
+			}));
+	}
+
+	@Test
+	void signalsTheCatalogTopicWhenAProductIsMarkedUnavailable(Scenario scenario) throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var productId = UUID.randomUUID();
+
+		scenario.publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, null, null, NOW))
+			.andWaitForStateChange(() -> probe.countMatching(productId.toString()), count -> count >= 1)
+			.andVerify(count -> assertThat(probe.matching(productId.toString())).singleElement().satisfies(n -> {
+				assertThat(n).contains("\"topic\":\"catalog\"");
+				assertThat(n).contains("\"type\":\"PRODUCT_AVAILABILITY_CHANGED\"");
+				assertThat(n).contains("\"productId\"");
+			}));
+	}
+
+	@Test
+	void signalsTheCatalogTopicWhenAnOptionIsMarkedUnavailable(Scenario scenario) throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var optionId = UUID.randomUUID();
+
+		scenario.publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, false, null, null, NOW))
+			.andWaitForStateChange(() -> probe.countMatching(optionId.toString()), count -> count >= 1)
+			.andVerify(count -> assertThat(probe.matching(optionId.toString())).singleElement().satisfies(n -> {
+				assertThat(n).contains("\"type\":\"OPTION_AVAILABILITY_CHANGED\"");
+				assertThat(n).contains("\"optionId\"");
 			}));
 	}
 
