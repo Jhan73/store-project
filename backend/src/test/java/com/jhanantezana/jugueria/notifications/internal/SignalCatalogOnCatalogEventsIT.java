@@ -18,6 +18,7 @@ import org.springframework.test.context.TestPropertySource;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
 import com.jhanantezana.jugueria.catalog.CategoryChanged;
+import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
 import com.jhanantezana.jugueria.catalog.StationChanged;
 
 // identity and shared are force-included for the same reason as the store-status signal tests.
@@ -63,6 +64,19 @@ class SignalCatalogOnCatalogEventsIT {
 			.andVerify(count -> assertThat(probe.matching(categoryId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
 				assertThat(n).contains("\"type\":\"CATEGORY_CHANGED\"");
+			}));
+	}
+
+	@Test
+	void signalsTheCatalogTopicWhenAModifierGroupChanges(Scenario scenario) throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var groupId = UUID.randomUUID();
+
+		scenario.publish(new ModifierGroupChanged(groupId, null, null, null, null, NOW))
+			.andWaitForStateChange(() -> probe.countMatching(groupId.toString()), count -> count >= 1)
+			.andVerify(count -> assertThat(probe.matching(groupId.toString())).singleElement().satisfies(n -> {
+				assertThat(n).contains("\"topic\":\"catalog\"");
+				assertThat(n).contains("\"type\":\"MODIFIER_GROUP_CHANGED\"");
 			}));
 	}
 
