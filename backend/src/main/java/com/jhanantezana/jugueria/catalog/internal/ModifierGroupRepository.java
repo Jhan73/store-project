@@ -19,4 +19,6 @@ public interface ModifierGroupRepository extends JpaRepository<ModifierGroup, UU
 	@EntityGraph(attributePaths = { "options", "options.allergens" })
 	Optional<ModifierGroup> findWithOptionsById(UUID id);
 
+	long countByIdIn(Collection<UUID> ids);
+
 }

@@ -282,6 +282,84 @@ class ModifierGroupControllerIT {
 	}
 
 	@Test
+	void deletesAGroupAndPublishesTheChange() {
+		var created = create(sizeGroup("Size-" + UUID.randomUUID()));
+
+		var result = mvc.delete()
+			.uri(GROUPS + "/" + idOf(created))
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.NO_CONTENT);
+		assertThat(mvc.get().uri(GROUPS + "/" + idOf(created)).with(admin()).exchange()).hasStatus(HttpStatus.NOT_FOUND);
+		assertThat(events.stream(ModifierGroupChanged.class).toList().get(1)).satisfies(event -> {
+			assertThat(event.before()).isNotNull();
+			assertThat(event.after()).isNull();
+		});
+	}
+
+	@Test
+	void refusesToDeleteAGroupAProductStillUses() {
+		var created = create(sizeGroup("Size-" + UUID.randomUUID()));
+		var category = mvc.post()
+			.uri("/api/v1/admin/categories")
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Cat-%s\",\"displayOrder\":0}".formatted(UUID.randomUUID()))
+			.exchange();
+		mvc.post().uri("/api/v1/admin/products").with(admin()).contentType(MediaType.APPLICATION_JSON).content("""
+				{ "name": "Mango-%s", "categoryId": "%s", "price": { "amount": "5.00", "currency": "PEN" },
+				  "displayOrder": 0, "quickSalePinned": false, "modifierGroupIds": ["%s"] }
+				""".formatted(UUID.randomUUID(), idOf(category), idOf(created))).exchange();
+
+		var result = mvc.delete()
+			.uri(GROUPS + "/" + idOf(created))
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("catalog.modifier-group-in-use");
+		assertThat(mvc.get().uri(GROUPS + "/" + idOf(created)).with(admin()).exchange()).hasStatusOk();
+	}
+
+	@Test
+	void rejectsADeleteWithoutIfMatch() {
+		var created = create(sizeGroup("Size-" + UUID.randomUUID()));
+
+		var result = mvc.delete().uri(GROUPS + "/" + idOf(created)).with(admin()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
+	@Test
+	void aStaleDeleteIsRejected() {
+		var name = "Size-" + UUID.randomUUID();
+		var created = create(sizeGroup(name));
+		update(idOf(created), etagOf(created), sizeGroup(name + "-b"));
+
+		var result = mvc.delete()
+			.uri(GROUPS + "/" + idOf(created))
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_FAILED);
+	}
+
+	@Test
+	void reportsAnUnknownGroupOnDelete() {
+		var result = mvc.delete()
+			.uri(GROUPS + "/" + UUID.randomUUID())
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, "\"0\"")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
 	void rejectsEveryEndpointWhenAnonymous() {
 		var id = UUID.randomUUID();
 		var body = sizeGroup("Size-" + UUID.randomUUID());
@@ -296,6 +374,8 @@ class ModifierGroupControllerIT {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(body)
 			.exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.delete().uri(GROUPS + "/" + id).header(HttpHeaders.IF_MATCH, "\"0\"").exchange())
+			.hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
 	@Test
@@ -315,6 +395,8 @@ class ModifierGroupControllerIT {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(body)
 				.exchange()).hasStatus(HttpStatus.FORBIDDEN);
+			assertThat(mvc.delete().uri(GROUPS + "/" + id).with(user).header(HttpHeaders.IF_MATCH, "\"0\"").exchange())
+				.hasStatus(HttpStatus.FORBIDDEN);
 		}
 	}
 

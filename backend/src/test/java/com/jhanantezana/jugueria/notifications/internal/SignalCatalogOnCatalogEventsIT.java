@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.Currency;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +22,9 @@ import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
 import com.jhanantezana.jugueria.catalog.CategoryChanged;
 import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
+import com.jhanantezana.jugueria.catalog.ProductChanged;
+import com.jhanantezana.jugueria.catalog.ProductSnapshot;
+import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.catalog.StationChanged;
 
 // identity and shared are force-included for the same reason as the store-status signal tests.
@@ -28,6 +34,8 @@ import com.jhanantezana.jugueria.catalog.StationChanged;
 class SignalCatalogOnCatalogEventsIT {
 
 	static final Instant NOW = Instant.parse("2026-09-29T09:00:00Z");
+
+	static final Currency PEN = Currency.getInstance("PEN");
 
 	@Autowired
 	JdbcConnectionDetails connectionDetails;
@@ -77,6 +85,21 @@ class SignalCatalogOnCatalogEventsIT {
 			.andVerify(count -> assertThat(probe.matching(groupId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
 				assertThat(n).contains("\"type\":\"MODIFIER_GROUP_CHANGED\"");
+			}));
+	}
+
+	@Test
+	void signalsTheCatalogTopicWhenAProductChanges(Scenario scenario) throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var productId = UUID.randomUUID();
+		var snapshot = new ProductSnapshot("Mango", null, UUID.randomUUID(), Money.of("5.00", PEN), 0, false, true,
+				null, Set.of(), List.of());
+
+		scenario.publish(new ProductChanged(productId, null, snapshot, null, null, NOW))
+			.andWaitForStateChange(() -> probe.countMatching(productId.toString()), count -> count >= 1)
+			.andVerify(count -> assertThat(probe.matching(productId.toString())).singleElement().satisfies(n -> {
+				assertThat(n).contains("\"topic\":\"catalog\"");
+				assertThat(n).contains("\"type\":\"PRODUCT_CHANGED\"");
 			}));
 	}
 

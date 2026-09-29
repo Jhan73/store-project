@@ -9,6 +9,7 @@ public final class CatalogTables {
 	}
 
 	public static void clean(JdbcClient jdbc) {
+		jdbc.sql("delete from catalog.product").update();
 		jdbc.sql("delete from catalog.category").update();
 		jdbc.sql("delete from catalog.modifier_group").update();
 		jdbc.sql("delete from catalog.station where not default_station").update();

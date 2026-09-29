@@ -95,6 +95,24 @@ public class ModifierGroupService {
 		return group;
 	}
 
+	// A group a product still attaches cannot go: the foreign key refuses it, and that refusal is the guard.
+	@Transactional
+	public void delete(UUID id, long expectedVersion) {
+		var group = groups.findWithOptionsById(id).orElseThrow(ModifierGroupService::notFound);
+		EntityVersions.requireMatching(group.getVersion(), expectedVersion);
+		var before = group.snapshot();
+		var now = Instant.now(clock);
+		groups.delete(group);
+		try {
+			groups.flush();
+		}
+		catch (DataIntegrityViolationException e) {
+			throw new BusinessException(CatalogError.MODIFIER_GROUP_IN_USE,
+					"The modifier group is still attached to a product");
+		}
+		changes.publish(new ModifierGroupChanged(id, before, null, currentActor.id(), currentActor.role(), now));
+	}
+
 	private void requireStoreCurrency(List<ModifierOptionDefinition> options) {
 		var storeCurrency = store.currency();
 		if (options.stream().anyMatch(option -> !option.priceDelta().currency().equals(storeCurrency))) {

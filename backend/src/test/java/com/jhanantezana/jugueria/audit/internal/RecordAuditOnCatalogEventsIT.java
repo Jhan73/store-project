@@ -23,6 +23,8 @@ import com.jhanantezana.jugueria.catalog.Allergen;
 import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
 import com.jhanantezana.jugueria.catalog.ModifierGroupSnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierOptionSnapshot;
+import com.jhanantezana.jugueria.catalog.ProductChanged;
+import com.jhanantezana.jugueria.catalog.ProductSnapshot;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -91,6 +93,52 @@ class RecordAuditOnCatalogEventsIT {
 		var entry = findByEntityId(groupId);
 		assertThat(entry.getAction()).isEqualTo("MODIFIER_GROUP_DELETED");
 		assertThat(entry.getAfter()).isNull();
+	}
+
+	@Test
+	void recordsAProductCreation() {
+		var productId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new ProductChanged(productId, null, product("Mango", "12.50", true), actorId, Role.ADMIN, NOW));
+
+		var entry = findByEntityId(productId);
+		assertThat(entry.getAction()).isEqualTo("PRODUCT_CREATED");
+		assertThat(entry.getEntityType()).isEqualTo("PRODUCT");
+		assertThat(entry.getActorId()).isEqualTo(actorId);
+		assertThat(entry.getBefore()).isNull();
+		assertThat(entry.getAfter()).containsEntry("name", "Mango").containsEntry("price", "12.50");
+	}
+
+	@Test
+	void recordsAPriceChangeWithBothPrices() {
+		var productId = UUID.randomUUID();
+
+		publish(new ProductChanged(productId, product("Mango", "12.50", true), product("Mango", "14.00", true), null,
+				null, NOW));
+
+		var entry = findByEntityId(productId);
+		assertThat(entry.getAction()).isEqualTo("PRODUCT_UPDATED");
+		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
+		assertThat(entry.getBefore()).containsEntry("price", "12.50");
+		assertThat(entry.getAfter()).containsEntry("price", "14.00");
+	}
+
+	@Test
+	void recordsADeactivationAsAnUpdate() {
+		var productId = UUID.randomUUID();
+
+		publish(new ProductChanged(productId, product("Mango", "12.50", true), product("Mango", "12.50", false), null,
+				null, NOW));
+
+		var entry = findByEntityId(productId);
+		assertThat(entry.getBefore()).containsEntry("active", true);
+		assertThat(entry.getAfter()).containsEntry("active", false);
+	}
+
+	private static ProductSnapshot product(String name, String price, boolean active) {
+		return new ProductSnapshot(name, null, UUID.randomUUID(), Money.of(price, PEN), 0, false, active, null,
+				Set.of(Allergen.MILK), List.of());
 	}
 
 	private void publish(Object event) {
