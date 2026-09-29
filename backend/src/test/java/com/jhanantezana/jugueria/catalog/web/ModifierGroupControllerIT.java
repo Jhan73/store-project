@@ -131,6 +131,17 @@ class ModifierGroupControllerIT {
 	}
 
 	@Test
+	void rejectsAnOptionPriceBeyondWhatTheColumnHolds() {
+		var result = create("""
+				{ "name": "Bad-%s", "required": false, "minChoices": 0, "maxChoices": 1,
+				  "options": [ { "name": "A", "priceDelta": { "amount": "10000000000.00", "currency": "PEN" } } ] }
+				""".formatted(UUID.randomUUID()));
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("catalog.invalid-price");
+	}
+
+	@Test
 	void rejectsAGroupWithoutOptions() {
 		var result = create("""
 				{ "name": "Bad-%s", "required": false, "minChoices": 0, "maxChoices": 1, "options": [] }

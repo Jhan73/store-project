@@ -83,6 +83,11 @@ class ModifierGroupTest {
 	}
 
 	@Test
+	void rejectsAnOptionPriceThatWouldOverflowTheColumn() {
+		assertInvalid(() -> group(false, 0, 1, option("Gold", "10000000000.00")), CatalogError.INVALID_PRICE);
+	}
+
+	@Test
 	void acceptsAFreeOption() {
 		assertThatCode(() -> group(false, 0, 1, option("Plain", "0.00"))).doesNotThrowAnyException();
 	}

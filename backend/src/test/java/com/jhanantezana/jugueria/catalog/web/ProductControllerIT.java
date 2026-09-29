@@ -120,6 +120,14 @@ class ProductControllerIT {
 	}
 
 	@Test
+	void rejectsAPriceBeyondWhatTheColumnHoldsInsteadOfFailingWith500() {
+		var result = create(product("Mango-" + UUID.randomUUID(), createCategory(), "10000000000.00", "[]", "[]"));
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("catalog.invalid-price");
+	}
+
+	@Test
 	void rejectsAPriceInAnotherCurrency() {
 		var result = create("""
 				{ "name": "Mango-%s", "categoryId": "%s", "price": { "amount": "5.00", "currency": "USD" },

@@ -70,7 +70,7 @@ public class ProductService {
 			products.saveAndFlush(product);
 		}
 		catch (DataIntegrityViolationException e) {
-			throw nameAlreadyUsed();
+			throw translate(e);
 		}
 		publish(product, null, now);
 		return ProductDetails.from(product);
@@ -90,7 +90,7 @@ public class ProductService {
 			products.flush();
 		}
 		catch (DataIntegrityViolationException e) {
-			throw nameAlreadyUsed();
+			throw translate(e);
 		}
 		publish(product, before, now);
 		return ProductDetails.from(product);
@@ -170,6 +170,17 @@ public class ProductService {
 	private Product findOrThrow(UUID id) {
 		return products.findById(id)
 			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
+	}
+
+	// Only the two violations a request can cause get a business code; anything else stays an unexpected 500.
+	private static RuntimeException translate(DataIntegrityViolationException e) {
+		if (Constraints.violated(e, Constraints.PRODUCT_NAME)) {
+			return nameAlreadyUsed();
+		}
+		if (Constraints.violated(e, Constraints.PRODUCT_MODIFIER_GROUP_FK)) {
+			return new BusinessException(CatalogError.UNKNOWN_MODIFIER_GROUP, "A listed modifier group does not exist");
+		}
+		return e;
 	}
 
 	private static BusinessException nameAlreadyUsed() {

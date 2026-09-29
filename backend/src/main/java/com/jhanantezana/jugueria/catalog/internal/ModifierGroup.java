@@ -145,6 +145,7 @@ public class ModifierGroup extends BaseEntity {
 			if (definition.priceDelta().isNegative()) {
 				throw new BusinessException(CatalogError.INVALID_PRICE, "An option price must not be negative");
 			}
+			PriceLimits.requireWithinColumn(definition.priceDelta());
 			if (!names.add(definition.name().toLowerCase())) {
 				throw invalid("Option names must be unique within the group: " + definition.name());
 			}

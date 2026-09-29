@@ -47,6 +47,26 @@ class ProductTest {
 	}
 
 	@Test
+	void rejectsAPriceThatWouldOverflowTheColumn() {
+		assertThatThrownBy(() -> mango("10000000000.00")).isInstanceOfSatisfying(BusinessException.class,
+				e -> assertThat(e.errorCode()).isEqualTo(CatalogError.INVALID_PRICE));
+	}
+
+	@Test
+	void acceptsTheLargestPriceTheColumnHolds() {
+		assertThat(mango("9999999999.99").getPrice()).isEqualTo(Money.of("9999999999.99", PEN));
+	}
+
+	@Test
+	void changeRejectsAPriceThatWouldOverflowTheColumn() {
+		var product = mango("12.50");
+
+		assertThatThrownBy(() -> product.change("Mango", null, UUID.randomUUID(), Money.of("10000000000.00", PEN), 0,
+				false, Set.of(), List.of(), LATER)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(CatalogError.INVALID_PRICE));
+	}
+
+	@Test
 	void changeReplacesTheDefinitionButKeepsAvailabilityAndImage() {
 		var product = mango("12.50");
 		product.changeImage("products/abc.png", NOW);

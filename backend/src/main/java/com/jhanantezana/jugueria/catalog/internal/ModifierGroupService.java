@@ -63,7 +63,7 @@ public class ModifierGroupService {
 			groups.saveAndFlush(group);
 		}
 		catch (DataIntegrityViolationException e) {
-			throw nameAlreadyUsed();
+			throw translateName(e);
 		}
 		changes.publish(new ModifierGroupChanged(group.getId(), null, group.snapshot(), currentActor.id(),
 				currentActor.role(), now));
@@ -84,7 +84,7 @@ public class ModifierGroupService {
 			groups.flush();
 		}
 		catch (DataIntegrityViolationException e) {
-			throw nameAlreadyUsed();
+			throw translateName(e);
 		}
 		// A change to an option's own fields leaves the group row untouched, so the bump has to be forced.
 		if (group.getVersion() == versionBefore) {
@@ -107,6 +107,9 @@ public class ModifierGroupService {
 			groups.flush();
 		}
 		catch (DataIntegrityViolationException e) {
+			if (!Constraints.violated(e, Constraints.PRODUCT_MODIFIER_GROUP_FK)) {
+				throw e;
+			}
 			throw new BusinessException(CatalogError.MODIFIER_GROUP_IN_USE,
 					"The modifier group is still attached to a product");
 		}
@@ -130,6 +133,10 @@ public class ModifierGroupService {
 
 	private static BusinessException notFound() {
 		return new BusinessException(CatalogError.MODIFIER_GROUP_NOT_FOUND, "Modifier group not found");
+	}
+
+	private static RuntimeException translateName(DataIntegrityViolationException e) {
+		return Constraints.violated(e, Constraints.MODIFIER_GROUP_NAME) ? nameAlreadyUsed() : e;
 	}
 
 	private static BusinessException nameAlreadyUsed() {

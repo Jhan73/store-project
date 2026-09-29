@@ -148,6 +148,7 @@ public class Product extends BaseEntity {
 		if (price.isNegative() || price.isZero()) {
 			throw new BusinessException(CatalogError.INVALID_PRICE, "A product price must be greater than zero");
 		}
+		PriceLimits.requireWithinColumn(price);
 		if (new HashSet<>(modifierGroupIds).size() != modifierGroupIds.size()) {
 			throw new BusinessException(CatalogError.INVALID_PRODUCT, "A modifier group can be attached only once");
 		}
