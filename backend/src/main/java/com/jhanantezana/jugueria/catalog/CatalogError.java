@@ -27,7 +27,8 @@ public enum CatalogError implements ErrorCode {
 	INVALID_IMAGE("catalog.invalid-image", HttpStatus.UNPROCESSABLE_CONTENT),
 	PROVIDER_UNAVAILABLE("catalog.provider-unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 	INVALID_PRICE("catalog.invalid-price", HttpStatus.UNPROCESSABLE_CONTENT),
-	CURRENCY_MISMATCH("catalog.currency-mismatch", HttpStatus.UNPROCESSABLE_CONTENT);
+	CURRENCY_MISMATCH("catalog.currency-mismatch", HttpStatus.UNPROCESSABLE_CONTENT),
+	PRICE_CURRENCY_MISMATCH("catalog.price-currency-mismatch", HttpStatus.CONFLICT);
 
 	private final String code;
 

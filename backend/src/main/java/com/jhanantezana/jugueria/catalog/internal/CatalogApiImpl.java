@@ -65,6 +65,10 @@ class CatalogApiImpl implements CatalogApi {
 				throw new BusinessException(CatalogError.MODIFIER_OPTION_UNAVAILABLE,
 						"Option " + optionId + " is not available right now");
 			}
+			if (!option.getPriceDelta().currency().equals(total.currency())) {
+				throw new BusinessException(CatalogError.PRICE_CURRENCY_MISMATCH,
+						"Option " + optionId + " is priced in another currency than the product");
+			}
 			var group = groupOfOption.get(optionId);
 			chosenPerGroup.merge(group.getId(), 1, Integer::sum);
 			priced.add(new PricedOption(optionId, group.getId(), option.getName(), option.getPriceDelta()));

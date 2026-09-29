@@ -132,6 +132,20 @@ class CatalogApiIT {
 					e -> assertThat(e.errorCode()).isEqualTo(CatalogError.INVALID_MODIFIER_SELECTION));
 	}
 
+	// The store currency is editable, so a price kept in the old one can meet an option kept in the new one.
+	@Test
+	void reportsAnOptionPricedInAnotherCurrencyThanTheProductInsteadOfFailing() {
+		var size = requiredSizeGroup();
+		var product = product("Mango", "12.50", size.groupId());
+		jdbc.sql("update catalog.modifier_option set price_delta_currency = 'USD' where id = ?")
+			.param(size.large())
+			.update();
+
+		assertThatThrownBy(() -> catalog.priceSelection(product, List.of(size.large()))).isInstanceOfSatisfying(
+				BusinessException.class,
+				e -> assertThat(e.errorCode()).isEqualTo(CatalogError.PRICE_CURRENCY_MISMATCH));
+	}
+
 	@Test
 	void rejectsAnUnknownProduct() {
 		assertThatThrownBy(() -> catalog.priceSelection(UUID.randomUUID(), List.of())).isInstanceOfSatisfying(
