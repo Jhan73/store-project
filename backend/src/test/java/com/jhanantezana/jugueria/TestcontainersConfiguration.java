@@ -15,7 +15,9 @@ public class TestcontainersConfiguration {
 		.withDatabaseName("jugueria")
 		.withUsername("jugueria_admin")
 		.withPassword("admin")
-		.withInitScript("db/least-privilege-roles.sql");
+		.withInitScript("db/least-privilege-roles.sql")
+		// Cached Spring contexts never close their Hikari pools (10 connections each), so the default 100 runs out.
+		.withCommand("postgres", "-c", "max_connections=400");
 
 	static {
 		POSTGRES.start();
