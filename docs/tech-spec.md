@@ -333,11 +333,13 @@ Reservation expiry and scheduled-order firing (every minute) and payment reconci
 
 | What | Where | Invalidation |
 |------|-------|--------------|
-| Menu (categories + products + availability) | Caffeine, per task | Evicted on every task via `NOTIFY` on `ProductChanged`/`AvailabilityChanged`; safety TTL 5 min |
+| Menu (categories + products + availability) | Caffeine, per task | Evicted on the writing task right after the commit, and on every task via the `NOTIFY` signal of **every** catalog event (`STATION_CHANGED`, `CATEGORY_CHANGED`, `PRODUCT_CHANGED`, `MODIFIER_GROUP_CHANGED`, `PRODUCT_AVAILABILITY_CHANGED`, `OPTION_AVAILABILITY_CHANGED`); safety TTL 5 min |
 | `GET /api/v1/catalog/menu` response | Browser/SSR | `ETag` + `Cache-Control: no-cache` (cheap `304` revalidation) |
 | Product images | CloudFront in front of S3, long `Cache-Control`, content-hashed keys | New key on change |
 
 Checkout **never** reads from cache: prices, availability, and stock are re-read from the database (FR-ONL-04).
+
+How the eviction reaches every task (M1-B6): each catalog command publishes its event through one internal seam (`CatalogChanges`), which also registers the local eviction for after the commit; the event's `notifications` listener turns it into a `NOTIFY app_events`; every task's `LISTEN` connection, besides forwarding to its STOMP subscribers, publishes a local `shared.RealtimeSignalReceived` **before** the STOMP send (so a client that re-fetches on the message never meets the stale cache), and the catalog module listens for it on the `catalog` topic and evicts. `catalog` therefore depends on `shared` only, never on `notifications`, which would close a cycle (`notifications` already listens to catalog events). A test with two real instances changes availability on one and reads the other's cached menu within 5 s. The menu is loaded by explicit SQL into records (one `REPEATABLE READ` read-only transaction, so a change committed midway cannot leave it half old and half new), and its `ETag` is the first 128 bits of the SHA-256 of its own JSON, so every task derives the same value for the same menu. The menu lists every active category (even an empty one) with its active products in display order; an 86'd product stays on it with `available: false`.
 
 ### 4.7 Auditing (FR-AUD-*, NFR-08)
 

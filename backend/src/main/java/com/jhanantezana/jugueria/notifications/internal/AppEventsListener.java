@@ -12,11 +12,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
+
+import com.jhanantezana.jugueria.shared.RealtimeSignalReceived;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -46,6 +49,8 @@ class AppEventsListener implements SmartLifecycle {
 
 	private final String applicationName;
 
+	private final ApplicationEventPublisher localEvents;
+
 	private volatile boolean running;
 
 	private volatile Connection connection;
@@ -53,7 +58,8 @@ class AppEventsListener implements SmartLifecycle {
 	private Thread worker;
 
 	AppEventsListener(JdbcConnectionDetails connectionDetails, SimpMessagingTemplate messagingTemplate,
-			JsonMapper mapper, NotificationsProperties properties) {
+			JsonMapper mapper, NotificationsProperties properties, ApplicationEventPublisher localEvents) {
+		this.localEvents = localEvents;
 		this.connectionDetails = connectionDetails;
 		this.messagingTemplate = messagingTemplate;
 		this.mapper = mapper;
@@ -139,6 +145,8 @@ class AppEventsListener implements SmartLifecycle {
 	void forward(String json) {
 		try {
 			var signal = mapper.readValue(json, RealtimeSignal.class);
+			// Before the STOMP send: a client that re-fetches on the message must not meet the stale cache.
+			publishLocally(signal);
 			var payload = mapper.writeValueAsString(signal.outbound());
 			// text/plain, not application/json: the body is JSON text, but StringMessageConverter (the
 			// simplest client-side converter for a signal client code just re-parses) only accepts text/plain.
@@ -150,6 +158,16 @@ class AppEventsListener implements SmartLifecycle {
 		catch (Exception e) {
 			// A malformed payload must never kill the listener loop; local subscribers just miss this signal.
 			log.error("Failed to forward an app_events notification", e);
+		}
+	}
+
+	private void publishLocally(RealtimeSignal signal) {
+		try {
+			localEvents.publishEvent(new RealtimeSignalReceived(signal.topic(), signal.type(), signal.ids()));
+		}
+		catch (RuntimeException e) {
+			// A failing reaction in another module must not stop this task's own subscribers hearing the signal.
+			log.error("A local reaction to an app_events notification failed", e);
 		}
 	}
 
