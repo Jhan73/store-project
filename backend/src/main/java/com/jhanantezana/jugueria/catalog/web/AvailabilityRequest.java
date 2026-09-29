@@ -1,4 +1,6 @@
 package com.jhanantezana.jugueria.catalog.web;
 
-record AvailabilityRequest(boolean available) {
+import jakarta.validation.constraints.NotNull;
+
+record AvailabilityRequest(@NotNull Boolean available) {
 }

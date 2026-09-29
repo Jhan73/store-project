@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.AvailabilityService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/catalog")
 class AvailabilityController {
@@ -23,14 +25,14 @@ class AvailabilityController {
 
 	@PutMapping("/products/{id}/availability")
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
-	AvailabilityResponse setProductAvailability(@PathVariable UUID id, @RequestBody AvailabilityRequest request) {
+	AvailabilityResponse setProductAvailability(@PathVariable UUID id, @Valid @RequestBody AvailabilityRequest request) {
 		availability.setProductAvailability(id, request.available());
 		return new AvailabilityResponse(id, request.available());
 	}
 
 	@PutMapping("/modifier-options/{id}/availability")
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
-	AvailabilityResponse setOptionAvailability(@PathVariable UUID id, @RequestBody AvailabilityRequest request) {
+	AvailabilityResponse setOptionAvailability(@PathVariable UUID id, @Valid @RequestBody AvailabilityRequest request) {
 		availability.setOptionAvailability(id, request.available());
 		return new AvailabilityResponse(id, request.available());
 	}

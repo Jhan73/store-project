@@ -140,6 +140,24 @@ class AvailabilityControllerIT {
 	}
 
 	@Test
+	void anEmptyBodyIsAValidationErrorNotAnImplicitFalse() {
+		var id = UUID.randomUUID();
+
+		for (var uri : new String[] { PRODUCT_AVAILABILITY.formatted(id), OPTION_AVAILABILITY.formatted(id) }) {
+			var result = mvc.put()
+				.uri(uri)
+				.with(admin())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}")
+				.exchange();
+
+			assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+			assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.validation-failed");
+			assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("available");
+		}
+	}
+
+	@Test
 	void everyStaffRoleMayToggleAProduct() {
 		var id = idOf(createProduct("Mango-" + UUID.randomUUID()));
 
