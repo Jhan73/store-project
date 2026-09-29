@@ -10,13 +10,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ModifierGroupRepository extends JpaRepository<ModifierGroup, UUID> {
 
-	@EntityGraph(attributePaths = { "options", "options.allergens" })
+	@EntityGraph(attributePaths = "options")
 	List<ModifierGroup> findAllByOrderByNameAsc();
 
-	@EntityGraph(attributePaths = { "options", "options.allergens" })
+	@EntityGraph(attributePaths = "options")
 	List<ModifierGroup> findAllByIdIn(Collection<UUID> ids);
 
-	@EntityGraph(attributePaths = { "options", "options.allergens" })
+	@EntityGraph(attributePaths = "options")
 	Optional<ModifierGroup> findWithOptionsById(UUID id);
 
 	long countByIdIn(Collection<UUID> ids);

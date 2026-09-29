@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.Hibernate;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,12 +46,22 @@ public class ModifierGroupService {
 
 	@Transactional(readOnly = true)
 	public List<ModifierGroup> list() {
-		return groups.findAllByOrderByNameAsc();
+		var all = groups.findAllByOrderByNameAsc();
+		all.forEach(ModifierGroupService::initializeAllergens);
+		return all;
 	}
 
 	@Transactional(readOnly = true)
 	public ModifierGroup get(UUID id) {
-		return groups.findWithOptionsById(id).orElseThrow(ModifierGroupService::notFound);
+		var group = groups.findWithOptionsById(id).orElseThrow(ModifierGroupService::notFound);
+		initializeAllergens(group);
+		return group;
+	}
+
+	// Fetching allergens in the same join as the options repeats every option once per allergen, so they load
+	// separately (in batches) here, while the transaction is still open for the response mapping.
+	private static void initializeAllergens(ModifierGroup group) {
+		group.getOptions().forEach(option -> Hibernate.initialize(option.getAllergens()));
 	}
 
 	@Transactional

@@ -85,6 +85,35 @@ class ModifierGroupControllerIT {
 		assertThat(result).bodyJson().extractingPath("$.options[1].allergens").asList().isEmpty();
 	}
 
+	// The group loads its options and their allergens together; a join fan-out must not repeat an option.
+	@Test
+	void anOptionWithSeveralAllergensIsNeverListedTwice() {
+		var name = "Boosters-" + UUID.randomUUID();
+		var created = create("""
+				{ "name": "%s", "required": false, "minChoices": 0, "maxChoices": 1,
+				  "options": [ { "name": "Peanut butter", "priceDelta": { "amount": "1.00", "currency": "PEN" },
+				                 "allergens": ["PEANUTS", "SOY"] } ] }
+				""".formatted(name));
+		var id = idOf(created);
+		var optionId = assertThat(created).bodyJson().extractingPath("$.options[0].id").actual().toString();
+
+		var single = mvc.get().uri(GROUPS + "/" + id).with(admin()).exchange();
+		var list = mvc.get().uri(GROUPS).with(admin()).exchange();
+		var updated = update(id, etagOf(single), """
+				{ "name": "%s", "required": false, "minChoices": 0, "maxChoices": 1,
+				  "options": [ { "id": "%s", "name": "Peanut butter",
+				                 "priceDelta": { "amount": "1.50", "currency": "PEN" },
+				                 "allergens": ["PEANUTS", "SOY"] } ] }
+				""".formatted(name, optionId));
+
+		assertThat(created).bodyJson().extractingPath("$.options").asList().hasSize(1);
+		assertThat(single).bodyJson().extractingPath("$.options").asList().hasSize(1);
+		assertThat(list).bodyJson().extractingPath("$[?(@.id=='" + id + "')].options[*].id").asList().hasSize(1);
+		assertThat(updated).hasStatusOk();
+		assertThat(updated).bodyJson().extractingPath("$.options").asList().hasSize(1);
+		assertThat(updated).bodyJson().extractingPath("$.options[0].allergens").asList().containsExactly("PEANUTS", "SOY");
+	}
+
 	@Test
 	void rejectsAMinimumAboveTheMaximum() {
 		var result = create("""
