@@ -32,6 +32,8 @@
 		<java-uuid-generator.version>5.2.0</java-uuid-generator.version>
 		<!-- Ahead of the Spring Boot BOM: 11.0.24 carries an authentication bypass. -->
 		<tomcat.version>11.0.26</tomcat.version>
+		<!-- Ahead of the Spring Boot BOM: 3.1.5 is exposed to CPU denial of service via unbounded numeric parsing. -->
+		<jackson-bom.version>3.1.6</jackson-bom.version>
 		<aws-sdk.version>2.55.6</aws-sdk.version>
 		<wiremock.version>3.13.2</wiremock.version>
 	</properties>
