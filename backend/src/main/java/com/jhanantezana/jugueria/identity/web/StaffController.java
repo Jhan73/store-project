@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.identity.internal.StaffAccountService;
 import com.jhanantezana.jugueria.identity.internal.StaffProvisioningService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.PageResponse;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -38,6 +40,8 @@ class StaffController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "identity.email-already-registered", "identity.invalid-staff-role" })
 	ResponseEntity<StaffResponse> create(@Valid @RequestBody CreateStaffRequest request) {
 		var provisioned = provisioning.createStaff(request.email(), request.role());
 		var response = StaffResponse.from(provisioned.account());
@@ -54,30 +58,36 @@ class StaffController {
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "common.not-found" })
 	StaffResponse get(@PathVariable UUID id) {
 		return StaffResponse.from(staffAccounts.get(id));
 	}
 
 	@PatchMapping("/{id}/role")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "common.not-found", "identity.invalid-staff-role", "identity.cannot-modify-own-account", "identity.last-active-admin-required" })
 	StaffResponse changeRole(@PathVariable UUID id, @Valid @RequestBody ChangeStaffRoleRequest request) {
 		return StaffResponse.from(staffAccounts.changeRole(id, request.role()));
 	}
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "common.not-found", "identity.cannot-modify-own-account", "identity.last-active-admin-required" })
 	StaffResponse deactivate(@PathVariable UUID id) {
 		return StaffResponse.from(staffAccounts.deactivate(id));
 	}
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "common.not-found" })
 	StaffResponse reactivate(@PathVariable UUID id) {
 		return StaffResponse.from(staffAccounts.reactivate(id));
 	}
 
 	@PostMapping("/{id}/set-password-link")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "204", description = "No Content")
+	@ApiErrors({ "common.not-found", "identity.cannot-modify-own-account" })
 	ResponseEntity<Void> resendSetPasswordLink(@PathVariable UUID id) {
 		provisioning.resendSetPasswordLink(id);
 		return ResponseEntity.noContent().build();

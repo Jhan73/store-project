@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.ModifierGroupService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -42,6 +44,7 @@ class ModifierGroupController {
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.modifier-group-not-found" })
 	ResponseEntity<ModifierGroupResponse> get(@PathVariable UUID id) {
 		var group = groups.get(id);
 		return ResponseEntity.ok().eTag(ETags.format(group.getVersion())).body(ModifierGroupResponse.from(group));
@@ -49,6 +52,8 @@ class ModifierGroupController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "catalog.modifier-group-name-already-used", "catalog.invalid-modifier-group", "catalog.invalid-price", "catalog.currency-mismatch" })
 	ResponseEntity<ModifierGroupResponse> create(@Valid @RequestBody SaveModifierGroupRequest request) {
 		var group = groups.create(request.name(), request.required(), request.minChoices(), request.maxChoices(),
 				request.optionDefinitions());
@@ -59,6 +64,7 @@ class ModifierGroupController {
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.modifier-group-not-found", "catalog.modifier-group-name-already-used", "catalog.invalid-modifier-group", "catalog.invalid-price", "catalog.currency-mismatch" })
 	ResponseEntity<ModifierGroupResponse> change(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody SaveModifierGroupRequest request) {
@@ -70,6 +76,8 @@ class ModifierGroupController {
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "204", description = "No Content")
+	@ApiErrors({ "catalog.modifier-group-not-found", "catalog.modifier-group-in-use" })
 	ResponseEntity<Void> delete(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

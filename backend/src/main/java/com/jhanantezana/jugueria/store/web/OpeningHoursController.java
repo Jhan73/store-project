@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.internal.OpeningHoursService;
@@ -40,6 +41,7 @@ class OpeningHoursController {
 
 	@PutMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.invalid-opening-hours" })
 	ResponseEntity<List<OpeningHourResponse>> replaceAll(
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody List<UpdateOpeningHourRequest> requests) {

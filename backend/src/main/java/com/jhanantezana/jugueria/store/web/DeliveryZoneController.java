@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.internal.DeliveryZoneService;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -41,6 +43,8 @@ class DeliveryZoneController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "store.invalid-delivery-zone", "store.delivery-zone-name-already-used", "store.delivery-zone-currency-mismatch" })
 	ResponseEntity<DeliveryZoneResponse> create(@Valid @RequestBody CreateDeliveryZoneRequest request) {
 		var zone = deliveryZones.create(request.name(), request.fee(), request.deliveryMinutes(),
 				request.minimumOrder(), request.freeDeliveryThreshold());
@@ -51,6 +55,7 @@ class DeliveryZoneController {
 
 	@PatchMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.delivery-zone-not-found", "store.invalid-delivery-zone", "store.delivery-zone-name-already-used", "store.delivery-zone-currency-mismatch" })
 	ResponseEntity<DeliveryZoneResponse> change(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody UpdateDeliveryZoneRequest request) {
@@ -62,6 +67,7 @@ class DeliveryZoneController {
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.delivery-zone-not-found" })
 	ResponseEntity<DeliveryZoneResponse> deactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
@@ -71,6 +77,7 @@ class DeliveryZoneController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.delivery-zone-not-found" })
 	ResponseEntity<DeliveryZoneResponse> reactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

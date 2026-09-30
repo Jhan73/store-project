@@ -25,6 +25,12 @@ class HeadlessContextIT {
 		assertThat(context.containsBean("firstAdminBootstrapRunner")).isTrue();
 	}
 
+	// Its classpath scan has no business running in an environment that never serves the spec.
+	@Test
+	void loadsNoOpenApiConfigurationByDefault() {
+		assertThat(context.containsBean("openApiConfiguration")).isFalse();
+	}
+
 	// The bootstrap serves no requests: no broker, no channel interceptor, no dedicated LISTEN connection.
 	@Test
 	void opensNoStompBrokerOrListenConnection() {

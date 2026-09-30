@@ -17,11 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.ReasonType;
 import com.jhanantezana.jugueria.store.internal.ReasonService;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -42,6 +44,8 @@ class ReasonController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "store.reason-code-already-used" })
 	ResponseEntity<ReasonResponse> create(@Valid @RequestBody CreateReasonRequest request) {
 		var reason = reasons.create(request.type(), request.code());
 		return ResponseEntity.created(URI.create("/api/v1/admin/reasons/" + reason.getId()))
@@ -51,6 +55,7 @@ class ReasonController {
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.reason-not-found" })
 	ResponseEntity<ReasonResponse> deactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
@@ -60,6 +65,7 @@ class ReasonController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "store.reason-not-found" })
 	ResponseEntity<ReasonResponse> reactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

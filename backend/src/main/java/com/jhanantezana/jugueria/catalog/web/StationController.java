@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.StationService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -41,6 +43,8 @@ class StationController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "catalog.station-name-already-used" })
 	ResponseEntity<StationResponse> create(@Valid @RequestBody SaveStationRequest request) {
 		var station = stations.create(request.name());
 		return ResponseEntity.created(URI.create("/api/v1/admin/stations/" + station.getId()))
@@ -50,6 +54,7 @@ class StationController {
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.station-not-found", "catalog.station-name-already-used" })
 	ResponseEntity<StationResponse> rename(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody SaveStationRequest request) {
