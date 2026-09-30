@@ -155,3 +155,17 @@ resource "aws_s3_bucket_policy" "media" {
 
   depends_on = [aws_s3_bucket_public_access_block.media]
 }
+
+# The adapter only writes objects; reads go through CloudFront and deletes never happen.
+data "aws_iam_policy_document" "write_media" {
+  statement {
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.media.arn}/products/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "backend_task_write_media" {
+  name   = "write-media"
+  role   = aws_iam_role.backend_task.id
+  policy = data.aws_iam_policy_document.write_media.json
+}
