@@ -5,4 +5,5 @@ module "environment" {
   backup_retention_days = 14
   deletion_protection   = true
   log_retention_days    = 90
+  media_versioning      = true
 }
