@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): springdoc-openapi, Bucket4j, AWS SDK `sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images). Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -31,6 +31,7 @@ Not yet in `pom.xml` (tech-spec §3): springdoc-openapi, Bucket4j, AWS SDK `sso`
 ./mvnw verify                                # unit + integration tests (*IT) — what CI runs
 ./mvnw test -Dtest=ClassName#method          # single unit test (class or method)
 ./mvnw verify -Dit.test=ClassName -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false   # single integration test
+./mvnw verify -Dit.test=OpenApiSpecIT -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false -Dopenapi.write=true   # regenerate api/openapi.json after an API change
 ```
 
 `*IT` classes run through the Maven Failsafe plugin and need Docker (Testcontainers). Without Docker, run `./mvnw verify -DskipITs`.
@@ -111,8 +112,8 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Money in JSON: `{ "amount": "12.50", "currency": "PEN" }` (amount as string).
 - Pagination `?page=&size=` (max 100) returning `PageResponse<T>` from `shared` — never Spring Data's `Page`. Sorting only on explicitly allowed fields. `ETag`/`If-Match` on catalog and settings updates.
 - Bean Validation on every request DTO. Controllers never expose entities.
-- Document each endpoint's success response and possible error `code`s in OpenAPI.
-- The generated OpenAPI spec is committed as `api/openapi.json`; CI fails on drift. Regenerate and commit it with any API change.
+- Document each endpoint's success response and possible error `code`s in OpenAPI: `@ApiResponse` for a success other than `200` (`201`, `204`) and `@ApiErrors({"<wire code>", …})` for the endpoint's own codes. The 401/403, validation, `If-Match`, and `500` codes are added automatically from the handler's signature and security annotations.
+- The generated OpenAPI spec is committed as `api/openapi.json`; CI fails on drift. Regenerate and commit it with any API change (command in "Commands"). The app never serves the spec: springdoc is off in every profile and `OpenApiSpecIT` enables it to write the file.
 
 **External systems**
 - Payment webhooks are never trusted: verify the signature, then fetch the payment from the provider API. Dedupe by provider event id.

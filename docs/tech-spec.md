@@ -77,7 +77,7 @@ flowchart LR
 | Framework | Spring Boot 4.1.x (already in `pom.xml`) | Follow patch releases via Dependabot |
 | Modularity | `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test` 2.1.x | Version from `spring-modulith-bom` |
 | Persistence | Spring Data JPA (Hibernate 7) · `spring-boot-starter-flyway` · PostgreSQL driver | — |
-| API docs | springdoc-openapi 3.x (Boot 4 line) | — |
+| API docs | springdoc-openapi 3.1.x (Boot 4 line), `springdoc-openapi-starter-webmvc-api` (no Swagger UI) | Version in `<properties>` |
 | Cache | `spring-boot-starter-cache` + Caffeine | In-process only |
 | HTTP client | `RestClient` / HTTP interface clients | Timeouts mandatory |
 | Resilience | Spring Framework 7 `@Retryable` / `@ConcurrencyLimit` (`@EnableResilientMethods`) | No extra library |
@@ -98,7 +98,8 @@ flowchart LR
 - **No license exceptions are in force.** PrimeNG 22+ (PrimeUI license) would need one, recorded here with its conditions, before it is adopted (§6.7).
 - Updates arrive through Dependabot, one major version at a time. PrimeNG majors are ignored (§6.7).
 - Already rejected — do not propose again without new arguments: jjwt (§7.1), MapStruct (§4.13), H2 (§11.1), Redis or any broker client (§13 D4/D5), NgRx or any global store (§6.2), runtime OpenAPI client generators (§6.5), `uuid`/`lodash`/`moment` (platform APIs cover them).
-- **Approved, backend** (M1-B6, catalog): `org.springframework.boot:spring-boot-starter-cache` and `com.github.ben-manes.caffeine:caffeine` (Apache-2.0; the platform has no expiring in-process cache, needed for the menu cache of §4.6, version from the Spring Boot BOM) and `software.amazon.awssdk:s3` via the existing AWS SDK BOM (Apache-2.0; the platform has no S3 client, needed for product images, §8.5). springdoc-openapi and Bucket4j stay pending for the work packages that need them.
+- **Approved, backend** (M1-B6, catalog): `org.springframework.boot:spring-boot-starter-cache` and `com.github.ben-manes.caffeine:caffeine` (Apache-2.0; the platform has no expiring in-process cache, needed for the menu cache of §4.6, version from the Spring Boot BOM) and `software.amazon.awssdk:s3` via the existing AWS SDK BOM (Apache-2.0; the platform has no S3 client, needed for product images, §8.5). Bucket4j stays pending for the work package that needs it.
+- **Approved, backend** (OpenAPI spec): `org.springdoc:springdoc-openapi-starter-webmvc-api` (Apache-2.0; the platform cannot derive an OpenAPI document from Spring MVC controllers, and §5.3 commits the spec so the frontend types are generated from it; the `-api` artifact has no Swagger UI, and the version is declared once in `<properties>` because the Spring Boot BOM does not manage it).
 - **Approved, backend** (D16, M1-B2 email transport slice): `org.springframework.boot:spring-boot-starter-mail` (Apache-2.0; the platform has no SMTP client, and Mailpit needs one locally) and `software.amazon.awssdk:sesv2` via `software.amazon.awssdk:bom` (Apache-2.0; the platform has no AWS client, and SES API v2 is D16's chosen `test`/`prod` transport). `org.wiremock:wiremock-standalone` (test scope, Apache-2.0; the platform has no HTTP-mocking server, needed to test the SES adapter's request mapping without calling real AWS, §11 — the shaded jar, chosen over the modular `wiremock` + `wiremock-jetty12` pair because its relocated Jetty and Jackson need no version alignment with the app's own dependencies).
 
 
@@ -108,7 +109,7 @@ flowchart LR
 
 | Where | Change |
 |-------|--------|
-| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `spring-boot-starter-security-oauth2-resource-server` (§7.1; Boot 4 name — the old `spring-boot-starter-oauth2-resource-server` is deprecated); `com.fasterxml.uuid:java-uuid-generator` (UUID v7, §4.11); ArchUnit for the §7.1 and §4.12 rules, used as Spring Modulith brings it (not declared: a test-scoped declaration would take it off the runtime classpath Modulith needs); `maven-failsafe-plugin` bound to `verify` for `*IT` tests (§11.1); AWS SDK for Java v2 `s3` and `sesv2`, plus `sso`/`ssooidc` for local SSO profiles (§8.5), added with the first WP that needs them; `springdoc-openapi-starter-webmvc-ui`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
+| `backend/pom.xml` | Add `spring-modulith-bom` (import) and `spring-modulith-starter-core`, `-starter-jdbc`, `-starter-test`; `spring-boot-starter-flyway`, `-actuator`, `-validation`, `-cache` + `caffeine`; `spring-boot-starter-security-oauth2-resource-server` (§7.1; Boot 4 name — the old `spring-boot-starter-oauth2-resource-server` is deprecated); `com.fasterxml.uuid:java-uuid-generator` (UUID v7, §4.11); ArchUnit for the §7.1 and §4.12 rules, used as Spring Modulith brings it (not declared: a test-scoped declaration would take it off the runtime classpath Modulith needs); `maven-failsafe-plugin` bound to `verify` for `*IT` tests (§11.1); AWS SDK for Java v2 `s3` and `sesv2`, plus `sso`/`ssooidc` for local SSO profiles (§8.5), added with the first WP that needs them; `springdoc-openapi-starter-webmvc-api`; `bucket4j-core`; `spring-boot-docker-compose` (dev only); Testcontainers PostgreSQL and WireMock (test) |
 | `application.properties` | Remove `spring.profiles.active=dev`. No profile is hardcoded: `SPRING_PROFILES_ACTIVE` is `test` or `prod` in each ECS service, and `local` for development |
 | `frontend/` | Remove leftover Karma/Jasmine packages (Angular 22 and Vitest are already in place); replace `RenderMode.Prerender` on `**` (§6.1); `withEventReplay()` → `withIncrementalHydration()`; add angular-eslint |
 
@@ -480,7 +481,7 @@ The REST contract and the inter-module contract evolve independently, so a REST 
 | Pagination | `?page=&size=` (max 100), response includes `totalElements` |
 | Idempotency | `Idempotency-Key` header required on every command that moves money or stock: `POST /orders`, order cancel, ticket payments, quick sales, line void/comp, cash movements, shift close, refunds. Stored in PostgreSQL `shared.idempotency_key` (unique on `actor_id` + `key`, `request_hash`, `response`, `expires_at` = 24 h), inserted **in the same transaction** as the operation — never in memory, because retries can reach a different task. Same key + different body ⇒ `422`. Implementation in §5.2 |
 | Concurrency | `ETag`/`If-Match` on updates of catalog items and every store resource (settings, opening hours, delivery zones, reasons) |
-| Contract | OpenAPI generated by springdoc, committed as `backend/api/openapi.json`; CI fails if the generated spec differs (API changes are always explicit in PRs). The frontend TypeScript types are generated from it (§6.5) |
+| Contract | OpenAPI generated by springdoc, committed as `backend/api/openapi.json`; CI fails if the generated spec differs (API changes are always explicit in PRs). The spec is written by `OpenApiSpecIT`, never served at runtime: springdoc is disabled in every profile and the test enables it. The frontend TypeScript types are generated from it (§6.5) |
 
 Main resources:
 
