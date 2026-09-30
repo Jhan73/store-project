@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-starter-security-oauth2-resource-server`, `java-uuid-generator` (UUID v7), ArchUnit, Validation, Cache + Caffeine, springdoc-openapi, Bucket4j, WireMock, AWS SDK. Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -31,6 +31,7 @@ Not yet in `pom.xml` (tech-spec §3): Modulith `-starter-jdbc`, `spring-boot-sta
 ./mvnw verify                                # unit + integration tests (*IT) — what CI runs
 ./mvnw test -Dtest=ClassName#method          # single unit test (class or method)
 ./mvnw verify -Dit.test=ClassName -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false   # single integration test
+./mvnw verify -Dit.test=OpenApiSpecIT -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false -Dopenapi.write=true   # regenerate api/openapi.json after an API change
 ```
 
 `*IT` classes run through the Maven Failsafe plugin and need Docker (Testcontainers). Without Docker, run `./mvnw verify -DskipITs`.
@@ -39,7 +40,7 @@ Local run (tech-spec §8.5): `./mvnw spring-boot:run` uses the `local` profile, 
 
 Profiles: none is hardcoded. `local` for development (set by the Maven plugin for `spring-boot:run`), `test`/`prod` through `SPRING_PROFILES_ACTIVE` in each ECS service; tests run with no profile and get PostgreSQL from Testcontainers. `test`/`prod` read `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (role `app`) and `DB_MIGRATOR_USERNAME`, `DB_MIGRATOR_PASSWORD` (role `migrator`, used by Flyway). Profile files hold only non-secret differences.
 
-Security: until identity is built (M1-B2), `identity/internal/security` exposes only `/actuator/health/**` and denies every other request.
+Security: `identity/internal/security` owns the filter chain, the JWT encoder/decoder, and the 401/403 Problem Details handlers. Locally and in tests the signing key is generated in memory (`jugueria.identity.jwt.ephemeral-key-allowed=true`, off by default); `test`/`prod` read it from SSM and refuse to start without it (`docs/runbooks/jwt-signing-keys.md`).
 
 Flyway migrations are **not** in this folder: they live in the root `db/migration/<module>/` and are packaged onto the classpath at build time. Schema and migration rules are in `db/CLAUDE.md`.
 
@@ -111,8 +112,8 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Money in JSON: `{ "amount": "12.50", "currency": "PEN" }` (amount as string).
 - Pagination `?page=&size=` (max 100) returning `PageResponse<T>` from `shared` — never Spring Data's `Page`. Sorting only on explicitly allowed fields. `ETag`/`If-Match` on catalog and settings updates.
 - Bean Validation on every request DTO. Controllers never expose entities.
-- Document each endpoint's success response and possible error `code`s in OpenAPI.
-- The generated OpenAPI spec is committed as `api/openapi.json`; CI fails on drift. Regenerate and commit it with any API change.
+- Document each endpoint's success response and possible error `code`s in OpenAPI: `@ApiResponse` for a success other than `200` (`201`, `204`) and `@ApiErrors({"<wire code>", …})` for the endpoint's own codes. The 401/403, validation, `If-Match`, and `500` codes are added automatically from the handler's signature and security annotations.
+- The generated OpenAPI spec is committed as `api/openapi.json`; CI fails on drift. Regenerate and commit it with any API change (command in "Commands"). The app never serves the spec: springdoc is off in every profile and `OpenApiSpecIT` enables it to write the file.
 
 **External systems**
 - Payment webhooks are never trusted: verify the signature, then fetch the payment from the provider API. Dedupe by provider event id.
@@ -203,11 +204,11 @@ Full design in tech-spec §7.1. Rules:
 | May this role call this endpoint? | Controller method in `web/` | `@PreAuthorize("hasAnyRole(...)")` per the PRD §4 matrix |
 | May this actor act on this resource in its current state? | Service / domain in `internal/` | Business rule with `CurrentActor`, throws `BusinessException` |
 
-- **Every controller method has `@PreAuthorize`** unless its route is in the allowlist (an ArchUnit test fails the build otherwise).
+- **Every controller method has `@PreAuthorize`**, or `@PermitAll` when its route is in the allowlist (an ArchUnit test fails the build otherwise).
 - Never put `@PreAuthorize` on module APIs or services: event listeners and jobs call them without a user.
 - Rules that depend on data (e.g. SERVER may void a line only while `PENDING`) are domain rules, never SpEL.
 - Ownership is part of the query (`findByIdAndCustomerId`). Someone else's resource is `404`, not `403`.
-- Read the actor only through `CurrentActor` (`shared`). Code in `internal/` never touches `SecurityContextHolder`. Jobs and `@ApplicationModuleListener`s get `SYSTEM`; events that need attribution carry `actorId`/`actorRole` explicitly.
+- Read the actor only through `CurrentActor` (`shared`). Code in `internal/` never touches `SecurityContextHolder`. Jobs and `@ApplicationModuleListener`s get `SYSTEM`; a request without a user is anonymous (`id()`/`role()` null, not `SYSTEM`); events that need attribution carry `actorId`/`actorRole` explicitly.
 - Refresh tokens are hashed, rotated, and family-revoked on reuse. Lockout counters live in PostgreSQL; Bucket4j is only coarse throttling.
 - Tests: one allowed-role and one denied-role test per endpoint (`jwt()` post-processor from `spring-security-test`).
 
@@ -216,7 +217,7 @@ Full design in tech-spec §7.1. Rules:
 Full model and status table in tech-spec §5.1. Rules:
 
 - Every error is RFC 9457 Problem Details with `code` (`<module>.<kebab-case-reason>`) and `correlationId`. Codes are public API: never rename, remove, or reuse one.
-- Throw `BusinessException(ErrorCode, properties)`. Each module declares its codes in a public enum implementing `ErrorCode`, with the wire code written explicitly.
+- Throw `BusinessException(ErrorCode, detail, properties)`. Use Spring 7's status names (`UNPROCESSABLE_CONTENT` for 422, not the deprecated `UNPROCESSABLE_ENTITY`). Each module declares its codes in a public enum implementing `ErrorCode`, with the wire code written explicitly.
 - **409 vs 422:** could the same request succeed later because someone else changes the state? `409`. Must the request itself change? `422`. A conditional update that affected 0 rows is a `409` with a module-specific code.
 - Error bodies are built **only** by the global `@RestControllerAdvice` in `shared` plus the Security `AuthenticationEntryPoint`/`AccessDeniedHandler`. Never write `@ExceptionHandler`/`@ControllerAdvice` in a module, never catch an exception to build a `ResponseEntity` error, never use `ResponseStatusException`.
 - Translate expected persistence exceptions to a code inside the module (unique email → `identity.email-already-registered`); let unexpected ones become `500`.

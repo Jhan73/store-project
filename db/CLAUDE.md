@@ -43,9 +43,11 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 | `migrator` | Flyway | DDL |
 | `app` | Application | DML only |
 
-Append-only tables are enforced by grants, not by convention — `app` has `INSERT, SELECT` and **no** `UPDATE/DELETE` on:
+Append-only tables are enforced by grants, not by convention — `app` has `INSERT, SELECT` and **no** `UPDATE/DELETE/TRUNCATE` on:
 `audit.audit_log`, `inventory.stock_movement`, `ordering.order_status_history`, `instore.in_store_payment`, `instore.cash_movement`.
-Corrections are new rows (e.g. `payment_void`), never updates.
+Corrections are new rows (e.g. `payment_void`), never updates. Default privileges grant DML on every new table `migrator`
+creates, so a partitioned append-only table needs the `REVOKE` repeated for the parent **and every partition**, in the
+same migration that creates them (`audit.audit_log`'s migration is the reference).
 
 Credentials come from SSM; never commit real passwords.
 
@@ -54,7 +56,7 @@ Credentials come from SSM; never commit real passwords.
 | Concern | Convention |
 |---------|------------|
 | Primary keys | `uuid`, UUID v7 generated in the application |
-| Money | `numeric(12,2)` + ISO-4217 currency column |
+| Money | `<attribute>_amount numeric(12,2)` + `<attribute>_currency char(3)` (ISO-4217), e.g. `unit_price_amount`, `unit_price_currency` |
 | Timestamps | `timestamptz`, stored in UTC |
 | Optimistic locking | `version` column on mutable aggregates |
 | Snapshots | Order/ticket lines store product name, chosen options with price deltas, and line total |
@@ -65,11 +67,19 @@ Credentials come from SSM; never commit real passwords.
 - **Conditional atomic updates** decide business outcomes (0 rows ⇒ rejected):
   `UPDATE inventory.stock_item SET reserved = reserved + :qty, version = version + 1 WHERE product_id = :id AND on_hand - reserved >= :qty;`
 - **Partial unique indexes** for invariants, e.g. one open ticket per table: `ticket(table_id) WHERE status = 'OPEN'`.
+- **Singleton row**: a constant boolean guard column with a `UNIQUE`/`CHECK` constraint pair (`guard boolean NOT NULL DEFAULT true`, `UNIQUE (guard)`, `CHECK (guard)`) makes a second row impossible, e.g. `store.store_settings`. The row is seeded by migration with working defaults; the application only updates it.
 - **Job claiming** with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`.
 - **Idempotency** rows in `shared.idempotency_key` (unique on `actor_id` + `key`, `request_hash`, `response`, `expires_at`), inserted with `ON CONFLICT DO NOTHING` inside the use-case transaction (tech-spec §5.2).
 - **Idempotent listeners** rely on unique constraints on the effect (e.g. one `stock_movement` per reason + reference + product) or on state-guarded updates (tech-spec §4.11).
 - **Fan-out** with `NOTIFY app_events, '<json>'` — payload is type + IDs only, under 8 KB.
-- `audit.audit_log` is partitioned by year.
+- **Range-partitioned append-only tables**: `audit.audit_log` is `PARTITION BY RANGE` on its timestamp column, one
+  partition per year, pre-created by migration, plus a `DEFAULT` partition so a late partition migration never blocks
+  a write instead of failing loudly. The partition key must be part of any primary key, so the table's PK is
+  `(id, occurred_at)` rather than `id` alone — `id` stays globally unique (UUID v7) without a DB constraint enforcing
+  it. New yearly partitions arrive as an ordinary migration (`app` has no DDL rights to create one itself at runtime).
+  `AuditPartitionCoverageIT` and `AuditAppendOnlyGrantsIT` (backend test suite) fail in CI, a year ahead of time, if a
+  partition or its revoke is ever missed; `docs/runbooks/audit-partitions.md` covers adding one and recovering rows
+  that already landed in `DEFAULT`.
 
 ## Capacity
 

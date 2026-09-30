@@ -196,6 +196,25 @@ data "aws_iam_policy_document" "deploy" {
     actions   = ["rds:DescribeDBInstances"]
     resources = ["*"]
   }
+
+  statement {
+    sid       = "ScaleServiceTargets"
+    actions   = ["application-autoscaling:RegisterScalableTarget"]
+    resources = ["*"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "application-autoscaling:service-namespace"
+      values   = ["ecs"]
+    }
+  }
+
+  # Describe calls carry no condition keys, so a namespace condition would deny them.
+  statement {
+    sid       = "ReadServiceTargets"
+    actions   = ["application-autoscaling:DescribeScalableTargets"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role" "deploy" {
@@ -265,31 +284,48 @@ data "aws_iam_policy_document" "power" {
     resources = ["*"]
   }
 
-  # Scaling an Express service to zero and back goes through the Express API, never the task count.
+  # Scaled through the Application Auto Scaling target Express creates, not the Express API: every
+  # Express update registers a task definition, and that permission would let this role, which no
+  # reviewer guards, change the image prod runs.
   statement {
-    sid = "ScaleExpressServices"
-    actions = [
-      "ecs:DescribeExpressGatewayService",
-      "ecs:UpdateExpressGatewayService",
-      "ecs:DescribeServices",
-      "ecs:DescribeClusters",
-    ]
+    sid       = "ScaleServiceTargets"
+    actions   = ["application-autoscaling:RegisterScalableTarget"]
     resources = ["*"]
-  }
-
-  # Express re-validates the roles it already holds on every update.
-  statement {
-    sid     = "PassEnvironmentRoles"
-    actions = ["iam:PassRole"]
-    resources = [
-      for environment in ["test", "prod"] :
-      "arn:aws:iam::${var.account_id}:role/jugueria-${environment}-*"
-    ]
 
     condition {
       test     = "StringEquals"
-      variable = "iam:PassedToService"
-      values   = ["ecs-tasks.amazonaws.com", "ecs.amazonaws.com"]
+      variable = "application-autoscaling:service-namespace"
+      values   = ["ecs"]
+    }
+  }
+
+  # Describe calls carry no condition keys, so a namespace condition would deny them.
+  statement {
+    sid       = "ReadServiceTargets"
+    actions   = ["application-autoscaling:DescribeScalableTargets"]
+    resources = ["*"]
+  }
+
+  # Application Auto Scaling checks the caller may update the service it scales.
+  statement {
+    sid     = "UpdateServiceCounts"
+    actions = ["ecs:DescribeServices", "ecs:UpdateService"]
+    resources = [
+      for environment in ["test", "prod"] :
+      "arn:aws:ecs:${var.region}:${var.account_id}:service/jugueria-${environment}/*"
+    ]
+  }
+
+  statement {
+    sid       = "NeverChangeTaskDefinitions"
+    effect    = "Deny"
+    actions   = ["ecs:UpdateService"]
+    resources = ["*"]
+
+    condition {
+      test     = "Null"
+      variable = "ecs:task-definition"
+      values   = ["false"]
     }
   }
 }

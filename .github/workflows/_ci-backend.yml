@@ -19,8 +19,16 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup-backend
+      # The spec test rewrites api/openapi.json here instead of comparing, so the next step can show the diff.
       - name: Build and test
-        run: ./mvnw -B -ntp verify
+        run: ./mvnw -B -ntp verify -Dopenapi.write=true
+      - name: OpenAPI spec is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- api/openapi.json)" ]; then
+            git --no-pager diff -- api/openapi.json | head -200
+            echo "::error file=backend/api/openapi.json::The committed spec differs from the one the controllers generate. From backend/, run: ./mvnw verify -Dit.test=OpenApiSpecIT -Dtest=NONE -Dsurefire.failIfNoSpecifiedTests=false -Dopenapi.write=true and commit backend/api/openapi.json"
+            exit 1
+          fi
       - name: Container image builds
         working-directory: .
         run: docker build --file backend/Dockerfile --tag backend:ci .

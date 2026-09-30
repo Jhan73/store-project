@@ -33,6 +33,6 @@ jobs:
           node dist/frontend/server/server.mjs &
           for _ in $(seq 1 20); do curl -fs localhost:4000/healthz >/dev/null && break; sleep 0.5; done
           curl -fs localhost:4000/healthz
-          curl -fs localhost:4000/ | grep -q '<html lang="es"'
+          curl -fs localhost:4000/ | grep -q '<html lang="es-PE"'
       - name: Container image builds
         run: docker build --tag frontend:ci .

@@ -3,6 +3,14 @@ name: CD test
 on:
   push:
     branches: [develop]
+  # Redeploys an app whose code did not change, e.g. to pick up a changed environment variable.
+  workflow_dispatch:
+    inputs:
+      redeploy:
+        description: App to redeploy even if its code did not change
+        type: choice
+        options: [backend, frontend, both]
+        required: true
 
 permissions:
   contents: read
@@ -26,6 +34,8 @@ jobs:
     outputs:
       backend: ${{ steps.compare.outputs.backend }}
       frontend: ${{ steps.compare.outputs.frontend }}
+      backend_build: ${{ steps.compare.outputs.backend_build }}
+      frontend_build: ${{ steps.compare.outputs.frontend_build }}
       backend_image: ${{ steps.compare.outputs.backend_image }}
       frontend_image: ${{ steps.compare.outputs.frontend_image }}
       any: ${{ steps.compare.outputs.any }}
@@ -43,7 +53,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
           SHA: ${{ github.sha }}
+          REF: ${{ github.ref }}
+          REDEPLOY: ${{ inputs.redeploy }}
         run: |
+          if [[ -n "$REDEPLOY" && "$REF" != "refs/heads/develop" ]]; then
+            echo "::error::test only runs what develop holds; dispatch this workflow from develop."
+            exit 1
+          fi
           any=false
           for app in backend frontend; do
             case "$app" in
@@ -76,14 +92,25 @@ jobs:
               changed=true
             fi
 
+            build="$changed"
+            if [[ "$changed" == false && ( "$REDEPLOY" == "$app" || "$REDEPLOY" == both ) ]]; then
+              # Unchanged code keeps the image already verified in test instead of a rebuild.
+              if [[ -z "$image" ]]; then
+                echo "::error::No verified image recorded for $app; push a change to rebuild it instead."
+                exit 1
+              fi
+              changed=true
+            fi
+
             if [[ "$changed" == true ]]; then
               any=true
             fi
             {
               echo "$app=$changed"
+              echo "${app}_build=$build"
               echo "${app}_image=$image"
             } >> "$GITHUB_OUTPUT"
-            echo "$app changed: $changed (deployed commit: ${deployed:-none})"
+            echo "$app deploy: $changed, build: $build (deployed commit: ${deployed:-none})"
           done
           echo "any=$any" >> "$GITHUB_OUTPUT"
 
@@ -117,7 +144,7 @@ jobs:
   build-backend:
     name: build backend
     needs: changes
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.changes.outputs.backend_build == 'true'
     permissions:
       contents: read
       id-token: write
@@ -131,7 +158,7 @@ jobs:
   build-frontend:
     name: build frontend
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
+    if: needs.changes.outputs.frontend_build == 'true'
     permissions:
       contents: read
       id-token: write
@@ -145,7 +172,10 @@ jobs:
   deploy-backend:
     name: deploy backend
     needs: [changes, power-on, build-backend]
-    if: needs.changes.outputs.backend == 'true'
+    # A redeploy skips the build, and a skipped need would otherwise skip this job too.
+    if: >-
+      always() && needs.changes.outputs.backend == 'true' && needs.power-on.result == 'success'
+      && (needs.build-backend.result == 'success' || needs.build-backend.result == 'skipped')
     permissions:
       contents: read
       id-token: write
@@ -153,12 +183,16 @@ jobs:
     with:
       app: backend
       environment: test
-      image: ${{ needs.build-backend.outputs.image }}
+      image: ${{ needs.build-backend.outputs.image || needs.changes.outputs.backend_image }}
+      force: ${{ needs.changes.outputs.backend_build != 'true' }}
 
   deploy-frontend:
     name: deploy frontend
     needs: [changes, power-on, build-frontend]
-    if: needs.changes.outputs.frontend == 'true'
+    # A redeploy skips the build, and a skipped need would otherwise skip this job too.
+    if: >-
+      always() && needs.changes.outputs.frontend == 'true' && needs.power-on.result == 'success'
+      && (needs.build-frontend.result == 'success' || needs.build-frontend.result == 'skipped')
     permissions:
       contents: read
       id-token: write
@@ -166,7 +200,8 @@ jobs:
     with:
       app: frontend
       environment: test
-      image: ${{ needs.build-frontend.outputs.image }}
+      image: ${{ needs.build-frontend.outputs.image || needs.changes.outputs.frontend_image }}
+      force: ${{ needs.changes.outputs.frontend_build != 'true' }}
 
   smoke:
     name: smoke

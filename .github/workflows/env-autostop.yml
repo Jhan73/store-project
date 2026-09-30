@@ -73,10 +73,16 @@ jobs:
           status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
             --query 'DBInstances[0].DBInstanceStatus' --output text)"
           echo "Database status: $status"
+          capacity="$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \
+            --resource-ids "service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-backend" \
+            "service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-frontend" \
+            --query 'sum(ScalableTargets[].MaxCapacity)' --output text)"
+          echo "Service capacity: $capacity"
 
+          # Services can outlive a database stopped by hand, so both count as up.
           # AWS restarts a stopped instance after 7 days, so an environment with no stop time set can
           # still come back up on its own. Treat that as expired rather than as deliberate.
-          if [[ "$status" != "available" ]]; then
+          if [[ "$status" != "available" && "$capacity" == "0" ]]; then
             echo "stop=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi

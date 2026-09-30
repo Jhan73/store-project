@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @TestConfiguration(proxyBeanMethods = false)
@@ -14,10 +15,17 @@ public class TestcontainersConfiguration {
 		.withDatabaseName("jugueria")
 		.withUsername("jugueria_admin")
 		.withPassword("admin")
-		.withInitScript("db/least-privilege-roles.sql");
+		.withInitScript("db/least-privilege-roles.sql")
+		// Cached Spring contexts never close their Hikari pools (10 connections each), so the default 100 runs out.
+		.withCommand("postgres", "-c", "max_connections=400");
 
 	static {
 		POSTGRES.start();
+	}
+
+	@Bean
+	DynamicPropertyRegistrar ephemeralSigningKey() {
+		return registry -> registry.add("jugueria.identity.jwt.ephemeral-key-allowed", () -> true);
 	}
 
 	@Bean

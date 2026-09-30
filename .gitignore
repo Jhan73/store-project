@@ -1,6 +1,8 @@
 # IDE
 .idea/
 *.iml
+# Written at the repository root by the IDE's Spring Modulith annotation processor
+/build/
 
 # Local tooling
 .atl/

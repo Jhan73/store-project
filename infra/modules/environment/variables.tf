@@ -18,3 +18,7 @@ variable "deletion_protection" {
 variable "log_retention_days" {
   type = number
 }
+
+variable "media_versioning" {
+  type = bool
+}

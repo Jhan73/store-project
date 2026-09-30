@@ -16,28 +16,33 @@ inputs:
 runs:
   using: composite
   steps:
-    # Scaled to zero through the Express API: the task count alone would be pushed back up by the
-    # scaling target, and lowering that target is what the power role is allowed to do.
+    # Scaled through the Application Auto Scaling target Express creates for each service: the task
+    # count alone would be pushed back up by it, and going through the Express API would need a new
+    # task definition on every stop.
     - name: Scale the services down
       if: inputs.state == 'stop'
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        account="$(aws sts get-caller-identity --query Account --output text)"
         saved='{}'
         for app in backend frontend; do
-          arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
-          target="$(aws ecs describe-express-gateway-service --service-arn "$arn" \
-            --query 'service.activeConfigurations[0].scalingTarget' --output json 2>/dev/null || echo null)"
-          minimum="$(jq -r '.minTaskCount // 0' <<< "$target")"
-          maximum="$(jq -r '.maxTaskCount // 0' <<< "$target")"
+          resource="service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
+          target="$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \
+            --resource-ids "$resource" --query 'ScalableTargets[0]' --output json)"
+          if [[ "$target" == "null" ]]; then
+            echo "::notice::$app has no service in $ENVIRONMENT yet, so there is nothing to scale down."
+            continue
+          fi
+          minimum="$(jq -r '.MinCapacity' <<< "$target")"
+          maximum="$(jq -r '.MaxCapacity' <<< "$target")"
           if [[ "$maximum" != "0" ]]; then
             saved="$(jq -c --arg app "$app" --argjson min "$minimum" --argjson max "$maximum" \
               '.[$app] = {minTaskCount: $min, maxTaskCount: $max}' <<< "$saved")"
           fi
-          aws ecs update-express-gateway-service --service-arn "$arn" \
-            --scaling-target minTaskCount=0,maxTaskCount=0 --query 'service.status.statusCode' --output text
+          aws application-autoscaling register-scalable-target --service-namespace ecs \
+            --scalable-dimension ecs:service:DesiredCount --resource-id "$resource" \
+            --min-capacity 0 --max-capacity 0
           echo "$app scaled to 0 (was $minimum..$maximum)"
         done
         # Remembered rather than hardcoded, so the sizes stay defined only where a deploy sets them.
@@ -84,20 +89,21 @@ runs:
       env:
         ENVIRONMENT: ${{ inputs.environment }}
       run: |
-        account="$(aws sts get-caller-identity --query Account --output text)"
         saved="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/scaling" \
           --query 'Parameter.Value' --output text 2>/dev/null || echo '{}')"
         for app in backend frontend; do
-          arn="arn:aws:ecs:$AWS_REGION:$account:service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
-          if ! aws ecs describe-express-gateway-service --service-arn "$arn" >/dev/null 2>&1; then
+          resource="service/jugueria-$ENVIRONMENT/jugueria-$ENVIRONMENT-$app"
+          found="$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \
+            --resource-ids "$resource" --query 'length(ScalableTargets)' --output text)"
+          if [[ "$found" == "0" ]]; then
             echo "::notice::$app has no service in $ENVIRONMENT yet, so there is nothing to scale up."
             continue
           fi
           minimum="$(jq -r --arg app "$app" '.[$app].minTaskCount // 1' <<< "$saved")"
           maximum="$(jq -r --arg app "$app" '.[$app].maxTaskCount // 1' <<< "$saved")"
-          aws ecs update-express-gateway-service --service-arn "$arn" \
-            --scaling-target "minTaskCount=$minimum,maxTaskCount=$maximum" \
-            --query 'service.status.statusCode' --output text
+          aws application-autoscaling register-scalable-target --service-namespace ecs \
+            --scalable-dimension ecs:service:DesiredCount --resource-id "$resource" \
+            --min-capacity "$minimum" --max-capacity "$maximum"
           echo "$app scaled to $minimum..$maximum"
         done
 

@@ -36,5 +36,14 @@ output "github_environment_variables" {
     SUBNET_IDS                 = join(",", data.aws_subnets.public.ids)
     BACKEND_SECURITY_GROUP_ID  = aws_security_group.backend.id
     FRONTEND_SECURITY_GROUP_ID = aws_security_group.frontend.id
+    MEDIA_PUBLIC_BASE_URL      = "https://${aws_cloudfront_distribution.media.domain_name}"
   }
+}
+
+output "media_bucket" {
+  value = aws_s3_bucket.media.bucket
+}
+
+output "media_distribution_domain" {
+  value = aws_cloudfront_distribution.media.domain_name
 }
