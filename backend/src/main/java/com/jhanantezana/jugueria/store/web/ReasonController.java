@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.shared.ETags;
+import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.ReasonType;
 import com.jhanantezana.jugueria.store.internal.ReasonService;
 
