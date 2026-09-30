@@ -57,6 +57,7 @@ jobs:
           FRONTEND_SECURITY_GROUP_ID: ${{ vars.FRONTEND_SECURITY_GROUP_ID }}
           SUBNET_IDS: ${{ vars.SUBNET_IDS }}
           NOTIFICATIONS_RECIPIENT_ALLOWLIST: ${{ vars.NOTIFICATIONS_RECIPIENT_ALLOWLIST }}
+          MEDIA_PUBLIC_BASE_URL: ${{ vars.MEDIA_PUBLIC_BASE_URL }}
         run: |
           account="$(aws sts get-caller-identity --query Account --output text)"
           parameters="arn:aws:ssm:$AWS_REGION:$account:parameter/jugueria/$ENVIRONMENT"
@@ -75,6 +76,10 @@ jobs:
               environment_variables="$(jq -nc --arg value "$ENVIRONMENT" --arg allowlist "$NOTIFICATIONS_RECIPIENT_ALLOWLIST" \
                 '[{name: "SPRING_PROFILES_ACTIVE", value: $value},
                   {name: "NOTIFICATIONS_RECIPIENT_ALLOWLIST", value: $allowlist}]')"
+              if [[ -n "$MEDIA_PUBLIC_BASE_URL" ]]; then
+                environment_variables="$(jq -c --arg url "$MEDIA_PUBLIC_BASE_URL" \
+                  '. + [{name: "JUGUERIA_CATALOG_IMAGES_PUBLIC_BASE_URL", value: $url}]' <<< "$environment_variables")"
+              fi
               secrets="$(jq -nc --arg p "$parameters" '[
                 {name: "DB_URL",               valueFrom: "\($p)/db/url"},
                 {name: "DB_USERNAME",          valueFrom: "\($p)/db/app/username"},
