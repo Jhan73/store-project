@@ -193,6 +193,7 @@ class TableAdminControllerIT {
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.precondition-required");
 	}
 
 	@Test
@@ -206,6 +207,7 @@ class TableAdminControllerIT {
 		var late = update(id, "Late-" + UUID.randomUUID(), null, 0, staleEtag);
 
 		assertThat(late).hasStatus(HttpStatus.PRECONDITION_FAILED);
+		assertThat(late).bodyJson().extractingPath("$.code").isEqualTo("common.precondition-failed");
 		var current = mvc.get().uri(TABLES).with(admin()).exchange();
 		assertThat(current).bodyJson().extractingPath("$[?(@.id=='" + id + "')].name").asList().containsExactly(winner);
 	}
@@ -249,10 +251,11 @@ class TableAdminControllerIT {
 	void rejectsAStatusChangeWithoutIfMatch() {
 		var created = create("Mesa-" + UUID.randomUUID(), null, 0);
 
-		assertThat(mvc.post().uri(TABLES + "/" + idOf(created) + "/deactivate").with(admin()).exchange())
-			.hasStatus(HttpStatus.PRECONDITION_REQUIRED);
-		assertThat(mvc.post().uri(TABLES + "/" + idOf(created) + "/reactivate").with(admin()).exchange())
-			.hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+		for (var action : new String[] { "deactivate", "reactivate" }) {
+			var result = mvc.post().uri(TABLES + "/" + idOf(created) + "/" + action).with(admin()).exchange();
+			assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+			assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.precondition-required");
+		}
 	}
 
 	@Test
