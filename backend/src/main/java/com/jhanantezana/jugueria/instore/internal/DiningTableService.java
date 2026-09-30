@@ -6,22 +6,35 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
+import com.jhanantezana.jugueria.instore.TableCreated;
+import com.jhanantezana.jugueria.instore.TableSnapshot;
+import com.jhanantezana.jugueria.instore.TableStatusChanged;
+import com.jhanantezana.jugueria.instore.TableUpdated;
 import com.jhanantezana.jugueria.shared.BusinessException;
+import com.jhanantezana.jugueria.shared.CurrentActor;
 
 @Service
 public class DiningTableService {
 
 	private final DiningTableRepository tables;
 
+	private final ApplicationEventPublisher events;
+
+	private final CurrentActor currentActor;
+
 	private final Clock clock;
 
-	DiningTableService(DiningTableRepository tables, Clock clock) {
+	DiningTableService(DiningTableRepository tables, ApplicationEventPublisher events, CurrentActor currentActor,
+			Clock clock) {
 		this.tables = tables;
+		this.events = events;
+		this.currentActor = currentActor;
 		this.clock = clock;
 	}
 
@@ -32,13 +45,16 @@ public class DiningTableService {
 
 	@Transactional
 	public DiningTable create(String name, @Nullable String area, int displayOrder) {
-		var table = new DiningTable(name, area, displayOrder, Instant.now(clock));
+		var now = Instant.now(clock);
+		var table = new DiningTable(name, area, displayOrder, now);
 		try {
 			tables.saveAndFlush(table);
 		}
 		catch (DataIntegrityViolationException e) {
 			throw translateName(e);
 		}
+		events.publishEvent(
+				new TableCreated(table.getId(), snapshot(table), currentActor.id(), currentActor.role(), now));
 		return table;
 	}
 
@@ -46,13 +62,17 @@ public class DiningTableService {
 	public DiningTable change(UUID id, String name, @Nullable String area, int displayOrder, long expectedVersion) {
 		var table = findOrThrow(id);
 		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
-		table.change(name, area, displayOrder, Instant.now(clock));
+		var before = snapshot(table);
+		var now = Instant.now(clock);
+		table.change(name, area, displayOrder, now);
 		try {
 			tables.flush();
 		}
 		catch (DataIntegrityViolationException e) {
 			throw translateName(e);
 		}
+		events.publishEvent(new TableUpdated(table.getId(), before, snapshot(table), currentActor.id(),
+				currentActor.role(), now));
 		return table;
 	}
 
@@ -61,7 +81,9 @@ public class DiningTableService {
 		var table = findOrThrow(id);
 		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
 		if (table.isActive()) {
-			table.deactivate(Instant.now(clock));
+			var now = Instant.now(clock);
+			table.deactivate(now);
+			publishStatus(table, now);
 		}
 		return table;
 	}
@@ -71,9 +93,20 @@ public class DiningTableService {
 		var table = findOrThrow(id);
 		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
 		if (!table.isActive()) {
-			table.reactivate(Instant.now(clock));
+			var now = Instant.now(clock);
+			table.reactivate(now);
+			publishStatus(table, now);
 		}
 		return table;
+	}
+
+	private void publishStatus(DiningTable table, Instant now) {
+		events.publishEvent(
+				new TableStatusChanged(table.getId(), table.isActive(), currentActor.id(), currentActor.role(), now));
+	}
+
+	private static TableSnapshot snapshot(DiningTable table) {
+		return new TableSnapshot(table.getName(), table.getArea(), table.getDisplayOrder());
 	}
 
 	private DiningTable findOrThrow(UUID id) {

@@ -14,11 +14,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
+import com.jhanantezana.jugueria.instore.TableCreated;
+import com.jhanantezana.jugueria.instore.TableStatusChanged;
+import com.jhanantezana.jugueria.instore.TableUpdated;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
@@ -26,6 +31,7 @@ import com.jhanantezana.testsupport.InstoreTables;
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
+@RecordApplicationEvents
 class TableAdminControllerIT {
 
 	static final String TABLES = "/api/v1/admin/tables";
@@ -35,6 +41,9 @@ class TableAdminControllerIT {
 
 	@Autowired
 	JdbcClient jdbc;
+
+	@Autowired
+	ApplicationEvents events;
 
 	@AfterEach
 	void cleanUp() {
@@ -256,6 +265,79 @@ class TableAdminControllerIT {
 			assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
 			assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.precondition-required");
 		}
+	}
+
+	@Test
+	void publishesOneEventPerCommandWithTheActor() {
+		var actorId = UUID.randomUUID();
+		var created = mvc.post()
+			.uri(TABLES)
+			.with(AuthenticatedAs.user(actorId, Role.ADMIN))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Mesa-%s\",\"area\":\"Terrace\",\"displayOrder\":1}".formatted(UUID.randomUUID()))
+			.exchange();
+		var id = idOf(created);
+		var updated = update(id, "Renamed-" + UUID.randomUUID(), null, 2, etagOf(created));
+		var deactivated = deactivate(id, etagOf(updated));
+		reactivate(id, etagOf(deactivated));
+
+		assertThat(events.stream(TableCreated.class)).singleElement().satisfies(event -> {
+			assertThat(event.actorId()).isEqualTo(actorId);
+			assertThat(event.actorRole()).isEqualTo(Role.ADMIN);
+			assertThat(event.after().area()).isEqualTo("Terrace");
+		});
+		assertThat(events.stream(TableUpdated.class)).singleElement().satisfies(event -> {
+			assertThat(event.before().area()).isEqualTo("Terrace");
+			assertThat(event.after().area()).isNull();
+			assertThat(event.after().displayOrder()).isEqualTo(2);
+		});
+		assertThat(events.stream(TableStatusChanged.class).map(TableStatusChanged::active)).containsExactly(false,
+				true);
+	}
+
+	@Test
+	void aNoOpStatusChangePublishesNothing() {
+		var created = create("Mesa-" + UUID.randomUUID(), null, 0);
+
+		reactivate(idOf(created), etagOf(created));
+		var deactivated = deactivate(idOf(created), etagOf(created));
+		deactivate(idOf(created), etagOf(deactivated));
+
+		assertThat(events.stream(TableStatusChanged.class)).hasSize(1);
+	}
+
+	@Test
+	void everyCommandLeavesAnAuditEntryWithTheActor() {
+		var actorId = UUID.randomUUID();
+		var admin = AuthenticatedAs.user(actorId, Role.ADMIN);
+		var created = mvc.post()
+			.uri(TABLES)
+			.with(admin)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Mesa-%s\"}".formatted(UUID.randomUUID()))
+			.exchange();
+		var id = idOf(created);
+		var updated = mvc.put()
+			.uri(TABLES + "/" + id)
+			.with(admin)
+			.header(HttpHeaders.IF_MATCH, etagOf(created))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Renamed-%s\",\"displayOrder\":3}".formatted(UUID.randomUUID()))
+			.exchange();
+		mvc.post()
+			.uri(TABLES + "/" + id + "/deactivate")
+			.with(admin)
+			.header(HttpHeaders.IF_MATCH, etagOf(updated))
+			.exchange();
+
+		var entries = jdbc.sql("select action, actor_id, actor_role from audit.audit_log where entity_id = ? order by occurred_at, action")
+			.param(UUID.fromString(id))
+			.query((rs, row) -> rs.getString("action") + "|" + rs.getObject("actor_id", UUID.class) + "|"
+					+ rs.getString("actor_role"))
+			.list();
+
+		assertThat(entries).containsExactlyInAnyOrder("TABLE_CREATED|" + actorId + "|ADMIN",
+				"TABLE_UPDATED|" + actorId + "|ADMIN", "TABLE_STATUS_CHANGED|" + actorId + "|ADMIN");
 	}
 
 	@Test
