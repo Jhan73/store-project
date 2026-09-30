@@ -3688,6 +3688,532 @@
         "tags" : [ "station-controller" ]
       }
     },
+    "/api/v1/admin/tables" : {
+      "get" : {
+        "operationId" : "tableAdminList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TableResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-admin-controller" ]
+      },
+      "post" : {
+        "operationId" : "tableAdminCreate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTableRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.table-name-already-used",
+            "x-error-codes" : [ "instore.table-name-already-used" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/tables/{id}" : {
+      "put" : {
+        "operationId" : "tableAdminChange",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTableRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.table-not-found",
+            "x-error-codes" : [ "instore.table-not-found" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification, instore.table-name-already-used",
+            "x-error-codes" : [ "common.concurrent-modification", "instore.table-name-already-used" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/tables/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "tableAdminDeactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.table-not-found",
+            "x-error-codes" : [ "instore.table-not-found" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification",
+            "x-error-codes" : [ "common.concurrent-modification" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/tables/{id}/reactivate" : {
+      "post" : {
+        "operationId" : "tableAdminReactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.table-not-found",
+            "x-error-codes" : [ "instore.table-not-found" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification",
+            "x-error-codes" : [ "common.concurrent-modification" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-admin-controller" ]
+      }
+    },
     "/api/v1/audit-entries" : {
       "get" : {
         "operationId" : "auditSearch",
@@ -4946,6 +5472,63 @@
         } ],
         "tags" : [ "staff-controller" ]
       }
+    },
+    "/api/v1/tables" : {
+      "get" : {
+        "operationId" : "tableGridGrid",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TableGridResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "table-grid-controller" ]
+      }
     }
   },
   "components" : {
@@ -5124,6 +5707,27 @@
         },
         "required" : [ "email", "role" ]
       },
+      "CreateTableRequest" : {
+        "type" : "object",
+        "properties" : {
+          "area" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
       "DeliveryZoneResponse" : {
         "type" : "object",
         "properties" : {
@@ -5158,7 +5762,7 @@
       "ErrorCode" : {
         "type" : "string",
         "description" : "Every error code the API can return; codes are never renamed or reused.",
-        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "store.delivery-zone-currency-mismatch", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
+        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "instore.table-name-already-used", "instore.table-not-found", "store.delivery-zone-currency-mismatch", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
       },
       "LoginRequest" : {
         "type" : "object",
@@ -5835,6 +6439,58 @@
           }
         }
       },
+      "TableGridResponse" : {
+        "type" : "object",
+        "properties" : {
+          "area" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "FREE", "OCCUPIED", "WAITING_FOR_PAYMENT" ]
+          },
+          "ticketOpenedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "TableResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "area" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "etag" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
       "UpdateCategoryRequest" : {
         "type" : "object",
         "properties" : {
@@ -5953,6 +6609,27 @@
           }
         },
         "required" : [ "currency", "registerDifferenceThreshold", "timeZone" ]
+      },
+      "UpdateTableRequest" : {
+        "type" : "object",
+        "properties" : {
+          "area" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "displayOrder", "name" ]
       }
     },
     "securitySchemes" : {

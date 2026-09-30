@@ -216,7 +216,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | FR-RPT-04 | **Today dashboard**: net sales, number of orders, and average ticket compared with the same weekday last week; split by channel; open orders; open shifts; current unavailable items (86 list); low-stock list. | M |
 | FR-RPT-05 | **Hourly heatmap**: sales by hour × weekday for a date range. | M |
 | FR-RPT-06 | **Exceptions by employee**: voids, comps, waste, refunds, cash out, and shift differences per employee and reason; employees above the configured threshold are flagged. | M |
-| FR-AUD-01 | Every change to prices, modifiers, availability, stock, orders, tickets, lines (void/comp/transfer/merge), payments, cash movements, shifts, refunds, settings, users, and roles is recorded: actor, role, action, entity, before/after values, reason, timestamp, and request origin. | M |
+| FR-AUD-01 | Every change to prices, modifiers, availability, stock, orders, tickets, lines (void/comp/transfer/merge), payments, cash movements, shifts, refunds, settings, table configuration, users, and roles is recorded: actor, role, action, entity, before/after values, reason, timestamp, and request origin. | M |
 | FR-AUD-02 | The audit log is read-only for everyone, including ADMIN, and is searchable by date, actor, and entity. | M |
 
 ## 6. Business rules (consolidated)

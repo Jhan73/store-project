@@ -122,6 +122,19 @@ class OpenApiSpecIT {
 	}
 
 	@Test
+	void tableRequestsMarkOnlyWhatTheyRequire() throws IOException {
+		var schemas = new JsonMapper().readTree(generate()).path("components").path("schemas");
+
+		var create = new ArrayList<String>();
+		schemas.path("CreateTableRequest").path("required").forEach(name -> create.add(name.asString()));
+		var update = new ArrayList<String>();
+		schemas.path("UpdateTableRequest").path("required").forEach(name -> update.add(name.asString()));
+
+		assertThat(create).containsExactly("name");
+		assertThat(update).containsExactlyInAnyOrder("name", "displayOrder");
+	}
+
+	@Test
 	void describesMoneyAndCurrenciesAsTheyAreSerialized() throws IOException {
 		var schemas = new JsonMapper().readTree(generate()).path("components").path("schemas");
 
