@@ -10,18 +10,24 @@ import com.jhanantezana.jugueria.catalog.internal.MenuView;
 import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
 import com.jhanantezana.jugueria.shared.Money;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 record MenuResponse(List<Category> categories) {
 
+	@Schema(name = "MenuCategory")
 	record Category(UUID id, String name, List<Product> products) {
 	}
 
+	@Schema(name = "MenuProduct")
 	record Product(UUID id, String name, @Nullable String description, Money price, @Nullable String imageUrl,
 			boolean available, List<Allergen> allergens, List<Group> modifierGroups) {
 	}
 
+	@Schema(name = "MenuModifierGroup")
 	record Group(UUID id, String name, boolean required, int minChoices, int maxChoices, List<Option> options) {
 	}
 
+	@Schema(name = "MenuModifierOption")
 	record Option(UUID id, String name, Money priceDelta, boolean available, List<Allergen> allergens) {
 	}
 

@@ -10,9 +10,12 @@ import com.jhanantezana.jugueria.catalog.internal.ModifierOption;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.Money;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 record ModifierGroupResponse(UUID id, String name, boolean required, int minChoices, int maxChoices,
 		List<Option> options, String etag) {
 
+	@Schema(name = "ModifierOptionResponse")
 	record Option(UUID id, String name, Money priceDelta, boolean available, List<Allergen> allergens) {
 
 		static Option from(ModifierOption option) {

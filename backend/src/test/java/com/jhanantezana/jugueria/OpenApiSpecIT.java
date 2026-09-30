@@ -121,6 +121,43 @@ class OpenApiSpecIT {
 		assertThat(login.has("403")).isFalse();
 	}
 
+	@Test
+	void describesMoneyAndCurrenciesAsTheyAreSerialized() throws IOException {
+		var schemas = new JsonMapper().readTree(generate()).path("components").path("schemas");
+
+		assertThat(schemas.path("Money").path("properties").path("amount").path("type").asString()).isEqualTo("string");
+		assertThat(schemas.has("Currency")).isFalse();
+		var currencies = new ArrayList<String>();
+		schemas.forEach(schema -> schema.path("properties").properties().forEach(property -> {
+			if (property.getKey().equals("currency")) {
+				currencies.add(property.getValue().path("type").asString());
+			}
+		}));
+		assertThat(currencies).isNotEmpty().containsOnly("string");
+	}
+
+	@Test
+	void marksIfMatchAsRequiredAndTheImageUploadBodyAsRequired() throws IOException {
+		var paths = new JsonMapper().readTree(generate()).path("paths");
+		var ifMatch = new ArrayList<JsonNode>();
+		paths.forEach(item -> item.forEach(operation -> operation.path("parameters").forEach(parameter -> {
+			if (parameter.path("name").asString().equals("If-Match")) {
+				ifMatch.add(parameter);
+			}
+		})));
+
+		assertThat(ifMatch).isNotEmpty().allSatisfy(parameter -> assertThat(parameter.path("required").asBoolean()).isTrue());
+		assertThat(paths.path("/api/v1/admin/products/{id}/image").path("put").path("requestBody").path("required")
+			.asBoolean()).isTrue();
+	}
+
+	@Test
+	void describesProblemInstanceAsAUriReference() throws IOException {
+		var problem = new JsonMapper().readTree(generate()).path("components").path("schemas").path("Problem");
+
+		assertThat(problem.path("properties").path("instance").path("format").asString()).isEqualTo("uri-reference");
+	}
+
 	private static List<String> codes(JsonNode response) {
 		var codes = new ArrayList<String>();
 		response.path("x-error-codes").forEach(code -> codes.add(code.asString()));

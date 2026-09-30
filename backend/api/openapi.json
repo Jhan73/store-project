@@ -232,7 +232,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -378,7 +378,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -503,7 +503,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -780,7 +780,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -926,7 +926,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1051,7 +1051,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1328,7 +1328,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1527,7 +1527,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1943,7 +1943,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2089,7 +2089,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2214,7 +2214,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2337,7 +2337,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2356,7 +2356,8 @@
                 "required" : [ "file" ]
               }
             }
-          }
+          },
+          "required" : true
         },
         "responses" : {
           "200" : {
@@ -2522,7 +2523,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2808,7 +2809,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -2933,7 +2934,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -3102,7 +3103,7 @@
         "parameters" : [ {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -3284,7 +3285,7 @@
         "parameters" : [ {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -3566,7 +3567,7 @@
         }, {
           "in" : "header",
           "name" : "If-Match",
-          "required" : false,
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -5014,24 +5015,6 @@
           }
         }
       },
-      "Category" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "products" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Product"
-            }
-          }
-        }
-      },
       "CategoryResponse" : {
         "type" : "object",
         "properties" : {
@@ -5177,35 +5160,6 @@
         "description" : "Every error code the API can return; codes are never renamed or reused.",
         "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "store.delivery-zone-currency-mismatch", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
       },
-      "Group" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "maxChoices" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "minChoices" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "options" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Option"
-            }
-          },
-          "required" : {
-            "type" : "boolean"
-          }
-        }
-      },
       "LoginRequest" : {
         "type" : "object",
         "properties" : {
@@ -5240,13 +5194,122 @@
           }
         }
       },
+      "MenuCategory" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuProduct"
+            }
+          }
+        }
+      },
+      "MenuModifierGroup" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "maxChoices" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minChoices" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "options" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuModifierOption"
+            }
+          },
+          "required" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "MenuModifierOption" : {
+        "type" : "object",
+        "properties" : {
+          "allergens" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CELERY", "CRUSTACEANS", "EGGS", "FISH", "GLUTEN", "LUPIN", "MILK", "MOLLUSCS", "MUSTARD", "PEANUTS", "SESAME", "SOY", "SULPHITES", "TREE_NUTS" ]
+            }
+          },
+          "available" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceDelta" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        }
+      },
+      "MenuProduct" : {
+        "type" : "object",
+        "properties" : {
+          "allergens" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CELERY", "CRUSTACEANS", "EGGS", "FISH", "GLUTEN", "LUPIN", "MILK", "MOLLUSCS", "MUSTARD", "PEANUTS", "SESAME", "SOY", "SULPHITES", "TREE_NUTS" ]
+            }
+          },
+          "available" : {
+            "type" : "boolean"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "imageUrl" : {
+            "type" : "string"
+          },
+          "modifierGroups" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MenuModifierGroup"
+            }
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        }
+      },
       "MenuResponse" : {
         "type" : "object",
         "properties" : {
           "categories" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Category"
+              "$ref" : "#/components/schemas/MenuCategory"
             }
           }
         }
@@ -5275,7 +5338,7 @@
           "options" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Option"
+              "$ref" : "#/components/schemas/ModifierOptionResponse"
             }
           },
           "required" : {
@@ -5283,60 +5346,7 @@
           }
         }
       },
-      "Money" : {
-        "type" : "object",
-        "properties" : {
-          "amount" : {
-            "type" : "number"
-          },
-          "currency" : {
-            "type" : "object",
-            "properties" : {
-              "currencyCode" : {
-                "type" : "string"
-              },
-              "defaultFractionDigits" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "displayName" : {
-                "type" : "string"
-              },
-              "numericCode" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "numericCodeAsString" : {
-                "type" : "string"
-              },
-              "symbol" : {
-                "type" : "string"
-              }
-            }
-          }
-        }
-      },
-      "OpeningHourResponse" : {
-        "type" : "object",
-        "properties" : {
-          "closed" : {
-            "type" : "boolean"
-          },
-          "closesAt" : {
-            "type" : "string",
-            "format" : "time-local"
-          },
-          "dayOfWeek" : {
-            "type" : "string",
-            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
-          },
-          "opensAt" : {
-            "type" : "string",
-            "format" : "time-local"
-          }
-        }
-      },
-      "Option" : {
+      "ModifierOptionResponse" : {
         "type" : "object",
         "properties" : {
           "allergens" : {
@@ -5358,6 +5368,42 @@
           },
           "priceDelta" : {
             "$ref" : "#/components/schemas/Money"
+          }
+        }
+      },
+      "Money" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "string",
+            "example" : "12.50",
+            "pattern" : "^-?\\d+\\.\\d{2}$"
+          },
+          "currency" : {
+            "type" : "string",
+            "description" : "ISO-4217 currency code",
+            "example" : "PEN",
+            "pattern" : "^[A-Z]{3}$"
+          }
+        }
+      },
+      "OpeningHourResponse" : {
+        "type" : "object",
+        "properties" : {
+          "closed" : {
+            "type" : "boolean"
+          },
+          "closesAt" : {
+            "type" : "string",
+            "format" : "time-local"
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
+          },
+          "opensAt" : {
+            "type" : "string",
+            "format" : "time-local"
           }
         }
       },
@@ -5475,7 +5521,7 @@
           },
           "instance" : {
             "type" : "string",
-            "format" : "uri"
+            "format" : "uri-reference"
           },
           "status" : {
             "type" : "integer",
@@ -5490,43 +5536,6 @@
           }
         },
         "required" : [ "code", "status" ]
-      },
-      "Product" : {
-        "type" : "object",
-        "properties" : {
-          "allergens" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string",
-              "enum" : [ "CELERY", "CRUSTACEANS", "EGGS", "FISH", "GLUTEN", "LUPIN", "MILK", "MOLLUSCS", "MUSTARD", "PEANUTS", "SESAME", "SOY", "SULPHITES", "TREE_NUTS" ]
-            }
-          },
-          "available" : {
-            "type" : "boolean"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "imageUrl" : {
-            "type" : "string"
-          },
-          "modifierGroups" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Group"
-            }
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "price" : {
-            "$ref" : "#/components/schemas/Money"
-          }
-        }
       },
       "ProductResponse" : {
         "type" : "object",
@@ -5797,29 +5806,10 @@
             "format" : "int32"
           },
           "currency" : {
-            "type" : "object",
-            "properties" : {
-              "currencyCode" : {
-                "type" : "string"
-              },
-              "defaultFractionDigits" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "displayName" : {
-                "type" : "string"
-              },
-              "numericCode" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "numericCodeAsString" : {
-                "type" : "string"
-              },
-              "symbol" : {
-                "type" : "string"
-              }
-            }
+            "type" : "string",
+            "description" : "ISO-4217 currency code",
+            "example" : "PEN",
+            "pattern" : "^[A-Z]{3}$"
           },
           "exceptionThreshold" : {
             "type" : "integer",
@@ -5934,29 +5924,10 @@
             "minimum" : 0
           },
           "currency" : {
-            "type" : "object",
-            "properties" : {
-              "currencyCode" : {
-                "type" : "string"
-              },
-              "defaultFractionDigits" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "displayName" : {
-                "type" : "string"
-              },
-              "numericCode" : {
-                "type" : "integer",
-                "format" : "int32"
-              },
-              "numericCodeAsString" : {
-                "type" : "string"
-              },
-              "symbol" : {
-                "type" : "string"
-              }
-            }
+            "type" : "string",
+            "description" : "ISO-4217 currency code",
+            "example" : "PEN",
+            "pattern" : "^[A-Z]{3}$"
           },
           "exceptionThreshold" : {
             "type" : "integer",

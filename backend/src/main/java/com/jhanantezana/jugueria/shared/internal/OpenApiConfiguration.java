@@ -9,9 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Currency;
+import java.util.stream.Stream;
 
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springdoc.core.utils.SpringDocUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +55,15 @@ import jakarta.annotation.security.PermitAll;
 
 // Shapes the generated spec only; the app never serves it (springdoc is enabled by the spec test alone).
 @Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(name = "springdoc.api-docs.enabled", havingValue = "true")
 class OpenApiConfiguration {
+
+	static {
+		// Jackson writes a Currency as its ISO code; springdoc would introspect the bean instead.
+		SpringDocUtils.getConfig()
+			.replaceWithSchema(Currency.class,
+					new StringSchema().pattern("^[A-Z]{3}$").example("PEN").description("ISO-4217 currency code"));
+	}
 
 	private static final String BEARER = "bearerAuth";
 
@@ -77,6 +89,11 @@ class OpenApiConfiguration {
 			components.addSchemas(ERROR_CODE, new StringSchema()._enum(codes.keySet().stream().sorted().toList())
 				.description("Every error code the API can return; codes are never renamed or reused."));
 			components.addSchemas(PROBLEM, problem());
+			var money = components.getSchemas().get("Money");
+			if (money != null) {
+				// The amount is @JsonFormat(STRING) on the wire, which springdoc does not see.
+				money.getProperties().put("amount", new StringSchema().pattern("^-?\\d+\\.\\d{2}$").example("12.50"));
+			}
 			if (openApi.getTags() != null) {
 				openApi.setTags(openApi.getTags().stream().sorted(Comparator.comparing(Tag::getName)).toList());
 			}
@@ -96,6 +113,7 @@ class OpenApiConfiguration {
 				}
 			}
 			addInputErrors(handler, errors);
+			requireDeclaredInputs(operation, handler);
 			var declared = handler.getMethodAnnotation(ApiErrors.class);
 			if (declared != null) {
 				Arrays.stream(declared.value()).map(this::declared).forEach(errors::add);
@@ -137,6 +155,20 @@ class OpenApiConfiguration {
 		}
 	}
 
+	// The handlers take them as optional so a missing one reaches our own 428, but a client must always send them.
+	private static void requireDeclaredInputs(Operation operation, HandlerMethod handler) {
+		if (operation.getParameters() != null) {
+			operation.getParameters()
+				.stream()
+				.filter(parameter -> "If-Match".equalsIgnoreCase(parameter.getName()))
+				.forEach(parameter -> parameter.setRequired(true));
+		}
+		if (operation.getRequestBody() != null && Arrays.stream(handler.getMethodParameters())
+			.anyMatch(parameter -> parameter.hasParameterAnnotation(RequestPart.class))) {
+			operation.getRequestBody().setRequired(true);
+		}
+	}
+
 	private ErrorCode declared(String code) {
 		var errorCode = codes.get(code);
 		if (errorCode == null) {
@@ -173,7 +205,7 @@ class OpenApiConfiguration {
 			.addProperty("title", new StringSchema())
 			.addProperty("status", new IntegerSchema())
 			.addProperty("detail", new StringSchema())
-			.addProperty("instance", new StringSchema().format("uri"))
+			.addProperty("instance", new StringSchema().format("uri-reference"))
 			.addProperty("code", new Schema<>().$ref("#/components/schemas/" + ERROR_CODE))
 			.addProperty("correlationId", new StringSchema().nullable(true))
 			.addProperty("errors", new ArraySchema().items(errors));
@@ -185,14 +217,13 @@ class OpenApiConfiguration {
 	private static Map<String, ErrorCode> declaredCodes() {
 		var scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AssignableTypeFilter(ErrorCode.class));
-		var codes = new LinkedHashMap<String, ErrorCode>();
+		var declared = new ArrayList<ErrorCode>();
 		for (var candidate : scanner.findCandidateComponents("com.jhanantezana.jugueria")) {
 			try {
 				var type = Class.forName(candidate.getBeanClassName());
 				if (type.isEnum()) {
 					for (var constant : type.getEnumConstants()) {
-						var errorCode = (ErrorCode) constant;
-						codes.put(errorCode.code(), errorCode);
+						declared.add((ErrorCode) constant);
 					}
 				}
 			}
@@ -200,6 +231,16 @@ class OpenApiConfiguration {
 				throw new IllegalStateException(ex);
 			}
 		}
+		return index(declared.stream());
+	}
+
+	static Map<String, ErrorCode> index(Stream<ErrorCode> declared) {
+		var codes = new LinkedHashMap<String, ErrorCode>();
+		declared.forEach(errorCode -> {
+			if (codes.putIfAbsent(errorCode.code(), errorCode) != null) {
+				throw new IllegalStateException("Error code declared twice: " + errorCode.code());
+			}
+		});
 		return codes;
 	}
 
