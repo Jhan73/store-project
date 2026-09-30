@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jhanantezana.jugueria.identity.internal.LoginService;
 import com.jhanantezana.jugueria.identity.internal.RefreshTokenService;
 import com.jhanantezana.jugueria.identity.internal.SetPasswordService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 
@@ -38,6 +40,7 @@ class AuthController {
 
 	@PostMapping("/login")
 	@PermitAll
+	@ApiErrors({ "auth.invalid-credentials", "auth.account-locked" })
 	ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 		var result = loginService.login(request.email(), request.password());
 		return withRefreshCookie(LoginResponse.from(result), result.refreshToken(), result.refreshTokenMaxAge());
@@ -46,6 +49,7 @@ class AuthController {
 	// X-Requested-With is required so a browser must run a CORS preflight before this cookie-authenticated call.
 	@PostMapping("/refresh")
 	@PermitAll
+	@ApiErrors({ "auth.invalid-refresh-token" })
 	ResponseEntity<LoginResponse> refresh(
 			@CookieValue(value = RefreshTokenCookie.NAME, required = false) @Nullable String refreshToken,
 			@RequestHeader("X-Requested-With") String requestedWith) {
@@ -56,6 +60,8 @@ class AuthController {
 	// X-Requested-With required for the same reason as refresh/logout: forces a CORS preflight.
 	@PostMapping("/set-password")
 	@PermitAll
+	@ApiResponse(responseCode = "204", description = "No Content")
+	@ApiErrors({ "auth.invalid-set-password-token" })
 	ResponseEntity<Void> setPassword(@Valid @RequestBody SetPasswordRequest request,
 			@RequestHeader("X-Requested-With") String requestedWith) {
 		setPasswordService.setPassword(request.token(), request.newPassword());
@@ -64,6 +70,7 @@ class AuthController {
 
 	@PostMapping("/logout")
 	@PermitAll
+	@ApiResponse(responseCode = "204", description = "No Content")
 	ResponseEntity<Void> logout(
 			@CookieValue(value = RefreshTokenCookie.NAME, required = false) @Nullable String refreshToken,
 			@RequestHeader("X-Requested-With") String requestedWith) {

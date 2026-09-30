@@ -22,10 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jhanantezana.jugueria.catalog.internal.ProductDetails;
 import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
 import com.jhanantezana.jugueria.catalog.internal.ProductService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.shared.PageResponse;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -56,12 +58,15 @@ class ProductController {
 
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found" })
 	ResponseEntity<ProductResponse> get(@PathVariable UUID id) {
 		return respond(ResponseEntity.ok(), products.get(id));
 	}
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.currency-mismatch", "catalog.product-name-already-used", "catalog.invalid-price", "catalog.invalid-product" })
 	ResponseEntity<ProductResponse> create(@Valid @RequestBody SaveProductRequest request) {
 		var product = products.create(request.toDefinition());
 		return respond(ResponseEntity.created(URI.create("/api/v1/admin/products/" + product.id())), product);
@@ -69,6 +74,7 @@ class ProductController {
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.currency-mismatch", "catalog.product-name-already-used", "catalog.invalid-price", "catalog.invalid-product" })
 	ResponseEntity<ProductResponse> change(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody SaveProductRequest request) {
@@ -78,6 +84,7 @@ class ProductController {
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found" })
 	ResponseEntity<ProductResponse> deactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
@@ -86,6 +93,7 @@ class ProductController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found" })
 	ResponseEntity<ProductResponse> reactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

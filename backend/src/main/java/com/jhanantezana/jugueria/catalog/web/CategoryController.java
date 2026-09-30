@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.CategoryService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -41,6 +43,8 @@ class CategoryController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "201", description = "Created")
+	@ApiErrors({ "catalog.unknown-station", "catalog.category-name-already-used" })
 	ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest request) {
 		var category = categories.create(request.name(), request.stationId(), request.displayOrder());
 		return ResponseEntity.created(URI.create("/api/v1/admin/categories/" + category.getId()))
@@ -50,6 +54,7 @@ class CategoryController {
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.category-not-found", "catalog.unknown-station", "catalog.category-name-already-used" })
 	ResponseEntity<CategoryResponse> change(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody UpdateCategoryRequest request) {
@@ -61,6 +66,7 @@ class CategoryController {
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.category-not-found" })
 	ResponseEntity<CategoryResponse> deactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
@@ -70,6 +76,7 @@ class CategoryController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.category-not-found" })
 	ResponseEntity<CategoryResponse> reactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

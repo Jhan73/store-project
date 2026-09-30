@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.AvailabilityService;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 
 import jakarta.validation.Valid;
 
@@ -25,6 +26,7 @@ class AvailabilityController {
 
 	@PutMapping("/products/{id}/availability")
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
+	@ApiErrors({ "catalog.product-not-found" })
 	AvailabilityResponse setProductAvailability(@PathVariable UUID id, @Valid @RequestBody AvailabilityRequest request) {
 		availability.setProductAvailability(id, request.available());
 		return new AvailabilityResponse(id, request.available());
@@ -32,6 +34,7 @@ class AvailabilityController {
 
 	@PutMapping("/modifier-options/{id}/availability")
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
+	@ApiErrors({ "catalog.modifier-option-not-found" })
 	AvailabilityResponse setOptionAvailability(@PathVariable UUID id, @Valid @RequestBody AvailabilityRequest request) {
 		availability.setOptionAvailability(id, request.available());
 		return new AvailabilityResponse(id, request.available());

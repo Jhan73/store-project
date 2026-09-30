@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.jhanantezana.jugueria.catalog.internal.ProductDetails;
 import com.jhanantezana.jugueria.catalog.internal.ProductImageService;
 import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
+import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 
@@ -38,6 +39,7 @@ class ProductImageController {
 
 	@PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found", "catalog.invalid-image", "common.content-too-large", "common.unsupported-media-type", "catalog.provider-unavailable" })
 	ResponseEntity<ProductResponse> replace(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@RequestPart("file") MultipartFile file) throws IOException {
@@ -47,6 +49,7 @@ class ProductImageController {
 
 	@DeleteMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "catalog.product-not-found" })
 	ResponseEntity<ProductResponse> remove(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
