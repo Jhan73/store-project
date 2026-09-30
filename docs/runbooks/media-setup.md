@@ -13,7 +13,23 @@ Product images live in a private S3 bucket per environment and are served throug
 
 ## 1. Apply
 
-Same procedure as the other environment changes (`terraform plan`, then `apply` per `infra/CLAUDE.md`), for `test` and then `prod`. A new CloudFront distribution takes a few minutes to deploy.
+There is no infra apply workflow yet (known gap: `infra/CLAUDE.md` says apply should run only through the protected GitHub environment). Today apply is manual with the admin profile, as at bootstrap, for `test` and then `prod`:
+
+```powershell
+$env:AWS_PROFILE = "jugueria-admin"
+terraform -chdir=infra/envs/test init -backend-config=backend.hcl
+terraform -chdir=infra/envs/test plan -out=test.tfplan
+terraform -chdir=infra/envs/test apply test.tfplan
+```
+
+Before the first apply, check that the global bucket name is free; `404` means it is available and `403` means someone else owns it:
+
+```powershell
+aws s3api head-bucket --bucket jugueria-test-media
+aws s3api head-bucket --bucket jugueria-prod-media
+```
+
+A new CloudFront distribution takes a few minutes to deploy.
 
 ## 2. Set the public base URL
 
@@ -22,7 +38,10 @@ terraform -chdir=infra/envs/test output github_environment_variables
 gh variable set MEDIA_PUBLIC_BASE_URL --env test --body "https://<distribution>.cloudfront.net"
 ```
 
-Repeat with `--env prod` using the `prod` root's output. Then redeploy the backend (`gh workflow run cd-test.yml --ref develop -f redeploy=backend`; for `prod`, the next release). An unset variable leaves the profile file's value in force, which is the not-yet-created custom domain.
+Repeat with `--env prod` using the `prod` root's output. Then redeploy the backend so the new variable reaches the container.
+
+- `test`: `gh workflow run cd-test.yml --ref develop -f redeploy=backend`.
+- `prod`: do not wait for a release. `cd-prod.yml` deploys only when the image differs, so a config-only change is not applied otherwise. Run **Rollback** (`rollback.yml`, which forces the deploy) with environment `prod`, application `backend`, and the commit `prod` runs now (first row of the deployments query in `docs/runbooks/rollback.md`). It redeploys that same image with the current configuration. I chose this over a `force` input on `cd-prod.yml` to avoid a second way to bypass the digest comparison. An unset variable leaves the profile file's value in force, which is the not-yet-created custom domain.
 
 ## 3. Verify
 
