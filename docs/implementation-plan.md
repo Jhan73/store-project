@@ -81,7 +81,7 @@ Order matters: foundations and `audit` come first, so every later module is audi
 | M1-B6 | **catalog**: categories, stations, products, modifier groups/options, allergens, availability ("86"), menu endpoint with cache + `ETag`, product images (S3 + CloudFront) | FR-CAT-01..07 | §4.6, §4.8 | Min/max modifier rules enforced; availability visible to subscribers in ≤ 5 s; menu cache evicted on every task | done |
 | M1-B7 | **instore — tables**: table configuration and grid endpoint (all tables free until M2) | FR-INS-09 (config) | §4.8 | ADMIN manages tables; grid endpoint returns every table | todo |
 
-Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development bucket and permission set already exist from M0-05).
+Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development bucket and permission set already exist from M0-05) — **done in Terraform** (apply pending, `docs/runbooks/media-setup.md`); custom `media` hostnames are a follow-up pending the owner's decision.
 
 ### Frontend
 

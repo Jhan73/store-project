@@ -29,3 +29,11 @@ output "ecs_infrastructure_role_arn" {
 output "github_environment_variables" {
   value = module.environment.github_environment_variables
 }
+
+output "media_bucket" {
+  value = module.environment.media_bucket
+}
+
+output "media_distribution_domain" {
+  value = module.environment.media_distribution_domain
+}
