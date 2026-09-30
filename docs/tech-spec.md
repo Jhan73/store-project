@@ -262,6 +262,12 @@ The `instore`/`ordering` command and the board update run in the **same transact
 - While a shift is open, the API never returns expected cash to CASHIER. `POST /shifts/{id}/close` takes the counted cash; the response returns expected cash and difference. If the difference exceeds the threshold and no note is sent, the API answers `409` with the difference, and the cashier resubmits with a note (the counted value cannot change after it is revealed).
 - `ShiftClosed` triggers the summary email to ADMIN (FR-REG-06).
 
+#### Tables (FR-INS-09)
+
+- **Configuration** (M1-B7). `instore.dining_table` holds a `name` (unique case-insensitively, kept reserved even when the table is deactivated, up to 60 characters), an optional `area` (free text, up to 60 characters; blank means none), a `displayOrder` (≥ 0) and `active`. `/admin/tables` is `ADMIN`-only: `GET` lists every table (inactive ones too) ordered by display order then name, `POST` creates (`displayOrder` optional, default 0), `PUT /{id}` replaces the definition (`displayOrder` required), `POST /{id}/deactivate` and `/reactivate` toggle `active`. Updates require `If-Match` and every item carries its `etag`, as for the catalog (§4.3 "Catalog"). A duplicate name is `instore.table-name-already-used` (`409`, read from the unique index's name), an unknown ID `instore.table-not-found` (`404`).
+- **There is no delete**: tickets will reference a table by ID, so retiring one is a deactivation. Refusing to deactivate a table with an open ticket is left to the work package that introduces tickets.
+- **No audit and no domain event yet.** FR-AUD-01 does not list table configuration, and `/topic/tables` carries table *status* changes, which only exist once tickets do; both arrive with the in-store tickets work package.
+
 #### Store settings, hours, zones, and reason lists (FR-ADM-02, FR-INS-14)
 
 - `store_settings` is a singleton row (partial unique index on a constant guard column), seeded by migration with working defaults (`America/Lima`, `PEN`) so the store runs before ADMIN tunes it.
