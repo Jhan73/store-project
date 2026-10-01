@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="es-PE">
+  <file id="ngi18n" original="ng.template">
+    <unit id="primeng.accept">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:5</note>
+      </notes>
+      <segment>
+        <source>Aceptar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.reject">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:6</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.choose">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:7</note>
+      </notes>
+      <segment>
+        <source>Elegir</source>
+      </segment>
+    </unit>
+    <unit id="primeng.clear">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:8</note>
+      </notes>
+      <segment>
+        <source>Limpiar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.apply">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:9</note>
+      </notes>
+      <segment>
+        <source>Aplicar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.cancel">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:10</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptyMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:11</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptyFilterMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:12</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.searchMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:13</note>
+      </notes>
+      <segment>
+        <source>Hay resultados disponibles</source>
+      </segment>
+    </unit>
+    <unit id="primeng.selectionMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:14</note>
+      </notes>
+      <segment>
+        <source>Elementos seleccionados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptySearchMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:15</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptySelectionMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:16</note>
+      </notes>
+      <segment>
+        <source>No hay elementos seleccionados</source>
+      </segment>
+    </unit>
+    <unit id="landing.hero.title">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>Juguería</source>
+      </segment>
+    </unit>
+    <unit id="landing.hero.subtitle">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:12,15</note>
+      </notes>
+      <segment>
+        <source>Muy pronto: pedidos online y en el local.</source>
+      </segment>
+    </unit>
+    <unit id="landing.staffLink.label">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:18,23</note>
+      </notes>
+      <segment>
+        <source>Acceso del personal</source>
+      </segment>
+    </unit>
+  </file>
+</xliff>

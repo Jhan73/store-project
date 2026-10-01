@@ -40,7 +40,19 @@ module.exports = defineConfig([
       angular.configs.templateAccessibility,
     ],
     rules: {
-      "@angular-eslint/template/i18n": ["error", { checkId: true }],
+      "@angular-eslint/template/i18n": [
+        "error",
+        {
+          checkId: true,
+          // Enumerations and data keys of the PrimeNG API, not text a user reads.
+          ignoreAttributes: ["severity", "optionLabel", "optionValue"],
+        },
+      ],
     },
+  },
+  {
+    // Test harness templates are never shown to users.
+    files: ["**/*.spec.ts/*.html"],
+    rules: { "@angular-eslint/template/i18n": "off" },
   }
 ]);

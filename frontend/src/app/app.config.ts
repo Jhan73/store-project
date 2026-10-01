@@ -1,12 +1,21 @@
+import { registerLocaleData } from '@angular/common';
+import localeEsPE from '@angular/common/locales/es-PE';
 import {
   ApplicationConfig,
+  LOCALE_ID,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
+import { AppPreset } from './core/theme/app-preset';
+import { DARK_CLASS } from './core/theme/theme-store';
+import { primeTranslation } from './core/theme/prime-translation';
+
+registerLocaleData(localeEsPE);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,5 +23,10 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideClientHydration(withIncrementalHydration()),
+    { provide: LOCALE_ID, useValue: 'es-PE' },
+    providePrimeNG({
+      theme: { preset: AppPreset, options: { darkModeSelector: `.${DARK_CLASS}` } },
+      translation: primeTranslation,
+    }),
   ],
 };

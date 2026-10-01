@@ -24,6 +24,7 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/cdk": "^22.2.1",
     "@angular/common": "^22.2.1",
     "@angular/compiler": "^22.2.1",
     "@angular/core": "^22.2.1",
@@ -32,7 +33,10 @@
     "@angular/platform-server": "^22.2.1",
     "@angular/router": "^22.2.1",
     "@angular/ssr": "^22.2.0",
+    "@primeuix/themes": "^2.0.3",
+    "@tabler/icons-angular": "^3.48.0",
     "express": "^5.1.0",
+    "primeng": "21.1.10",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -48,8 +52,22 @@
     "eslint": "^10.9.1",
     "istanbul-lib-instrument": "^6.0.3",
     "jsdom": "^30.1.1",
+    "openapi-typescript": "7.13.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "8.70.1",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "primeng": {
+      "@angular/core": "$@angular/core",
+      "@angular/common": "$@angular/common",
+      "@angular/forms": "$@angular/forms",
+      "@angular/router": "$@angular/router",
+      "@angular/platform-browser": "$@angular/platform-browser",
+      "@angular/cdk": "$@angular/cdk"
+    },
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }
