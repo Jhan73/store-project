@@ -301,6 +301,60 @@ class OpenApiSpecIT {
 		assertThat(codes(withBody.path("400"))).containsExactly("common.malformed-request", "common.validation-failed");
 	}
 
+	@Test
+	void documentsUnsupportedMediaTypeAndNotAcceptableWhereABodyIsRead() throws IOException {
+		var paths = new JsonMapper().readTree(generate()).path("paths");
+
+		var json = paths.path("/api/v1/admin/categories").path("post").path("responses");
+		assertThat(codes(json.path("415"))).containsExactly("common.unsupported-media-type");
+		assertThat(codes(json.path("406"))).containsExactly("common.not-acceptable");
+		var upload = paths.path("/api/v1/admin/products/{id}/image").path("put").path("responses");
+		assertThat(codes(upload.path("415"))).containsExactly("common.unsupported-media-type");
+		var read = paths.path("/api/v1/staff/{id}").path("get").path("responses");
+		assertThat(read.has("415")).isFalse();
+		assertThat(read.has("406")).isFalse();
+	}
+
+	@Test
+	void documentsTheMenuConditionalRequest() throws IOException {
+		var menu = new JsonMapper().readTree(generate()).path("paths").path("/api/v1/catalog/menu").path("get");
+
+		assertThat(menu.path("responses").has("304")).isTrue();
+		assertThat(menu.path("responses").path("200").path("headers").has("ETag")).isTrue();
+		var ifNoneMatch = new ArrayList<JsonNode>();
+		menu.path("parameters").forEach(parameter -> {
+			if (parameter.path("name").asString().equals("If-None-Match")) {
+				ifNoneMatch.add(parameter);
+			}
+		});
+		assertThat(ifNoneMatch).singleElement().satisfies(parameter -> {
+			assertThat(parameter.path("in").asString()).isEqualTo("header");
+			assertThat(parameter.path("required").asBoolean()).isFalse();
+		});
+	}
+
+	@Test
+	void documentsTheLocationAndETagHeadersTheControllersSet() throws IOException {
+		var paths = new JsonMapper().readTree(generate()).path("paths");
+
+		var created = paths.path("/api/v1/admin/categories").path("post").path("responses").path("201").path("headers");
+		assertThat(created.has("Location")).isTrue();
+		assertThat(created.has("ETag")).isTrue();
+		var changed = paths.path("/api/v1/admin/categories/{id}").path("put").path("responses").path("200").path("headers");
+		assertThat(changed.has("ETag")).isTrue();
+		assertThat(changed.has("Location")).isFalse();
+		var staff = paths.path("/api/v1/staff").path("post").path("responses").path("201").path("headers");
+		assertThat(staff.has("Location")).isTrue();
+		assertThat(staff.has("ETag")).isFalse();
+		var settings = paths.path("/api/v1/admin/settings").path("get").path("responses");
+		assertThat(settings.path("200").path("headers").has("ETag")).isTrue();
+		assertThat(settings.has("304")).isTrue();
+		var hours = paths.path("/api/v1/admin/settings/opening-hours").path("get").path("responses");
+		assertThat(hours.path("200").path("headers").has("ETag")).isTrue();
+		var deleted = paths.path("/api/v1/admin/modifier-groups/{id}").path("delete").path("responses").path("204");
+		assertThat(deleted.has("headers")).isFalse();
+	}
+
 	private JsonNode schemas() throws IOException {
 		return new JsonMapper().readTree(generate()).path("components").path("schemas");
 	}

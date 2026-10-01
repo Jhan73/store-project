@@ -28,11 +28,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.core.MethodParameter;
+import org.springframework.core.ResolvableType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -45,11 +48,13 @@ import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.ErrorCode;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.PageResponse;
+import com.jhanantezana.jugueria.shared.ReturnsETag;
 
 import io.swagger.v3.core.util.AnnotationsUtils;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.headers.Header;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
@@ -58,6 +63,7 @@ import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.parameters.HeaderParameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -219,6 +225,7 @@ class OpenApiConfiguration {
 			}
 			errors.add(CommonError.INTERNAL_ERROR);
 			addProblemResponses(operation, errors);
+			addSuccessHeaders(operation, handler);
 			return operation;
 		};
 	}
@@ -233,8 +240,7 @@ class OpenApiConfiguration {
 
 	private static void addInputErrors(HandlerMethod handler, Set<ErrorCode> errors) {
 		for (var parameter : handler.getMethodParameters()) {
-			if (parameter.hasParameterAnnotation(RequestHeader.class)
-					&& parameter.getParameterAnnotation(RequestHeader.class).value().equalsIgnoreCase("If-Match")) {
+			if (isIfMatch(parameter)) {
 				errors.add(CommonError.PRECONDITION_REQUIRED);
 				errors.add(CommonError.PRECONDITION_FAILED);
 				errors.add(CommonError.CONCURRENT_MODIFICATION);
@@ -244,6 +250,10 @@ class OpenApiConfiguration {
 					|| parameter.hasParameterAnnotation(RequestPart.class)
 					|| parameter.hasParameterAnnotation(RequestParam.class)
 					|| parameter.hasParameterAnnotation(PathVariable.class)) {
+				if (parameter.hasParameterAnnotation(RequestBody.class) || parameter.hasParameterAnnotation(RequestPart.class)) {
+					errors.add(CommonError.UNSUPPORTED_MEDIA_TYPE);
+					errors.add(CommonError.NOT_ACCEPTABLE);
+				}
 				if (isValidated(parameter)) {
 					errors.add(CommonError.VALIDATION_FAILED);
 				}
@@ -254,6 +264,53 @@ class OpenApiConfiguration {
 				errors.add(CommonError.MALFORMED_REQUEST);
 			}
 		}
+	}
+
+	// Location on every 201; ETag where the handler sets one, which also lets a GET answer 304 to If-None-Match.
+	private static void addSuccessHeaders(Operation operation, HandlerMethod handler) {
+		var responses = operation.getResponses();
+		if (responses.get("201") != null) {
+			responses.get("201")
+				.addHeaderObject("Location", new Header().description("URI of the created resource.")
+					.schema(new StringSchema().format("uri-reference")));
+		}
+		if (!returnsETag(handler)) {
+			return;
+		}
+		for (var status : List.of("200", "201")) {
+			if (responses.get(status) != null) {
+				responses.get(status)
+					.addHeaderObject("ETag", new Header().description("Version of the returned resource.")
+						.schema(new StringSchema()));
+			}
+		}
+		if (handler.hasMethodAnnotation(GetMapping.class)) {
+			operation.addParametersItem(new HeaderParameter().name("If-None-Match")
+				.required(false)
+				.description("An ETag from an earlier response; a match answers 304 with no body.")
+				.schema(new StringSchema()));
+			responses.addApiResponse("304", new ApiResponse()
+				.description("Not Modified. The If-None-Match header matched the current ETag; the response has no body."));
+		}
+	}
+
+	private static boolean returnsETag(HandlerMethod handler) {
+		if (handler.hasMethodAnnotation(ReturnsETag.class)) {
+			return true;
+		}
+		if (Arrays.stream(handler.getMethodParameters()).anyMatch(OpenApiConfiguration::isIfMatch)) {
+			return true;
+		}
+		var returned = ResolvableType.forMethodParameter(handler.getReturnType());
+		var body = (ResponseEntity.class.isAssignableFrom(returned.toClass()) ? returned.getGeneric(0) : returned)
+			.resolve();
+		return body != null && body.isRecord()
+				&& Arrays.stream(body.getRecordComponents()).anyMatch(component -> component.getName().equals("etag"));
+	}
+
+	private static boolean isIfMatch(MethodParameter parameter) {
+		return parameter.hasParameterAnnotation(RequestHeader.class)
+				&& parameter.getParameterAnnotation(RequestHeader.class).value().equalsIgnoreCase("If-Match");
 	}
 
 	// A path variable or query parameter with no constraint can only be malformed, never invalid.
