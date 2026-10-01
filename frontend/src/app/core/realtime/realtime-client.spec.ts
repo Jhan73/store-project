@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { API_ORIGIN } from '../api/api-config';
 import { AuthStore } from '../auth/auth-store';
@@ -49,6 +50,7 @@ class FakeSocket {
   }
 }
 
+const ERROR_FRAME = 'ERROR\nmessage:rejected\n\n\0';
 const last = () => FakeSocket.instances[FakeSocket.instances.length - 1];
 const message = (destination: string, body: string, subscription = 'sub-0') =>
   `MESSAGE\ndestination:${destination}\nsubscription:${subscription}\nmessage-id:1\n\n${body}\0`;
@@ -119,6 +121,15 @@ describe('RealtimeClient', () => {
     expect(last().frames[0]).toContain('CONNECT\n');
     expect(last().frames[0]).toContain('accept-version:1.2');
     expect(last().frames[0]).not.toContain('Authorization');
+  });
+
+  it('names the virtual host in CONNECT, as STOMP 1.2 requires', () => {
+    setup();
+    watch('/topic/catalog');
+
+    last().open();
+
+    expect(last().frames[0]).toContain('host:api.test');
   });
 
   it('sends the access token in the CONNECT frame when signed in', async () => {
@@ -247,6 +258,7 @@ describe('RealtimeClient', () => {
 
       last().open();
       last().connected();
+      vi.advanceTimersByTime(10_000);
       last().close();
       vi.advanceTimersByTime(1_000);
       expect(FakeSocket.instances).toHaveLength(attempts + 2);
@@ -268,7 +280,64 @@ describe('RealtimeClient', () => {
       vi.advanceTimersByTime(1_000);
       last().open();
       last().connected();
+      expect(refetches).toBe(2);
+      vi.advanceTimersByTime(10_000);
       expect(refetches).toBe(3);
+    });
+
+    it('keeps growing the delay when the broker rejects a subscription after CONNECTED', () => {
+      setup();
+      watch('/topic/board');
+      last().open();
+      last().connected();
+      last().receive(ERROR_FRAME);
+
+      vi.advanceTimersByTime(1_000);
+      expect(FakeSocket.instances).toHaveLength(2);
+      last().open();
+      last().connected();
+      last().receive(ERROR_FRAME);
+
+      vi.advanceTimersByTime(1_999);
+      expect(FakeSocket.instances).toHaveLength(2);
+      vi.advanceTimersByTime(1);
+      expect(FakeSocket.instances).toHaveLength(3);
+    });
+
+    it('starts the delay over once a connection stayed healthy', () => {
+      setup();
+      watch('/topic/catalog');
+      last().open();
+      last().connected();
+      last().close();
+      vi.advanceTimersByTime(1_000);
+      last().open();
+      last().connected();
+      vi.advanceTimersByTime(10_000);
+
+      last().close();
+
+      vi.advanceTimersByTime(1_000);
+      expect(FakeSocket.instances).toHaveLength(3);
+    });
+
+    it('does not hammer REST while the connection flaps', () => {
+      setup();
+      let refetches = 0;
+      subscriptions.push(client.refetch('/topic/board').subscribe(() => refetches++));
+      last().open();
+      last().connected();
+      expect(refetches).toBe(1);
+
+      for (let cycle = 0; cycle < 4; cycle++) {
+        last().receive(ERROR_FRAME);
+        vi.advanceTimersByTime(30_000);
+        last().open();
+        last().connected();
+        vi.advanceTimersByTime(5_000);
+      }
+
+      expect(refetches).toBe(1);
     });
   });
 
@@ -336,6 +405,39 @@ describe('RealtimeClient', () => {
       await vi.advanceTimersByTimeAsync(1_000);
       last().open();
       expect(last().frames[0]).toContain('Authorization:Bearer jwt-2');
+    });
+
+    it('sends the user to login when the broker rejects a token the server refuses to renew', async () => {
+      setup();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      await signIn();
+      watch('/topic/catalog');
+      last().open();
+
+      last().receive(ERROR_FRAME);
+      http
+        .expectOne('https://api.test/api/v1/auth/refresh')
+        .flush(null, { status: 401, statusText: 'Unauthorized' });
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(navigate).toHaveBeenCalledWith(['/login'], expect.anything());
+    });
+
+    it('keeps the session when the renewal fails for a transient reason', async () => {
+      setup();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      await signIn();
+      watch('/topic/catalog');
+      last().open();
+
+      last().receive(ERROR_FRAME);
+      http
+        .expectOne('https://api.test/api/v1/auth/refresh')
+        .flush(null, { status: 503, statusText: 'Service Unavailable' });
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(TestBed.inject(AuthStore).isAuthenticated()).toBe(true);
     });
 
     it('reconnects when the signed-in user changes', async () => {

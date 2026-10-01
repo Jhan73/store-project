@@ -10,8 +10,10 @@ import {
   untracked,
 } from '@angular/core';
 import { EMPTY, map, merge, Observable, Subject } from 'rxjs';
+import { Router } from '@angular/router';
 import { API_ORIGIN } from '../api/api-config';
 import { AuthStore } from '../auth/auth-store';
+import { redirectToLogin } from '../auth/session-redirect';
 import { encodeFrame, StompFrame, StompParser } from './stomp-frame';
 
 export type RealtimeState = 'idle' | 'connecting' | 'connected' | 'reconnecting';
@@ -30,6 +32,9 @@ export const WEB_SOCKET_FACTORY = new InjectionToken<(url: string, protocols: st
 const HEART_BEAT_MS = 20_000;
 const INITIAL_DELAY_MS = 1_000;
 const MAX_DELAY_MS = 30_000;
+// A connection counts as healthy only after surviving this long; a broker that accepts CONNECT and then
+// rejects a SUBSCRIBE would otherwise reset the backoff on every cycle.
+const STABLE_AFTER_MS = 10_000;
 
 interface Topic {
   readonly subject: Subject<RealtimeMessage>;
@@ -53,9 +58,11 @@ function parseSignal(body: string | undefined): RealtimeMessage | null {
 @Injectable({ providedIn: 'root' })
 export class RealtimeClient {
   private readonly auth = inject(AuthStore);
+  private readonly router = inject(Router);
   private readonly createSocket = inject(WEB_SOCKET_FACTORY);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private readonly url = `${inject(API_ORIGIN).replace(/^http/, 'ws')}/ws`;
+  private readonly origin = inject(API_ORIGIN);
+  private readonly url = `${this.origin.replace(/^http/, 'ws')}/ws`;
   private readonly topics = new Map<string, Topic>();
   private readonly connected = new Subject<void>();
   private readonly status = signal<RealtimeState>('idle');
@@ -69,6 +76,8 @@ export class RealtimeClient {
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
   private watchdogTimer: ReturnType<typeof setInterval> | undefined;
+  private stableTimer: ReturnType<typeof setTimeout> | undefined;
+  private resyncPending = false;
   private lastReceivedAt = 0;
 
   readonly state = this.status.asReadonly();
@@ -154,6 +163,7 @@ export class RealtimeClient {
       command: 'CONNECT',
       headers: {
         'accept-version': '1.2',
+        host: new URL(this.origin).host,
         'heart-beat': `${HEART_BEAT_MS},${HEART_BEAT_MS}`,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -181,13 +191,24 @@ export class RealtimeClient {
   }
 
   private onConnected(frame: StompFrame): void {
-    this.attempts = 0;
     this.status.set('connected');
     this.startHeartBeats(frame.headers['heart-beat']);
     for (const [destination, topic] of this.topics) {
       this.sendSubscribe(destination, topic);
     }
-    this.connected.next();
+    // After a recent failure, wait for the connection to prove itself so a flapping one does not hammer REST.
+    if (this.attempts === 0) {
+      this.connected.next();
+    } else {
+      this.resyncPending = true;
+    }
+    this.stableTimer = setTimeout(() => {
+      this.attempts = 0;
+      if (this.resyncPending) {
+        this.resyncPending = false;
+        this.connected.next();
+      }
+    }, STABLE_AFTER_MS);
   }
 
   private onMessage(frame: StompFrame): void {
@@ -201,7 +222,11 @@ export class RealtimeClient {
   // Most likely an expired token: renew it so the next attempt connects with a fresh one (or anonymously).
   private onError(): void {
     if (this.status() !== 'connected' && this.usedToken) {
-      void this.auth.refresh();
+      void this.auth.refresh().then((outcome) => {
+        if (outcome === 'rejected') {
+          redirectToLogin(this.router);
+        }
+      });
     }
     this.drop();
   }
@@ -277,6 +302,8 @@ export class RealtimeClient {
   private stopHeartBeats(): void {
     clearInterval(this.pingTimer);
     clearInterval(this.watchdogTimer);
+    clearTimeout(this.stableTimer);
+    this.resyncPending = false;
   }
 
   private sendSubscribe(destination: string, topic: Topic): void {
