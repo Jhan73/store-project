@@ -8,7 +8,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:frontend": "node dist/frontend/server/server.mjs",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "api:generate": "openapi-typescript ../backend/api/openapi.json --output src/app/core/api/schema.d.ts"
   },
   "prettier": {
     "printWidth": 100,

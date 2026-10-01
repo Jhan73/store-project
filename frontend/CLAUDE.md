@@ -31,7 +31,7 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 - Avoid hardcoded colors.
 - Tokens are defined once, in the global theme stylesheet, with a light and a dark value each. Components only consume `var(--token)`; they never define colors of their own.
 
-Pending: `openapi-typescript` and the `api:generate` script (M1-F1, tech-spec §6.5) — its latest release declares a TypeScript 5 peer, and Angular 22 requires TypeScript 6.
+`openapi-typescript` 7.13.0 declares a TypeScript 5 peer while Angular 22 uses TypeScript 6, so `package.json` carries an `overrides` entry scoped to it (like the one for `primeng`). The generated types compile and the output is deterministic; if a future release breaks under TypeScript 6, report it instead of widening the override.
 
 ## Commands
 
@@ -42,7 +42,8 @@ NG_ALLOWED_HOSTS=localhost npm run serve:ssr:frontend   # run the built SSR serv
 npm test                                    # Vitest via @angular/build:unit-test
 npm run lint                                # angular-eslint, including the i18n rule
 npx ng test --include src/app/app.spec.ts   # single spec file
-npx ng extract-i18n                         # extract UI text
+npx ng extract-i18n                         # extract UI text into src/locale/messages.xlf (committed; CI fails on drift)
+npm run api:generate                        # regenerate src/app/core/api/schema.d.ts from ../backend/api/openapi.json (CI fails on drift)
 ```
 
 Tests use Vitest (`vitest/globals`). Do not write new tests against Jasmine APIs. Prettier config is in `package.json` (printWidth 100, single quotes).
