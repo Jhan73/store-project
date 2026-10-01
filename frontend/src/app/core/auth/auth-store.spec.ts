@@ -84,6 +84,29 @@ describe('AuthStore', () => {
       expect(store.isAuthenticated()).toBe(false);
     });
 
+    it('retries on the next call after a transient failure instead of caching it', async () => {
+      const first = store.restore();
+      http.expectOne(REFRESH).flush(null, { status: 503, statusText: 'x' });
+      await first;
+      expect(store.isAuthenticated()).toBe(false);
+
+      const second = store.restore();
+      http.expectOne(REFRESH).flush(session('jwt-2'));
+      await second;
+
+      expect(store.accessToken()).toBe('jwt-2');
+    });
+
+    it('caches a definitive rejection', async () => {
+      const first = store.restore();
+      http.expectOne(REFRESH).flush(null, UNAUTHORIZED);
+      await first;
+
+      await store.restore();
+
+      http.expectNone(REFRESH);
+    });
+
     it('runs once, however many callers ask', async () => {
       const first = store.restore();
       const second = store.restore();
@@ -109,7 +132,7 @@ describe('AuthStore', () => {
 
       http.expectOne(REFRESH).flush(session('jwt-3'));
 
-      expect(await Promise.all(calls)).toEqual([true, true, true]);
+      expect(await Promise.all(calls)).toEqual(['refreshed', 'refreshed', 'refreshed']);
       expect(store.accessToken()).toBe('jwt-3');
     });
 
@@ -131,8 +154,85 @@ describe('AuthStore', () => {
       const done = store.refresh();
       http.expectOne(REFRESH).flush({ code: 'auth.invalid-refresh-token' }, UNAUTHORIZED);
 
-      expect(await done).toBe(false);
+      expect(await done).toBe('rejected');
       expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it.each([
+      ['a 503 while the environment starts', { status: 503, statusText: 'Service Unavailable' }],
+      ['a gateway error', { status: 502, statusText: 'Bad Gateway' }],
+    ])('keeps the session on %s', async (_label, init) => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ code: 'common.service-unavailable' }, init);
+
+      expect(await done).toBe('unavailable');
+      expect(store.accessToken()).toBe('jwt-1');
+      expect(store.refreshError()).toMatchObject({ status: init.status });
+    });
+
+    it('keeps the session on a network failure', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).error(new ProgressEvent('error'));
+
+      expect(await done).toBe('unavailable');
+      expect(store.isAuthenticated()).toBe(true);
+      expect(store.refreshError()).toMatchObject({ status: 0 });
+    });
+
+    it('gives up on a refresh that hangs, so it cannot hold the lock forever', async () => {
+      vi.useFakeTimers();
+      await signIn();
+
+      const done = store.refresh();
+      const request = http.expectOne(REFRESH);
+      vi.advanceTimersByTime(10_000);
+
+      expect(await done).toBe('unavailable');
+      expect(request.cancelled).toBe(true);
+      expect(store.isAuthenticated()).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('forgets the transient failure once a refresh succeeds', async () => {
+      const failed = store.refresh();
+      http.expectOne(REFRESH).flush(null, { status: 503, statusText: 'x' });
+      await failed;
+
+      const ok = store.refresh();
+      http.expectOne(REFRESH).flush(session('jwt-3'));
+      await ok;
+
+      expect(store.refreshError()).toBeNull();
+    });
+
+    it('discards a refresh that finishes after logout', async () => {
+      await signIn();
+
+      const refresh = store.refresh();
+      const logout = store.logout();
+      http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne(REFRESH).flush(session('late'));
+
+      expect(await refresh).toBe('rejected');
+      await logout;
+      expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it('remembers that the session ended until the next login', async () => {
+      await signIn();
+      expect(store.hasEnded()).toBe(false);
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush(null, UNAUTHORIZED);
+      await done;
+      expect(store.hasEnded()).toBe(true);
+
+      await signIn('jwt-9');
+      expect(store.hasEnded()).toBe(false);
     });
 
     it('serializes refreshes across tabs with the Web Locks API', async () => {

@@ -8,7 +8,7 @@ export function roleGuard(...allowed: Role[]): CanMatchFn {
   return async () => {
     const store = inject(AuthStore);
     const router = inject(Router);
-    const target = router.getCurrentNavigation()?.extractedUrl.toString();
+    const target = router.currentNavigation()?.extractedUrl.toString();
 
     await store.restore();
 

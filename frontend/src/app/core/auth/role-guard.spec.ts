@@ -50,9 +50,9 @@ describe('roleGuard', () => {
   });
 
   it('sends anonymous visitors to login, remembering where they were going', async () => {
-    vi.spyOn(router, 'getCurrentNavigation').mockReturnValue({
+    vi.spyOn(router, 'currentNavigation').mockReturnValue({
       extractedUrl: router.parseUrl('/staff/tickets'),
-    } as ReturnType<Router['getCurrentNavigation']>);
+    } as ReturnType<Router['currentNavigation']>);
     const result = run('ADMIN');
 
     http.expectOne(REFRESH).flush(null, { status: 401, statusText: 'Unauthorized' });

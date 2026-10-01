@@ -133,6 +133,43 @@ describe('authInterceptor', () => {
     expect(navigate).toHaveBeenCalledWith(['/login'], expect.anything());
   });
 
+  it('stops refreshing and redirecting once the session has ended', async () => {
+    const first = firstValueFrom(client.get(DATA));
+    http.expectOne(DATA).flush(null, UNAUTHORIZED);
+    http.expectOne(REFRESH).flush(null, UNAUTHORIZED);
+    await expect(first).rejects.toMatchObject({ status: 401 });
+    expect(navigate).toHaveBeenCalledTimes(1);
+
+    const second = firstValueFrom(client.get(OTHER));
+    http.expectOne(OTHER).flush(null, UNAUTHORIZED);
+
+    await expect(second).rejects.toMatchObject({ status: 401 });
+    http.expectNone(REFRESH);
+    expect(navigate).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the session and reports the outage when the refresh cannot reach the server', async () => {
+    const result = firstValueFrom(client.get(DATA));
+
+    http.expectOne(DATA).flush(null, UNAUTHORIZED);
+    http.expectOne(REFRESH).error(new ProgressEvent('error'));
+
+    await expect(result).rejects.toMatchObject({ status: 0 });
+    expect(store.isAuthenticated()).toBe(true);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('keeps the session when the refresh answers 503 while the environment starts', async () => {
+    const result = firstValueFrom(client.get(DATA));
+
+    http.expectOne(DATA).flush(null, UNAUTHORIZED);
+    http.expectOne(REFRESH).flush(null, { status: 503, statusText: 'Service Unavailable' });
+
+    await expect(result).rejects.toMatchObject({ status: 503 });
+    expect(store.isAuthenticated()).toBe(true);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('never retries or refreshes on a 401 from an auth endpoint', async () => {
     const result = firstValueFrom(client.post(LOGIN, {}));
 
