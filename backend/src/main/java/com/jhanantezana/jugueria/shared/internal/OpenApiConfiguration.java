@@ -9,17 +9,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Currency;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.customizers.OperationCustomizer;
 import org.springdoc.core.utils.SpringDocUtils;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,7 +39,10 @@ import org.springframework.web.method.HandlerMethod;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.ErrorCode;
+import com.jhanantezana.jugueria.shared.Money;
+import com.jhanantezana.jugueria.shared.PageResponse;
 
+import io.swagger.v3.core.util.AnnotationsUtils;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -42,6 +50,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.IntegerSchema;
+import io.swagger.v3.oas.models.media.JsonSchema;
 import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
@@ -98,6 +107,85 @@ class OpenApiConfiguration {
 				openApi.setTags(openApi.getTags().stream().sorted(Comparator.comparing(Tag::getName)).toList());
 			}
 		};
+	}
+
+	// A record component is required unless it is @Nullable; Jackson writes nulls, so a nullable one is still present.
+	@Bean
+	OpenApiCustomizer requiredAndNullableProperties() {
+		var records = webRecords();
+		return openApi -> openApi.getComponents().getSchemas().forEach((name, schema) -> {
+			var type = records.get(name);
+			if (type == null && name.startsWith("PageResponse")) {
+				type = PageResponse.class;
+			}
+			if (type != null && schema.getProperties() != null) {
+				tighten(schema, type);
+			}
+		});
+	}
+
+	private static void tighten(Schema<?> schema, Class<?> record) {
+		var properties = schema.getProperties();
+		var required = new TreeSet<String>();
+		if (schema.getRequired() != null) {
+			required.addAll(schema.getRequired());
+		}
+		for (var component : record.getRecordComponents()) {
+			var property = properties.get(component.getName());
+			if (property == null) {
+				continue;
+			}
+			if (component.getAnnotatedType().isAnnotationPresent(Nullable.class)) {
+				properties.put(component.getName(), orNull(property));
+			}
+			else {
+				required.add(component.getName());
+			}
+		}
+		if (!required.isEmpty()) {
+			schema.setRequired(List.copyOf(required));
+		}
+	}
+
+	// OpenAPI 3.1 has no "nullable": a type array carries null, a reference needs a oneOf.
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static Schema orNull(Schema property) {
+		if (property.get$ref() == null && property.getTypes() != null && !property.getTypes().isEmpty()) {
+			var copy = AnnotationsUtils.clone(property, true);
+			copy.addType("null");
+			return copy;
+		}
+		var nullType = new JsonSchema();
+		nullType.addType("null");
+		var options = new ArrayList<Schema>();
+		options.add(property);
+		options.add(nullType);
+		return new JsonSchema().oneOf(options);
+	}
+
+	private static Map<String, Class<?>> webRecords() {
+		var scanner = new ClassPathScanningCandidateComponentProvider(false) {
+			@Override
+			protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
+				return true;
+			}
+		};
+		scanner.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*[.]web[.].*")));
+		var records = new TreeMap<String, Class<?>>();
+		records.put("Money", Money.class);
+		for (var candidate : scanner.findCandidateComponents("com.jhanantezana.jugueria")) {
+			try {
+				var type = Class.forName(candidate.getBeanClassName(), false, OpenApiConfiguration.class.getClassLoader());
+				if (type.isRecord() && !type.getName().matches(".*(IT|Test)([$].*)?")) {
+					var schema = type.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
+					records.put(schema != null && !schema.name().isBlank() ? schema.name() : type.getSimpleName(), type);
+				}
+			}
+			catch (ClassNotFoundException ex) {
+				throw new IllegalStateException(ex);
+			}
+		}
+		return records;
 	}
 
 	@Bean

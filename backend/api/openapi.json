@@ -5540,22 +5540,22 @@
             "type" : "string"
           },
           "actorId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "actorRole" : {
             "type" : "string"
           },
           "after" : {
-            "type" : "object",
+            "type" : [ "object", "null" ],
             "additionalProperties" : { }
           },
           "before" : {
-            "type" : "object",
+            "type" : [ "object", "null" ],
             "additionalProperties" : { }
           },
           "correlationId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "entityId" : {
             "type" : "string",
@@ -5573,9 +5573,10 @@
             "format" : "date-time"
           },
           "reason" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
-        }
+        },
+        "required" : [ "action", "actorRole", "entityId", "entityType", "id", "occurredAt" ]
       },
       "AvailabilityRequest" : {
         "type" : "object",
@@ -5596,7 +5597,8 @@
             "type" : "string",
             "format" : "uuid"
           }
-        }
+        },
+        "required" : [ "available", "id" ]
       },
       "CategoryResponse" : {
         "type" : "object",
@@ -5622,7 +5624,8 @@
             "type" : "string",
             "format" : "uuid"
           }
-        }
+        },
+        "required" : [ "active", "displayOrder", "etag", "id", "name", "stationId" ]
       },
       "ChangeStaffRoleRequest" : {
         "type" : "object",
@@ -5648,11 +5651,11 @@
             "minLength" : 0
           },
           "stationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
-        "required" : [ "name" ]
+        "required" : [ "displayOrder", "name" ]
       },
       "CreateDeliveryZoneRequest" : {
         "type" : "object",
@@ -5666,17 +5669,25 @@
             "$ref" : "#/components/schemas/Money"
           },
           "freeDeliveryThreshold" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "minimumOrder" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "name" : {
             "type" : "string",
             "minLength" : 1
           }
         },
-        "required" : [ "fee", "name" ]
+        "required" : [ "deliveryMinutes", "fee", "name" ]
       },
       "CreateReasonRequest" : {
         "type" : "object",
@@ -5711,12 +5722,12 @@
         "type" : "object",
         "properties" : {
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "maxLength" : 60,
             "minLength" : 0
           },
           "displayOrder" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "minimum" : 0
           },
@@ -5745,19 +5756,28 @@
             "$ref" : "#/components/schemas/Money"
           },
           "freeDeliveryThreshold" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "id" : {
             "type" : "string",
             "format" : "uuid"
           },
           "minimumOrder" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "name" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "active", "deliveryMinutes", "etag", "fee", "id", "name" ]
       },
       "ErrorCode" : {
         "type" : "string",
@@ -5796,7 +5816,8 @@
             "type" : "string",
             "format" : "uuid"
           }
-        }
+        },
+        "required" : [ "accessToken", "role", "tokenType", "userId" ]
       },
       "MenuCategory" : {
         "type" : "object",
@@ -5814,7 +5835,8 @@
               "$ref" : "#/components/schemas/MenuProduct"
             }
           }
-        }
+        },
+        "required" : [ "id", "name", "products" ]
       },
       "MenuModifierGroup" : {
         "type" : "object",
@@ -5843,7 +5865,8 @@
           "required" : {
             "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "id", "maxChoices", "minChoices", "name", "options", "required" ]
       },
       "MenuModifierOption" : {
         "type" : "object",
@@ -5868,7 +5891,8 @@
           "priceDelta" : {
             "$ref" : "#/components/schemas/Money"
           }
-        }
+        },
+        "required" : [ "allergens", "available", "id", "name", "priceDelta" ]
       },
       "MenuProduct" : {
         "type" : "object",
@@ -5884,14 +5908,14 @@
             "type" : "boolean"
           },
           "description" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "id" : {
             "type" : "string",
             "format" : "uuid"
           },
           "imageUrl" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "modifierGroups" : {
             "type" : "array",
@@ -5905,7 +5929,8 @@
           "price" : {
             "$ref" : "#/components/schemas/Money"
           }
-        }
+        },
+        "required" : [ "allergens", "available", "id", "modifierGroups", "name", "price" ]
       },
       "MenuResponse" : {
         "type" : "object",
@@ -5916,7 +5941,8 @@
               "$ref" : "#/components/schemas/MenuCategory"
             }
           }
-        }
+        },
+        "required" : [ "categories" ]
       },
       "ModifierGroupResponse" : {
         "type" : "object",
@@ -5948,7 +5974,8 @@
           "required" : {
             "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "etag", "id", "maxChoices", "minChoices", "name", "options", "required" ]
       },
       "ModifierOptionResponse" : {
         "type" : "object",
@@ -5973,7 +6000,8 @@
           "priceDelta" : {
             "$ref" : "#/components/schemas/Money"
           }
-        }
+        },
+        "required" : [ "allergens", "available", "id", "name", "priceDelta" ]
       },
       "Money" : {
         "type" : "object",
@@ -5989,7 +6017,8 @@
             "example" : "PEN",
             "pattern" : "^[A-Z]{3}$"
           }
-        }
+        },
+        "required" : [ "amount", "currency" ]
       },
       "OpeningHourResponse" : {
         "type" : "object",
@@ -5998,7 +6027,7 @@
             "type" : "boolean"
           },
           "closesAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "time-local"
           },
           "dayOfWeek" : {
@@ -6006,10 +6035,11 @@
             "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
           },
           "opensAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "time-local"
           }
-        }
+        },
+        "required" : [ "closed", "dayOfWeek" ]
       },
       "PageResponseAuditEntryResponse" : {
         "type" : "object",
@@ -6036,7 +6066,8 @@
             "type" : "integer",
             "format" : "int32"
           }
-        }
+        },
+        "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
       },
       "PageResponseProductResponse" : {
         "type" : "object",
@@ -6063,7 +6094,8 @@
             "type" : "integer",
             "format" : "int32"
           }
-        }
+        },
+        "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
       },
       "PageResponseStaffResponse" : {
         "type" : "object",
@@ -6090,7 +6122,8 @@
             "type" : "integer",
             "format" : "int32"
           }
-        }
+        },
+        "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
       },
       "Problem" : {
         "type" : "object",
@@ -6162,7 +6195,7 @@
             "format" : "uuid"
           },
           "description" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "displayOrder" : {
             "type" : "integer",
@@ -6176,7 +6209,7 @@
             "format" : "uuid"
           },
           "imageUrl" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "modifierGroupIds" : {
             "type" : "array",
@@ -6194,7 +6227,8 @@
           "quickSalePinned" : {
             "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "active", "allergens", "available", "categoryId", "displayOrder", "etag", "id", "modifierGroupIds", "name", "price", "quickSalePinned" ]
       },
       "ReasonResponse" : {
         "type" : "object",
@@ -6216,7 +6250,8 @@
             "type" : "string",
             "enum" : [ "VOID", "COMP", "CASH_OUT", "STOCK_ADJUSTMENT" ]
           }
-        }
+        },
+        "required" : [ "active", "code", "etag", "id", "type" ]
       },
       "SaveModifierGroupRequest" : {
         "type" : "object",
@@ -6248,13 +6283,13 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "name", "options" ]
+        "required" : [ "maxChoices", "minChoices", "name", "options", "required" ]
       },
       "SaveModifierOptionRequest" : {
         "type" : "object",
         "properties" : {
           "allergens" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string",
               "enum" : [ "CELERY", "CRUSTACEANS", "EGGS", "FISH", "GLUTEN", "LUPIN", "MILK", "MOLLUSCS", "MUSTARD", "PEANUTS", "SESAME", "SOY", "SULPHITES", "TREE_NUTS" ]
@@ -6262,7 +6297,7 @@
             "uniqueItems" : true
           },
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "name" : {
@@ -6280,7 +6315,7 @@
         "type" : "object",
         "properties" : {
           "allergens" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string",
               "enum" : [ "CELERY", "CRUSTACEANS", "EGGS", "FISH", "GLUTEN", "LUPIN", "MILK", "MOLLUSCS", "MUSTARD", "PEANUTS", "SESAME", "SOY", "SULPHITES", "TREE_NUTS" ]
@@ -6292,7 +6327,7 @@
             "format" : "uuid"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "maxLength" : 500,
             "minLength" : 0
           },
@@ -6302,7 +6337,7 @@
             "minimum" : 0
           },
           "modifierGroupIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string",
               "format" : "uuid"
@@ -6320,7 +6355,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "categoryId", "name", "price" ]
+        "required" : [ "categoryId", "displayOrder", "name", "price", "quickSalePinned" ]
       },
       "SaveStationRequest" : {
         "type" : "object",
@@ -6370,7 +6405,8 @@
             "type" : "string",
             "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "ADMIN" ]
           }
-        }
+        },
+        "required" : [ "active", "createdAt", "email", "id", "role" ]
       },
       "StationResponse" : {
         "type" : "object",
@@ -6388,7 +6424,8 @@
           "name" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "defaultStation", "etag", "id", "name" ]
       },
       "StoreSettingsResponse" : {
         "type" : "object",
@@ -6437,13 +6474,14 @@
           "timeZone" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "id", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "TableGridResponse" : {
         "type" : "object",
         "properties" : {
           "area" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "displayOrder" : {
             "type" : "integer",
@@ -6461,10 +6499,11 @@
             "enum" : [ "FREE", "OCCUPIED", "WAITING_FOR_PAYMENT" ]
           },
           "ticketOpenedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           }
-        }
+        },
+        "required" : [ "displayOrder", "id", "name", "status" ]
       },
       "TableResponse" : {
         "type" : "object",
@@ -6473,7 +6512,7 @@
             "type" : "boolean"
           },
           "area" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "displayOrder" : {
             "type" : "integer",
@@ -6489,7 +6528,8 @@
           "name" : {
             "type" : "string"
           }
-        }
+        },
+        "required" : [ "active", "displayOrder", "etag", "id", "name" ]
       },
       "UpdateCategoryRequest" : {
         "type" : "object",
@@ -6509,7 +6549,7 @@
             "format" : "uuid"
           }
         },
-        "required" : [ "name", "stationId" ]
+        "required" : [ "displayOrder", "name", "stationId" ]
       },
       "UpdateDeliveryZoneRequest" : {
         "type" : "object",
@@ -6523,17 +6563,25 @@
             "$ref" : "#/components/schemas/Money"
           },
           "freeDeliveryThreshold" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "minimumOrder" : {
-            "$ref" : "#/components/schemas/Money"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
           },
           "name" : {
             "type" : "string",
             "minLength" : 1
           }
         },
-        "required" : [ "fee", "name" ]
+        "required" : [ "deliveryMinutes", "fee", "name" ]
       },
       "UpdateOpeningHourRequest" : {
         "type" : "object",
@@ -6542,7 +6590,7 @@
             "type" : "boolean"
           },
           "closesAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "time-local"
           },
           "dayOfWeek" : {
@@ -6550,11 +6598,11 @@
             "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
           },
           "opensAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "time-local"
           }
         },
-        "required" : [ "dayOfWeek" ]
+        "required" : [ "closed", "dayOfWeek" ]
       },
       "UpdateStoreSettingsRequest" : {
         "type" : "object",
@@ -6608,13 +6656,13 @@
             "minLength" : 1
           }
         },
-        "required" : [ "currency", "registerDifferenceThreshold", "timeZone" ]
+        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "UpdateTableRequest" : {
         "type" : "object",
         "properties" : {
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "maxLength" : 60,
             "minLength" : 0
           },

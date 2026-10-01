@@ -7,15 +7,20 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -38,6 +43,9 @@ class OpenApiSpecIT {
 
 	@Autowired
 	MockMvcTester mvc;
+
+	@Autowired
+	JsonMapper jsonMapper;
 
 	@Autowired
 	@Qualifier("requestMappingHandlerMapping")
@@ -169,6 +177,124 @@ class OpenApiSpecIT {
 		var problem = new JsonMapper().readTree(generate()).path("components").path("schemas").path("Problem");
 
 		assertThat(problem.path("properties").path("instance").path("format").asString()).isEqualTo("uri-reference");
+	}
+
+	@Test
+	void requiresEveryRequestComponentThatIsNotNullable() throws IOException {
+		var schemas = schemas();
+
+		var category = schemas.path("CreateCategoryRequest");
+		assertThat(names(category.path("required"))).containsExactlyInAnyOrder("name", "displayOrder");
+		assertThat(types(category.path("properties").path("stationId"))).containsExactlyInAnyOrder("string", "null");
+		assertThat(types(category.path("properties").path("name"))).containsExactly("string");
+
+		var product = schemas.path("SaveProductRequest");
+		assertThat(names(product.path("required"))).contains("categoryId", "name", "price", "displayOrder",
+				"quickSalePinned");
+		assertThat(names(product.path("required"))).doesNotContain("description", "allergens", "modifierGroupIds");
+	}
+
+	@Test
+	void requiresEveryResponseComponentAndMarksTheNullableOnesAsSuch() throws IOException {
+		var product = schemas().path("ProductResponse");
+
+		assertThat(names(product.path("required"))).containsExactlyInAnyOrder("id", "name", "categoryId", "price",
+				"displayOrder", "quickSalePinned", "active", "available", "allergens", "modifierGroupIds", "etag");
+		assertThat(types(product.path("properties").path("description"))).containsExactlyInAnyOrder("string", "null");
+		assertThat(types(product.path("properties").path("imageUrl"))).containsExactlyInAnyOrder("string", "null");
+		assertThat(types(product.path("properties").path("etag"))).containsExactly("string");
+	}
+
+	@Test
+	void marksANullableReferenceAsOneOfTheTypeAndNull() throws IOException {
+		var minimumOrder = schemas().path("DeliveryZoneResponse").path("properties").path("minimumOrder");
+
+		assertThat(minimumOrder.path("oneOf").get(0).path("$ref").asString()).isEqualTo("#/components/schemas/Money");
+		assertThat(minimumOrder.path("oneOf").get(1).path("type").asString()).isEqualTo("null");
+		assertThat(schemas().path("DeliveryZoneResponse").path("properties").path("fee").has("$ref")).isTrue();
+	}
+
+	@Test
+	void everySchemaPropertyIsRequiredOrNullableOrAnOptionalRequestInput() throws IOException {
+		var schemas = schemas();
+
+		schemas.properties().forEach(schema -> {
+			var name = schema.getKey();
+			if (!name.endsWith("Response")) {
+				return;
+			}
+			var required = names(schema.getValue().path("required"));
+			schema.getValue().path("properties").properties().forEach(property -> {
+				var nullable = types(property.getValue()).contains("null")
+						|| property.getValue().path("oneOf").toString().contains("\"null\"");
+				assertThat(nullable || required.contains(property.getKey()))
+					.as("%s.%s must be required or nullable", name, property.getKey())
+					.isTrue();
+			});
+		});
+	}
+
+	// Nulls are written, not omitted, so a response schema must list every component, nullable or not.
+	@Test
+	void serializedResponsesCarryExactlyThePropertiesTheSpecDescribes() throws Exception {
+		var schemas = schemas();
+		var scanner = new ClassPathScanningCandidateComponentProvider(false) {
+			@Override
+			protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
+				return true;
+			}
+		};
+		scanner.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*[.]web[.][A-Za-z]*Response")));
+		var checked = new ArrayList<String>();
+
+		for (var candidate : scanner.findCandidateComponents("com.jhanantezana.jugueria")) {
+			var type = Class.forName(candidate.getBeanClassName());
+			var schema = schemas.path(type.getSimpleName());
+			if (!type.isRecord() || schema.isMissingNode()) {
+				continue;
+			}
+			var constructor = type.getDeclaredConstructors()[0];
+			constructor.setAccessible(true);
+			var arguments = Arrays.stream(constructor.getParameterTypes()).map(OpenApiSpecIT::blank).toArray();
+			var json = jsonMapper.readTree(jsonMapper.writeValueAsString(constructor.newInstance(arguments)));
+
+			assertThat(names(schema.path("required"))).as(type.getSimpleName()).isSubsetOf(propertyNames(json));
+			assertThat(propertyNames(json)).as(type.getSimpleName())
+				.containsExactlyInAnyOrderElementsOf(propertyNames(schema.path("properties")));
+			checked.add(type.getSimpleName());
+		}
+
+		assertThat(checked).contains("ProductResponse", "TableGridResponse", "StoreSettingsResponse", "StaffResponse");
+	}
+
+	private static Object blank(Class<?> type) {
+		if (type.isPrimitive()) {
+			return java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(type, 1), 0);
+		}
+		return List.class.isAssignableFrom(type) ? List.of() : java.util.Set.class.isAssignableFrom(type)
+				? java.util.Set.of() : null;
+	}
+
+	private static List<String> propertyNames(JsonNode object) {
+		var names = new ArrayList<String>();
+		object.propertyNames().forEach(names::add);
+		return names;
+	}
+
+	private JsonNode schemas() throws IOException {
+		return new JsonMapper().readTree(generate()).path("components").path("schemas");
+	}
+
+	private static List<String> names(JsonNode array) {
+		var names = new ArrayList<String>();
+		array.forEach(name -> names.add(name.asString()));
+		return names;
+	}
+
+	// "type" is a string for a plain schema and an array once null is allowed.
+	private static List<String> types(JsonNode schema) {
+		var type = schema.path("type");
+		return type.isArray() ? names(type) : type.isMissingNode() ? List.of() : List.of(type.asString());
 	}
 
 	private static List<String> codes(JsonNode response) {
