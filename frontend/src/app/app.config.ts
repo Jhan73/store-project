@@ -9,10 +9,12 @@ import {
 } from '@angular/core';
 import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth-interceptor';
+import { errorInterceptor } from './core/errors/error-interceptor';
 import { AppPreset } from './core/theme/app-preset';
 import { DARK_CLASS } from './core/theme/theme-store';
 import { primeTranslation } from './core/theme/prime-translation';
@@ -24,9 +26,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([errorInterceptor, authInterceptor])),
     provideClientHydration(withIncrementalHydration()),
     { provide: LOCALE_ID, useValue: 'es-PE' },
+    MessageService,
     providePrimeNG({
       theme: { preset: AppPreset, options: { darkModeSelector: `.${DARK_CLASS}` } },
       translation: primeTranslation,
