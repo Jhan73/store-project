@@ -281,6 +281,26 @@ class OpenApiSpecIT {
 		return names;
 	}
 
+	@Test
+	void describesTimesOfDayAsTheStringsJacksonWrites() throws IOException {
+		var opensAt = schemas().path("OpeningHourResponse").path("properties").path("opensAt");
+
+		assertThat(types(opensAt)).containsExactlyInAnyOrder("string", "null");
+		assertThat(opensAt.has("format")).isFalse();
+		assertThat("08:00:00").matches(opensAt.path("pattern").asString());
+		assertThat("24:00:00").doesNotMatch(opensAt.path("pattern").asString());
+	}
+
+	@Test
+	void listsValidationFailedOnlyWhereSomethingIsValidated() throws IOException {
+		var paths = new JsonMapper().readTree(generate()).path("paths");
+
+		var byId = paths.path("/api/v1/staff/{id}").path("get").path("responses");
+		assertThat(codes(byId.path("400"))).containsExactly("common.malformed-request");
+		var withBody = paths.path("/api/v1/admin/categories").path("post").path("responses");
+		assertThat(codes(withBody.path("400"))).containsExactly("common.malformed-request", "common.validation-failed");
+	}
+
 	private JsonNode schemas() throws IOException {
 		return new JsonMapper().readTree(generate()).path("components").path("schemas");
 	}

@@ -402,8 +402,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -527,8 +527,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -950,8 +950,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -1075,8 +1075,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -1345,8 +1345,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -1461,8 +1461,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -1708,8 +1708,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -1877,8 +1877,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2113,8 +2113,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2238,8 +2238,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2547,8 +2547,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2668,8 +2668,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2833,8 +2833,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -2958,8 +2958,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -4002,8 +4002,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -4127,8 +4127,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -4301,8 +4301,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -4852,8 +4852,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -5021,8 +5021,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -5106,8 +5106,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -5213,8 +5213,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -5408,8 +5408,8 @@
                 }
               }
             },
-            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
-            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
           },
           "401" : {
             "content" : {
@@ -6028,7 +6028,9 @@
           },
           "closesAt" : {
             "type" : [ "string", "null" ],
-            "format" : "time-local"
+            "description" : "Local time of day, HH:mm:ss",
+            "example" : "08:00:00",
+            "pattern" : "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"
           },
           "dayOfWeek" : {
             "type" : "string",
@@ -6036,7 +6038,9 @@
           },
           "opensAt" : {
             "type" : [ "string", "null" ],
-            "format" : "time-local"
+            "description" : "Local time of day, HH:mm:ss",
+            "example" : "08:00:00",
+            "pattern" : "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"
           }
         },
         "required" : [ "closed", "dayOfWeek" ]
@@ -6591,7 +6595,9 @@
           },
           "closesAt" : {
             "type" : [ "string", "null" ],
-            "format" : "time-local"
+            "description" : "Local time of day, HH:mm:ss",
+            "example" : "08:00:00",
+            "pattern" : "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"
           },
           "dayOfWeek" : {
             "type" : "string",
@@ -6599,7 +6605,9 @@
           },
           "opensAt" : {
             "type" : [ "string", "null" ],
-            "format" : "time-local"
+            "description" : "Local time of day, HH:mm:ss",
+            "example" : "08:00:00",
+            "pattern" : "^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$"
           }
         },
         "required" : [ "closed", "dayOfWeek" ]

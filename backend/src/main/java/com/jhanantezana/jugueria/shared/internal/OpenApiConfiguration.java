@@ -1,5 +1,7 @@
 package com.jhanantezana.jugueria.shared.internal;
 
+import java.lang.annotation.Annotation;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -25,9 +27,11 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,6 +65,8 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
 import io.swagger.v3.oas.models.tags.Tag;
 import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Constraint;
+import jakarta.validation.Valid;
 
 // Shapes the generated spec only; the app never serves it (springdoc is enabled by the spec test alone).
 @Configuration(proxyBeanMethods = false)
@@ -72,6 +78,11 @@ class OpenApiConfiguration {
 		SpringDocUtils.getConfig()
 			.replaceWithSchema(Currency.class,
 					new StringSchema().pattern("^[A-Z]{3}$").example("PEN").description("ISO-4217 currency code"));
+		// springdoc would call it format "time-local", which no tool knows; Jackson writes HH:mm:ss.
+		SpringDocUtils.getConfig()
+			.replaceWithSchema(LocalTime.class, new StringSchema().pattern("^([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$")
+				.example("08:00:00")
+				.description("Local time of day, HH:mm:ss"));
 	}
 
 	private static final String BEARER = "bearerAuth";
@@ -233,7 +244,9 @@ class OpenApiConfiguration {
 					|| parameter.hasParameterAnnotation(RequestPart.class)
 					|| parameter.hasParameterAnnotation(RequestParam.class)
 					|| parameter.hasParameterAnnotation(PathVariable.class)) {
-				errors.add(CommonError.VALIDATION_FAILED);
+				if (isValidated(parameter)) {
+					errors.add(CommonError.VALIDATION_FAILED);
+				}
 				errors.add(CommonError.MALFORMED_REQUEST);
 			}
 			else if (parameter.hasParameterAnnotation(RequestHeader.class)
@@ -241,6 +254,15 @@ class OpenApiConfiguration {
 				errors.add(CommonError.MALFORMED_REQUEST);
 			}
 		}
+	}
+
+	// A path variable or query parameter with no constraint can only be malformed, never invalid.
+	private static boolean isValidated(MethodParameter parameter) {
+		return parameter.hasParameterAnnotation(RequestBody.class) || parameter.hasParameterAnnotation(RequestPart.class)
+				|| Arrays.stream(parameter.getParameterAnnotations())
+					.map(Annotation::annotationType)
+					.anyMatch(type -> type == Valid.class || type == Validated.class
+							|| type.isAnnotationPresent(Constraint.class));
 	}
 
 	// The handlers take them as optional so a missing one reaches our own 428, but a client must always send them.
