@@ -95,9 +95,20 @@ export class Login {
   protected readonly failure = signal<Failure | null>(null);
 
   constructor() {
+    void this.leaveIfSignedIn();
+  }
+
+  // A valid refresh cookie means the visitor is already signed in; an outage is shown, but the form stays usable.
+  private async leaveIfSignedIn(): Promise<void> {
+    await this.auth.restore();
     const role = this.auth.role();
     if (role) {
-      void this.router.navigateByUrl(homeRouteFor(role));
+      await this.router.navigateByUrl(homeRouteFor(role));
+      return;
+    }
+    const outage = this.auth.refreshError();
+    if (outage && !this.submitting() && !this.failure()) {
+      this.failure.set({ message: errorMessage(outage), supportCode: null });
     }
   }
 

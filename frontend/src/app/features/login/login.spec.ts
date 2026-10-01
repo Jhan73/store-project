@@ -1,5 +1,9 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+  TestRequest,
+} from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { API_ORIGIN } from '../../core/api/api-config';
@@ -9,6 +13,11 @@ import { errorInterceptor } from '../../core/errors/error-interceptor';
 import { Login } from './login';
 
 const LOGIN = 'http://api.test/api/v1/auth/login';
+const REFRESH = 'http://api.test/api/v1/auth/refresh';
+
+type RestoreAnswer = (request: TestRequest) => void;
+const noSession: RestoreAnswer = (request) =>
+  request.flush(null, { status: 401, statusText: 'Unauthorized' });
 
 function setup(returnUrl: string | null = null) {
   TestBed.configureTestingModule({
@@ -33,9 +42,10 @@ describe('Login', () => {
   let http: HttpTestingController;
   let navigateByUrl: ReturnType<typeof vi.spyOn>;
 
-  async function render(returnUrl: string | null = null) {
+  async function render(returnUrl: string | null = null, answer: RestoreAnswer = noSession) {
     ({ http, navigateByUrl } = setup(returnUrl));
     const fixture = TestBed.createComponent(Login);
+    answer(http.expectOne(REFRESH));
     await fixture.whenStable();
     return { fixture, host: fixture.nativeElement as HTMLElement };
   }
@@ -150,6 +160,39 @@ describe('Login', () => {
     expect(host.querySelector('[role="alert"]')?.textContent).toContain('Revisa los campos marcados.');
   });
 
+  it('sends a visitor with a valid session cookie home without asking for credentials', async () => {
+    await render(null, (request) =>
+      request.flush({ accessToken: 'jwt', tokenType: 'Bearer', userId: 'u', role: 'CASHIER' }),
+    );
+
+    await vi.waitFor(() => expect(navigateByUrl).toHaveBeenCalledWith('/staff'));
+  });
+
+  it('shows no error when there is simply no session to restore', async () => {
+    const { host } = await render();
+
+    expect(host.querySelector('[role="alert"]')?.textContent?.trim()).toBe('');
+    expect(navigateByUrl).not.toHaveBeenCalled();
+  });
+
+  it('tells the user when the service is unavailable, and still lets them sign in', async () => {
+    const { fixture, host } = await render(null, (request) =>
+      request.flush(
+        { status: 503, code: 'common.service-unavailable' },
+        { status: 503, statusText: 'Service Unavailable' },
+      ),
+    );
+
+    await vi.waitFor(() =>
+      expect(host.querySelector('[role="alert"]')?.textContent).toContain(
+        'El servicio no está disponible por ahora.',
+      ),
+    );
+    await submit(host, fixture);
+    respondOk('SERVER');
+    await vi.waitFor(() => expect(navigateByUrl).toHaveBeenCalledWith('/staff'));
+  });
+
   it('leaves a signed-in user at their home instead of showing the form', async () => {
     ({ http, navigateByUrl } = setup());
     const signIn = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
@@ -158,6 +201,6 @@ describe('Login', () => {
 
     TestBed.createComponent(Login);
 
-    expect(navigateByUrl).toHaveBeenCalledWith('/admin');
+    await vi.waitFor(() => expect(navigateByUrl).toHaveBeenCalledWith('/admin'));
   });
 });
