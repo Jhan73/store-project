@@ -1,6 +1,574 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="es-PE">
   <file id="ngi18n" original="ng.template">
+    <unit id="role.server">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:6</note>
+      </notes>
+      <segment>
+        <source>Mozo</source>
+      </segment>
+    </unit>
+    <unit id="role.cashier">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:8</note>
+      </notes>
+      <segment>
+        <source>Cajero</source>
+      </segment>
+    </unit>
+    <unit id="role.admin">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:10</note>
+      </notes>
+      <segment>
+        <source>Administrador</source>
+      </segment>
+    </unit>
+    <unit id="role.customer">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:12</note>
+      </notes>
+      <segment>
+        <source>Cliente</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.account-locked">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:6</note>
+      </notes>
+      <segment>
+        <source>Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. Inténtalo más tarde.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.forbidden">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:7</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para realizar esta acción.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-credentials">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:8</note>
+      </notes>
+      <segment>
+        <source>El correo o la contraseña no son correctos.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-refresh-token">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:9</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-set-password-token">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:10</note>
+      </notes>
+      <segment>
+        <source>El enlace para crear tu contraseña no es válido o ya venció.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.unauthenticated">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:11</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.category-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:12</note>
+      </notes>
+      <segment>
+        <source>Ya existe una categoría con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.category-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:13</note>
+      </notes>
+      <segment>
+        <source>La categoría no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:14</note>
+      </notes>
+      <segment>
+        <source>La moneda no coincide con la del catálogo.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-image">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:15</note>
+      </notes>
+      <segment>
+        <source>La imagen no es válida.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-modifier-group">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:16</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-modifier-selection">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:17</note>
+      </notes>
+      <segment>
+        <source>La selección de modificadores no cumple las reglas del producto.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-price">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:18</note>
+      </notes>
+      <segment>
+        <source>El precio no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-product">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:19</note>
+      </notes>
+      <segment>
+        <source>Los datos del producto no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-in-use">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:20</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores está en uso y no se puede eliminar.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:21</note>
+      </notes>
+      <segment>
+        <source>Ya existe un grupo de modificadores con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:22</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-option-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:23</note>
+      </notes>
+      <segment>
+        <source>La opción de modificador no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-option-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:24</note>
+      </notes>
+      <segment>
+        <source>Una de las opciones elegidas no está disponible.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.price-currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:25</note>
+      </notes>
+      <segment>
+        <source>La moneda del precio no coincide con la de la tienda.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:26</note>
+      </notes>
+      <segment>
+        <source>Ya existe un producto con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:27</note>
+      </notes>
+      <segment>
+        <source>El producto no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:28</note>
+      </notes>
+      <segment>
+        <source>El producto no está disponible por ahora.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.provider-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:29</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la imagen en este momento. Inténtalo de nuevo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.station-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:30</note>
+      </notes>
+      <segment>
+        <source>Ya existe una estación con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.station-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:31</note>
+      </notes>
+      <segment>
+        <source>La estación no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-category">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:32</note>
+      </notes>
+      <segment>
+        <source>La categoría elegida no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-modifier-group">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:33</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores elegido no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-station">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:34</note>
+      </notes>
+      <segment>
+        <source>La estación elegida no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.concurrent-modification">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:35</note>
+      </notes>
+      <segment>
+        <source>Otra persona modificó este dato al mismo tiempo. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.content-too-large">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:36</note>
+      </notes>
+      <segment>
+        <source>El contenido enviado es demasiado grande.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.internal-error">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:37</note>
+      </notes>
+      <segment>
+        <source>Ocurrió un error inesperado. Inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.malformed-request">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:38</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.method-not-allowed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:39</note>
+      </notes>
+      <segment>
+        <source>Esta operación no está permitida.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.not-acceptable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:40</note>
+      </notes>
+      <segment>
+        <source>No pudimos entregar la respuesta en el formato pedido.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:41</note>
+      </notes>
+      <segment>
+        <source>No encontramos lo que buscas.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.precondition-failed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:42</note>
+      </notes>
+      <segment>
+        <source>Los datos cambiaron mientras los editabas. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.precondition-required">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:43</note>
+      </notes>
+      <segment>
+        <source>Recarga la página e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.service-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:44</note>
+      </notes>
+      <segment>
+        <source>El servicio no está disponible por ahora. Inténtalo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.unsupported-media-type">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:45</note>
+      </notes>
+      <segment>
+        <source>El tipo de archivo no es compatible.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.validation-failed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:46</note>
+      </notes>
+      <segment>
+        <source>Revisa los campos marcados.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.cannot-modify-own-account">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:47</note>
+      </notes>
+      <segment>
+        <source>No puedes modificar tu propia cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.email-already-registered">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:48</note>
+      </notes>
+      <segment>
+        <source>Ya existe una cuenta con ese correo.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.invalid-staff-role">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:49</note>
+      </notes>
+      <segment>
+        <source>El rol elegido no es válido para el personal.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.last-active-admin-required">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:50</note>
+      </notes>
+      <segment>
+        <source>Debe quedar al menos un administrador activo.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:51</note>
+      </notes>
+      <segment>
+        <source>Ya existe una mesa con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:52</note>
+      </notes>
+      <segment>
+        <source>La mesa no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:53</note>
+      </notes>
+      <segment>
+        <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:54</note>
+      </notes>
+      <segment>
+        <source>Ya existe una zona de reparto con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+      </notes>
+      <segment>
+        <source>La zona de reparto no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-board-thresholds">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+      </notes>
+      <segment>
+        <source>Los tiempos del tablero no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-delivery-zone">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+      </notes>
+      <segment>
+        <source>Los datos de la zona de reparto no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-opening-hours">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+      </notes>
+      <segment>
+        <source>El horario de atención no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-settings-value">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+      </notes>
+      <segment>
+        <source>Uno de los valores de la configuración no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.reason-code-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+      </notes>
+      <segment>
+        <source>Ya existe un motivo con ese código.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.reason-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+      </notes>
+      <segment>
+        <source>El motivo no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.generic">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+      </notes>
+      <segment>
+        <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.0">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:67</note>
+      </notes>
+      <segment>
+        <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.400">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:68</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.401">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:69</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.403">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:70</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para realizar esta acción.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.404">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+      </notes>
+      <segment>
+        <source>No encontramos lo que buscas.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.409">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+      </notes>
+      <segment>
+        <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.422">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+      </notes>
+      <segment>
+        <source>Los datos no cumplen las reglas de la operación.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.429">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+      </notes>
+      <segment>
+        <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.500">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+      </notes>
+      <segment>
+        <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.supportCode">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+      </notes>
+      <segment>
+        <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
+      </segment>
+    </unit>
     <unit id="primeng.accept">
       <notes>
         <note category="location">src/app/core/theme/prime-translation.ts:5</note>
@@ -97,6 +665,46 @@
         <source>No hay elementos seleccionados</source>
       </segment>
     </unit>
+    <unit id="admin.home.title">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:7,8</note>
+      </notes>
+      <segment>
+        <source>Administración</source>
+      </segment>
+    </unit>
+    <unit id="admin.home.empty">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:8,11</note>
+      </notes>
+      <segment>
+        <source>Aquí aparecerán las herramientas de administración.</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.title">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:11,12</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para ver esta página</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.hint">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:12,13</note>
+      </notes>
+      <segment>
+        <source>Si crees que es un error, pide acceso a un administrador.</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.home">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:13,17</note>
+      </notes>
+      <segment>
+        <source>Volver al inicio</source>
+      </segment>
+    </unit>
     <unit id="landing.hero.title">
       <notes>
         <note category="location">src/app/features/landing/landing.ts:11,12</note>
@@ -119,6 +727,126 @@
       </notes>
       <segment>
         <source>Acceso del personal</source>
+      </segment>
+    </unit>
+    <unit id="login.title">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:33,35</note>
+      </notes>
+      <segment>
+        <source>Iniciar sesión</source>
+      </segment>
+    </unit>
+    <unit id="login.email.label">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:36,38</note>
+      </notes>
+      <segment>
+        <source>Correo electrónico</source>
+      </segment>
+    </unit>
+    <unit id="login.password.label">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:49,51</note>
+      </notes>
+      <segment>
+        <source>Contraseña</source>
+      </segment>
+    </unit>
+    <unit id="login.submit">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:74</note>
+      </notes>
+      <segment>
+        <source>Entrar</source>
+      </segment>
+    </unit>
+    <unit id="staff.home.title">
+      <notes>
+        <note category="location">src/app/features/staff/staff-home.ts:7,8</note>
+      </notes>
+      <segment>
+        <source>Operación</source>
+      </segment>
+    </unit>
+    <unit id="staff.home.empty">
+      <notes>
+        <note category="location">src/app/features/staff/staff-home.ts:8,11</note>
+      </notes>
+      <segment>
+        <source>Aquí aparecerán las herramientas del local.</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.staff">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:13</note>
+      </notes>
+      <segment>
+        <source>Operación</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.admin">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:19</note>
+      </notes>
+      <segment>
+        <source>Administración</source>
+      </segment>
+    </unit>
+    <unit id="shell.brand">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,27</note>
+      </notes>
+      <segment>
+        <source>Juguería</source>
+      </segment>
+    </unit>
+    <unit id="shell.nav.label">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:29,30</note>
+      </notes>
+      <segment>
+        <source>Navegación principal</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.group">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:47</note>
+      </notes>
+      <segment>
+        <source>Tema</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.light">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:54,55</note>
+      </notes>
+      <segment>
+        <source>Tema claro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.dark">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:66,67</note>
+      </notes>
+      <segment>
+        <source>Tema oscuro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.system">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:78,79</note>
+      </notes>
+      <segment>
+        <source>Tema del sistema</source>
+      </segment>
+    </unit>
+    <unit id="shell.logout">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:95,97</note>
+      </notes>
+      <segment>
+        <source>Salir</source>
       </segment>
     </unit>
   </file>

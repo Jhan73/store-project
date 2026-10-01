@@ -85,6 +85,16 @@ describe('ThemeStore', () => {
     expect(store.isDark()).toBe(false);
   });
 
+  it('falls back to light when the browser cannot report a preference', () => {
+    vi.stubGlobal('matchMedia', undefined);
+
+    const store = TestBed.inject(ThemeStore);
+
+    expect(store.isDark()).toBe(false);
+    store.setMode('dark');
+    expect(document.documentElement.classList.contains(DARK_CLASS)).toBe(true);
+  });
+
   it('removes the stored choice when going back to system mode', () => {
     stubSystemPreference(false);
     const store = TestBed.inject(ThemeStore);

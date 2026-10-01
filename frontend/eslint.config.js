@@ -45,8 +45,15 @@ module.exports = defineConfig([
         "error",
         {
           checkId: true,
-          // Enumerations and data keys of the PrimeNG API, not text a user reads.
-          ignoreAttributes: ["severity", "optionLabel", "optionValue"],
+          // Identifiers, enumerations and test hooks, not text a user reads.
+          ignoreAttributes: [
+            "severity",
+            "optionLabel",
+            "optionValue",
+            "inputId",
+            "ariaCurrentWhenActive",
+            "data-testid",
+          ],
         },
       ],
     },

@@ -616,6 +616,7 @@ Unknown paths return 404 (no client route matches). The SSR server accepts only 
 | `/menu`, `/menu/:category` | `Server` | SEO + fresh prices/availability; incremental hydration with `@defer` |
 | `/cart`, `/checkout`, `/account/**`, `/orders/**` | `Client` | User-specific, no SEO |
 | `/staff/**` (tables, tickets, board, register), `/display`, `/admin/**` | `Client` | Authenticated tools, no SEO |
+| `/login`, `/forbidden` | `Client` | Session-dependent, no SEO |
 
 `provideClientHydration(withIncrementalHydration())` replaces `withEventReplay()` (event replay is included).
 

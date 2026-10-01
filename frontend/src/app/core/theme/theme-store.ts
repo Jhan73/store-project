@@ -22,13 +22,15 @@ export class ThemeStore {
     if (!this.isBrowser) {
       return;
     }
-    const query = matchMedia(DARK_QUERY);
-    this.systemDark.set(query.matches);
     this.mode.set(this.readStoredMode());
-    query.addEventListener('change', () => {
+    if (typeof matchMedia === 'function') {
+      const query = matchMedia(DARK_QUERY);
       this.systemDark.set(query.matches);
-      this.apply();
-    });
+      query.addEventListener('change', () => {
+        this.systemDark.set(query.matches);
+        this.apply();
+      });
+    }
     this.apply();
   }
 

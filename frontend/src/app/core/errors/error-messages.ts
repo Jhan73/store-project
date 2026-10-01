@@ -90,3 +90,7 @@ export function errorMessage(error: unknown): string {
   const status = error.status >= 500 ? 500 : error.status;
   return STATUS_MESSAGES[status] ?? GENERIC;
 }
+
+export function supportCodeMessage(correlationId: string): string {
+  return $localize`:@@error.supportCode:Código de soporte: ${correlationId}:correlationId:`;
+}

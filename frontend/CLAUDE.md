@@ -77,11 +77,16 @@ Folders are named after business features, never after technical types (`compone
 |--------|------|
 | `/`, `/legal/*` | `Prerender` |
 | `/menu`, `/menu/:category` | `Server` (SEO + fresh data; `@defer` with incremental hydration) |
-| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/staff/**`, `/display`, `/admin/**` | `Client` |
+| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/login`, `/forbidden`, `/staff/**`, `/display`, `/admin/**` | `Client` |
 
 SSR never renders authenticated content, so tokens never exist on the SSR server.
 
 **SSR host allowlist:** Angular rejects SSR requests whose `Host` is not allowed (SSRF protection, HTTP 400). The list comes **only** from the runtime variable `NG_ALLOWED_HOSTS` (comma-separated), set per ECS service — never from `security.allowedHosts` in `angular.json`, because the same image is promoted from `test` to `prod`. `/healthz` is handled by Express before Angular, so ALB health checks (which use the task IP as `Host`) pass.
+
+**Staff and admin shell**
+- `/staff` and `/admin` are lazy child routes behind `canMatch: [roleGuard(...)]` and share `features/workspace/workspace-layout` (header, role-filtered navigation, theme switch, sign-out, toast host) built on the presentational `shared/ui/app-shell`. Each work package that adds a screen adds its entry to `features/workspace/workspace-nav.ts`, so the menu never links to a page that does not exist.
+- `/login` is the single sign-in page (staff and, later, customers); it only follows a `returnUrl` that is an in-app path.
+- Errors raised by a feature are shown with `ErrorNotifier.show(error)` (toast with the localized message and the correlation id).
 
 **Components and state**
 - Container/presentational: route components orchestrate; `shared/ui` components only receive `input()` and emit `output()`.

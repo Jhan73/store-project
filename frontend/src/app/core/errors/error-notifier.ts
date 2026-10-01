@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ApiError } from './api-error';
-import { errorMessage } from './error-messages';
+import { errorMessage, supportCodeMessage } from './error-messages';
 
 @Injectable({ providedIn: 'root' })
 export class ErrorNotifier {
@@ -12,9 +12,7 @@ export class ErrorNotifier {
     this.messages.add({
       severity: 'error',
       summary: errorMessage(error),
-      detail: correlationId
-        ? $localize`:@@error.supportCode:Código de soporte: ${correlationId}:correlationId:`
-        : undefined,
+      detail: correlationId ? supportCodeMessage(correlationId) : undefined,
     });
   }
 }
