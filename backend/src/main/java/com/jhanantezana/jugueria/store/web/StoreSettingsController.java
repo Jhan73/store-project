@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
+import com.jhanantezana.jugueria.shared.ReturnsETag;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.internal.StoreSettingsService;
 
@@ -30,6 +31,7 @@ class StoreSettingsController {
 
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ReturnsETag
 	ResponseEntity<StoreSettingsResponse> get() {
 		var settings = settingsService.get();
 		return ResponseEntity.ok().eTag(ETags.format(settings.getVersion())).body(StoreSettingsResponse.from(settings));

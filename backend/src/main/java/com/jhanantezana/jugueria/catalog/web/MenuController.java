@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.MenuCache;
+import com.jhanantezana.jugueria.shared.ReturnsETag;
 
 import jakarta.annotation.security.PermitAll;
 
@@ -27,6 +28,7 @@ class MenuController {
 	// matching If-None-Match itself for a ResponseEntity).
 	@GetMapping("/menu")
 	@PermitAll
+	@ReturnsETag
 	ResponseEntity<MenuResponse> menu() {
 		var rendered = renderer.render(menuCache.menu());
 		return ResponseEntity.ok().cacheControl(CacheControl.noCache()).eTag(rendered.etag()).body(rendered.body());
