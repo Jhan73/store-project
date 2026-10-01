@@ -126,7 +126,8 @@ class OpenApiConfiguration {
 		};
 	}
 
-	// A record component is required unless it is @Nullable; Jackson writes nulls, so a nullable one is still present.
+	// A response component is always required, because Jackson writes nulls; a request one only when it is not
+	// @Nullable, because the server accepts its omission.
 	@Bean
 	OpenApiCustomizer requiredAndNullableProperties() {
 		var records = webRecords();
@@ -136,12 +137,12 @@ class OpenApiConfiguration {
 				type = PageResponse.class;
 			}
 			if (type != null && schema.getProperties() != null) {
-				tighten(schema, type);
+				tighten(schema, type, !name.endsWith("Request"));
 			}
 		});
 	}
 
-	private static void tighten(Schema<?> schema, Class<?> record) {
+	private static void tighten(Schema<?> schema, Class<?> record, boolean response) {
 		var properties = schema.getProperties();
 		var required = new TreeSet<String>();
 		if (schema.getRequired() != null) {
@@ -155,7 +156,7 @@ class OpenApiConfiguration {
 			if (component.getAnnotatedType().isAnnotationPresent(Nullable.class)) {
 				properties.put(component.getName(), orNull(property));
 			}
-			else {
+			if (response || !component.getAnnotatedType().isAnnotationPresent(Nullable.class)) {
 				required.add(component.getName());
 			}
 		}
@@ -223,6 +224,9 @@ class OpenApiConfiguration {
 			if (declared != null) {
 				Arrays.stream(declared.value()).map(this::declared).forEach(errors::add);
 			}
+			if (returnsBody(operation)) {
+				errors.add(CommonError.NOT_ACCEPTABLE);
+			}
 			errors.add(CommonError.INTERNAL_ERROR);
 			addProblemResponses(operation, errors);
 			addSuccessHeaders(operation, handler);
@@ -252,7 +256,6 @@ class OpenApiConfiguration {
 					|| parameter.hasParameterAnnotation(PathVariable.class)) {
 				if (parameter.hasParameterAnnotation(RequestBody.class) || parameter.hasParameterAnnotation(RequestPart.class)) {
 					errors.add(CommonError.UNSUPPORTED_MEDIA_TYPE);
-					errors.add(CommonError.NOT_ACCEPTABLE);
 				}
 				if (isValidated(parameter)) {
 					errors.add(CommonError.VALIDATION_FAILED);
@@ -266,7 +269,12 @@ class OpenApiConfiguration {
 		}
 	}
 
-	// Location on every 201; ETag where the handler sets one, which also lets a GET answer 304 to If-None-Match.
+	private static boolean returnsBody(Operation operation) {
+		return operation.getResponses() != null && operation.getResponses().entrySet().stream().anyMatch(
+				response -> response.getKey().startsWith("2") && response.getValue().getContent() != null);
+	}
+
+	// Location on every 201; ETag where the handler sets one, a GET marked @ReturnsETag also documents 304.
 	private static void addSuccessHeaders(Operation operation, HandlerMethod handler) {
 		var responses = operation.getResponses();
 		if (responses.get("201") != null) {
@@ -284,7 +292,8 @@ class OpenApiConfiguration {
 						.schema(new StringSchema()));
 			}
 		}
-		if (handler.hasMethodAnnotation(GetMapping.class)) {
+		// Only where the ETag is explicit: an inferred one may not move with every change to the body.
+		if (handler.hasMethodAnnotation(ReturnsETag.class) && handler.hasMethodAnnotation(GetMapping.class)) {
 			operation.addParametersItem(new HeaderParameter().name("If-None-Match")
 				.required(false)
 				.description("An ETag from an earlier response; a match answers 304 with no body.")
@@ -315,7 +324,7 @@ class OpenApiConfiguration {
 
 	// A path variable or query parameter with no constraint can only be malformed, never invalid.
 	private static boolean isValidated(MethodParameter parameter) {
-		return parameter.hasParameterAnnotation(RequestBody.class) || parameter.hasParameterAnnotation(RequestPart.class)
+		return parameter.hasParameterAnnotation(RequestBody.class)
 				|| Arrays.stream(parameter.getParameterAnnotations())
 					.map(Annotation::annotationType)
 					.anyMatch(type -> type == Valid.class || type == Validated.class

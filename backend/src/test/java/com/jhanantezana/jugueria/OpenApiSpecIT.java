@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import com.jhanantezana.jugueria.shared.Money;
+import com.jhanantezana.jugueria.shared.PageResponse;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 
@@ -199,7 +201,8 @@ class OpenApiSpecIT {
 		var product = schemas().path("ProductResponse");
 
 		assertThat(names(product.path("required"))).containsExactlyInAnyOrder("id", "name", "categoryId", "price",
-				"displayOrder", "quickSalePinned", "active", "available", "allergens", "modifierGroupIds", "etag");
+				"displayOrder", "quickSalePinned", "active", "available", "allergens", "modifierGroupIds", "etag", "description",
+				"imageUrl");
 		assertThat(types(product.path("properties").path("description"))).containsExactlyInAnyOrder("string", "null");
 		assertThat(types(product.path("properties").path("imageUrl"))).containsExactlyInAnyOrder("string", "null");
 		assertThat(types(product.path("properties").path("etag"))).containsExactly("string");
@@ -215,64 +218,193 @@ class OpenApiSpecIT {
 	}
 
 	@Test
-	void everySchemaPropertyIsRequiredOrNullableOrAnOptionalRequestInput() throws IOException {
-		var schemas = schemas();
-
-		schemas.properties().forEach(schema -> {
+	void everyResponsePropertyIsRequiredAndAnOptionalRequestInputIsNullable() throws IOException {
+		schemas().properties().forEach(schema -> {
 			var name = schema.getKey();
-			if (!name.endsWith("Response")) {
+			if (name.equals("Problem") || name.equals("ErrorCode") || name.endsWith("Request")) {
 				return;
 			}
-			var required = names(schema.getValue().path("required"));
-			schema.getValue().path("properties").properties().forEach(property -> {
-				var nullable = types(property.getValue()).contains("null")
-						|| property.getValue().path("oneOf").toString().contains("\"null\"");
-				assertThat(nullable || required.contains(property.getKey()))
-					.as("%s.%s must be required or nullable", name, property.getKey())
-					.isTrue();
-			});
+			assertThat(names(schema.getValue().path("required"))).as(name)
+				.containsExactlyInAnyOrderElementsOf(propertyNames(schema.getValue().path("properties")));
 		});
+		var table = schemas().path("CreateTableRequest");
+		assertThat(names(table.path("required"))).containsExactly("name");
+		assertThat(table.path("properties").path("displayOrder").path("default").asInt(-1)).isZero();
 	}
 
-	// Nulls are written, not omitted, so a response schema must list every component, nullable or not.
+	// Nulls are written, not omitted, so a response schema lists every component, nullable or not.
 	@Test
 	void serializedResponsesCarryExactlyThePropertiesTheSpecDescribes() throws Exception {
 		var schemas = schemas();
+		var checked = new ArrayList<String>();
+
+		for (var type : responseRecords(schemas)) {
+			if (type == Money.class) {
+				continue; // refuses nulls, so only the sample test covers it
+			}
+			var name = schemaName(type);
+			var empty = jsonMapper.readTree(jsonMapper.writeValueAsString(instantiate(type, OpenApiSpecIT::blank)));
+			assertThat(names(schemas.path(name).path("required"))).as(name).isSubsetOf(propertyNames(empty));
+			assertThat(propertyNames(empty)).as(name)
+				.containsExactlyInAnyOrderElementsOf(propertyNames(schemas.path(name).path("properties")));
+			checked.add(name);
+		}
+
+		assertThat(checked).contains("ProductResponse", "TableGridResponse", "StoreSettingsResponse", "StaffResponse",
+				"MenuCategory", "MenuProduct", "MenuModifierGroup", "MenuModifierOption", "ModifierOptionResponse");
+	}
+
+	@Test
+	void serializedSampleValuesConformToTheirSchemas() throws Exception {
+		var schemas = schemas();
+
+		for (var type : responseRecords(schemas)) {
+			var json = jsonMapper.readTree(jsonMapper.writeValueAsString(instantiate(type, OpenApiSpecIT::sample)));
+			assertConforms(json, schemas.path(schemaName(type)), schemas, schemaName(type));
+		}
+		var product = Class.forName("com.jhanantezana.jugueria.catalog.web.ProductResponse");
+		var page = new PageResponse<>(List.of(instantiate(product, OpenApiSpecIT::sample)), 0, 20, 1L, 1);
+		assertConforms(jsonMapper.readTree(jsonMapper.writeValueAsString(page)),
+				schemas.path("PageResponseProductResponse"), schemas, "PageResponseProductResponse");
+	}
+
+	private static List<Class<?>> responseRecords(JsonNode schemas) throws ClassNotFoundException {
 		var scanner = new ClassPathScanningCandidateComponentProvider(false) {
 			@Override
 			protected boolean isCandidateComponent(AnnotatedBeanDefinition definition) {
 				return true;
 			}
 		};
-		scanner.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*[.]web[.][A-Za-z]*Response")));
-		var checked = new ArrayList<String>();
-
+		scanner.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*[.]web[.].*")));
+		var types = new ArrayList<Class<?>>(List.of(Money.class));
 		for (var candidate : scanner.findCandidateComponents("com.jhanantezana.jugueria")) {
 			var type = Class.forName(candidate.getBeanClassName());
-			var schema = schemas.path(type.getSimpleName());
-			if (!type.isRecord() || schema.isMissingNode()) {
-				continue;
+			if (type.isRecord() && !type.getName().matches(".*(IT|Test)([$].*)?") && !schemaName(type).endsWith("Request")
+					&& !schemas.path(schemaName(type)).isMissingNode()) {
+				types.add(type);
 			}
-			var constructor = type.getDeclaredConstructors()[0];
-			constructor.setAccessible(true);
-			var arguments = Arrays.stream(constructor.getParameterTypes()).map(OpenApiSpecIT::blank).toArray();
-			var json = jsonMapper.readTree(jsonMapper.writeValueAsString(constructor.newInstance(arguments)));
-
-			assertThat(names(schema.path("required"))).as(type.getSimpleName()).isSubsetOf(propertyNames(json));
-			assertThat(propertyNames(json)).as(type.getSimpleName())
-				.containsExactlyInAnyOrderElementsOf(propertyNames(schema.path("properties")));
-			checked.add(type.getSimpleName());
 		}
-
-		assertThat(checked).contains("ProductResponse", "TableGridResponse", "StoreSettingsResponse", "StaffResponse");
+		return types;
 	}
 
-	private static Object blank(Class<?> type) {
-		if (type.isPrimitive()) {
-			return java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(type, 1), 0);
+	private static String schemaName(Class<?> type) {
+		var schema = type.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class);
+		return schema != null && !schema.name().isBlank() ? schema.name() : type.getSimpleName();
+	}
+
+	private static Object instantiate(Class<?> type, java.util.function.Function<java.lang.reflect.Type, Object> values)
+			throws ReflectiveOperationException {
+		var constructor = type.getDeclaredConstructors()[0];
+		constructor.setAccessible(true);
+		return constructor.newInstance(Arrays.stream(constructor.getGenericParameterTypes()).map(values).toArray());
+	}
+
+	private static Class<?> rawType(java.lang.reflect.Type type) {
+		return type instanceof Class<?> c ? c : (Class<?>) ((java.lang.reflect.ParameterizedType) type).getRawType();
+	}
+
+	private static Object blank(java.lang.reflect.Type type) {
+		var raw = rawType(type);
+		if (raw.isPrimitive()) {
+			return java.lang.reflect.Array.get(java.lang.reflect.Array.newInstance(raw, 1), 0);
 		}
-		return List.class.isAssignableFrom(type) ? List.of() : java.util.Set.class.isAssignableFrom(type)
+		return List.class.isAssignableFrom(raw) ? List.of() : java.util.Set.class.isAssignableFrom(raw)
 				? java.util.Set.of() : null;
+	}
+
+	// A non-null value for every component, so the type and format claims meet real JSON.
+	private static Object sample(java.lang.reflect.Type type) {
+		try {
+			var raw = rawType(type);
+			var arguments = type instanceof java.lang.reflect.ParameterizedType p ? p.getActualTypeArguments()
+					: new java.lang.reflect.Type[0];
+			if (raw == String.class) {
+				return "text";
+			}
+			if (raw == UUID.class) {
+				return UUID.randomUUID();
+			}
+			if (raw == java.time.Instant.class) {
+				return java.time.Instant.parse("2026-01-02T03:04:05Z");
+			}
+			if (raw == java.time.LocalTime.class) {
+				return java.time.LocalTime.of(8, 0);
+			}
+			if (raw == java.math.BigDecimal.class) {
+				return new java.math.BigDecimal("12.50");
+			}
+			if (raw == java.util.Currency.class) {
+				return java.util.Currency.getInstance("PEN");
+			}
+			if (raw == Money.class) {
+				return Money.of("12.50", java.util.Currency.getInstance("PEN"));
+			}
+			if (raw.isEnum()) {
+				return raw.getEnumConstants()[0];
+			}
+			if (List.class.isAssignableFrom(raw)) {
+				return List.of(sample(arguments[0]));
+			}
+			if (java.util.Set.class.isAssignableFrom(raw)) {
+				return java.util.Set.of(sample(arguments[0]));
+			}
+			if (java.util.Map.class.isAssignableFrom(raw)) {
+				return java.util.Map.of("key", "value");
+			}
+			if (raw.isRecord()) {
+				return instantiate(raw, OpenApiSpecIT::sample);
+			}
+			if (raw == boolean.class) {
+				return true;
+			}
+			return blank(raw) instanceof Number ? (Object) 1 : blank(raw);
+		}
+		catch (ReflectiveOperationException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+
+	private static void assertConforms(JsonNode value, JsonNode schema, JsonNode schemas, String where) {
+		if (schema.has("$ref")) {
+			var target = schema.path("$ref").asString();
+			assertConforms(value, schemas.path(target.substring(target.lastIndexOf('/') + 1)), schemas, where);
+			return;
+		}
+		if (schema.has("oneOf")) {
+			var matches = 0;
+			for (var option : schema.path("oneOf")) {
+				try {
+					assertConforms(value, option, schemas, where);
+					matches++;
+				}
+				catch (AssertionError ignored) {
+					// another branch may fit
+				}
+			}
+			assertThat(matches).as(where).isPositive();
+			return;
+		}
+		var declared = types(schema);
+		var actual = value.isNull() ? "null" : value.isString() ? "string" : value.isBoolean() ? "boolean"
+				: value.isIntegralNumber() ? "integer" : value.isNumber() ? "number" : value.isArray() ? "array" : "object";
+		assertThat(declared.contains(actual) || actual.equals("integer") && declared.contains("number"))
+			.as("%s is %s but the spec says %s", where, actual, declared)
+			.isTrue();
+		if (value.isString() && schema.has("pattern")) {
+			assertThat(value.asString()).as(where).matches(schema.path("pattern").asString());
+		}
+		if (value.isString() && schema.has("enum")) {
+			assertThat(names(schema.path("enum"))).as(where).contains(value.asString());
+		}
+		if (value.isArray() && schema.has("items")) {
+			value.forEach(item -> assertConforms(item, schema.path("items"), schemas, where + "[]"));
+		}
+		if (value.isObject() && schema.has("properties")) {
+			assertThat(propertyNames(value)).as(where)
+				.containsExactlyInAnyOrderElementsOf(propertyNames(schema.path("properties")));
+			value.properties().forEach(property -> assertConforms(property.getValue(),
+					schema.path("properties").path(property.getKey()), schemas, where + "." + property.getKey()));
+		}
 	}
 
 	private static List<String> propertyNames(JsonNode object) {
@@ -302,7 +434,7 @@ class OpenApiSpecIT {
 	}
 
 	@Test
-	void documentsUnsupportedMediaTypeAndNotAcceptableWhereABodyIsRead() throws IOException {
+	void documentsNotAcceptableWhereABodyIsReturnedAndUnsupportedMediaTypeWhereOneIsRead() throws IOException {
 		var paths = new JsonMapper().readTree(generate()).path("paths");
 
 		var json = paths.path("/api/v1/admin/categories").path("post").path("responses");
@@ -312,7 +444,36 @@ class OpenApiSpecIT {
 		assertThat(codes(upload.path("415"))).containsExactly("common.unsupported-media-type");
 		var read = paths.path("/api/v1/staff/{id}").path("get").path("responses");
 		assertThat(read.has("415")).isFalse();
-		assertThat(read.has("406")).isFalse();
+		assertThat(codes(read.path("406"))).containsExactly("common.not-acceptable");
+		var bodyless = paths.path("/api/v1/admin/categories/{id}/deactivate").path("post").path("responses");
+		assertThat(bodyless.has("415")).isFalse();
+		assertThat(bodyless.has("406")).isTrue();
+		var noContent = paths.path("/api/v1/admin/modifier-groups/{id}").path("delete").path("responses");
+		assertThat(noContent.has("406")).isFalse();
+		assertThat(noContent.has("415")).isFalse();
+	}
+
+	@Test
+	void doesNotListValidationFailedForAnUnvalidatedPart() throws IOException {
+		var upload = new JsonMapper().readTree(generate())
+			.path("paths")
+			.path("/api/v1/admin/products/{id}/image")
+			.path("put")
+			.path("responses");
+
+		assertThat(codes(upload.path("400"))).doesNotContain("common.validation-failed");
+	}
+
+	@Test
+	void documentsTheConditionalGetOnlyWhereTheETagIsExplicit() throws IOException {
+		var paths = new JsonMapper().readTree(generate()).path("paths");
+
+		var product = paths.path("/api/v1/admin/products/{id}").path("get");
+		assertThat(product.path("responses").path("200").path("headers").has("ETag")).isTrue();
+		assertThat(product.path("responses").has("304")).isFalse();
+		product.path("parameters")
+			.forEach(parameter -> assertThat(parameter.path("name").asString()).isNotEqualTo("If-None-Match"));
+		assertThat(paths.path("/api/v1/admin/modifier-groups/{id}").path("get").path("responses").has("304")).isFalse();
 	}
 
 	@Test
