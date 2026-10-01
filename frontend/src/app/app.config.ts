@@ -1,4 +1,5 @@
 import { registerLocaleData } from '@angular/common';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import localeEsPE from '@angular/common/locales/es-PE';
 import {
   ApplicationConfig,
@@ -11,6 +12,7 @@ import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './core/auth/auth-interceptor';
 import { AppPreset } from './core/theme/app-preset';
 import { DARK_CLASS } from './core/theme/theme-store';
 import { primeTranslation } from './core/theme/prime-translation';
@@ -22,6 +24,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideClientHydration(withIncrementalHydration()),
     { provide: LOCALE_ID, useValue: 'es-PE' },
     providePrimeNG({
