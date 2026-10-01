@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
+import com.jhanantezana.jugueria.shared.ReturnsETag;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 import com.jhanantezana.jugueria.store.internal.OpeningHoursService;
 
@@ -32,6 +33,7 @@ class OpeningHoursController {
 
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ReturnsETag
 	ResponseEntity<List<OpeningHourResponse>> list() {
 		var result = openingHours.list();
 		return ResponseEntity.ok()
