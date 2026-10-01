@@ -15,6 +15,7 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 - This combination is not supported by the vendor. If a PrimeNG component misbehaves, check first whether it is an Angular 22 incompatibility, and report it to the owner instead of patching around it: the fallback is migrating to PrimeNG 22 (tech-spec §6.7).
 - **Do not upgrade to PrimeNG 22** without the owner's approval: it uses a different license (PrimeUI, key required).
 - Styled mode with one custom preset (`definePreset`). The preset and the app's semantic tokens share one palette; do not restyle PrimeNG components with ad-hoc CSS.
+- Initial-bundle warning budget is 600 kB (`angular.json`), raised from 500 kB because PrimeNG and its preset alone use about 506 kB; the 1 MB error budget is unchanged.
 - PrimeNG's `darkModeSelector` is the same `<html>` class used for the app's dark mode, so both switch together.
 
 **Icons:** Tabler, through `@tabler/icons-angular` (official, MIT). Import each icon individually (tree-shaking); no icon fonts, no other icon sets. Decorative icons are `aria-hidden="true"`; icon-only buttons need an i18n `aria-label`.
@@ -110,8 +111,8 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Elapsed-time screens (board age colors, countdowns) correct device clock drift with an offset from the API's `Date` response header.
 
 **Auth** (tech-spec §6.4)
-- Access token in memory only. Refresh token is a `__Host-` HttpOnly cookie handled by the browser; call `POST /auth/refresh` with `credentials: 'include'` and the `X-Requested-With` header on load.
-- One auth interceptor in `core/auth`: attaches the bearer token **only** to API-origin requests; on `401` runs a **single-flight** refresh (concurrent `401`s share one refresh), retries once, and on failure clears the session and redirects to login. Never retries `/auth/*` calls. `403` never triggers a refresh.
+- Access token in memory only. Refresh token is a `__Host-` HttpOnly cookie handled by the browser. The session is restored lazily: the first role guard and the login page await one `POST /auth/refresh` (`credentials: 'include'`, `X-Requested-With`); public pages make no call.
+- One auth interceptor in `core/auth`: attaches the bearer token **only** to API-origin requests; on `401` runs a **single-flight** refresh (concurrent `401`s share one refresh), and retries once. Only a `401` from the refresh ends the session (clear it, redirect to login once); an outage (network, `5xx`, 10 s timeout) keeps the session and fails the request with that outage. Never retries `/auth/*` calls. `403` never triggers a refresh. Tabs serialize refreshes with the Web Locks API.
 - Role guards per feature with `canMatch`. They are UX only — the backend enforces.
 
 **Errors** (tech-spec §5.1)
@@ -139,7 +140,7 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Plurals with ICU (`{count, plural, =1 {…} other {…}}`); never concatenate translated fragments.
 - Format numbers, currency, and dates with locale-aware pipes or `Intl`, never by hand.
 - Error messages use the ID `@@error.<code>`.
-- `@angular-eslint/template/i18n` (with `checkId`) fails CI on unmarked text or missing IDs; the `ng extract-i18n` output is committed.
+- `@angular-eslint/template/i18n` (with `checkId`) fails CI on unmarked text or missing IDs; the `ng extract-i18n` output is committed. The CI drift check ignores the `location` notes (file and line numbers), so editing code does not require re-extracting, but adding, removing or rewording a message does: run `npx ng extract-i18n` and commit `src/locale/messages.xlf`.
 
 **Accessibility**
 - Semantic HTML, labelled controls, focus management in dialogs, WCAG AA contrast, never color alone.
