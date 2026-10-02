@@ -55,4 +55,18 @@ describe('AuthApi', () => {
     expect(request.request.headers.has('X-Requested-With')).toBe(true);
     request.flush(null, { status: 204, statusText: 'No Content' });
   });
+
+  it('sets the password with the token in the body and the CSRF-defense header, without cookies', () => {
+    let done = false;
+    api.setPassword({ token: 'tok', newPassword: 'Str0ng!pass' }).subscribe(() => (done = true));
+
+    const request = http.expectOne('http://api.test/api/v1/auth/set-password');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ token: 'tok', newPassword: 'Str0ng!pass' });
+    expect(request.request.headers.has('X-Requested-With')).toBe(true);
+    expect(request.request.withCredentials).toBe(false);
+    expect(request.request.url).not.toContain('tok');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    expect(done).toBe(true);
+  });
 });
