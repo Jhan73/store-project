@@ -669,7 +669,7 @@ src/app/
 
 **Money.** The frontend never computes an amount the customer pays: totals, fees, discounts, and bill splits come from the API. For previews (e.g. the cart subtotal before checkout), a `Money` utility in `core/` parses the `amount` string into integer minor units (`"12.50"` → `1250`) without `parseFloat`, adds integers, and formats with `Intl.NumberFormat` using the currency from the API.
 
-**Time.** Moments arrive as ISO-8601 UTC and are displayed in the **store** time zone (from store settings), not the browser's. Screens that compute elapsed time (board age colors, countdowns) correct for device clock drift with an offset derived from the API's `Date` response header.
+**Time.** Moments arrive as ISO-8601 UTC and are displayed in the **store** time zone (from store settings), not the browser's. Screens that compute elapsed time (board age colors, countdowns) correct for device clock drift with an offset derived from the API's `Date` response header. `Date` is not CORS-safelisted, so the backend lists it in `Access-Control-Expose-Headers` (with `ETag`, `Location`, `Retry-After`, `Idempotent-Replayed`, `X-Request-Id`); without that the browser hides it and the offset is silently `0`.
 
 ### 6.6 Internationalization (NFR-12)
 

@@ -159,6 +159,19 @@ class SecurityIT {
 		assertThat(foreign).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
+	@Test
+	void exposesTheResponseHeadersTheFrontendReadsToTheFrontendOrigin() {
+		var result = mvc.get()
+			.uri("/.well-known/oauth-protected-resource")
+			.header(HttpHeaders.ORIGIN, webOrigins.allowedOrigins().getFirst())
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+				values -> assertThat(String.join(",", values)).contains(HttpHeaders.DATE, HttpHeaders.ETAG,
+						HttpHeaders.LOCATION, HttpHeaders.RETRY_AFTER));
+	}
+
 	private MvcTestResult call(String token) {
 		return mvc.get().uri(PROTECTED).header(HttpHeaders.AUTHORIZATION, "Bearer " + token).exchange();
 	}

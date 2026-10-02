@@ -87,7 +87,7 @@ class SecurityConfiguration {
 		cors.setAllowedHeaders(List.of(HttpHeaders.AUTHORIZATION, HttpHeaders.CONTENT_TYPE, HttpHeaders.IF_MATCH,
 				"Idempotency-Key", "X-Requested-With", CorrelationId.HEADER));
 		cors.setExposedHeaders(List.of(HttpHeaders.ETAG, HttpHeaders.LOCATION, HttpHeaders.RETRY_AFTER,
-				"Idempotent-Replayed", CorrelationId.HEADER));
+				HttpHeaders.DATE, "Idempotent-Replayed", CorrelationId.HEADER));
 		cors.setAllowCredentials(true);
 		cors.setMaxAge(Duration.ofHours(1));
 		var source = new UrlBasedCorsConfigurationSource();
