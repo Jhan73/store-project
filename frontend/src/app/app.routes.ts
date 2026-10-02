@@ -11,6 +11,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/login/login').then((m) => m.Login),
   },
   {
+    path: 'set-password',
+    title: $localize`:@@setPassword.pageTitle:Crear contraseña`,
+    loadComponent: () => import('./features/set-password/set-password').then((m) => m.SetPassword),
+  },
+  {
     path: 'forbidden',
     loadComponent: () => import('./features/forbidden/forbidden').then((m) => m.Forbidden),
   },

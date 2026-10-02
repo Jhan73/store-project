@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="es-PE">
   <file id="ngi18n" original="ng.template">
+    <unit id="setPassword.pageTitle">
+      <notes>
+        <note category="location">src/app/app.routes.ts:15</note>
+      </notes>
+      <segment>
+        <source>Crear contraseña</source>
+      </segment>
+    </unit>
     <unit id="role.server">
       <notes>
         <note category="location">src/app/core/auth/role-label.ts:6</note>
@@ -761,6 +769,167 @@
         <source>Entrar</source>
       </segment>
     </unit>
+    <unit id="setPassword.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:64,65</note>
+      </notes>
+      <segment>
+        <source>Crea tu contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.hint">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:66,68</note>
+      </notes>
+      <segment>
+        <source> Entre 8 y 50 caracteres, con una mayúscula, una minúscula, un número y un carácter especial. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:71,72</note>
+      </notes>
+      <segment>
+        <source>Contraseña nueva</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toggle.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:93,94</note>
+      </notes>
+      <segment>
+        <source>Mostrar contraseñas</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.required">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:103,105</note>
+      </notes>
+      <segment>
+        <source>Escribe una contraseña.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.length">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:110,111</note>
+      </notes>
+      <segment>
+        <source>Debe tener entre 8 y 50 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.lowercase">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:115,116</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos una letra minúscula.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.uppercase">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:120,121</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos una letra mayúscula.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.digit">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:125,126</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos un número.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.special">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:130,131</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos un carácter especial, como ! ? # $ o %.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.rejected">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:138,139</note>
+      </notes>
+      <segment>
+        <source> La contraseña no cumple los requisitos de seguridad. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:147,149</note>
+      </notes>
+      <segment>
+        <source>Repite la contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.required">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:162,164</note>
+      </notes>
+      <segment>
+        <source>Repite la contraseña.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.mismatch">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:164,166</note>
+      </notes>
+      <segment>
+        <source>Las contraseñas no coinciden.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.submit">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:183,184</note>
+      </notes>
+      <segment>
+        <source>Guardar contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.invalid.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:192,193</note>
+      </notes>
+      <segment>
+        <source>Enlace no válido</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.invalid.help">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:195,197</note>
+      </notes>
+      <segment>
+        <source> Pide a un administrador que te envíe un enlace nuevo. Los enlaces vencen a las 48 horas y solo sirven una vez. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toLogin">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:199,201</note>
+        <note category="location">src/app/features/set-password/set-password.ts:207,209</note>
+      </notes>
+      <segment>
+        <source>Ir a iniciar sesión</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.done.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:205,206</note>
+      </notes>
+      <segment>
+        <source>Contraseña creada</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.done.body">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:206,207</note>
+      </notes>
+      <segment>
+        <source>Ya puedes iniciar sesión con tu nueva contraseña.</source>
+      </segment>
+    </unit>
     <unit id="staff.home.title">
       <notes>
         <note category="location">src/app/features/staff/staff-home.ts:7,8</note>
@@ -795,7 +964,7 @@
     </unit>
     <unit id="shell.brand">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,27</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,26</note>
       </notes>
       <segment>
         <source>Juguería</source>
@@ -843,7 +1012,7 @@
     </unit>
     <unit id="shell.logout">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:95,97</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:95,96</note>
       </notes>
       <segment>
         <source>Salir</source>

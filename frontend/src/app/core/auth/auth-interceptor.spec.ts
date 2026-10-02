@@ -12,6 +12,7 @@ const DATA = `${ORIGIN}/api/v1/tables`;
 const OTHER = `${ORIGIN}/api/v1/staff`;
 const REFRESH = `${ORIGIN}/api/v1/auth/refresh`;
 const LOGIN = `${ORIGIN}/api/v1/auth/login`;
+const SET_PASSWORD = `${ORIGIN}/api/v1/auth/set-password`;
 const UNAUTHORIZED = { status: 401, statusText: 'Unauthorized' };
 
 function session(accessToken: string) {
@@ -177,6 +178,18 @@ describe('authInterceptor', () => {
 
     await expect(result).rejects.toMatchObject({ status: 401 });
     http.expectNone(REFRESH);
+  });
+
+  it('sends set-password without the bearer token and never refreshes on its 401', async () => {
+    const result = firstValueFrom(client.post(SET_PASSWORD, {}));
+
+    const request = http.expectOne(SET_PASSWORD);
+    expect(request.request.headers.has('Authorization')).toBe(false);
+    request.flush(null, UNAUTHORIZED);
+
+    await expect(result).rejects.toMatchObject({ status: 401 });
+    http.expectNone(REFRESH);
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('does not refresh on 403', async () => {
