@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../api/api-config';
-import type { LoginRequest, LoginResponse } from '../api/api-types';
+import type { LoginRequest, LoginResponse, SetPasswordRequest } from '../api/api-types';
 
 // The backend rejects cookie-authenticated calls without this header; its presence forces a CORS preflight.
 const REQUESTED_WITH = { 'X-Requested-With': 'XMLHttpRequest' };
@@ -28,5 +28,10 @@ export class AuthApi {
       withCredentials: true,
       headers: REQUESTED_WITH,
     });
+  }
+
+  // Public and cookie-free: the one-time token travels in the body, never in the URL.
+  setPassword(body: SetPasswordRequest): Observable<void> {
+    return this.http.post<void>(`${this.base}/set-password`, body, { headers: REQUESTED_WITH });
   }
 }
