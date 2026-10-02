@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -45,9 +47,13 @@ class ModifierGroupController {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiErrors({ "catalog.modifier-group-not-found" })
-	ResponseEntity<ModifierGroupResponse> get(@PathVariable UUID id) {
+	ModifierGroupResponse get(@PathVariable UUID id, HttpServletResponse response) {
 		var group = groups.get(id);
-		return ResponseEntity.ok().eTag(ETags.format(group.getVersion())).body(ModifierGroupResponse.from(group));
+		// The ETag is the version, which an option availability change leaves alone. Returning a bare body keeps Spring
+		// from answering a matching If-None-Match with a 304 that would hold a stale `available`.
+		response.setHeader(HttpHeaders.ETAG, ETags.format(group.getVersion()));
+		response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
+		return ModifierGroupResponse.from(group);
 	}
 
 	@PostMapping

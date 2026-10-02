@@ -111,6 +111,47 @@ class AvailabilityControllerIT {
 	}
 
 	@Test
+	void aConditionalGetAfterAnAvailabilityChangeReturnsTheFreshProduct() {
+		var product = createProduct("Mango-" + UUID.randomUUID());
+		var cachedEtag = etagOf(product);
+		setProductAvailability(idOf(product), false, admin());
+
+		var revalidated = mvc.get()
+			.uri(PRODUCTS + "/" + idOf(product))
+			.with(admin())
+			.header(HttpHeaders.IF_NONE_MATCH, cachedEtag)
+			.exchange();
+
+		assertThat(revalidated).hasStatusOk();
+		assertThat(revalidated).bodyJson().extractingPath("$.available").isEqualTo(false);
+		assertThat(revalidated).headers().hasHeaderSatisfying(HttpHeaders.ETAG,
+				values -> assertThat(values).containsExactly(cachedEtag));
+		assertThat(revalidated).headers().hasHeaderSatisfying(HttpHeaders.CACHE_CONTROL,
+				values -> assertThat(values).containsExactly("no-store"));
+	}
+
+	@Test
+	void aConditionalGetAfterAnOptionAvailabilityChangeReturnsTheFreshGroup() {
+		var group = createGroup("Boosters-" + UUID.randomUUID());
+		var optionId = assertThat(group).bodyJson().extractingPath("$.options[0].id").actual().toString();
+		var cachedEtag = etagOf(group);
+		setOptionAvailability(optionId, false, cashier());
+
+		var revalidated = mvc.get()
+			.uri(GROUPS + "/" + idOf(group))
+			.with(admin())
+			.header(HttpHeaders.IF_NONE_MATCH, cachedEtag)
+			.exchange();
+
+		assertThat(revalidated).hasStatusOk();
+		assertThat(revalidated).bodyJson().extractingPath("$.options[0].available").isEqualTo(false);
+		assertThat(revalidated).headers().hasHeaderSatisfying(HttpHeaders.ETAG,
+				values -> assertThat(values).containsExactly(cachedEtag));
+		assertThat(revalidated).headers().hasHeaderSatisfying(HttpHeaders.CACHE_CONTROL,
+				values -> assertThat(values).containsExactly("no-store"));
+	}
+
+	@Test
 	void anAdminSaveWithAStaleViewNeverUndoesTheStaffs86() {
 		var product = createProduct("Mango-" + UUID.randomUUID());
 		var id = idOf(product);

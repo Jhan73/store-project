@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,6 +29,7 @@ import com.jhanantezana.jugueria.shared.PageRequests;
 import com.jhanantezana.jugueria.shared.PageResponse;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
 @RestController
@@ -57,8 +59,13 @@ class ProductController {
 	@GetMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiErrors({ "catalog.product-not-found" })
-	ResponseEntity<ProductResponse> get(@PathVariable UUID id) {
-		return respond(ResponseEntity.ok(), products.get(id));
+	ProductResponse get(@PathVariable UUID id, HttpServletResponse response) {
+		var product = products.get(id);
+		// The ETag is the version, which an availability change leaves alone. Returning a bare body keeps Spring from
+		// answering a matching If-None-Match with a 304 that would hold a stale `available`.
+		response.setHeader(HttpHeaders.ETAG, ETags.format(product.version()));
+		response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
+		return ProductResponse.from(product, imageUrls);
 	}
 
 	@PostMapping

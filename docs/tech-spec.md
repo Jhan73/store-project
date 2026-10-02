@@ -346,6 +346,7 @@ Reservation expiry and scheduled-order firing (every minute) and payment reconci
 |------|-------|--------------|
 | Menu (categories + products + availability) | Caffeine, per task | Evicted on the writing task right after the commit, and on every task via the `NOTIFY` signal of **every** catalog event (`STATION_CHANGED`, `CATEGORY_CHANGED`, `PRODUCT_CHANGED`, `MODIFIER_GROUP_CHANGED`, `PRODUCT_AVAILABILITY_CHANGED`, `OPTION_AVAILABILITY_CHANGED`); safety TTL 5 min |
 | `GET /api/v1/catalog/menu` response | Browser/SSR | `ETag` + `Cache-Control: no-cache` (cheap `304` revalidation) |
+| `GET /api/v1/admin/products/{id}` and `/modifier-groups/{id}` | Admin UI only | `Cache-Control: no-store`, never `304`. Their `ETag` is the entity version (for `If-Match`), which an availability change does not move, so a conditional GET must always return the fresh body |
 | Product images | CloudFront in front of S3, long `Cache-Control`, content-hashed keys | New key on change |
 
 Checkout **never** reads from cache: prices, availability, and stock are re-read from the database (FR-ONL-04).
