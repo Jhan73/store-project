@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -168,8 +169,11 @@ class SecurityIT {
 
 		assertThat(result).hasStatusOk();
 		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
-				values -> assertThat(String.join(",", values)).contains(HttpHeaders.DATE, HttpHeaders.ETAG,
-						HttpHeaders.LOCATION, HttpHeaders.RETRY_AFTER));
+				values -> assertThat(values.stream()
+					.flatMap(value -> Arrays.stream(value.split(",")))
+					.map(String::trim)
+					.toList()).contains(HttpHeaders.DATE, HttpHeaders.ETAG, HttpHeaders.LOCATION,
+							HttpHeaders.RETRY_AFTER));
 	}
 
 	private MvcTestResult call(String token) {
