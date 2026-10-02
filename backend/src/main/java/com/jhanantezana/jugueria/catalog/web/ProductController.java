@@ -61,8 +61,7 @@ class ProductController {
 	@ApiErrors({ "catalog.product-not-found" })
 	ProductResponse get(@PathVariable UUID id, HttpServletResponse response) {
 		var product = products.get(id);
-		// The ETag is the version, which an availability change leaves alone. Returning a bare body keeps Spring from
-		// answering a matching If-None-Match with a 304 that would hold a stale `available`.
+		// A bare body (not ResponseEntity) skips Spring's automatic 304, which would hide an availability change.
 		response.setHeader(HttpHeaders.ETAG, ETags.format(product.version()));
 		response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
 		return ProductResponse.from(product, imageUrls);
