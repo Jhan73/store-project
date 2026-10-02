@@ -21,6 +21,15 @@ jobs:
       - uses: ./.github/actions/setup-frontend
       - name: Lint
         run: npm run lint
+      - name: API types match the OpenAPI spec
+        run: |
+          npm run api:generate
+          git diff --exit-code -- src/app/core/api/schema.d.ts
+      - name: i18n messages are extracted
+        run: |
+          npx ng extract-i18n
+          # File and line numbers in location notes shift with any edit; ids and texts must still match.
+          git diff --exit-code -I 'category="location"' -- src/locale
       - name: Unit tests
         run: npx ng test --watch=false
       - name: Production build (SSR)
