@@ -211,6 +211,17 @@ class ProductControllerIT {
 	}
 
 	@Test
+	void answersAnEmptyPageWhenThePageOffsetOverflowsAnInt() {
+		var hugePage = mvc.get().uri(PRODUCTS + "?page=2147483647").with(admin()).exchange();
+		var overflowingOffset = mvc.get().uri(PRODUCTS + "?page=21474837&size=100").with(admin()).exchange();
+
+		assertThat(hugePage).hasStatusOk();
+		assertThat(hugePage).bodyJson().extractingPath("$.content").asList().isEmpty();
+		assertThat(overflowingOffset).hasStatusOk();
+		assertThat(overflowingOffset).bodyJson().extractingPath("$.content").asList().isEmpty();
+	}
+
+	@Test
 	void acceptsThePageSizeBoundariesAndClampsBadPaging() {
 		var negativePage = mvc.get().uri(PRODUCTS + "?page=-1").with(admin()).exchange();
 		var zeroSize = mvc.get().uri(PRODUCTS + "?size=0").with(admin()).exchange();

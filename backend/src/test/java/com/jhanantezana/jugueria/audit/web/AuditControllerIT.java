@@ -214,6 +214,14 @@ class AuditControllerIT {
 	}
 
 	@Test
+	void answersAnEmptyPageWhenThePageOffsetOverflowsAnInt() {
+		var result = mvc.get().uri(AUDIT_ENTRIES + "?page=2147483647").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content").asList().isEmpty();
+	}
+
+	@Test
 	void acceptsThePageSizeBoundaries() {
 		var min = mvc.get().uri(AUDIT_ENTRIES + "?size=1").with(admin()).exchange();
 		var max = mvc.get().uri(AUDIT_ENTRIES + "?size=100").with(admin()).exchange();

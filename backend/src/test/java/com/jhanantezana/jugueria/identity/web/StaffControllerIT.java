@@ -339,6 +339,14 @@ class StaffControllerIT {
 	}
 
 	@Test
+	void answersAnEmptyPageWhenThePageOffsetOverflowsAnInt() {
+		var result = mvc.get().uri(STAFF + "?page=21474837&size=100").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content").asList().isEmpty();
+	}
+
+	@Test
 	void acceptsThePageSizeBoundaries() {
 		var min = mvc.get().uri(STAFF + "?size=1").with(admin()).exchange();
 		var max = mvc.get().uri(STAFF + "?size=100").with(admin()).exchange();

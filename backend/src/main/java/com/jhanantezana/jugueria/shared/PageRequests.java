@@ -10,9 +10,11 @@ public final class PageRequests {
 	private PageRequests() {
 	}
 
-	// Out-of-range paging is clamped instead of rejected: the client still gets a valid page.
+	// Out-of-range paging is clamped instead of rejected: the client still gets a valid page. The page is capped so
+	// the offset fits an int, which Spring Data requires.
 	public static PageRequest of(int page, int size, Sort sort) {
-		return PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE), sort);
+		var boundedSize = Math.clamp(size, 1, MAX_PAGE_SIZE);
+		return PageRequest.of(Math.clamp(page, 0, Integer.MAX_VALUE / boundedSize), boundedSize, sort);
 	}
 
 	public static PageRequest of(int page, int size) {
