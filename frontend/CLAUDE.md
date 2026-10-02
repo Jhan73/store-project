@@ -15,6 +15,7 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 - This combination is not supported by the vendor. If a PrimeNG component misbehaves, check first whether it is an Angular 22 incompatibility, and report it to the owner instead of patching around it: the fallback is migrating to PrimeNG 22 (tech-spec §6.7).
 - **Do not upgrade to PrimeNG 22** without the owner's approval: it uses a different license (PrimeUI, key required).
 - Styled mode with one custom preset (`definePreset`). The preset and the app's semantic tokens share one palette; do not restyle PrimeNG components with ad-hoc CSS.
+- Initial-bundle warning budget is 600 kB (`angular.json`), raised from 500 kB because PrimeNG and its preset alone use about 506 kB; the 1 MB error budget is unchanged.
 - PrimeNG's `darkModeSelector` is the same `<html>` class used for the app's dark mode, so both switch together.
 
 **Icons:** Tabler, through `@tabler/icons-angular` (official, MIT). Import each icon individually (tree-shaking); no icon fonts, no other icon sets. Decorative icons are `aria-hidden="true"`; icon-only buttons need an i18n `aria-label`.
@@ -31,7 +32,7 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 - Avoid hardcoded colors.
 - Tokens are defined once, in the global theme stylesheet, with a light and a dark value each. Components only consume `var(--token)`; they never define colors of their own.
 
-Pending: `openapi-typescript` and the `api:generate` script (M1-F1, tech-spec §6.5) — its latest release declares a TypeScript 5 peer, and Angular 22 requires TypeScript 6.
+`openapi-typescript` 7.13.0 declares a TypeScript 5 peer while Angular 22 uses TypeScript 6, so `package.json` carries an `overrides` entry scoped to it (like the one for `primeng`). The generated types compile and the output is deterministic; if a future release breaks under TypeScript 6, report it instead of widening the override.
 
 ## Commands
 
@@ -42,7 +43,8 @@ NG_ALLOWED_HOSTS=localhost npm run serve:ssr:frontend   # run the built SSR serv
 npm test                                    # Vitest via @angular/build:unit-test
 npm run lint                                # angular-eslint, including the i18n rule
 npx ng test --include src/app/app.spec.ts   # single spec file
-npx ng extract-i18n                         # extract UI text
+npx ng extract-i18n                         # extract UI text into src/locale/messages.xlf (committed; CI fails on drift)
+npm run api:generate                        # regenerate src/app/core/api/schema.d.ts from ../backend/api/openapi.json (CI fails on drift)
 ```
 
 Tests use Vitest (`vitest/globals`). Do not write new tests against Jasmine APIs. Prettier config is in `package.json` (printWidth 100, single quotes).
@@ -76,11 +78,16 @@ Folders are named after business features, never after technical types (`compone
 |--------|------|
 | `/`, `/legal/*` | `Prerender` |
 | `/menu`, `/menu/:category` | `Server` (SEO + fresh data; `@defer` with incremental hydration) |
-| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/staff/**`, `/display`, `/admin/**` | `Client` |
+| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/login`, `/forbidden`, `/staff/**`, `/display`, `/admin/**` | `Client` |
 
 SSR never renders authenticated content, so tokens never exist on the SSR server.
 
 **SSR host allowlist:** Angular rejects SSR requests whose `Host` is not allowed (SSRF protection, HTTP 400). The list comes **only** from the runtime variable `NG_ALLOWED_HOSTS` (comma-separated), set per ECS service — never from `security.allowedHosts` in `angular.json`, because the same image is promoted from `test` to `prod`. `/healthz` is handled by Express before Angular, so ALB health checks (which use the task IP as `Host`) pass.
+
+**Staff and admin shell**
+- `/staff` and `/admin` are lazy child routes behind `canMatch: [roleGuard(...)]` and share `features/workspace/workspace-layout` (header, role-filtered navigation, theme switch, sign-out, toast host) built on the presentational `shared/ui/app-shell`. Each work package that adds a screen adds its entry to `features/workspace/workspace-nav.ts`, so the menu never links to a page that does not exist.
+- `/login` is the single sign-in page (staff and, later, customers); it only follows a `returnUrl` that is an in-app path.
+- Errors raised by a feature are shown with `ErrorNotifier.show(error)` (toast with the localized message and the correlation id).
 
 **Components and state**
 - Container/presentational: route components orchestrate; `shared/ui` components only receive `input()` and emit `output()`.
@@ -104,8 +111,8 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Elapsed-time screens (board age colors, countdowns) correct device clock drift with an offset from the API's `Date` response header.
 
 **Auth** (tech-spec §6.4)
-- Access token in memory only. Refresh token is a `__Host-` HttpOnly cookie handled by the browser; call `POST /auth/refresh` with `credentials: 'include'` and the `X-Requested-With` header on load.
-- One auth interceptor in `core/auth`: attaches the bearer token **only** to API-origin requests; on `401` runs a **single-flight** refresh (concurrent `401`s share one refresh), retries once, and on failure clears the session and redirects to login. Never retries `/auth/*` calls. `403` never triggers a refresh.
+- Access token in memory only. Refresh token is a `__Host-` HttpOnly cookie handled by the browser. The session is restored lazily: the first role guard and the login page await one `POST /auth/refresh` (`credentials: 'include'`, `X-Requested-With`); public pages make no call.
+- One auth interceptor in `core/auth`: attaches the bearer token **only** to API-origin requests; on `401` runs a **single-flight** refresh (concurrent `401`s share one refresh), and retries once. Only a `401` from the refresh ends the session (clear it, redirect to login once); an outage (network, `5xx`, 10 s timeout) keeps the session and fails the request with that outage. Never retries `/auth/*` calls. `403` never triggers a refresh. Tabs serialize refreshes with the Web Locks API.
 - Role guards per feature with `canMatch`. They are UX only — the backend enforces.
 
 **Errors** (tech-spec §5.1)
@@ -133,7 +140,7 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Plurals with ICU (`{count, plural, =1 {…} other {…}}`); never concatenate translated fragments.
 - Format numbers, currency, and dates with locale-aware pipes or `Intl`, never by hand.
 - Error messages use the ID `@@error.<code>`.
-- `@angular-eslint/template/i18n` (with `checkId`) fails CI on unmarked text or missing IDs; the `ng extract-i18n` output is committed.
+- `@angular-eslint/template/i18n` (with `checkId`) fails CI on unmarked text or missing IDs; the `ng extract-i18n` output is committed. The CI drift check ignores the `location` notes (file and line numbers), so editing code does not require re-extracting, but adding, removing or rewording a message does: run `npx ng extract-i18n` and commit `src/locale/messages.xlf`.
 
 **Accessibility**
 - Semantic HTML, labelled controls, focus management in dialogs, WCAG AA contrast, never color alone.
