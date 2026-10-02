@@ -445,6 +445,58 @@ class AuthControllerIT {
 	}
 
 	@Test
+	void setPasswordAcceptsExactly72BytesAndHashesIt() {
+		var account = accounts
+			.save(new UserAccount("bytes-ok@jugueria.pe", "unusable-hash", Role.CASHIER, Instant.now()));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
+		var password = "Aa1!" + "ñ".repeat(34);
+
+		assertThat(setPassword(raw, password)).hasStatus(HttpStatus.NO_CONTENT);
+
+		var reloaded = accounts.findById(account.getId()).orElseThrow();
+		assertThat(passwordEncoder.matches(password, reloaded.getPasswordHash())).isTrue();
+	}
+
+	@Test
+	void setPasswordRejectsMoreThan72BytesOnTheFieldInsteadOfFailingWith500() {
+		var account = accounts
+			.save(new UserAccount("bytes-over@jugueria.pe", "unusable-hash", Role.CASHIER, Instant.now()));
+		var raw = seedSetPasswordToken(account.getId(), Instant.now().plus(Duration.ofHours(48)));
+
+		var result = setPassword(raw, "Aa1!" + "ñ".repeat(35));
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.validation-failed");
+		assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("newPassword");
+		assertThat(setPasswordTokens.findByTokenHash(RefreshTokens.hash(raw)).orElseThrow().getUsedAt()).isNull();
+	}
+
+	@Test
+	void loginRejectsAnOverlongPasswordAsAValidationFailureForKnownAndUnknownEmailsAlike() {
+		accounts
+			.save(new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(PASSWORD), Role.CASHIER, Instant.now()));
+
+		for (var attempt : new String[][] { { "cashier@jugueria.pe", "Aa1!" + "ñ".repeat(100) },
+				{ "unknown@jugueria.pe", "a".repeat(5000) } }) {
+			var result = login(attempt[0], attempt[1]);
+
+			assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+			assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.validation-failed");
+			assertThat(result).bodyJson().extractingPath("$.errors[0].field").isEqualTo("password");
+		}
+	}
+
+	@Test
+	void loginNeverMatchesOnAPasswordBcryptWouldTruncate() {
+		var password = "Aa1!" + "ñ".repeat(34);
+		accounts.save(
+				new UserAccount("cashier@jugueria.pe", passwordEncoder.encode(password), Role.CASHIER, Instant.now()));
+
+		assertThat(login("cashier@jugueria.pe", password)).hasStatusOk();
+		assertThat(login("cashier@jugueria.pe", password + "extra")).hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
 	void setPasswordRejectsWithoutTheRequestedWithHeader() {
 		var result = mvc.post()
 			.uri(SET_PASSWORD)
