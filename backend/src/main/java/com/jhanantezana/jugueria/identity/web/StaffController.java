@@ -3,7 +3,6 @@ package com.jhanantezana.jugueria.identity.web;
 import java.net.URI;
 import java.util.UUID;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.jhanantezana.jugueria.identity.internal.StaffAccountService;
 import com.jhanantezana.jugueria.identity.internal.StaffProvisioningService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
+import com.jhanantezana.jugueria.shared.PageRequests;
 import com.jhanantezana.jugueria.shared.PageResponse;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,8 +26,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/staff")
 class StaffController {
-
-	private static final int MAX_PAGE_SIZE = 100;
 
 	private final StaffProvisioningService provisioning;
 
@@ -52,8 +50,7 @@ class StaffController {
 	@PreAuthorize("hasRole('ADMIN')")
 	PageResponse<StaffResponse> list(@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "20") int size) {
-		var bounded = Math.min(size, MAX_PAGE_SIZE);
-		return PageResponse.from(staffAccounts.list(PageRequest.of(page, bounded)), StaffResponse::from);
+		return PageResponse.from(staffAccounts.list(PageRequests.of(page, size)), StaffResponse::from);
 	}
 
 	@GetMapping("/{id}")

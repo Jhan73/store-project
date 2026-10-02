@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +24,7 @@ import com.jhanantezana.jugueria.catalog.internal.ProductService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
+import com.jhanantezana.jugueria.shared.PageRequests;
 import com.jhanantezana.jugueria.shared.PageResponse;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,8 +33,6 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/v1/admin/products")
 class ProductController {
-
-	private static final int MAX_PAGE_SIZE = 100;
 
 	// The menu order, with the id as a tiebreak so equal names and orders never shuffle between pages.
 	private static final Sort SORT = Sort.by("displayOrder").and(Sort.by("name")).and(Sort.by("id"));
@@ -52,7 +50,7 @@ class ProductController {
 	@PreAuthorize("hasRole('ADMIN')")
 	PageResponse<ProductResponse> list(@RequestParam(required = false) @Nullable UUID categoryId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		var pageable = PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE), SORT);
+		var pageable = PageRequests.of(page, size, SORT);
 		return PageResponse.from(products.list(categoryId, pageable), product -> ProductResponse.from(product, imageUrls));
 	}
 
