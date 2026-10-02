@@ -817,9 +817,25 @@
         <source>Debe tener entre 8 y 50 caracteres.</source>
       </segment>
     </unit>
-    <unit id="setPassword.rule.lowercase">
+    <unit id="setPassword.rule.bytes">
       <notes>
         <note category="location">src/app/features/set-password/set-password.ts:115,116</note>
+      </notes>
+      <segment>
+        <source>Debe pesar como máximo 72 bytes: evita acentos o emojis en exceso.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.lineBreak">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:120,121</note>
+      </notes>
+      <segment>
+        <source>No uses saltos de línea ni separadores de párrafo.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.lowercase">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:125,126</note>
       </notes>
       <segment>
         <source>Incluye al menos una letra minúscula.</source>
@@ -827,7 +843,7 @@
     </unit>
     <unit id="setPassword.rule.uppercase">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:120,121</note>
+        <note category="location">src/app/features/set-password/set-password.ts:130,131</note>
       </notes>
       <segment>
         <source>Incluye al menos una letra mayúscula.</source>
@@ -835,7 +851,7 @@
     </unit>
     <unit id="setPassword.rule.digit">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:125,126</note>
+        <note category="location">src/app/features/set-password/set-password.ts:135,136</note>
       </notes>
       <segment>
         <source>Incluye al menos un número.</source>
@@ -843,7 +859,7 @@
     </unit>
     <unit id="setPassword.rule.special">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:130,131</note>
+        <note category="location">src/app/features/set-password/set-password.ts:140,141</note>
       </notes>
       <segment>
         <source>Incluye al menos un carácter especial, como ! ? # $ o %.</source>
@@ -851,7 +867,7 @@
     </unit>
     <unit id="setPassword.password.rejected">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:138,139</note>
+        <note category="location">src/app/features/set-password/set-password.ts:148,149</note>
       </notes>
       <segment>
         <source> La contraseña no cumple los requisitos de seguridad. </source>
@@ -859,7 +875,7 @@
     </unit>
     <unit id="setPassword.confirm.label">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:147,149</note>
+        <note category="location">src/app/features/set-password/set-password.ts:157,159</note>
       </notes>
       <segment>
         <source>Repite la contraseña</source>
@@ -867,7 +883,7 @@
     </unit>
     <unit id="setPassword.confirm.required">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:162,164</note>
+        <note category="location">src/app/features/set-password/set-password.ts:172,174</note>
       </notes>
       <segment>
         <source>Repite la contraseña.</source>
@@ -875,7 +891,7 @@
     </unit>
     <unit id="setPassword.confirm.mismatch">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:164,166</note>
+        <note category="location">src/app/features/set-password/set-password.ts:174,176</note>
       </notes>
       <segment>
         <source>Las contraseñas no coinciden.</source>
@@ -883,15 +899,41 @@
     </unit>
     <unit id="setPassword.submit">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:183,184</note>
+        <note category="location">src/app/features/set-password/set-password.ts:193,194</note>
       </notes>
       <segment>
         <source>Guardar contraseña</source>
       </segment>
     </unit>
+    <unit id="setPassword.missing.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:202,203</note>
+      </notes>
+      <segment>
+        <source>No encontramos tu enlace</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.missing.body">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:204,206</note>
+      </notes>
+      <segment>
+        <source> Abre de nuevo el enlace que te llegó por correo para crear tu contraseña. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toLogin">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:207,209</note>
+        <note category="location">src/app/features/set-password/set-password.ts:220,222</note>
+        <note category="location">src/app/features/set-password/set-password.ts:228,230</note>
+      </notes>
+      <segment>
+        <source>Ir a iniciar sesión</source>
+      </segment>
+    </unit>
     <unit id="setPassword.invalid.title">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:192,193</note>
+        <note category="location">src/app/features/set-password/set-password.ts:213,214</note>
       </notes>
       <segment>
         <source>Enlace no válido</source>
@@ -899,24 +941,15 @@
     </unit>
     <unit id="setPassword.invalid.help">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:195,197</note>
+        <note category="location">src/app/features/set-password/set-password.ts:216,218</note>
       </notes>
       <segment>
         <source> Pide a un administrador que te envíe un enlace nuevo. Los enlaces vencen a las 48 horas y solo sirven una vez. </source>
       </segment>
     </unit>
-    <unit id="setPassword.toLogin">
-      <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:199,201</note>
-        <note category="location">src/app/features/set-password/set-password.ts:207,209</note>
-      </notes>
-      <segment>
-        <source>Ir a iniciar sesión</source>
-      </segment>
-    </unit>
     <unit id="setPassword.done.title">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:205,206</note>
+        <note category="location">src/app/features/set-password/set-password.ts:226,227</note>
       </notes>
       <segment>
         <source>Contraseña creada</source>
@@ -924,7 +957,7 @@
     </unit>
     <unit id="setPassword.done.body">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:206,207</note>
+        <note category="location">src/app/features/set-password/set-password.ts:227,228</note>
       </notes>
       <segment>
         <source>Ya puedes iniciar sesión con tu nueva contraseña.</source>

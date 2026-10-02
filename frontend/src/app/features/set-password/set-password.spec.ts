@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Location } from '@angular/common';
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
@@ -75,6 +76,7 @@ describe('SetPassword', () => {
     it('removes the token from the address bar by replacing the history entry', async () => {
       const { navigate, router } = await render();
 
+      expect(TestBed.inject(Location).path()).toBe('/set-password');
       expect(navigate).toHaveBeenCalledWith(
         [],
         expect.objectContaining({ replaceUrl: true, queryParams: { token: null } }),
@@ -93,12 +95,13 @@ describe('SetPassword', () => {
       request.flush(null, { status: 204, statusText: 'No Content' });
     });
 
-    it('shows the invalid-link state and no form when there is no token', async () => {
+    it('asks to reopen the emailed link, without admin advice, when the address has no token', async () => {
       const { host, navigate } = await render('/set-password');
 
       expect(host.querySelector('form')).toBeNull();
-      expect(host.querySelector('h1')?.textContent).toContain('Enlace no válido');
-      expect(host.textContent).toContain('administrador');
+      expect(host.querySelector('h1')?.textContent).toContain('No encontramos tu enlace');
+      expect(host.textContent).toContain('Abre de nuevo el enlace');
+      expect(host.textContent).not.toContain('administrador');
       expect(navigate).not.toHaveBeenCalled();
     });
 
@@ -107,6 +110,7 @@ describe('SetPassword', () => {
 
       expect(host.querySelector('form')).toBeNull();
       expect(host.querySelector('h1')?.textContent).toContain('Enlace no válido');
+      expect(host.textContent).toContain('administrador');
       expect(router.url).toBe('/set-password');
     });
 
@@ -116,7 +120,7 @@ describe('SetPassword', () => {
       expect(host.querySelector('form')).toBeNull();
     });
 
-    it('offers a way to reach the sign-in page from the invalid-link state', async () => {
+    it('offers a way to reach the sign-in page from the missing and invalid states', async () => {
       const { host } = await render('/set-password');
 
       expect(host.querySelector('a[href="/login"]')).not.toBeNull();
@@ -181,6 +185,8 @@ describe('SetPassword', () => {
       ['abcdef1!', 'mayúscula'],
       ['Abcdefg!', 'número'],
       ['Abcdefg1', 'carácter especial'],
+      ['Aa1!' + 'ñ'.repeat(35), '72 bytes'],
+      ['Abcdef1!\u2028', 'saltos de línea'],
     ])('rejects %s with a message about the broken rule', async (password, message) => {
       const { harness, host, http } = await render();
 
@@ -273,7 +279,7 @@ describe('SetPassword', () => {
     it.each([
       ['auth.invalid-set-password-token', 401],
     ])('replaces the form with the invalid-link state on %s', async (code, status) => {
-      const { harness, host, http } = await render();
+      const { harness, host, http, router } = await render();
       await submit(harness, host);
 
       const { body, init } = problem(status, code);
@@ -284,6 +290,7 @@ describe('SetPassword', () => {
       expect(host.querySelector('h1')?.textContent).toContain('Enlace no válido');
       expect(host.textContent).toContain('ya venció');
       expect(host.textContent).toContain('administrador');
+      expect(router.url).toBe('/set-password');
       expect(document.activeElement?.tagName).toBe('H1');
     });
 

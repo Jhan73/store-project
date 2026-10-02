@@ -35,7 +35,7 @@ interface Failure {
   readonly supportCode: string | null;
 }
 
-type View = 'form' | 'invalid-link' | 'done';
+type View = 'form' | 'missing-token' | 'invalid-link' | 'done';
 
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   const password = group.get('newPassword')?.value as string;
@@ -108,6 +108,16 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
                         @case ('length') {
                           <ng-container i18n="@@setPassword.rule.length"
                             >Debe tener entre 8 y 50 caracteres.</ng-container
+                          >
+                        }
+                        @case ('bytes') {
+                          <ng-container i18n="@@setPassword.rule.bytes"
+                            >Debe pesar como máximo 72 bytes: evita acentos o emojis en exceso.</ng-container
+                          >
+                        }
+                        @case ('lineBreak') {
+                          <ng-container i18n="@@setPassword.rule.lineBreak"
+                            >No uses saltos de línea ni separadores de párrafo.</ng-container
                           >
                         }
                         @case ('lowercase') {
@@ -187,6 +197,17 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
             />
           </form>
         }
+        @case ('missing-token') {
+          <section class="card">
+            <h1 tabindex="-1" i18n="@@setPassword.missing.title">No encontramos tu enlace</h1>
+            <p i18n="@@setPassword.missing.body">
+              Abre de nuevo el enlace que te llegó por correo para crear tu contraseña.
+            </p>
+            <a pButton routerLink="/login" severity="secondary" i18n="@@setPassword.toLogin"
+              >Ir a iniciar sesión</a
+            >
+          </section>
+        }
         @case ('invalid-link') {
           <section class="card">
             <h1 tabindex="-1" i18n="@@setPassword.invalid.title">Enlace no válido</h1>
@@ -244,11 +265,14 @@ export class SetPassword {
     const route = inject(ActivatedRoute);
     const raw = route.snapshot.queryParamMap.get('token');
     this.token = raw !== null && TOKEN_FORMAT.test(raw) ? raw : null;
-    if (this.token === null) {
+    if (raw === null) {
+      // A reload or a restored tab lands here once the token is gone from the URL: the link may still be valid.
+      this.view.set('missing-token');
+    } else if (this.token === null) {
       this.view.set('invalid-link');
     }
     if (raw !== null) {
-      // Replace, don't push: the token must not stay in history, screenshots or Referer.
+      // Replace, don't push: removes it from the address bar and the current history entry only.
       void this.router.navigate([], {
         relativeTo: route,
         queryParams: { token: null },
