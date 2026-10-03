@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:18@sha256:10037cee1d5ebfc057cd71b3365466cf27ce8d4bd0c4f409e426fcb2b3fb12e7
+    image: postgres:18@sha256:5a5a84b19854a9ffaa54082c166ff4ec27473a361e496e5ea167f298f2da9722
     environment:
       POSTGRES_DB: jugueria
       POSTGRES_USER: jugueria
@@ -12,7 +12,7 @@ services:
       - postgres-data:/var/lib/postgresql
 
   mailpit:
-    image: axllent/mailpit:v1.31.2@sha256:74d609a42ec279aa63c6b4622a6fa9b5408d1ad5b1d76a1c4be40a265ce0863d
+    image: axllent/mailpit:v1.31.3@sha256:ed9b00c609e77e99c79b93f1178255ebc271868920f2c69a8d166bd5634ed10d
     ports:
       - "1025:1025"
       - "8025:8025"
