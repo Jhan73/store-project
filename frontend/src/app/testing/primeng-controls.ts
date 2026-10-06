@@ -36,9 +36,9 @@ export async function openSelect(fixture: Stable, host: HTMLElement, id: string)
 export async function closeSelect(fixture: Stable, host: HTMLElement, id: string): Promise<void> {
   const root = selectRoot(host, id);
   if (isOpen(root)) {
-    root.querySelector<HTMLElement>('[role="combobox"]')!.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
-    );
+    root
+      .querySelector<HTMLElement>('[role="combobox"]')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     await fixture.whenStable();
   }
 }
@@ -84,7 +84,16 @@ export function selectedLabel(host: HTMLElement, id: string): string {
 }
 
 export function selectIsInvalid(host: HTMLElement, id: string): boolean {
-  return selectRoot(host, id).classList.contains('p-invalid');
+  const root = selectRoot(host, id);
+  const marked = root.classList.contains('p-invalid');
+  const announced =
+    root.querySelector('[role="combobox"]')?.getAttribute('aria-invalid') === 'true';
+  if (marked !== announced) {
+    throw new Error(
+      `The select "${id}" is ${marked ? '' : 'not '}marked p-invalid but aria-invalid is ${announced ? '' : 'not '}"true"`,
+    );
+  }
+  return marked;
 }
 
 export function selectIsDisabled(host: HTMLElement, id: string): boolean {
@@ -101,7 +110,15 @@ export function typeNumber(host: HTMLElement, id: string, value: string): void {
 }
 
 export function numberIsInvalid(host: HTMLElement, id: string): boolean {
-  return host.querySelector(`p-inputnumber #${id}`)!.classList.contains('p-invalid');
+  const input = host.querySelector(`p-inputnumber #${id}`)!;
+  const marked = input.classList.contains('p-invalid');
+  const announced = input.getAttribute('aria-invalid') === 'true';
+  if (marked !== announced) {
+    throw new Error(
+      `The number "${id}" is ${marked ? '' : 'not '}marked p-invalid but aria-invalid is ${announced ? '' : 'not '}"true"`,
+    );
+  }
+  return marked;
 }
 
 /** The text a p-inputnumber shows. */

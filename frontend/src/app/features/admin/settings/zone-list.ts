@@ -3,6 +3,7 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { DeliveryZone, Money } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney, parseAmount } from '../../../core/money/money';
@@ -118,6 +119,7 @@ import { SettingsApi } from './settings-api';
           formControlName="deliveryMinutes"
           [useGrouping]="false"
           [invalid]="invalid('deliveryMinutes')"
+          [pt]="numberAriaInvalid(invalid('deliveryMinutes'))"
         />
         @if (invalid('deliveryMinutes')) {
           <small class="error" i18n="@@admin.settings.zones.minutesInvalid">Escribe un número entero mayor que cero.</small>
@@ -176,6 +178,7 @@ export class ZoneList {
   protected readonly currency = signal('');
   protected readonly editing = signal<DeliveryZone | null>(null);
   protected readonly saving = signal(false);
+  protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly pending = new PendingIds();
   private lastLoad = 0;
   private reconcile = false;

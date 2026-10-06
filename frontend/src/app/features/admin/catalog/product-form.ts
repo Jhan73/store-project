@@ -23,6 +23,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
+import { selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import { forkJoin, of } from 'rxjs';
 import type {
   Allergen,
@@ -120,6 +121,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             optionValue="id"
             [options]="categoryOptions()"
             [invalid]="invalid(form.controls.categoryId)"
+            [pt]="selectAriaInvalid(invalid(form.controls.categoryId))"
           />
           @if (invalid(form.controls.categoryId)) {
             <small class="error" i18n="@@admin.catalog.productForm.categoryInvalid">Elige una categoría.</small>
@@ -297,6 +299,7 @@ export class ProductForm {
 
   protected readonly productId = inject(ActivatedRoute).snapshot.paramMap.get('id');
   protected readonly ready = signal(false);
+  protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly saving = signal(false);
   protected readonly imageAccept = IMAGE_TYPES.join(',');
   protected readonly maxImageBytes = MAX_IMAGE_BYTES;

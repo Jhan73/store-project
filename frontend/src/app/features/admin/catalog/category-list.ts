@@ -4,6 +4,7 @@ import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
@@ -95,6 +96,7 @@ import { isStale, reportFailure } from '../admin-errors';
           formControlName="displayOrder"
           [useGrouping]="false"
           [invalid]="invalid('displayOrder')"
+          [pt]="numberAriaInvalid(invalid('displayOrder'))"
         />
         @if (invalid('displayOrder')) {
           <small class="error" i18n="@@admin.catalog.categories.orderInvalid">Escribe un número entero.</small>
@@ -144,6 +146,7 @@ export class CategoryList {
   protected readonly stations = signal<readonly Station[]>([]);
   protected readonly editing = signal<Category | null>(null);
   protected readonly saving = signal(false);
+  protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly stationOptions = computed(() => [...this.stations()]);
   private readonly stationNames = computed(
     () => new Map(this.stations().map((station) => [station.id, station.name])),

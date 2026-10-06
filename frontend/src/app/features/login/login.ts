@@ -11,6 +11,7 @@ import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
+import { passwordAriaInvalid } from '../../shared/forms/aria-invalid';
 import { AuthStore } from '../../core/auth/auth-store';
 import { homeRouteFor, safeReturnUrl } from '../../core/auth/navigation';
 import { ApiError } from '../../core/errors/api-error';
@@ -53,6 +54,7 @@ interface Failure {
             autocomplete="current-password"
             [feedback]="false"
             [invalid]="invalid(form.controls.password)"
+            [pt]="passwordAriaInvalid(invalid(form.controls.password))"
             fluid
           />
         </div>
@@ -92,6 +94,7 @@ export class Login {
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
   protected readonly submitting = signal(false);
+  protected readonly passwordAriaInvalid = passwordAriaInvalid;
   protected readonly failure = signal<Failure | null>(null);
 
   constructor() {

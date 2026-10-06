@@ -20,6 +20,7 @@ import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { StoreSettings } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
@@ -118,6 +119,7 @@ function timeZoneOptions(current: string): string[] {
             [formControlName]="field.name"
             [useGrouping]="false"
             [invalid]="invalid(field.name)"
+            [pt]="numberAriaInvalid(invalid(field.name))"
           />
           @if (invalid(field.name)) {
             <small class="error">{{ numberInvalid(field) }}</small>
@@ -140,6 +142,7 @@ function timeZoneOptions(current: string): string[] {
             formControlName="timeZone"
             [options]="timeZones()"
             [invalid]="invalid('timeZone')"
+            [pt]="selectAriaInvalid(invalid('timeZone'))"
           />
         </div>
         <div class="field">
@@ -224,6 +227,8 @@ export class SettingsForm {
   private readonly notifier = inject(ErrorNotifier);
 
   protected readonly preparationFields = PREPARATION_FIELDS;
+  protected readonly numberAriaInvalid = numberAriaInvalid;
+  protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly boardFields = BOARD_FIELDS;
   protected readonly exceptionField = EXCEPTION_FIELD;
   protected readonly timeZones = signal<string[]>([]);
