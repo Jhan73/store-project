@@ -5,7 +5,7 @@ import type { Category, Product, ProductPage } from '../../../core/api/api-types
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney } from '../../../core/money/money';
 import { CatalogApi } from './catalog-api';
-import { isStale } from './catalog-errors';
+import { isStale } from '../admin-errors';
 
 const PAGE_SIZE = 20;
 

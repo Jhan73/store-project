@@ -23,7 +23,7 @@ import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
 import { AllergenPicker } from './allergen-picker';
 import { CatalogApi } from './catalog-api';
-import { isStale, reportFailure } from './catalog-errors';
+import { isStale, reportFailure } from '../admin-errors';
 
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024;

@@ -97,8 +97,93 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/admin');
 
-    expect(navLinks()).toEqual(['/staff', '/admin', '/admin/catalog']);
+    expect(navLinks()).toEqual([
+      '/staff',
+      '/admin',
+      '/admin/catalog',
+      '/admin/settings',
+      '/admin/tables',
+      '/admin/users',
+    ]);
     expect(url()).toBe('/admin');
+  });
+
+  it('keeps floor staff out of the staff accounts', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/users');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the staff accounts', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/users');
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=20')
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne('http://api.test/api/v1/admin/settings')
+      .flush({ timeZone: 'America/Lima', currency: 'PEN' });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/users');
+    expect(page().body.textContent).toContain('Personal');
+  });
+
+  it('keeps floor staff out of the table configuration', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/tables');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the table configuration', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/tables');
+    http.expectOne('http://api.test/api/v1/admin/tables').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/tables');
+    expect(page().body.textContent).toContain('Todavía no hay mesas');
+  });
+
+  it('keeps floor staff out of the store settings', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/settings/general');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('opens the store settings on the general settings with their own navigation', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/settings');
+    http.expectOne('http://api.test/api/v1/admin/settings').flush(
+      {
+        currency: 'PEN',
+        timeZone: 'America/Lima',
+        registerDifferenceThreshold: { amount: '5.00', currency: 'PEN' },
+      },
+      { headers: { ETag: '"1"' } },
+    );
+    await harness.fixture.whenStable();
+
+    const subNav = Array.from(page().querySelectorAll('nav[aria-label="Configuración"] a')).map(
+      (link) => link.getAttribute('href'),
+    );
+    expect(subNav).toEqual([
+      '/admin/settings/general',
+      '/admin/settings/hours',
+      '/admin/settings/zones',
+      '/admin/settings/reasons',
+    ]);
+    expect(url()).toBe('/admin/settings/general');
+    expect(page().body.textContent).toContain('Configuración de la tienda');
   });
 
   it('keeps floor staff out of the catalog', async () => {

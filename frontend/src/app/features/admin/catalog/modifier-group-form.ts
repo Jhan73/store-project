@@ -20,10 +20,10 @@ import type {
 } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
-import { amountValidator } from './amount-validator';
+import { amountValidator } from '../amount-validator';
 import { AllergenPicker } from './allergen-picker';
 import { CatalogApi } from './catalog-api';
-import { isStale, reportFailure } from './catalog-errors';
+import { isStale, reportFailure } from '../admin-errors';
 import { modifierGroupViolations } from './modifier-group-rules';
 
 function optionForm(option?: ModifierOption) {
