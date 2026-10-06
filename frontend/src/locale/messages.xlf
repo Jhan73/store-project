@@ -1884,6 +1884,145 @@
         <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de cierre</source>
       </segment>
     </unit>
+    <unit id="admin.settings.reasons.void">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:17</note>
+      </notes>
+      <segment>
+        <source>Anulaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.comp">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:18</note>
+      </notes>
+      <segment>
+        <source>Cortesías</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.cashOut">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:19</note>
+      </notes>
+      <segment>
+        <source>Salidas de caja</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.stockAdjustment">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:22</note>
+      </notes>
+      <segment>
+        <source>Ajustes de inventario</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:32,35</note>
+      </notes>
+      <segment>
+        <source>Motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.typeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:35,36</note>
+      </notes>
+      <segment>
+        <source>Lista de motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.empty">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:44,47</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay motivos en esta lista.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.code">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:49,50</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.state">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:50,51</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.actions">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:51,53</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:31,33</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.active">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:60,62</note>
+      </notes>
+      <segment>
+        <source>Activo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:62,65</note>
+      </notes>
+      <segment>
+        <source>Inactivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:77,78</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:72,73</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:79,81</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:74,76</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.codeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:91,94</note>
+      </notes>
+      <segment>
+        <source>Nuevo motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.codeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:101,104</note>
+      </notes>
+      <segment>
+        <source>Escribe un motivo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.create">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:106,109</note>
+      </notes>
+      <segment>
+        <source> Agregar motivo </source>
+      </segment>
+    </unit>
     <unit id="admin.settings.general.basePrepMinutes">
       <notes>
         <note category="location">src/app/features/admin/settings/settings-form.ts:39</note>
@@ -2092,6 +2231,14 @@
         <source>Zonas de reparto</source>
       </segment>
     </unit>
+    <unit id="admin.settings.nav.reasons">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:46,49</note>
+      </notes>
+      <segment>
+        <source>Motivos</source>
+      </segment>
+    </unit>
     <unit id="admin.settings.zones.title">
       <notes>
         <note category="location">src/app/features/admin/settings/zone-list.ts:20,24</note>
@@ -2148,14 +2295,6 @@
         <source>Estado</source>
       </segment>
     </unit>
-    <unit id="admin.settings.actions">
-      <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:31,33</note>
-      </notes>
-      <segment>
-        <source>Acciones</source>
-      </segment>
-    </unit>
     <unit id="admin.settings.active">
       <notes>
         <note category="location">src/app/features/admin/settings/zone-list.ts:44,46</note>
@@ -2178,22 +2317,6 @@
       </notes>
       <segment>
         <source> Editar </source>
-      </segment>
-    </unit>
-    <unit id="admin.settings.deactivate">
-      <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:72,73</note>
-      </notes>
-      <segment>
-        <source>Desactivar</source>
-      </segment>
-    </unit>
-    <unit id="admin.settings.reactivate">
-      <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:74,76</note>
-      </notes>
-      <segment>
-        <source>Reactivar</source>
       </segment>
     </unit>
     <unit id="admin.settings.zones.nameLabel">

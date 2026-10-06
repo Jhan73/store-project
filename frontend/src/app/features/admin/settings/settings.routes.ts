@@ -20,6 +20,10 @@ export const SETTINGS_ROUTES: Routes = [
         path: 'zones',
         loadComponent: () => import('./zone-list').then((m) => m.ZoneList),
       },
+      {
+        path: 'reasons',
+        loadComponent: () => import('./reason-list').then((m) => m.ReasonList),
+      },
     ],
   },
 ];

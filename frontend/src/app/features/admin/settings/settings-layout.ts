@@ -37,6 +37,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             >Zonas de reparto</a
           >
         </li>
+        <li>
+          <a
+            routerLink="reasons"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.settings.nav.reasons"
+            >Motivos</a
+          >
+        </li>
       </ul>
     </nav>
     <router-outlet />
