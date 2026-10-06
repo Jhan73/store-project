@@ -125,7 +125,7 @@ describe('Availability', () => {
 
   const host = (fixture: ComponentFixture<Availability>) => fixture.nativeElement as HTMLElement;
   const box = (fixture: ComponentFixture<Availability>, testId: string) =>
-    host(fixture).querySelector<HTMLInputElement>(`[data-testid="${testId}"]`)!;
+    host(fixture).querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="${testId}"] input`)!;
   const banner = (fixture: ComponentFixture<Availability>) =>
     host(fixture).querySelector('[data-testid="offline-banner"]');
   const stateText = (fixture: ComponentFixture<Availability>, id: string) =>
@@ -226,6 +226,7 @@ describe('Availability', () => {
     const fixture = await ready();
 
     box(fixture, 'product-p1').click();
+    await fixture.whenStable();
     expect(box(fixture, 'product-p1').checked).toBe(false);
     http
       .expectOne({ method: 'PUT', url: `${CATALOG}/products/p1/availability` })
