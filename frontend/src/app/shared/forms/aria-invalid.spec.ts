@@ -10,7 +10,13 @@ import { numberAriaInvalid, passwordAriaInvalid, selectAriaInvalid } from './ari
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Select, InputNumber, Password],
   template: `
-    <p-select inputId="sel" [options]="options" [invalid]="invalid()" [pt]="selectPt()" />
+    <p-select
+      inputId="sel"
+      [options]="options"
+      [filter]="true"
+      [invalid]="invalid()"
+      [pt]="selectPt()"
+    />
     <p-inputnumber inputId="num" [invalid]="invalid()" [pt]="numberPt()" />
     <p-password inputId="pwd" [feedback]="false" [invalid]="invalid()" [pt]="passwordPt()" />
   `,
@@ -59,6 +65,23 @@ describe('aria-invalid pass-through', () => {
     expect(combobox().getAttribute('aria-invalid')).toBe('true');
     expect(number().getAttribute('aria-invalid')).toBe('true');
     expect(password().getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('keeps aria-invalid on the combobox, not the search box, while the filter is open', async () => {
+    const { fixture, combobox } = await render();
+    fixture.componentInstance.invalid.set(true);
+    await fixture.whenStable();
+
+    (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('p-select')!.click();
+    await fixture.whenStable();
+    await vi.waitFor(() =>
+      expect((fixture.nativeElement as HTMLElement).querySelector('input[role="searchbox"]')).not.toBeNull(),
+    );
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelectorAll('p-select [role="combobox"]')).toHaveLength(1);
+    expect(combobox().getAttribute('aria-invalid')).toBe('true');
+    expect(host.querySelector('input[role="searchbox"]')!.getAttribute('aria-invalid')).toBeNull();
   });
 
   it('stops announcing the elements as invalid once the control becomes valid', async () => {

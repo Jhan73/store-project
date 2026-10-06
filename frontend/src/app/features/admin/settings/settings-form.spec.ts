@@ -7,8 +7,10 @@ import type { StoreSettings } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import {
   chooseOption,
+  filterOptions,
   numberIsInvalid,
   numberText,
+  optionLabels,
   selectedLabel,
   typeNumber,
 } from '../../../testing/primeng-controls';
@@ -93,6 +95,21 @@ describe('SettingsForm', () => {
     expect(numberText(host, 'settings-boardLateMinutes')).toBe('12');
     expect(value(host, '#settings-registerDifferenceThreshold')).toBe('5.00');
     expect(numberText(host, 'settings-exceptionThreshold')).toBe('3');
+  });
+
+  it('searches the time zones and picks one of the matches', async () => {
+    const { fixture, host } = await render();
+
+    expect(await filterOptions(fixture, host, 'settings-timeZone', 'bog')).toEqual([
+      'America/Bogota',
+    ]);
+    await chooseOption(fixture, host, 'settings-timeZone', 'America/Bogota');
+
+    expect(selectedLabel(host, 'settings-timeZone')).toBe('America/Bogota');
+    expect(await optionLabels(fixture, host, 'settings-timeZone')).toEqual([
+      'America/Bogota',
+      'America/Lima',
+    ]);
   });
 
   it('warns about delivery zones only while the currency differs from the saved one', async () => {

@@ -24,14 +24,21 @@ function isOpen(root: HTMLElement): boolean {
 
 export async function openSelect(fixture: Stable, host: HTMLElement, id: string): Promise<void> {
   const root = selectRoot(host, id);
-  if (!isOpen(root)) {
+  for (let attempt = 0; attempt < 2 && !isOpen(root); attempt++) {
     root.click();
     await fixture.whenStable();
-    await vi.waitFor(() => {
-      if (!isOpen(root)) {
-        throw new Error(`The select "${id}" did not open`);
-      }
-    }, WAIT);
+    try {
+      await vi.waitFor(() => {
+        if (!isOpen(root)) {
+          throw new Error('closed');
+        }
+      }, { timeout: 2500 });
+    } catch {
+      // a click that lands while the previous overlay is still leaving is lost; click again
+    }
+  }
+  if (!isOpen(root)) {
+    throw new Error(`The select "${id}" did not open`);
   }
 }
 
@@ -66,6 +73,27 @@ export async function chooseOption(
   }
   find()!.click();
   await fixture.whenStable();
+}
+
+/** Opens the select, types into its search box and returns the labels that remain. The select stays open. */
+export async function filterOptions(
+  fixture: Stable,
+  host: HTMLElement,
+  id: string,
+  text: string,
+): Promise<string[]> {
+  await openSelect(fixture, host, id);
+  const root = selectRoot(host, id);
+  await vi.waitFor(() => {
+    if (!root.querySelector('input[role="searchbox"]')) {
+      throw new Error(`The select "${id}" has no search box`);
+    }
+  }, WAIT);
+  const input = root.querySelector<HTMLInputElement>('input[role="searchbox"]')!;
+  input.value = text;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await fixture.whenStable();
+  return optionNodes(root).map((node) => node.textContent?.trim() ?? '');
 }
 
 /** The labels of the options the select offers, in order. */

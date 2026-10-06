@@ -120,6 +120,11 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             optionLabel="name"
             optionValue="id"
             [options]="categoryOptions()"
+            [filter]="true"
+            filterBy="name"
+            [resetFilterOnHide]="true"
+            filterPlaceholder="Buscar"
+            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
             [invalid]="invalid(form.controls.categoryId)"
             [pt]="selectAriaInvalid(invalid(form.controls.categoryId))"
           />
@@ -226,6 +231,11 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
               optionLabel="name"
               optionValue="id"
               [options]="detached()"
+              [filter]="true"
+              filterBy="name"
+              [resetFilterOnHide]="true"
+              filterPlaceholder="Buscar"
+              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
               [formControl]="groupPick"
             />
             <button

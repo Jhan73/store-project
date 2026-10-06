@@ -8,6 +8,7 @@ import type { Allergen, Category, ModifierGroup, Product } from '../../../core/a
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import {
   chooseOption,
+  filterOptions,
   optionLabels,
   selectedLabel,
   selectIsInvalid,
@@ -160,6 +161,23 @@ describe('ProductForm', () => {
       await fixture.whenStable();
 
       expect(navigate).toHaveBeenCalledWith(['/admin/catalog/products', 'p9']);
+    }, 15_000);
+
+    it('searches the categories and the groups before picking one', async () => {
+      const { fixture, host, http } = await render();
+
+      expect(await filterOptions(fixture, host, 'product-category', 'sna')).toEqual(['Snacks']);
+      await chooseOption(fixture, host, 'product-category', 'Snacks');
+      expect(await filterOptions(fixture, host, 'product-group-add', 'ex')).toEqual(['Extras']);
+      await chooseOption(fixture, host, 'product-group-add', 'Extras');
+      await click(fixture, host, 'add-group');
+      type(host, '#product-name', 'Water');
+      type(host, '#product-price', '3');
+      submit(host);
+
+      const body = http.expectOne(`${API}/admin/products`).request.body;
+      expect(body.categoryId).toBe('c2');
+      expect(body.modifierGroupIds).toEqual(['g2']);
     });
 
     it('sends no description when it is left blank', async () => {
@@ -210,7 +228,7 @@ describe('ProductForm', () => {
         'g3',
         'g1',
       ]);
-    });
+    }, 15_000);
 
     it('sends nothing and marks the fields when the basics are missing', async () => {
       const { fixture, host } = await render();

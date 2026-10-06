@@ -118,6 +118,11 @@ import { isStale, reportFailure } from '../admin-errors';
           optionLabel="name"
           optionValue="id"
           [options]="stationOptions()"
+          [filter]="true"
+          filterBy="name"
+          [resetFilterOnHide]="true"
+          filterPlaceholder="Buscar"
+          i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
           [showClear]="!editing()"
         />
       </div>

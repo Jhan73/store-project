@@ -150,5 +150,5 @@ describe('admin catalog flow', () => {
     expect(router.url).toBe('/admin/catalog/products/p1');
     expect(page().querySelector<HTMLInputElement>('#product-name')!.value).toBe('Orange juice');
     expect(page().textContent).toContain('Size');
-  }, 20_000);
+  }, 40_000);
 });

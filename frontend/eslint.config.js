@@ -50,6 +50,7 @@ module.exports = defineConfig([
             "severity",
             "optionLabel",
             "optionValue",
+            "filterBy",
             "inputId",
             "ariaCurrentWhenActive",
             "data-testid",

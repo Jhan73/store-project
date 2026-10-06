@@ -141,6 +141,10 @@ function timeZoneOptions(current: string): string[] {
             [ariaLabelledBy]="'settings-timeZone-label'"
             formControlName="timeZone"
             [options]="timeZones()"
+            [filter]="true"
+            [resetFilterOnHide]="true"
+            filterPlaceholder="Buscar"
+            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
             [invalid]="invalid('timeZone')"
             [pt]="selectAriaInvalid(invalid('timeZone'))"
           />

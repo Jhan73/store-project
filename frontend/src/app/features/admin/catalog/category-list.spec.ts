@@ -5,7 +5,12 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Station } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
-import { chooseOption, selectedLabel, typeNumber } from '../../../testing/primeng-controls';
+import {
+  chooseOption,
+  filterOptions,
+  selectedLabel,
+  typeNumber,
+} from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { CategoryList } from './category-list';
 
@@ -103,6 +108,18 @@ describe('CategoryList', () => {
       displayOrder: 1,
       stationId: 's2',
     });
+  });
+
+  it('searches the stations before choosing one', async () => {
+    const { fixture, host, http } = await render([]);
+
+    type(host, '#category-name', 'Shots');
+    typeNumber(host, 'category-order', '1');
+    expect(await filterOptions(fixture, host, 'category-station', 'ba')).toEqual(['Bar']);
+    await chooseOption(fixture, host, 'category-station', 'Bar');
+    submit(host);
+
+    expect(http.expectOne(`${ADMIN}/categories`).request.body.stationId).toBe('s2');
   });
 
   it('edits a category with the version it was listed with', async () => {

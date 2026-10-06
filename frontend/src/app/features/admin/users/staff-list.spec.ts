@@ -9,6 +9,7 @@ import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import {
   chooseOption,
+  filterOptions,
   optionLabels,
   selectedLabel,
   selectIsDisabled,
@@ -136,6 +137,26 @@ describe('StaffList', () => {
       'Cajero',
       'Administrador',
     ]);
+  });
+
+  it('searches the roles and invites with the one that is picked', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'staff-role', 'caj')).toEqual(['Cajero']);
+    await chooseOption(fixture, host, 'staff-role', 'Cajero');
+    type(host, '#staff-email', 'nueva@juguera.pe');
+    submit(host);
+
+    expect(http.expectOne(`${API}/staff`).request.body).toEqual({
+      email: 'nueva@juguera.pe',
+      role: 'CASHIER',
+    });
+  });
+
+  it('searches the role of an existing account', async () => {
+    const { fixture, host } = await render();
+
+    expect(await filterOptions(fixture, host, 'role-u1', 'admin')).toEqual(['Administrador']);
   });
 
   it('keeps the typed email and tells the user when it is already registered', async () => {

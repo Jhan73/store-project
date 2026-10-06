@@ -45,6 +45,11 @@ const TYPES: readonly TypeOption[] = [
         optionLabel="label"
         optionValue="value"
         [options]="types"
+        [filter]="true"
+        filterBy="label"
+        [resetFilterOnHide]="true"
+        filterPlaceholder="Buscar"
+        i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
         [formControl]="typeControl"
         (onChange)="pick($event.value)"
       />

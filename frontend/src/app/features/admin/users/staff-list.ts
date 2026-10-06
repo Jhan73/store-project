@@ -57,6 +57,11 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
                 [inputId]="'role-' + member.id"
                 [ariaLabel]="roleControlLabel(member)"
                 [options]="roleOptions"
+                [filter]="true"
+                filterBy="label"
+                [resetFilterOnHide]="true"
+                filterPlaceholder="Buscar"
+                i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
                 [ngModel]="member.role"
                 [disabled]="pending.has(member.id) || isOwn(member)"
                 [attr.data-testid]="'role-' + member.id"
@@ -162,6 +167,11 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           optionValue="value"
           formControlName="role"
           [options]="roleOptions"
+          [filter]="true"
+          filterBy="label"
+          [resetFilterOnHide]="true"
+          filterPlaceholder="Buscar"
+          i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
         />
       </div>
       <p class="muted" i18n="@@admin.users.inviteHint">

@@ -992,6 +992,21 @@
         <source>Estación predeterminada</source>
       </segment>
     </unit>
+    <unit id="shared.select.filterPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:125</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:127</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:238</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:47</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:52</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:147</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:64</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:174</note>
+      </notes>
+      <segment>
+        <source>Buscar</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.categories.save">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:117,119</note>

@@ -6,7 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
-import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
+import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { ProductList } from './product-list';
 
@@ -121,6 +121,19 @@ describe('ProductList', () => {
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Chips');
+    expect(selectedLabel(host, 'product-category-filter')).toBe('Snacks');
+  });
+
+  it('searches the categories before filtering by one', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'product-category-filter', 'snack')).toEqual([
+      'Snacks',
+    ]);
+    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
+    http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`).flush(page([]));
+    await fixture.whenStable();
+
     expect(selectedLabel(host, 'product-category-filter')).toBe('Snacks');
   });
 

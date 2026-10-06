@@ -5,7 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Reason } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
-import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
+import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { ReasonList } from './reason-list';
 import { SettingsApi } from './settings-api';
 
@@ -84,6 +84,17 @@ describe('ReasonList', () => {
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Supplier');
+  });
+
+  it('searches the types and loads the one that is picked', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'reason-type', 'caja')).toEqual(['Salidas de caja']);
+    await chooseType(fixture, host, 'Salidas de caja');
+    http.expectOne(`${ADMIN}/reasons?type=CASH_OUT`).flush([]);
+    await fixture.whenStable();
+
+    expect(selectedLabel(host, 'reason-type')).toBe('Salidas de caja');
   });
 
   it('shows only the answer to the latest pick when answers arrive out of order', async () => {
