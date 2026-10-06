@@ -109,7 +109,7 @@ import { isStale, reportFailure } from '../admin-errors';
         >
         <p-select
           inputId="category-station"
-          ariaLabelledBy="category-station-label"
+          [ariaLabelledBy]="'category-station-label'"
           formControlName="stationId"
           placeholder="Estación predeterminada"
           i18n-placeholder="@@admin.catalog.categories.defaultStation"

@@ -136,7 +136,7 @@ function timeZoneOptions(current: string): string[] {
           >
           <p-select
             inputId="settings-timeZone"
-            ariaLabelledBy="settings-timeZone-label"
+            [ariaLabelledBy]="'settings-timeZone-label'"
             formControlName="timeZone"
             [options]="timeZones()"
             [invalid]="invalid('timeZone')"
@@ -226,7 +226,7 @@ export class SettingsForm {
   protected readonly preparationFields = PREPARATION_FIELDS;
   protected readonly boardFields = BOARD_FIELDS;
   protected readonly exceptionField = EXCEPTION_FIELD;
-  protected readonly timeZones = signal<readonly string[]>([]);
+  protected readonly timeZones = signal<string[]>([]);
   protected readonly currency = signal('');
   private readonly typedCurrency = signal('');
   protected readonly currencyChanged = computed(() => {

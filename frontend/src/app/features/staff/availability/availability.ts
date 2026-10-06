@@ -51,9 +51,10 @@ import { AvailabilityStore, ItemKind } from './availability-store';
           <ul>
             @for (product of category.products; track product.id) {
               <li>
-                <label>
+                <label [for]="'product-' + product.id">
                   <p-toggleswitch
                     #toggle="ngModel"
+                    [inputId]="'product-' + product.id"
                     [ngModel]="product.available"
                     [disabled]="!store.enabled() || store.pending.has(product.id)"
                     [attr.data-testid]="'product-' + product.id"
@@ -88,9 +89,10 @@ import { AvailabilityStore, ItemKind } from './availability-store';
             <ul>
               @for (option of group.options; track option.id) {
                 <li>
-                  <label>
+                  <label [for]="'option-' + option.id">
                     <p-toggleswitch
                       #toggle="ngModel"
+                      [inputId]="'option-' + option.id"
                       [ngModel]="option.available"
                       [disabled]="!store.enabled() || store.pending.has(option.id)"
                       [attr.data-testid]="'option-' + option.id"

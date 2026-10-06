@@ -41,7 +41,7 @@ const TYPES: readonly TypeOption[] = [
       >
       <p-select
         inputId="reason-type"
-        ariaLabelledBy="reason-type-label"
+        [ariaLabelledBy]="'reason-type-label'"
         optionLabel="label"
         optionValue="value"
         [options]="types"
@@ -123,7 +123,7 @@ export class ReasonList {
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 
-  protected readonly types = TYPES;
+  protected readonly types = [...TYPES];
   protected readonly type = signal<ReasonType>(TYPES[0].value);
   protected readonly typeControl = new FormControl<ReasonType>(TYPES[0].value, {
     nonNullable: true,

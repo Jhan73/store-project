@@ -34,12 +34,12 @@ const PAGE_SIZE = 20;
       >
       <p-select
         inputId="product-category-filter"
-        ariaLabelledBy="product-category-filter-label"
+        [ariaLabelledBy]="'product-category-filter-label'"
         placeholder="Todas"
         i18n-placeholder="@@admin.catalog.products.allCategories"
         optionLabel="name"
         optionValue="id"
-        [options]="categories()"
+        [options]="categoryOptions()"
         [showClear]="true"
         [formControl]="categoryFilter"
         (onChange)="filter($event.value)"
@@ -157,6 +157,7 @@ export class ProductList {
   private readonly notifier = inject(ErrorNotifier);
 
   protected readonly categories = signal<readonly Category[]>([]);
+  protected readonly categoryOptions = computed(() => [...this.categories()]);
   protected readonly categoryId = signal('');
   protected readonly categoryFilter = new FormControl<string | null>(null);
   protected readonly current = signal<ProductPage>({

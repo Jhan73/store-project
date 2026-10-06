@@ -157,7 +157,7 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         <label for="staff-role" id="staff-role-label" i18n="@@admin.users.roleLabel">Rol</label>
         <p-select
           inputId="staff-role"
-          ariaLabelledBy="staff-role-label"
+          [ariaLabelledBy]="'staff-role-label'"
           optionLabel="label"
           optionValue="value"
           formControlName="role"

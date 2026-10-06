@@ -39,6 +39,7 @@ const stale = {
 };
 
 async function render() {
+  vi.spyOn(Intl, 'supportedValuesOf').mockReturnValue(['America/Bogota', 'America/Lima']);
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(withInterceptors([errorInterceptor])),
@@ -74,7 +75,10 @@ function value(host: HTMLElement, selector: string) {
 
 
 describe('SettingsForm', () => {
-  afterEach(() => TestBed.inject(HttpTestingController).verify());
+  afterEach(() => {
+    TestBed.inject(HttpTestingController).verify();
+    vi.restoreAllMocks();
+  });
 
   it('shows every setting as the server holds it', async () => {
     const { host } = await render();

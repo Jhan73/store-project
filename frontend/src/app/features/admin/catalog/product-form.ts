@@ -112,7 +112,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
           >
           <p-select
             inputId="product-category"
-            ariaLabelledBy="product-category-label"
+            [ariaLabelledBy]="'product-category-label'"
             formControlName="categoryId"
             placeholder="Elige una categoría"
             i18n-placeholder="@@admin.catalog.productForm.categoryPlaceholder"
@@ -218,7 +218,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             >
             <p-select
               inputId="product-group-add"
-              ariaLabelledBy="product-group-add-label"
+              [ariaLabelledBy]="'product-group-add-label'"
               placeholder="Elige un grupo"
               i18n-placeholder="@@admin.catalog.productForm.groupPlaceholder"
               optionLabel="name"
@@ -265,7 +265,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
           }
           <div class="field">
             <p-fileupload
-              mode="basic"
+              [mode]="'basic'"
               [auto]="true"
               [customUpload]="true"
               chooseLabel="Elegir una imagen nueva"
