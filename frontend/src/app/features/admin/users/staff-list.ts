@@ -1,7 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  NgModel,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import type { Observable } from 'rxjs';
 import type { Role, StaffMember, StaffPage } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
@@ -17,7 +25,7 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
 
 @Component({
   selector: 'app-staff-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText],
+  imports: [FormsModule, ReactiveFormsModule, ButtonDirective, InputText, Select],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -42,16 +50,18 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           <tr>
             <td>{{ member.email }}</td>
             <td>
-              <select
-                [attr.aria-label]="roleControlLabel(member)"
+              <p-select
+                #roleSelect="ngModel"
+                optionLabel="label"
+                optionValue="value"
+                [inputId]="'role-' + member.id"
+                [ariaLabel]="roleControlLabel(member)"
+                [options]="roleOptions"
+                [ngModel]="member.role"
                 [disabled]="pending.has(member.id) || isOwn(member)"
                 [attr.data-testid]="'role-' + member.id"
-                (change)="changeRole(member, $event)"
-              >
-                @for (role of roles; track role) {
-                  <option [value]="role" [selected]="role === member.role">{{ label(role) }}</option>
-                }
-              </select>
+                (onChange)="changeRole(member, $event.value, roleSelect)"
+              />
             </td>
             <td>
               @if (member.active) {
@@ -144,12 +154,15 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         }
       </div>
       <div class="field">
-        <label for="staff-role" i18n="@@admin.users.roleLabel">Rol</label>
-        <select id="staff-role" formControlName="role">
-          @for (role of roles; track role) {
-            <option [value]="role">{{ label(role) }}</option>
-          }
-        </select>
+        <label for="staff-role" id="staff-role-label" i18n="@@admin.users.roleLabel">Rol</label>
+        <p-select
+          inputId="staff-role"
+          ariaLabelledBy="staff-role-label"
+          optionLabel="label"
+          optionValue="value"
+          formControlName="role"
+          [options]="roleOptions"
+        />
       </div>
       <p class="muted" i18n="@@admin.users.inviteHint">
         La persona recibirá un enlace por correo para crear su propia contraseña.
@@ -167,7 +180,10 @@ export class StaffList {
   private readonly notifier = inject(ErrorNotifier);
   private readonly auth = inject(AuthStore);
 
-  protected readonly roles = STAFF_ROLES;
+  protected readonly roleOptions = STAFF_ROLES.map((role) => ({
+    value: role,
+    label: roleLabel(role),
+  }));
   protected readonly current = signal<StaffPage>({
     content: [],
     page: 0,
@@ -195,10 +211,6 @@ export class StaffList {
       next: (zone) => this.timeZone.set(zone),
       error: (error: unknown) => this.notifier.show(error),
     });
-  }
-
-  protected label(role: Role): string {
-    return roleLabel(role);
   }
 
   protected roleControlLabel(member: StaffMember): string {
@@ -234,13 +246,12 @@ export class StaffList {
     });
   }
 
-  protected changeRole(member: StaffMember, event: Event): void {
-    const select = event.target as HTMLSelectElement;
-    this.run(member, this.api.changeRole(member.id, select.value as Role), {
+  protected changeRole(member: StaffMember, role: Role, control: NgModel): void {
+    this.run(member, this.api.changeRole(member.id, role), {
       onDone: (saved) => this.replace(saved),
       onFail: () => {
         // The select already shows the new role; put it back to what the list holds now.
-        select.value = this.held(member.id)?.role ?? member.role;
+        control.control.setValue(this.held(member.id)?.role ?? member.role);
       },
     });
   }

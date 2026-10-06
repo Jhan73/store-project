@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
+import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import type { AdminTable } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
@@ -17,7 +18,7 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
 
 @Component({
   selector: 'app-table-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText],
+  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -116,14 +117,11 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
       </div>
       <div class="field">
         <label for="table-order" i18n="@@admin.tables.orderLabel">Orden de aparición</label>
-        <input
-          pInputText
-          id="table-order"
-          type="number"
-          min="0"
-          step="1"
+        <p-inputnumber
+          inputId="table-order"
           formControlName="displayOrder"
-          [attr.aria-invalid]="invalid('displayOrder') ? 'true' : null"
+          [useGrouping]="false"
+          [invalid]="invalid('displayOrder')"
         />
         @if (invalid('displayOrder')) {
           <small class="error" i18n="@@admin.tables.orderInvalid">Escribe un número entero.</small>
