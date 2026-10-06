@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
+import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
@@ -9,7 +11,7 @@ import { isStale, reportFailure } from '../admin-errors';
 
 @Component({
   selector: 'app-category-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText],
+  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText, Select],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -88,28 +90,34 @@ import { isStale, reportFailure } from '../admin-errors';
       </div>
       <div class="field">
         <label for="category-order" i18n="@@admin.catalog.categories.orderLabel">Orden de aparición</label>
-        <input
-          pInputText
-          id="category-order"
-          type="number"
-          min="0"
+        <p-inputnumber
+          inputId="category-order"
           formControlName="displayOrder"
-          [attr.aria-invalid]="invalid('displayOrder') ? 'true' : null"
+          [useGrouping]="false"
+          [invalid]="invalid('displayOrder')"
         />
         @if (invalid('displayOrder')) {
           <small class="error" i18n="@@admin.catalog.categories.orderInvalid">Escribe un número entero.</small>
         }
       </div>
       <div class="field">
-        <label for="category-station" i18n="@@admin.catalog.categories.stationLabel">Estación de preparación</label>
-        <select id="category-station" formControlName="stationId">
-          @if (!editing()) {
-            <option value="" i18n="@@admin.catalog.categories.defaultStation">Estación predeterminada</option>
-          }
-          @for (station of stations(); track station.id) {
-            <option [value]="station.id">{{ station.name }}</option>
-          }
-        </select>
+        <label
+          for="category-station"
+          id="category-station-label"
+          i18n="@@admin.catalog.categories.stationLabel"
+          >Estación de preparación</label
+        >
+        <p-select
+          inputId="category-station"
+          ariaLabelledBy="category-station-label"
+          formControlName="stationId"
+          placeholder="Estación predeterminada"
+          i18n-placeholder="@@admin.catalog.categories.defaultStation"
+          optionLabel="name"
+          optionValue="id"
+          [options]="stationOptions()"
+          [showClear]="!editing()"
+        />
       </div>
       <div class="actions">
         <button pButton type="submit" [loading]="saving()">
@@ -136,6 +144,7 @@ export class CategoryList {
   protected readonly stations = signal<readonly Station[]>([]);
   protected readonly editing = signal<Category | null>(null);
   protected readonly saving = signal(false);
+  protected readonly stationOptions = computed(() => [...this.stations()]);
   private readonly stationNames = computed(
     () => new Map(this.stations().map((station) => [station.id, station.name])),
   );
@@ -145,7 +154,7 @@ export class CategoryList {
       validators: [Validators.required, Validators.pattern(/\S/)],
     }),
     displayOrder: new FormControl<number | null>(0, [Validators.required, Validators.min(0)]),
-    stationId: new FormControl('', { nonNullable: true }),
+    stationId: new FormControl<string | null>(null),
   });
 
   constructor() {
@@ -176,7 +185,7 @@ export class CategoryList {
 
   protected cancel(): void {
     this.editing.set(null);
-    this.form.reset({ name: '', displayOrder: 0, stationId: '' });
+    this.form.reset({ name: '', displayOrder: 0, stationId: null });
   }
 
   protected toggle(category: Category): void {
@@ -201,7 +210,10 @@ export class CategoryList {
     const target = this.editing();
     const base = { name: name.trim(), displayOrder: displayOrder ?? 0 };
     const request = target
-      ? this.api.changeCategory(target.id, target.etag, { ...base, stationId })
+      ? this.api.changeCategory(target.id, target.etag, {
+          ...base,
+          stationId: stationId ?? target.stationId,
+        })
       : this.api.createCategory(stationId ? { ...base, stationId } : base);
     this.saving.set(true);
     request.subscribe({

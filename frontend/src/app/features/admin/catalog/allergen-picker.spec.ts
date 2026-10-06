@@ -25,7 +25,7 @@ describe('AllergenPicker', () => {
     const fixture = TestBed.createComponent(Harness);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
-    const boxes = () => Array.from(host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+    const boxes = () => Array.from(host.querySelectorAll<HTMLInputElement>('p-checkbox input'));
     return { fixture, host, boxes };
   }
 

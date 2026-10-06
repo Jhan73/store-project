@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -10,7 +17,12 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
+import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
+import { Textarea } from 'primeng/textarea';
 import { forkJoin, of } from 'rxjs';
 import type {
   Allergen,
@@ -35,7 +47,18 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-product-form',
-  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, InputText, AllergenPicker],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonDirective,
+    Checkbox,
+    FileUpload,
+    InputNumber,
+    InputText,
+    Select,
+    Textarea,
+    AllergenPicker,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -71,21 +94,33 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
 
         <div class="field wide">
           <label for="product-description" i18n="@@admin.catalog.productForm.description">Descripción (opcional)</label>
-          <textarea id="product-description" formControlName="description" rows="2"></textarea>
+          <textarea
+            pTextarea
+            id="product-description"
+            formControlName="description"
+            rows="2"
+            fluid
+          ></textarea>
         </div>
 
         <div class="field">
-          <label for="product-category" i18n="@@admin.catalog.productForm.category">Categoría</label>
-          <select
-            id="product-category"
-            formControlName="categoryId"
-            [attr.aria-invalid]="invalid(form.controls.categoryId) ? 'true' : null"
+          <label
+            for="product-category"
+            id="product-category-label"
+            i18n="@@admin.catalog.productForm.category"
+            >Categoría</label
           >
-            <option value="" i18n="@@admin.catalog.productForm.categoryPlaceholder">Elige una categoría</option>
-            @for (category of categories(); track category.id) {
-              <option [value]="category.id">{{ category.name }}</option>
-            }
-          </select>
+          <p-select
+            inputId="product-category"
+            ariaLabelledBy="product-category-label"
+            formControlName="categoryId"
+            placeholder="Elige una categoría"
+            i18n-placeholder="@@admin.catalog.productForm.categoryPlaceholder"
+            optionLabel="name"
+            optionValue="id"
+            [options]="categoryOptions()"
+            [invalid]="invalid(form.controls.categoryId)"
+          />
           @if (invalid(form.controls.categoryId)) {
             <small class="error" i18n="@@admin.catalog.productForm.categoryInvalid">Elige una categoría.</small>
           }
@@ -108,11 +143,15 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
 
         <div class="field">
           <label for="product-order" i18n="@@admin.catalog.productForm.order">Orden de aparición</label>
-          <input pInputText id="product-order" type="number" min="0" formControlName="displayOrder" />
+          <p-inputnumber
+            inputId="product-order"
+            formControlName="displayOrder"
+            [useGrouping]="false"
+          />
         </div>
 
         <span class="check">
-          <input type="checkbox" id="product-pinned" formControlName="quickSalePinned" />
+          <p-checkbox inputId="product-pinned" formControlName="quickSalePinned" [binary]="true" />
           <label for="product-pinned" i18n="@@admin.catalog.productForm.pinned">Fijar en venta rápida</label>
         </span>
 
@@ -170,13 +209,23 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             }
           </ol>
           <div class="actions">
-            <label for="product-group-add" class="sr-only" i18n="@@admin.catalog.productForm.addGroupLabel">Grupo a agregar</label>
-            <select id="product-group-add" [formControl]="groupPick">
-              <option value="" i18n="@@admin.catalog.productForm.groupPlaceholder">Elige un grupo</option>
-              @for (group of detached(); track group.id) {
-                <option [value]="group.id">{{ group.name }}</option>
-              }
-            </select>
+            <label
+              for="product-group-add"
+              id="product-group-add-label"
+              class="sr-only"
+              i18n="@@admin.catalog.productForm.addGroupLabel"
+              >Grupo a agregar</label
+            >
+            <p-select
+              inputId="product-group-add"
+              ariaLabelledBy="product-group-add-label"
+              placeholder="Elige un grupo"
+              i18n-placeholder="@@admin.catalog.productForm.groupPlaceholder"
+              optionLabel="name"
+              optionValue="id"
+              [options]="detached()"
+              [formControl]="groupPick"
+            />
             <button
               pButton
               type="button"
@@ -215,14 +264,21 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             </button>
           }
           <div class="field">
-            <label for="product-image" i18n="@@admin.catalog.productForm.imagePick">Elegir una imagen nueva</label>
-            <input type="file" id="product-image" [attr.accept]="imageAccept" (change)="upload($event)" />
+            <p-fileupload
+              mode="basic"
+              [auto]="true"
+              [customUpload]="true"
+              chooseLabel="Elegir una imagen nueva"
+              i18n-chooseLabel="@@admin.catalog.productForm.imagePick"
+              [accept]="imageAccept"
+              [maxFileSize]="maxImageBytes"
+              [invalidFileTypeMessageSummary]="imageInvalid"
+              invalidFileTypeMessageDetail=""
+              [invalidFileSizeMessageSummary]="imageInvalid"
+              invalidFileSizeMessageDetail=""
+              (onSelect)="upload($event)"
+            />
             <small class="muted" i18n="@@admin.catalog.productForm.imageHint">PNG, JPG o WebP, de hasta 2 MB.</small>
-            @if (imageError()) {
-              <small class="error" role="alert" data-testid="image-error" i18n="@@admin.catalog.productForm.imageInvalid"
-                >La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.</small
-              >
-            }
           </div>
         } @else {
           <p class="muted" i18n="@@admin.catalog.productForm.imageLater">
@@ -243,14 +299,17 @@ export class ProductForm {
   protected readonly ready = signal(false);
   protected readonly saving = signal(false);
   protected readonly imageAccept = IMAGE_TYPES.join(',');
-  protected readonly imageError = signal(false);
+  protected readonly maxImageBytes = MAX_IMAGE_BYTES;
+  protected readonly imageInvalid = $localize`:@@admin.catalog.productForm.imageInvalid:La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.`;
+  private readonly uploader = viewChild(FileUpload);
   protected readonly currency = signal('');
   protected readonly allergens = signal<readonly Allergen[]>([]);
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly groups = signal<readonly ModifierGroup[]>([]);
   protected readonly groupIds = signal<readonly string[]>([]);
   protected readonly product = signal<Product | null>(null);
-  protected readonly groupPick = new FormControl('', { nonNullable: true });
+  protected readonly categoryOptions = computed(() => [...this.categories()]);
+  protected readonly groupPick = new FormControl<string | null>(null);
   protected readonly detached = computed(() =>
     this.groups().filter((group) => !this.groupIds().includes(group.id)),
   );
@@ -305,7 +364,7 @@ export class ProductForm {
     if (id && !this.groupIds().includes(id)) {
       this.groupIds.update((ids) => [...ids, id]);
     }
-    this.groupPick.setValue('');
+    this.groupPick.setValue(null);
   }
 
   protected detach(index: number): void {
@@ -359,16 +418,11 @@ export class ProductForm {
     });
   }
 
-  protected upload(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+  // The uploader keeps only the files that pass its type and size checks and shows its message for the rest.
+  protected upload(event: FileSelectEvent): void {
+    const file = event.currentFiles[0];
     const current = this.product();
-    input.value = '';
     if (!file || !current) {
-      return;
-    }
-    this.imageError.set(!IMAGE_TYPES.includes(file.type) || file.size > MAX_IMAGE_BYTES);
-    if (this.imageError()) {
       return;
     }
     this.api.replaceProductImage(current.id, current.etag, file).subscribe({
@@ -382,7 +436,7 @@ export class ProductForm {
     if (!current) {
       return;
     }
-    this.imageError.set(false);
+    this.uploader()?.clear();
     this.api.removeProductImage(current.id, current.etag).subscribe({
       next: (saved) => this.product.set(saved),
       error: (error: unknown) => this.failImage(error),

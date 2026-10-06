@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormControl, FormsModule, NgModel, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ButtonDirective } from 'primeng/button';
+import { Select } from 'primeng/select';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney } from '../../../core/money/money';
@@ -11,7 +14,7 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-product-list',
-  imports: [RouterLink, ButtonDirective],
+  imports: [FormsModule, ReactiveFormsModule, RouterLink, ButtonDirective, Select, ToggleSwitch],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -23,15 +26,24 @@ const PAGE_SIZE = 20;
     </div>
 
     <div class="field">
-      <label for="product-category-filter" i18n="@@admin.catalog.products.filter">Categoría</label>
-      <select id="product-category-filter" (change)="filter($event)">
-        <option value="" i18n="@@admin.catalog.products.allCategories">Todas</option>
-        @for (category of categories(); track category.id) {
-          <option [value]="category.id" [selected]="category.id === categoryId()">
-            {{ category.name }}
-          </option>
-        }
-      </select>
+      <label
+        for="product-category-filter"
+        id="product-category-filter-label"
+        i18n="@@admin.catalog.products.filter"
+        >Categoría</label
+      >
+      <p-select
+        inputId="product-category-filter"
+        ariaLabelledBy="product-category-filter-label"
+        placeholder="Todas"
+        i18n-placeholder="@@admin.catalog.products.allCategories"
+        optionLabel="name"
+        optionValue="id"
+        [options]="categories()"
+        [showClear]="true"
+        [formControl]="categoryFilter"
+        (onChange)="filter($event.value)"
+      />
     </div>
 
     @if (current().content.length === 0) {
@@ -68,13 +80,13 @@ const PAGE_SIZE = 20;
                 }
               </td>
               <td>
-                <input
-                  type="checkbox"
-                  [checked]="product.available"
+                <p-toggleswitch
+                  #availability="ngModel"
+                  [ngModel]="product.available"
                   [disabled]="savingAvailability().has(product.id)"
                   [attr.data-testid]="'available-' + product.id"
-                  [attr.aria-label]="product.name"
-                  (change)="setAvailability(product, $event)"
+                  [ariaLabel]="product.name"
+                  (onChange)="setAvailability(product, $event.checked, availability)"
                 />
               </td>
               <td class="actions">
@@ -146,6 +158,7 @@ export class ProductList {
 
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly categoryId = signal('');
+  protected readonly categoryFilter = new FormControl<string | null>(null);
   protected readonly current = signal<ProductPage>({
     content: [],
     page: 0,
@@ -175,8 +188,8 @@ export class ProductList {
     return formatMoney(product.price);
   }
 
-  protected filter(event: Event): void {
-    this.categoryId.set((event.target as HTMLSelectElement).value);
+  protected filter(categoryId: string | null): void {
+    this.categoryId.set(categoryId ?? '');
     this.go(0);
   }
 
@@ -202,19 +215,18 @@ export class ProductList {
       });
   }
 
-  protected setAvailability(product: Product, event: Event): void {
-    const box = event.target as HTMLInputElement;
+  protected setAvailability(product: Product, available: boolean, control: NgModel): void {
     this.markSaving(product.id, true);
-    this.api.setProductAvailability(product.id, box.checked).subscribe({
+    this.api.setProductAvailability(product.id, available).subscribe({
       next: (result) => {
         this.markSaving(product.id, false);
         this.patch(product.id, { available: result.available });
       },
       error: (error: unknown) => {
         this.markSaving(product.id, false);
-        // The checkbox already flipped on screen; put it back to what the list holds now.
+        // The switch already flipped on screen; put it back to what the list holds now.
         const held = this.current().content.find((item) => item.id === product.id);
-        box.checked = held?.available ?? product.available;
+        control.control.setValue(held?.available ?? product.available);
         this.notifier.show(error);
       },
     });

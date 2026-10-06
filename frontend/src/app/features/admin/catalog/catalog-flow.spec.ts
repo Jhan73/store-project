@@ -11,6 +11,7 @@ import { authInterceptor } from '../../../core/auth/auth-interceptor';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { AppPreset } from '../../../core/theme/app-preset';
+import { chooseOption } from '../../../testing/primeng-controls';
 
 const API = 'http://api.test/api/v1';
 
@@ -93,11 +94,8 @@ describe('admin catalog flow', () => {
     input.dispatchEvent(new Event('input'));
   }
 
-  function choose(selector: string, value: string) {
-    const select = page().querySelector<HTMLSelectElement>(selector)!;
-    select.value = value;
-    select.dispatchEvent(new Event('change'));
-  }
+  const choose = (id: string, label: string) =>
+    chooseOption(harness.fixture, page(), id, label);
 
   it('lets an administrator create a modifier group and then a product that uses it', async () => {
     const router = TestBed.inject(Router);
@@ -107,7 +105,7 @@ describe('admin catalog flow', () => {
     http.expectOne(`${API}/admin/allergens`).flush(['MILK']);
     await settle();
     type('#group-name', 'Size');
-    page().querySelector<HTMLInputElement>('#group-required')!.click();
+    page().querySelector<HTMLInputElement>('p-checkbox #group-required')!.click();
     type('#option-0-name', 'Large');
     type('#option-0-price', '2');
     page().querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
@@ -127,9 +125,9 @@ describe('admin catalog flow', () => {
     http.expectOne(`${API}/admin/modifier-groups`).flush([sizeGroup]);
     await settle();
     type('#product-name', 'Orange juice');
-    choose('#product-category', 'c1');
+    await choose('product-category', 'Juices');
     type('#product-price', '9.50');
-    choose('#product-group-add', 'g1');
+    await choose('product-group-add', 'Size');
     page().querySelector<HTMLButtonElement>('[data-testid="add-group"]')!.click();
     await settle();
     page().querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
