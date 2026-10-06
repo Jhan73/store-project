@@ -1,7 +1,7 @@
 import { AbstractControl } from '@angular/forms';
-import { ApiError } from '../../../core/errors/api-error';
-import { ErrorNotifier } from '../../../core/errors/error-notifier';
-import { applyFieldErrors } from '../../../core/errors/field-errors';
+import { ApiError } from '../../core/errors/api-error';
+import { ErrorNotifier } from '../../core/errors/error-notifier';
+import { applyFieldErrors } from '../../core/errors/field-errors';
 
 // The item moved or is gone since it was listed: what the screen shows is stale and must be re-read.
 export function isStale(error: unknown): boolean {

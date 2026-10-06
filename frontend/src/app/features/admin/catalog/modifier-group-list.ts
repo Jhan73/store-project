@@ -4,7 +4,7 @@ import { ButtonDirective } from 'primeng/button';
 import type { ModifierGroup } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
-import { isStale } from './catalog-errors';
+import { isStale } from '../admin-errors';
 
 @Component({
   selector: 'app-modifier-group-list',
