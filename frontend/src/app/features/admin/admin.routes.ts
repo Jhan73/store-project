@@ -18,6 +18,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'tables',
         loadChildren: () => import('./tables/tables.routes').then((m) => m.TABLES_ROUTES),
       },
+      {
+        path: 'users',
+        loadChildren: () => import('./users/users.routes').then((m) => m.USERS_ROUTES),
+      },
     ],
   },
 ];

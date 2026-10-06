@@ -103,8 +103,33 @@ describe('staff and admin area', () => {
       '/admin/catalog',
       '/admin/settings',
       '/admin/tables',
+      '/admin/users',
     ]);
     expect(url()).toBe('/admin');
+  });
+
+  it('keeps floor staff out of the staff accounts', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/users');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the staff accounts', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/users');
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=20')
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne('http://api.test/api/v1/admin/settings')
+      .flush({ timeZone: 'America/Lima', currency: 'PEN' });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/users');
+    expect(page().body.textContent).toContain('Personal');
   });
 
   it('keeps floor staff out of the table configuration', async () => {
