@@ -97,8 +97,33 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/admin');
 
-    expect(navLinks()).toEqual(['/staff', '/admin', '/admin/catalog', '/admin/settings']);
+    expect(navLinks()).toEqual([
+      '/staff',
+      '/admin',
+      '/admin/catalog',
+      '/admin/settings',
+      '/admin/tables',
+    ]);
     expect(url()).toBe('/admin');
+  });
+
+  it('keeps floor staff out of the table configuration', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/tables');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the table configuration', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/tables');
+    http.expectOne('http://api.test/api/v1/admin/tables').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/tables');
+    expect(page().body.textContent).toContain('Todavía no hay mesas');
   });
 
   it('keeps floor staff out of the store settings', async () => {

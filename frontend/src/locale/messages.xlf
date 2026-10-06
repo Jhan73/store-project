@@ -2423,6 +2423,174 @@
         <source> Cancelar </source>
       </segment>
     </unit>
+    <unit id="admin.tables.title">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:20,22</note>
+      </notes>
+      <segment>
+        <source>Mesas</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.empty">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:23,26</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay mesas.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.name">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:28,29</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.area">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:29,30</note>
+      </notes>
+      <segment>
+        <source>Zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.order">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:30,31</note>
+      </notes>
+      <segment>
+        <source>Orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.state">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:31,32</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.actions">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:32,34</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.active">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:43,45</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:45,47</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.edit">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:58,59</note>
+      </notes>
+      <segment>
+        <source> Editar </source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:71,72</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:73,75</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:85,87</note>
+      </notes>
+      <segment>
+        <source>Nombre de la mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:95,98</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre de hasta 60 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.areaLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:99,101</note>
+      </notes>
+      <segment>
+        <source>Zona (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.areaInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:109,112</note>
+      </notes>
+      <segment>
+        <source>La zona admite hasta 60 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.orderLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:113,115</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.orderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:124,127</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.save">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:130,131</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.create">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:132,134</note>
+      </notes>
+      <segment>
+        <source>Agregar mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:137,139</note>
+      </notes>
+      <segment>
+        <source> Cancelar </source>
+      </segment>
+    </unit>
     <unit id="forbidden.title">
       <notes>
         <note category="location">src/app/features/forbidden/forbidden.ts:11,12</note>
@@ -2743,6 +2911,14 @@
       </notes>
       <segment>
         <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.tables">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:38</note>
+      </notes>
+      <segment>
+        <source>Mesas</source>
       </segment>
     </unit>
     <unit id="shell.brand">
