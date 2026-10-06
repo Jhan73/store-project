@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { IconHome, IconSettings } from '@tabler/icons-angular';
 import type { ThemeMode } from '../../../core/theme/theme-store';
 import { AppShell } from './app-shell';
@@ -34,6 +34,19 @@ class Harness {
   readonly logouts = signal(0);
 }
 
+@Component({
+  selector: 'app-shell-nested-harness',
+  imports: [AppShell],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `<app-shell [items]="items" roleLabel="Admin" themeMode="system" />`,
+})
+class NestedHarness {
+  readonly items: NavItem[] = [
+    { path: '/admin', label: 'Administración', icon: IconSettings, exact: true },
+    { path: '/admin/catalog', label: 'Catálogo', icon: IconHome },
+  ];
+}
+
 describe('AppShell', () => {
   async function render() {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
@@ -57,6 +70,18 @@ describe('AppShell', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual(['/staff', '/admin']);
     expect(links.map((link) => link.textContent?.trim())).toEqual(['Operación', 'Administración']);
     expect(host.querySelector('nav')?.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('marks only the exact item active when a nested route is open', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }])] });
+    const fixture = TestBed.createComponent(NestedHarness);
+    await TestBed.inject(Router).navigateByUrl('/admin/catalog');
+    await fixture.whenStable();
+
+    const active = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('nav a.is-active'),
+    ).map((link) => link.getAttribute('href'));
+    expect(active).toEqual(['/admin/catalog']);
   });
 
   it('keeps decorative icons out of the accessibility tree', async () => {

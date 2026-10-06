@@ -689,6 +689,272 @@
         <source>Aquí aparecerán las herramientas de administración.</source>
       </segment>
     </unit>
+    <unit id="admin.catalog.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:10,11</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.label">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:11</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.categories">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:15,19</note>
+      </notes>
+      <segment>
+        <source>Categorías</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.stations">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:20,23</note>
+      </notes>
+      <segment>
+        <source>Estaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:16,20</note>
+      </notes>
+      <segment>
+        <source>Categorías</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:21,22</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.station">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:22,23</note>
+      </notes>
+      <segment>
+        <source>Estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.order">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:23,24</note>
+      </notes>
+      <segment>
+        <source>Orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.state">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:24,25</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.actions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:25,27</note>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:25,27</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.active">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:36,38</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:38,40</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.edit">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:51,52</note>
+      </notes>
+      <segment>
+        <source> Editar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:63,64</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:65,67</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:76,79</note>
+      </notes>
+      <segment>
+        <source>Nombre de la categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:86,89</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.orderLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:90,93</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.orderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:100,103</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.stationLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:104,105</note>
+      </notes>
+      <segment>
+        <source>Estación de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.defaultStation">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:107,109</note>
+      </notes>
+      <segment>
+        <source>Estación predeterminada</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:117,119</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.create">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:119,122</note>
+      </notes>
+      <segment>
+        <source>Agregar categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:124,126</note>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:86,88</note>
+      </notes>
+      <segment>
+        <source> Cancelar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:16,19</note>
+      </notes>
+      <segment>
+        <source>Estaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.caption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:20,23</note>
+      </notes>
+      <segment>
+        <source> Dónde se prepara cada categoría </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:24,25</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.default">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:34,37</note>
+      </notes>
+      <segment>
+        <source>Predeterminada</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.edit">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:47,49</note>
+      </notes>
+      <segment>
+        <source> Renombrar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:57,60</note>
+      </notes>
+      <segment>
+        <source>Nombre de la estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:67,70</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:73,75</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.create">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:75,77</note>
+      </notes>
+      <segment>
+        <source>Agregar estación</source>
+      </segment>
+    </unit>
     <unit id="forbidden.title">
       <notes>
         <note category="location">src/app/features/forbidden/forbidden.ts:11,12</note>
@@ -995,6 +1261,14 @@
         <source>Administración</source>
       </segment>
     </unit>
+    <unit id="workspace.nav.catalog">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:26</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
     <unit id="shell.brand">
       <notes>
         <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,26</note>
@@ -1013,7 +1287,7 @@
     </unit>
     <unit id="shell.theme.group">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:47</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:52</note>
       </notes>
       <segment>
         <source>Tema</source>
@@ -1021,7 +1295,7 @@
     </unit>
     <unit id="shell.theme.light">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:54,55</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:59,60</note>
       </notes>
       <segment>
         <source>Tema claro</source>
@@ -1029,7 +1303,7 @@
     </unit>
     <unit id="shell.theme.dark">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:66,67</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:71,72</note>
       </notes>
       <segment>
         <source>Tema oscuro</source>
@@ -1037,7 +1311,7 @@
     </unit>
     <unit id="shell.theme.system">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:78,79</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:83,84</note>
       </notes>
       <segment>
         <source>Tema del sistema</source>
@@ -1045,7 +1319,7 @@
     </unit>
     <unit id="shell.logout">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:95,96</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:100,101</note>
       </notes>
       <segment>
         <source>Salir</source>

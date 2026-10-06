@@ -97,8 +97,41 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/admin');
 
-    expect(navLinks()).toEqual(['/staff', '/admin']);
+    expect(navLinks()).toEqual(['/staff', '/admin', '/admin/catalog']);
     expect(url()).toBe('/admin');
+  });
+
+  it('keeps floor staff out of the catalog', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/catalog/stations');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the catalog with its own navigation', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/catalog/stations');
+    http.expectOne('http://api.test/api/v1/admin/stations').flush([]);
+    await harness.fixture.whenStable();
+
+    const subNav = Array.from(page().querySelectorAll('nav[aria-label="Catálogo"] a')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(subNav).toEqual(['/admin/catalog/categories', '/admin/catalog/stations']);
+    expect(page().body.textContent).toContain('Estaciones');
+  });
+
+  it('opens the catalog on its categories', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/catalog');
+    http.expectOne('http://api.test/api/v1/admin/categories').flush([]);
+    http.expectOne('http://api.test/api/v1/admin/stations').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/catalog/categories');
   });
 
   it('signs out and returns to login', async () => {
