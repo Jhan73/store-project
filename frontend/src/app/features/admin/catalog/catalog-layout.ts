@@ -11,6 +11,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     <nav aria-label="Catálogo" i18n-aria-label="@@admin.catalog.nav.label">
       <ul>
         <li>
+          <a
+            routerLink="products"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.catalog.nav.products"
+            >Productos</a
+          >
+        </li>
+        <li>
           <a routerLink="categories" routerLinkActive="is-active" ariaCurrentWhenActive="page" i18n="@@admin.catalog.nav.categories"
             >Categorías</a
           >

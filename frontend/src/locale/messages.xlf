@@ -817,9 +817,17 @@
         <source>Catálogo</source>
       </segment>
     </unit>
+    <unit id="admin.catalog.nav.products">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:19,22</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.nav.categories">
       <notes>
-        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:15,19</note>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:24,28</note>
       </notes>
       <segment>
         <source>Categorías</source>
@@ -827,7 +835,7 @@
     </unit>
     <unit id="admin.catalog.nav.modifierGroups">
       <notes>
-        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:24,28</note>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:33,37</note>
       </notes>
       <segment>
         <source>Modificadores</source>
@@ -835,7 +843,7 @@
     </unit>
     <unit id="admin.catalog.nav.stations">
       <notes>
-        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:29,32</note>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:38,41</note>
       </notes>
       <segment>
         <source>Estaciones</source>
@@ -885,6 +893,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:25,27</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:28,30</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:49,51</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:25,27</note>
       </notes>
       <segment>
@@ -911,6 +920,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:51,52</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:80,81</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:87,88</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -919,6 +929,7 @@
     <unit id="admin.catalog.deactivate">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:63,64</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:99,100</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -927,6 +938,7 @@
     <unit id="admin.catalog.reactivate">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:65,67</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:101,103</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -1025,6 +1037,7 @@
     <unit id="admin.catalog.back">
       <notes>
         <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:62,66</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:51,55</note>
       </notes>
       <segment>
         <source>Volver a la lista</source>
@@ -1193,6 +1206,7 @@
     <unit id="admin.catalog.saved">
       <notes>
         <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:329</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:346</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -1292,6 +1306,358 @@
       </notes>
       <segment>
         <source> Eliminar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.editTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:45,47</note>
+      </notes>
+      <segment>
+        <source>Editar producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.newTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:47,50</note>
+      </notes>
+      <segment>
+        <source>Nuevo producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:58,60</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:68,72</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.description">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:73,74</note>
+      </notes>
+      <segment>
+        <source>Descripción (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.category">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:78,80</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.categoryPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:84,85</note>
+      </notes>
+      <segment>
+        <source>Elige una categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.categoryInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:90,94</note>
+      </notes>
+      <segment>
+        <source>Elige una categoría.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.price">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:95,96</note>
+      </notes>
+      <segment>
+        <source>Precio (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.priceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:105,109</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto mayor que cero, como 9.50.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.order">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:110,111</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.pinned">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:116,119</note>
+      </notes>
+      <segment>
+        <source>Fijar en venta rápida</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.allergens">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:124,127</note>
+      </notes>
+      <segment>
+        <source>Alérgenos del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.groups">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:128,130</note>
+      </notes>
+      <segment>
+        <source>Grupos de modificadores, en orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveUp">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:143,145</note>
+      </notes>
+      <segment>
+        <source> Subir </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveDown">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:155,157</note>
+      </notes>
+      <segment>
+        <source> Bajar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeGroup">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:167,169</note>
+      </notes>
+      <segment>
+        <source> Quitar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.addGroupLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:173,174</note>
+      </notes>
+      <segment>
+        <source>Grupo a agregar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.groupPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:175,176</note>
+      </notes>
+      <segment>
+        <source>Elige un grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.addGroup">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:188,190</note>
+      </notes>
+      <segment>
+        <source> Agregar grupo </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:195,197</note>
+      </notes>
+      <segment>
+        <source> Guardar producto </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:201,203</note>
+      </notes>
+      <segment>
+        <source>Imagen</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeImage">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:214,217</note>
+      </notes>
+      <segment>
+        <source> Quitar imagen </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imagePick">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:218,219</note>
+      </notes>
+      <segment>
+        <source>Elegir una imagen nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageHint">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:220,222</note>
+      </notes>
+      <segment>
+        <source>PNG, JPG o WebP, de hasta 2 MB.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:223,226</note>
+      </notes>
+      <segment>
+        <source>La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageLater">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:229,232</note>
+      </notes>
+      <segment>
+        <source> Podrás subir la imagen después de guardar el producto. </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:19,20</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.new">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:21,25</note>
+      </notes>
+      <segment>
+        <source>Nuevo producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.filter">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:26,27</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.allCategories">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:28,29</note>
+      </notes>
+      <segment>
+        <source>Todas</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.empty">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:38,41</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay productos.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.image">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:43,44</note>
+      </notes>
+      <segment>
+        <source>Imagen</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:44,45</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.category">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:45,46</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.price">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:46,47</note>
+      </notes>
+      <segment>
+        <source>Precio</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.state">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:47,48</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.available">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:48,49</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.active">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:65,67</note>
+      </notes>
+      <segment>
+        <source>Activo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:67,70</note>
+      </notes>
+      <segment>
+        <source>Inactivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.paging">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:112</note>
+      </notes>
+      <segment>
+        <source>Paginación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.previous">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:122,124</note>
+      </notes>
+      <segment>
+        <source> Anterior </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.pageOf">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:125,127</note>
+      </notes>
+      <segment>
+        <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.next">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:136,139</note>
+      </notes>
+      <segment>
+        <source> Siguiente </source>
       </segment>
     </unit>
     <unit id="admin.catalog.stations.title">

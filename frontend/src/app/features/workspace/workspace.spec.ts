@@ -120,6 +120,7 @@ describe('staff and admin area', () => {
       link.getAttribute('href'),
     );
     expect(subNav).toEqual([
+      '/admin/catalog/products',
       '/admin/catalog/categories',
       '/admin/catalog/modifier-groups',
       '/admin/catalog/stations',
@@ -127,15 +128,17 @@ describe('staff and admin area', () => {
     expect(page().body.textContent).toContain('Estaciones');
   });
 
-  it('opens the catalog on its categories', async () => {
+  it('opens the catalog on its products', async () => {
     await signInAs('ADMIN');
 
     await harness.navigateByUrl('/admin/catalog');
     http.expectOne('http://api.test/api/v1/admin/categories').flush([]);
-    http.expectOne('http://api.test/api/v1/admin/stations').flush([]);
+    http
+      .expectOne('http://api.test/api/v1/admin/products?page=0&size=20')
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
     await harness.fixture.whenStable();
 
-    expect(url()).toBe('/admin/catalog/categories');
+    expect(url()).toBe('/admin/catalog/products');
   });
 
   it('signs out and returns to login', async () => {

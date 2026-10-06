@@ -7,7 +7,19 @@ export const CATALOG_ROUTES: Routes = [
     providers: [CatalogApi],
     loadComponent: () => import('./catalog-layout').then((m) => m.CatalogLayout),
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'categories' },
+      { path: '', pathMatch: 'full', redirectTo: 'products' },
+      {
+        path: 'products',
+        loadComponent: () => import('./product-list').then((m) => m.ProductList),
+      },
+      {
+        path: 'products/new',
+        loadComponent: () => import('./product-form').then((m) => m.ProductForm),
+      },
+      {
+        path: 'products/:id',
+        loadComponent: () => import('./product-form').then((m) => m.ProductForm),
+      },
       {
         path: 'categories',
         loadComponent: () => import('./category-list').then((m) => m.CategoryList),
