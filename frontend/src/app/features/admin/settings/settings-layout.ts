@@ -19,6 +19,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             >General</a
           >
         </li>
+        <li>
+          <a
+            routerLink="hours"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.settings.nav.hours"
+            >Horario</a
+          >
+        </li>
       </ul>
     </nav>
     <router-outlet />

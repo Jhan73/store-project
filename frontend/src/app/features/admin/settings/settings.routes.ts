@@ -12,6 +12,10 @@ export const SETTINGS_ROUTES: Routes = [
         path: 'general',
         loadComponent: () => import('./settings-form').then((m) => m.SettingsForm),
       },
+      {
+        path: 'hours',
+        loadComponent: () => import('./opening-hours-form').then((m) => m.OpeningHoursForm),
+      },
     ],
   },
 ];

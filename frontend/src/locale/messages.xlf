@@ -1732,6 +1732,158 @@
         <source>Agregar estación</source>
       </segment>
     </unit>
+    <unit id="admin.settings.hours.monday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:27</note>
+      </notes>
+      <segment>
+        <source>Lunes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.tuesday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:28</note>
+      </notes>
+      <segment>
+        <source>Martes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.wednesday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:29</note>
+      </notes>
+      <segment>
+        <source>Miércoles</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.thursday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:30</note>
+      </notes>
+      <segment>
+        <source>Jueves</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.friday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:31</note>
+      </notes>
+      <segment>
+        <source>Viernes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.saturday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:32</note>
+      </notes>
+      <segment>
+        <source>Sábado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.sunday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:33</note>
+      </notes>
+      <segment>
+        <source>Domingo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:85,86</note>
+      </notes>
+      <segment>
+        <source>Horario de atención</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.hint">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:87,91</note>
+      </notes>
+      <segment>
+        <source> Horas locales de la tienda. Si una hora de cierre es anterior a la de apertura, el local cierra después de medianoche. </source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.day">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:96</note>
+      </notes>
+      <segment>
+        <source>Día</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closed">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:96,97</note>
+      </notes>
+      <segment>
+        <source>Cerrado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.opens">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:97,98</note>
+      </notes>
+      <segment>
+        <source>Abre</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:98,101</note>
+      </notes>
+      <segment>
+        <source>Cierra</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.overnight">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:132,134</note>
+      </notes>
+      <segment>
+        <source>Cierra al día siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:143,145</note>
+      </notes>
+      <segment>
+        <source> Guardar horario </source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.saved">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:147,152</note>
+      </notes>
+      <segment>
+        <source>Horario guardado.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closedLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:176</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: cerrado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.opensLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:180</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de apertura</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closesLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:184</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de cierre</source>
+      </segment>
+    </unit>
     <unit id="admin.settings.general.basePrepMinutes">
       <notes>
         <note category="location">src/app/features/admin/settings/settings-form.ts:39</note>
@@ -1922,6 +2074,14 @@
       </notes>
       <segment>
         <source>General</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.hours">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:28,31</note>
+      </notes>
+      <segment>
+        <source>Horario</source>
       </segment>
     </unit>
     <unit id="forbidden.title">
