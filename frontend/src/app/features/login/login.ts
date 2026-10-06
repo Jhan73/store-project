@@ -7,10 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { IconLogin, TablerIconComponent } from '@tabler/icons-angular';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
+import { Tooltip } from 'primeng/tooltip';
 import { passwordAriaInvalid } from '../../shared/forms/aria-invalid';
 import { AuthStore } from '../../core/auth/auth-store';
 import { homeRouteFor, safeReturnUrl } from '../../core/auth/navigation';
@@ -25,7 +27,7 @@ interface Failure {
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, Button, InputText, Message, Password],
+  imports: [ReactiveFormsModule, Button, InputText, Message, Password, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './login.scss',
   template: `
@@ -72,11 +74,15 @@ interface Failure {
 
         <p-button
           type="submit"
-          label="Entrar"
-          i18n-label="@@login.submit"
           [loading]="submitting()"
+          pTooltip="Iniciar sesión con tu correo y contraseña"
+          i18n-pTooltip="@@login.submit.tooltip"
+          tooltipPosition="top"
           fluid
-        />
+        >
+          <tabler-icon [icon]="icons.login" aria-hidden="true" />
+          <span i18n="@@login.submit">Entrar</span>
+        </p-button>
       </form>
     </main>
   `,
@@ -94,6 +100,7 @@ export class Login {
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
   protected readonly submitting = signal(false);
+  protected readonly icons = { login: IconLogin };
   protected readonly passwordAriaInvalid = passwordAriaInvalid;
   protected readonly failure = signal<Failure | null>(null);
 

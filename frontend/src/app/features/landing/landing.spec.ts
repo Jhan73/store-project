@@ -21,4 +21,13 @@ describe('Landing', () => {
 
     expect(host.querySelector('a[href="/staff"]')?.textContent).toContain('Acceso del personal');
   });
+
+  it('decorates the staff link with a hidden icon and a tooltip', async () => {
+    const host = await render();
+    const link = host.querySelector('a[href="/staff"]');
+
+    expect(link?.querySelector('svg')?.closest('tabler-icon')?.getAttribute('aria-hidden')).toBe('true');
+    expect(link?.getAttribute('pTooltip')).toBe('Entrar a la zona del personal');
+    expect(link?.textContent?.trim()).toBe('Acceso del personal');
+  });
 });

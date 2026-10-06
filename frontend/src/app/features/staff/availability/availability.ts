@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule, NgModel } from '@angular/forms';
+import { IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { ToggleSwitch } from 'primeng/toggleswitch';
+import { Tooltip } from 'primeng/tooltip';
 import { AvailabilityStore, ItemKind } from './availability-store';
 
 @Component({
   selector: 'app-availability',
-  imports: [FormsModule, ButtonDirective, ToggleSwitch],
+  imports: [FormsModule, ButtonDirective, ToggleSwitch, TablerIconComponent, Tooltip],
   providers: [AvailabilityStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './availability.scss',
@@ -24,9 +26,12 @@ import { AvailabilityStore, ItemKind } from './availability-store';
           severity="secondary"
           data-testid="retry"
           (click)="store.load()"
-          i18n="@@staff.availability.retry"
+          pTooltip="Volver a cargar la disponibilidad"
+          i18n-pTooltip="@@staff.availability.retry.tooltip"
+          tooltipPosition="top"
         >
-          Reintentar
+          <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+          <span i18n="@@staff.availability.retry">Reintentar</span>
         </button>
       </div>
     } @else if (!store.connected()) {
@@ -123,6 +128,7 @@ import { AvailabilityStore, ItemKind } from './availability-store';
   `,
 })
 export class Availability {
+  protected readonly icons = { retry: IconRefresh };
   protected readonly store = inject(AvailabilityStore);
 
   protected change(kind: ItemKind, id: string, available: boolean, control: NgModel): void {

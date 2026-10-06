@@ -48,6 +48,20 @@ class NestedHarness {
 }
 
 describe('AppShell', () => {
+  it('gives every icon-only and text button a tooltip that matches its name', async () => {
+    const { host } = await render();
+
+    const themeButtons = [...host.querySelectorAll<HTMLElement>('.themes button')];
+    expect(themeButtons).toHaveLength(3);
+    for (const button of themeButtons) {
+      expect(button.getAttribute('pTooltip')).toBe(button.getAttribute('aria-label'));
+      expect(button.querySelector('svg')).not.toBeNull();
+    }
+    const logout = host.querySelector<HTMLElement>('[data-testid="logout"]');
+    expect(logout?.getAttribute('pTooltip')).toBe('Cerrar la sesión');
+    expect(logout?.textContent?.trim()).toBe('Salir');
+  });
+
   async function render() {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(Harness);
