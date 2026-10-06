@@ -1,9 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  IconX,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
@@ -12,7 +22,15 @@ import { isStale, reportFailure } from '../admin-errors';
 
 @Component({
   selector: 'app-category-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText, Select],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputNumber,
+    InputText,
+    Select,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -49,9 +67,12 @@ import { isStale, reportFailure } from '../admin-errors';
                 [size]="'small'"
                 [attr.data-testid]="'edit-' + category.id"
                 (click)="edit(category)"
-                i18n="@@admin.catalog.edit"
+                pTooltip="Editar los datos de esta categoría"
+                i18n-pTooltip="@@admin.catalog.categories.edit.tooltip"
+                tooltipPosition="top"
               >
-                Editar
+                <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                <span i18n="@@admin.catalog.edit">Editar</span>
               </button>
               <button
                 pButton
@@ -61,10 +82,14 @@ import { isStale, reportFailure } from '../admin-errors';
                 [outlined]="true"
                 [attr.data-testid]="'toggle-' + category.id"
                 (click)="toggle(category)"
+                [pTooltip]="category.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
               >
                 @if (category.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
                 } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
                 }
               </button>
@@ -127,16 +152,33 @@ import { isStale, reportFailure } from '../admin-errors';
         />
       </div>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()">
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          [pTooltip]="editing() ? tips.save : tips.create"
+          tooltipPosition="top"
+        >
           @if (editing()) {
+            <tabler-icon [icon]="icons.save" aria-hidden="true" />
             <ng-container i18n="@@admin.catalog.categories.save">Guardar cambios</ng-container>
           } @else {
+            <tabler-icon [icon]="icons.create" aria-hidden="true" />
             <ng-container i18n="@@admin.catalog.categories.create">Agregar categoría</ng-container>
           }
         </button>
         @if (editing()) {
-          <button pButton type="button" severity="secondary" (click)="cancel()" i18n="@@admin.catalog.cancel">
-            Cancelar
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            (click)="cancel()"
+            pTooltip="Descartar los cambios y cerrar el formulario"
+            i18n-pTooltip="@@admin.catalog.cancel.tooltip"
+            tooltipPosition="top"
+          >
+            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+            <span i18n="@@admin.catalog.cancel">Cancelar</span>
           </button>
         }
       </div>
@@ -144,6 +186,20 @@ import { isStale, reportFailure } from '../admin-errors';
   `,
 })
 export class CategoryList {
+  protected readonly icons = {
+    edit: IconPencil,
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    save: IconDeviceFloppy,
+    create: IconPlus,
+    cancel: IconX,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.catalog.categories.deactivate.tooltip:Ocultar esta categoría del menú`,
+    reactivate: $localize`:@@admin.catalog.categories.reactivate.tooltip:Volver a mostrar esta categoría en el menú`,
+    save: $localize`:@@admin.catalog.categories.save.tooltip:Guardar los cambios de la categoría`,
+    create: $localize`:@@admin.catalog.categories.create.tooltip:Agregar una categoría nueva`,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 

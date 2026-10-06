@@ -11,11 +11,19 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import {
+  IconArrowLeft,
+  IconDeviceFloppy,
+  IconPlus,
+  IconTrash,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { ToggleSwitch } from 'primeng/toggleswitch';
+import { Tooltip } from 'primeng/tooltip';
 import { forkJoin, map, of } from 'rxjs';
 import type {
   Allergen,
@@ -61,6 +69,8 @@ type OptionForm = ReturnType<typeof optionForm>;
     InputText,
     ToggleSwitch,
     AllergenPicker,
+    TablerIconComponent,
+    Tooltip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
@@ -73,9 +83,17 @@ type OptionForm = ReturnType<typeof optionForm>;
           <ng-container i18n="@@admin.catalog.groupForm.newTitle">Nuevo grupo de modificadores</ng-container>
         }
       </h2>
-      <a pButton severity="secondary" routerLink="/admin/catalog/modifier-groups" i18n="@@admin.catalog.back"
-        >Volver a la lista</a
+      <a
+        pButton
+        severity="secondary"
+        routerLink="/admin/catalog/modifier-groups"
+        pTooltip="Volver a la lista de grupos de modificadores"
+        i18n-pTooltip="@@admin.catalog.groupForm.back.tooltip"
+        tooltipPosition="top"
       >
+        <tabler-icon [icon]="icons.back" aria-hidden="true" />
+        <span i18n="@@admin.catalog.back">Volver a la lista</span>
+      </a>
     </div>
 
     @if (ready()) {
@@ -214,9 +232,12 @@ type OptionForm = ReturnType<typeof optionForm>;
                 [size]="'small'"
                 [attr.data-testid]="'remove-option-' + i"
                 (click)="removeOption(i)"
-                i18n="@@admin.catalog.groupForm.removeOption"
+                pTooltip="Quitar esta opción del grupo"
+                i18n-pTooltip="@@admin.catalog.groupForm.removeOption.tooltip"
+                tooltipPosition="top"
               >
-                Quitar opción
+                <tabler-icon [icon]="icons.remove" aria-hidden="true" />
+                <span i18n="@@admin.catalog.groupForm.removeOption">Quitar opción</span>
               </button>
             </fieldset>
           }
@@ -229,12 +250,23 @@ type OptionForm = ReturnType<typeof optionForm>;
             severity="secondary"
             data-testid="add-option"
             (click)="addOption()"
-            i18n="@@admin.catalog.groupForm.addOption"
+            pTooltip="Agregar una opción nueva al grupo"
+            i18n-pTooltip="@@admin.catalog.groupForm.addOption.tooltip"
+            tooltipPosition="top"
           >
-            Agregar opción
+            <tabler-icon [icon]="icons.add" aria-hidden="true" />
+            <span i18n="@@admin.catalog.groupForm.addOption">Agregar opción</span>
           </button>
-          <button pButton type="submit" [loading]="saving()" i18n="@@admin.catalog.groupForm.save">
-            Guardar grupo
+          <button
+            pButton
+            type="submit"
+            [loading]="saving()"
+            pTooltip="Guardar el grupo y sus opciones"
+            i18n-pTooltip="@@admin.catalog.groupForm.save.tooltip"
+            tooltipPosition="top"
+          >
+            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            <span i18n="@@admin.catalog.groupForm.save">Guardar grupo</span>
           </button>
         </div>
       </form>
@@ -242,6 +274,12 @@ type OptionForm = ReturnType<typeof optionForm>;
   `,
 })
 export class ModifierGroupForm {
+  protected readonly icons = {
+    back: IconArrowLeft,
+    remove: IconTrash,
+    add: IconPlus,
+    save: IconDeviceFloppy,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
   private readonly messages = inject(MessageService);

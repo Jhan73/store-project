@@ -1,9 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormsModule, NgModel, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
+import { Tooltip } from 'primeng/tooltip';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney } from '../../../core/money/money';
@@ -14,15 +24,31 @@ const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-product-list',
-  imports: [FormsModule, ReactiveFormsModule, RouterLink, ButtonDirective, Select, ToggleSwitch],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonDirective,
+    Select,
+    ToggleSwitch,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
     <div class="toolbar">
       <h2 i18n="@@admin.catalog.products.title">Productos</h2>
-      <a pButton routerLink="/admin/catalog/products/new" i18n="@@admin.catalog.products.new"
-        >Nuevo producto</a
+      <a
+        pButton
+        routerLink="/admin/catalog/products/new"
+        pTooltip="Crear un producto nuevo"
+        i18n-pTooltip="@@admin.catalog.products.new.tooltip"
+        tooltipPosition="top"
       >
+        <tabler-icon [icon]="icons.create" aria-hidden="true" />
+        <span i18n="@@admin.catalog.products.new">Nuevo producto</span>
+      </a>
     </div>
 
     <div class="field">
@@ -100,9 +126,12 @@ const PAGE_SIZE = 20;
                   severity="secondary"
                   [size]="'small'"
                   [routerLink]="['/admin/catalog/products', product.id]"
-                  i18n="@@admin.catalog.edit"
+                  pTooltip="Editar los datos de este producto"
+                  i18n-pTooltip="@@admin.catalog.products.edit.tooltip"
+                  tooltipPosition="top"
                 >
-                  Editar
+                  <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.edit">Editar</span>
                 </a>
                 <button
                   pButton
@@ -112,10 +141,14 @@ const PAGE_SIZE = 20;
                   [size]="'small'"
                   [attr.data-testid]="'toggle-' + product.id"
                   (click)="toggle(product)"
+                  [pTooltip]="product.active ? tips.deactivate : tips.reactivate"
+                  tooltipPosition="top"
                 >
                   @if (product.active) {
+                    <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
                   } @else {
+                    <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
                   }
                 </button>
@@ -135,9 +168,12 @@ const PAGE_SIZE = 20;
           data-testid="previous-page"
           [disabled]="current().page === 0"
           (click)="go(current().page - 1)"
-          i18n="@@admin.catalog.products.previous"
+          pTooltip="Ir a la página anterior"
+          i18n-pTooltip="@@admin.catalog.products.previous.tooltip"
+          tooltipPosition="top"
         >
-          Anterior
+          <tabler-icon [icon]="icons.previous" aria-hidden="true" />
+          <span i18n="@@admin.catalog.products.previous">Anterior</span>
         </button>
         <span i18n="@@admin.catalog.products.pageOf"
           >Página {{ current().page + 1 }} de {{ current().totalPages }}</span
@@ -149,15 +185,30 @@ const PAGE_SIZE = 20;
           data-testid="next-page"
           [disabled]="current().page + 1 >= current().totalPages"
           (click)="go(current().page + 1)"
-          i18n="@@admin.catalog.products.next"
+          pTooltip="Ir a la página siguiente"
+          i18n-pTooltip="@@admin.catalog.products.next.tooltip"
+          tooltipPosition="top"
         >
-          Siguiente
+          <tabler-icon [icon]="icons.next" aria-hidden="true" />
+          <span i18n="@@admin.catalog.products.next">Siguiente</span>
         </button>
       </nav>
     }
   `,
 })
 export class ProductList {
+  protected readonly icons = {
+    create: IconPlus,
+    edit: IconPencil,
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    previous: IconChevronLeft,
+    next: IconChevronRight,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.catalog.products.deactivate.tooltip:Ocultar este producto del menú`,
+    reactivate: $localize`:@@admin.catalog.products.reactivate.tooltip:Volver a mostrar este producto en el menú`,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 
