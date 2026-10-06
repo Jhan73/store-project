@@ -1,4 +1,4 @@
-import { IconBook2, IconHome, IconSettings } from '@tabler/icons-angular';
+import { IconAdjustments, IconBook2, IconHome, IconSettings } from '@tabler/icons-angular';
 import type { Role } from '../../core/api/api-types';
 import type { NavItem } from '../../shared/ui/app-shell/nav-item';
 
@@ -25,6 +25,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/admin/catalog',
     label: $localize`:@@workspace.nav.catalog:Catálogo`,
     icon: IconBook2,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/admin/settings',
+    label: $localize`:@@workspace.nav.settings:Configuración`,
+    icon: IconAdjustments,
     roles: ['ADMIN'],
   },
 ];

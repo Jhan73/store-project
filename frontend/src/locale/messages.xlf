@@ -920,7 +920,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:51,52</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:80,81</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:87,88</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:88,89</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -929,7 +929,7 @@
     <unit id="admin.catalog.deactivate">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:63,64</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:99,100</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:100,101</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -938,7 +938,7 @@
     <unit id="admin.catalog.reactivate">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:65,67</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:101,103</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:102,104</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -1165,7 +1165,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionAvailable">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:174,177</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:175,178</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -1173,7 +1173,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionAllergens">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:182,184</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:183,185</note>
       </notes>
       <segment>
         <source>Alérgenos de esta opción</source>
@@ -1181,7 +1181,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.removeOption">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:194,196</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:195,197</note>
       </notes>
       <segment>
         <source> Quitar opción </source>
@@ -1189,7 +1189,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.addOption">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:209,211</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:210,212</note>
       </notes>
       <segment>
         <source> Agregar opción </source>
@@ -1197,7 +1197,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:212,214</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:213,215</note>
       </notes>
       <segment>
         <source> Guardar grupo </source>
@@ -1205,7 +1205,7 @@
     </unit>
     <unit id="admin.catalog.saved">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:329</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:348</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:346</note>
       </notes>
       <segment>
@@ -1630,7 +1630,7 @@
     </unit>
     <unit id="admin.catalog.products.paging">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:112</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:113</note>
       </notes>
       <segment>
         <source>Paginación</source>
@@ -1638,7 +1638,7 @@
     </unit>
     <unit id="admin.catalog.products.previous">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:122,124</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:123,125</note>
       </notes>
       <segment>
         <source> Anterior </source>
@@ -1646,7 +1646,7 @@
     </unit>
     <unit id="admin.catalog.products.pageOf">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:125,127</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:126,128</note>
       </notes>
       <segment>
         <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
@@ -1654,7 +1654,7 @@
     </unit>
     <unit id="admin.catalog.products.next">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:136,139</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:137,140</note>
       </notes>
       <segment>
         <source> Siguiente </source>
@@ -1730,6 +1730,198 @@
       </notes>
       <segment>
         <source>Agregar estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.basePrepMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:39</note>
+      </notes>
+      <segment>
+        <source>Minutos base de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.queueMinutesPerOrder">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:44</note>
+      </notes>
+      <segment>
+        <source>Minutos extra por pedido en cola</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.busyModeMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:49</note>
+      </notes>
+      <segment>
+        <source>Minutos extra en modo ocupado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.onlineCapacityLimit">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:54</note>
+      </notes>
+      <segment>
+        <source>Límite de pedidos en línea simultáneos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardWarningMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:62</note>
+      </notes>
+      <segment>
+        <source>Minutos para marcar advertencia</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardLateMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:67</note>
+      </notes>
+      <segment>
+        <source>Minutos para marcar atraso</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.exceptionThreshold">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:74</note>
+      </notes>
+      <segment>
+        <source>Umbral de excepciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:101,103</note>
+      </notes>
+      <segment>
+        <source>Configuración de la tienda</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.regional">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:123,125</note>
+      </notes>
+      <segment>
+        <source>Región</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.timeZone">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:125,127</note>
+      </notes>
+      <segment>
+        <source>Zona horaria</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.currency">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:137,139</note>
+      </notes>
+      <segment>
+        <source>Moneda (ISO 4217)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.currencyInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:148,152</note>
+      </notes>
+      <segment>
+        <source>Escribe un código de tres letras, como PEN.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.preparation">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:155,156</note>
+      </notes>
+      <segment>
+        <source>Preparación y pedidos en línea</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.board">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:162,163</note>
+      </notes>
+      <segment>
+        <source>Tablero de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardOrderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:168,173</note>
+      </notes>
+      <segment>
+        <source>El tiempo de atraso debe ser mayor que el de advertencia.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.cash">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:174,176</note>
+      </notes>
+      <segment>
+        <source>Caja y excepciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.registerDifference">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:177,178</note>
+      </notes>
+      <segment>
+        <source>Diferencia de caja permitida (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.registerDifferenceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:189,193</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 5.00.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:198,201</note>
+      </notes>
+      <segment>
+        <source> Guardar cambios </source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.saved">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:202,207</note>
+      </notes>
+      <segment>
+        <source>Cambios guardados.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.numberInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:255</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:10,11</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.label">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:11</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.general">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:19,22</note>
+      </notes>
+      <segment>
+        <source>General</source>
       </segment>
     </unit>
     <unit id="forbidden.title">
@@ -2044,6 +2236,14 @@
       </notes>
       <segment>
         <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.settings">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:32</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
       </segment>
     </unit>
     <unit id="shell.brand">
