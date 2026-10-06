@@ -169,6 +169,7 @@ type OptionForm = ReturnType<typeof optionForm>;
                     type="checkbox"
                     [id]="'option-' + i + '-available'"
                     [checked]="option.controls.available.value"
+                    [disabled]="savingOptions().has(option.controls.id.value)"
                     (change)="setAvailability(option, $event)"
                   />
                   <label [for]="'option-' + i + '-available'" i18n="@@admin.catalog.groupForm.optionAvailable">Disponible</label>
@@ -228,6 +229,7 @@ export class ModifierGroupForm {
   protected readonly attempted = signal(false);
   protected readonly currency = signal('');
   protected readonly allergens = signal<readonly Allergen[]>([]);
+  protected readonly savingOptions = signal<ReadonlySet<string | null>>(new Set());
 
   private etag = '';
   protected readonly options = new FormArray<OptionForm>([optionForm()]);
@@ -297,13 +299,30 @@ export class ModifierGroupForm {
     if (!id) {
       return;
     }
+    this.markSaving(id, true);
     this.api.setOptionAvailability(id, available).subscribe({
-      next: (result) => option.controls.available.setValue(result.available),
+      next: (result) => {
+        this.markSaving(id, false);
+        option.controls.available.setValue(result.available);
+      },
       error: (error: unknown) => {
+        this.markSaving(id, false);
         // The checkbox already flipped on screen; put it back to what the server still holds.
         (event.target as HTMLInputElement).checked = option.controls.available.value;
         this.notifier.show(error);
       },
+    });
+  }
+
+  private markSaving(id: string, saving: boolean): void {
+    this.savingOptions.update((ids) => {
+      const next = new Set(ids);
+      if (saving) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
     });
   }
 

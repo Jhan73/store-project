@@ -71,6 +71,7 @@ const PAGE_SIZE = 20;
                 <input
                   type="checkbox"
                   [checked]="product.available"
+                  [disabled]="savingAvailability().has(product.id)"
                   [attr.data-testid]="'available-' + product.id"
                   [attr.aria-label]="product.name"
                   (change)="setAvailability(product, $event)"
@@ -152,6 +153,7 @@ export class ProductList {
     totalElements: 0,
     totalPages: 0,
   });
+  protected readonly savingAvailability = signal<ReadonlySet<string>>(new Set());
   private lastRequest = 0;
   private readonly categoryNames = computed(
     () => new Map(this.categories().map((category) => [category.id, category.name])),
@@ -202,11 +204,17 @@ export class ProductList {
 
   protected setAvailability(product: Product, event: Event): void {
     const box = event.target as HTMLInputElement;
+    this.markSaving(product.id, true);
     this.api.setProductAvailability(product.id, box.checked).subscribe({
-      next: (result) => this.patch(product.id, { available: result.available }),
+      next: (result) => {
+        this.markSaving(product.id, false);
+        this.patch(product.id, { available: result.available });
+      },
       error: (error: unknown) => {
-        // The checkbox already flipped on screen; put it back to what the server still holds.
-        box.checked = product.available;
+        this.markSaving(product.id, false);
+        // The checkbox already flipped on screen; put it back to what the list holds now.
+        const held = this.current().content.find((item) => item.id === product.id);
+        box.checked = held?.available ?? product.available;
         this.notifier.show(error);
       },
     });
@@ -224,6 +232,18 @@ export class ProductList {
           this.go(this.current().page);
         }
       },
+    });
+  }
+
+  private markSaving(id: string, saving: boolean): void {
+    this.savingAvailability.update((ids) => {
+      const next = new Set(ids);
+      if (saving) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
     });
   }
 

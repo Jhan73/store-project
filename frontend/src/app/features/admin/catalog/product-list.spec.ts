@@ -187,6 +187,45 @@ describe('ProductList', () => {
     expect(host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!.checked).toBe(true);
   });
 
+  it('blocks the availability switch while its change is being saved', async () => {
+    const { fixture, host, http } = await render();
+    const box = () => host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!;
+
+    box().click();
+    await fixture.whenStable();
+    expect(box().disabled).toBe(true);
+    box().click();
+    const request = http.expectOne(`${API}/catalog/products/p1/availability`);
+    request.flush({ id: 'p1', available: false });
+    await fixture.whenStable();
+
+    expect(box().disabled).toBe(false);
+    expect(box().checked).toBe(false);
+  });
+
+  it('puts the switch back to the value the list holds now, not the one it had at the click', async () => {
+    const { fixture, host, http } = await render();
+    const box = () => host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!;
+
+    box().click();
+    const availability = http.expectOne(`${API}/catalog/products/p1/availability`);
+    const select = host.querySelector<HTMLSelectElement>('#product-category-filter')!;
+    select.value = 'c1';
+    select.dispatchEvent(new Event('change'));
+    http
+      .expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`)
+      .flush(page([product('p1', 'Orange juice', { available: false })]));
+    await fixture.whenStable();
+
+    availability.flush(
+      { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
+      { status: 500, statusText: 'Server Error' },
+    );
+    await fixture.whenStable();
+
+    expect(box().checked).toBe(false);
+  });
+
   it('deactivates an active product and reactivates an inactive one with their versions', async () => {
     const { fixture, host, http } = await render(
       page([product('p1', 'Orange juice'), product('p2', 'Beet shot', { active: false, etag: '"5"' })]),
