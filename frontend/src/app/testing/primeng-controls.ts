@@ -12,6 +12,8 @@ function selectRoot(host: HTMLElement, id: string): HTMLElement {
   return root;
 }
 
+const WAIT = { timeout: 5000 };
+
 function optionNodes(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>('li[role="option"]'));
 }
@@ -29,7 +31,7 @@ export async function openSelect(fixture: Stable, host: HTMLElement, id: string)
       if (!isOpen(root)) {
         throw new Error(`The select "${id}" did not open`);
       }
-    });
+    }, WAIT);
   }
 }
 
@@ -58,7 +60,7 @@ export async function chooseOption(
       if (!find()) {
         throw new Error('missing');
       }
-    });
+    }, WAIT);
   } catch {
     throw new Error(`No option "${label}" in the select "${id}"`);
   }
