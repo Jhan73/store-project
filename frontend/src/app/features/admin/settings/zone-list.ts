@@ -8,7 +8,7 @@ import { formatMoney, parseAmount } from '../../../core/money/money';
 import { amountValidator, optionalAmountValidator } from '../amount-validator';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
-import { PendingIds } from '../pending-ids';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { SettingsApi } from './settings-api';
 
 @Component({

@@ -6,7 +6,7 @@ import type { AdminTable } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
-import { PendingIds } from '../pending-ids';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { TablesApi } from './tables-api';
 
 const MAX_LENGTH = 60;
