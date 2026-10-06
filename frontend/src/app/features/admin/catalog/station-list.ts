@@ -152,7 +152,16 @@ export class StationList {
 
   private load(): void {
     this.api.stations().subscribe({
-      next: (list) => this.stations.set(list),
+      next: (list) => {
+        this.stations.set(list);
+        const current = this.editing();
+        const fresh = current && list.find((item) => item.id === current.id);
+        if (fresh) {
+          this.edit(fresh);
+        } else if (current) {
+          this.cancel();
+        }
+      },
       error: (error: unknown) => this.notifier.show(error),
     });
   }

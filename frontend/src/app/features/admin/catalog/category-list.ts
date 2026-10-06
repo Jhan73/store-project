@@ -223,6 +223,9 @@ export class CategoryList {
 
   private replace(saved: Category): void {
     this.categories.update((list) => list.map((item) => (item.id === saved.id ? saved : item)));
+    if (this.editing()?.id === saved.id) {
+      this.editing.set(saved);
+    }
   }
 
   private fail(error: unknown, form?: FormGroup): void {
@@ -234,7 +237,16 @@ export class CategoryList {
 
   private load(): void {
     this.api.categories().subscribe({
-      next: (list) => this.categories.set(list),
+      next: (list) => {
+        this.categories.set(list);
+        const current = this.editing();
+        const fresh = current && list.find((item) => item.id === current.id);
+        if (fresh) {
+          this.edit(fresh);
+        } else if (current) {
+          this.cancel();
+        }
+      },
       error: (error: unknown) => this.notifier.show(error),
     });
   }

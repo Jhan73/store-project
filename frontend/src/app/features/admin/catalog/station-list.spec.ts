@@ -119,6 +119,46 @@ describe('StationList', () => {
     expect(rows(host)[1]).toContain('Juice bar');
   });
 
+  it('retries a stale rename with the refreshed version and shows the current name', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
+    await fixture.whenStable();
+    type(host, '#station-name', 'Cold bar');
+    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    http.expectOne(`${STATIONS}/s2`).flush(
+      { type: 'about:blank', status: 412, code: 'common.precondition-failed', correlationId: 'c' },
+      { status: 412, statusText: 'Precondition Failed' },
+    );
+    await fixture.whenStable();
+    http.expectOne(STATIONS).flush([main, { ...bar, name: 'Juice bar', etag: '"5"' }]);
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('Juice bar');
+    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    const retry = http.expectOne(`${STATIONS}/s2`);
+    expect(retry.request.headers.get('If-Match')).toBe('"5"');
+    retry.flush({ ...bar, name: 'Juice bar', etag: '"6"' });
+  });
+
+  it('leaves edit mode when the station no longer exists after a failed rename', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
+    await fixture.whenStable();
+    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    http.expectOne(`${STATIONS}/s2`).flush(
+      { type: 'about:blank', status: 404, code: 'common.not-found', correlationId: 'c' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    await fixture.whenStable();
+    http.expectOne(STATIONS).flush([main]);
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('');
+    expect(host.querySelector('form [type="button"]')).toBeNull();
+  });
+
   it('shows a duplicate name as a notification and keeps what was typed', async () => {
     const { fixture, host, http, messages } = await render();
     const add = vi.spyOn(messages, 'add');
