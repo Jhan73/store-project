@@ -121,6 +121,25 @@ describe('ProductList', () => {
     expect(rows(host)[0]).toContain('Chips');
   });
 
+  it('keeps the latest filter when an earlier response arrives late', async () => {
+    const { fixture, host, http } = await render();
+    const select = host.querySelector<HTMLSelectElement>('#product-category-filter')!;
+
+    select.value = 'c1';
+    select.dispatchEvent(new Event('change'));
+    const early = http.expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`);
+    select.value = 'c2';
+    select.dispatchEvent(new Event('change'));
+    const late = http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`);
+
+    late.flush(page([product('p3', 'Chips', { categoryId: 'c2' })]));
+    early.flush(page([product('p1', 'Orange juice')]));
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Chips');
+  });
+
   it('moves between pages', async () => {
     const { fixture, host, http } = await render(page([product('p1', 'Orange juice')], 0, 2));
     expect(host.textContent).toContain('Página 1 de 2');

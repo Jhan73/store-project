@@ -152,6 +152,7 @@ export class ProductList {
     totalElements: 0,
     totalPages: 0,
   });
+  private lastRequest = 0;
   private readonly categoryNames = computed(
     () => new Map(this.categories().map((category) => [category.id, category.name])),
   );
@@ -178,6 +179,7 @@ export class ProductList {
   }
 
   protected go(page: number): void {
+    const request = ++this.lastRequest;
     this.api
       .products({
         ...(this.categoryId() && { categoryId: this.categoryId() }),
@@ -185,8 +187,16 @@ export class ProductList {
         size: PAGE_SIZE,
       })
       .subscribe({
-        next: (result) => this.current.set(result),
-        error: (error: unknown) => this.notifier.show(error),
+        next: (result) => {
+          if (request === this.lastRequest) {
+            this.current.set(result);
+          }
+        },
+        error: (error: unknown) => {
+          if (request === this.lastRequest) {
+            this.notifier.show(error);
+          }
+        },
       });
   }
 
