@@ -182,6 +182,51 @@ describe('Availability', () => {
     expect(stateText(fixture, 'p1')).toContain('Agotado');
   });
 
+  it('sends exactly one request when the slider is clicked', async () => {
+    const fixture = await ready();
+
+    host(fixture)
+      .querySelector<HTMLElement>('p-toggleswitch[data-testid="product-p1"] .p-toggleswitch-slider')!
+      .click();
+    await fixture.whenStable();
+
+    const requests = http.match({ method: 'PUT', url: `${CATALOG}/products/p1/availability` });
+    expect(requests.length).toBe(1);
+    expect(requests[0].request.body).toEqual({ available: false });
+  });
+
+  it('sends exactly one request when the option slider is clicked', async () => {
+    const fixture = await ready();
+
+    host(fixture)
+      .querySelector<HTMLElement>('p-toggleswitch[data-testid="option-o2"] .p-toggleswitch-slider')!
+      .click();
+    await fixture.whenStable();
+
+    const requests = http.match({
+      method: 'PUT',
+      url: `${CATALOG}/modifier-options/o2/availability`,
+    });
+    expect(requests.length).toBe(1);
+  });
+
+  it('sends at most one request when the name is clicked', async () => {
+    const fixture = await ready();
+
+    host(fixture).querySelector<HTMLElement>('.name')!.click();
+    await fixture.whenStable();
+
+    const requests = http.match({ method: 'PUT', url: `${CATALOG}/products/p1/availability` });
+    expect(requests.length).toBeLessThanOrEqual(1);
+  });
+
+  it('gives each switch the item name as its accessible name', async () => {
+    const fixture = await ready();
+
+    const labelledBy = box(fixture, 'product-p1').getAttribute('aria-labelledby')!;
+    expect(host(fixture).querySelector(`#${labelledBy}`)?.textContent).toContain('Naranja');
+  });
+
   it('sends the option toggle', async () => {
     const fixture = await ready();
 

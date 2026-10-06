@@ -56,4 +56,13 @@ describe('AllergenPicker', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.selected()).toEqual(['MILK']);
   });
+
+  it('toggles once when the visible box is clicked', async () => {
+    const { fixture, host } = await render();
+
+    host.querySelector<HTMLElement>('p-checkbox .p-checkbox-box')!.click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.selected()).toEqual(['PEANUTS', 'MILK']);
+  });
 });
