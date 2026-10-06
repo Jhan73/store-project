@@ -89,3 +89,12 @@ export function typeNumber(host: HTMLElement, id: string, value: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
   input.dispatchEvent(new Event('blur'));
 }
+
+export function numberIsInvalid(host: HTMLElement, id: string): boolean {
+  return host.querySelector(`p-inputnumber #${id}`)!.classList.contains('p-invalid');
+}
+
+/** The text a p-inputnumber shows. */
+export function numberText(host: HTMLElement, id: string): string {
+  return host.querySelector<HTMLInputElement>(`p-inputnumber #${id}`)!.value;
+}

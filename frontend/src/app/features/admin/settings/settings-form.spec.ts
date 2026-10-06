@@ -5,6 +5,13 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { StoreSettings } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import {
+  chooseOption,
+  numberIsInvalid,
+  numberText,
+  selectedLabel,
+  typeNumber,
+} from '../../../testing/primeng-controls';
 import { SettingsApi } from './settings-api';
 import { SettingsForm } from './settings-form';
 
@@ -57,19 +64,14 @@ function type(host: HTMLElement, selector: string, value: string) {
   input.dispatchEvent(new Event('input'));
 }
 
-function choose(host: HTMLElement, selector: string, value: string) {
-  const select = host.querySelector<HTMLSelectElement>(selector)!;
-  select.value = value;
-  select.dispatchEvent(new Event('change'));
-}
-
 function submit(host: HTMLElement) {
   host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 }
 
 function value(host: HTMLElement, selector: string) {
-  return host.querySelector<HTMLInputElement | HTMLSelectElement>(selector)!.value;
+  return host.querySelector<HTMLInputElement>(selector)!.value;
 }
+
 
 describe('SettingsForm', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
@@ -77,16 +79,16 @@ describe('SettingsForm', () => {
   it('shows every setting as the server holds it', async () => {
     const { host } = await render();
 
-    expect(value(host, '#settings-timeZone')).toBe('America/Lima');
+    expect(selectedLabel(host, 'settings-timeZone')).toBe('America/Lima');
     expect(value(host, '#settings-currency')).toBe('PEN');
-    expect(value(host, '#settings-basePrepMinutes')).toBe('10');
-    expect(value(host, '#settings-queueMinutesPerOrder')).toBe('2');
-    expect(value(host, '#settings-busyModeMinutes')).toBe('15');
-    expect(value(host, '#settings-onlineCapacityLimit')).toBe('20');
-    expect(value(host, '#settings-boardWarningMinutes')).toBe('8');
-    expect(value(host, '#settings-boardLateMinutes')).toBe('12');
+    expect(numberText(host, 'settings-basePrepMinutes')).toBe('10');
+    expect(numberText(host, 'settings-queueMinutesPerOrder')).toBe('2');
+    expect(numberText(host, 'settings-busyModeMinutes')).toBe('15');
+    expect(numberText(host, 'settings-onlineCapacityLimit')).toBe('20');
+    expect(numberText(host, 'settings-boardWarningMinutes')).toBe('8');
+    expect(numberText(host, 'settings-boardLateMinutes')).toBe('12');
     expect(value(host, '#settings-registerDifferenceThreshold')).toBe('5.00');
-    expect(value(host, '#settings-exceptionThreshold')).toBe('3');
+    expect(numberText(host, 'settings-exceptionThreshold')).toBe('3');
   });
 
   it('warns about delivery zones only while the currency differs from the saved one', async () => {
@@ -128,16 +130,17 @@ describe('SettingsForm', () => {
   it('sends every edited setting and shows what the server answered', async () => {
     const { fixture, host, http } = await render();
 
-    choose(host, '#settings-timeZone', 'America/Bogota');
+    await chooseOption(fixture, host, 'settings-timeZone', 'America/Bogota');
     type(host, '#settings-currency', 'usd');
-    type(host, '#settings-basePrepMinutes', '12');
-    type(host, '#settings-queueMinutesPerOrder', '0');
-    type(host, '#settings-busyModeMinutes', '20');
-    type(host, '#settings-onlineCapacityLimit', '30');
-    type(host, '#settings-boardWarningMinutes', '6');
-    type(host, '#settings-boardLateMinutes', '9');
+    typeNumber(host, 'settings-basePrepMinutes', '12');
+    typeNumber(host, 'settings-queueMinutesPerOrder', '0');
+    typeNumber(host, 'settings-busyModeMinutes', '20');
+    typeNumber(host, 'settings-onlineCapacityLimit', '30');
+    typeNumber(host, 'settings-boardWarningMinutes', '6');
+    typeNumber(host, 'settings-boardLateMinutes', '9');
     type(host, '#settings-registerDifferenceThreshold', '7,5');
-    type(host, '#settings-exceptionThreshold', '4');
+    typeNumber(host, 'settings-exceptionThreshold', '4');
+    await fixture.whenStable();
     submit(host);
     const request = http.expectOne(URL);
     expect(request.request.body).toEqual({
@@ -159,7 +162,7 @@ describe('SettingsForm', () => {
     await fixture.whenStable();
 
     expect(value(host, '#settings-registerDifferenceThreshold')).toBe('7.50');
-    expect(value(host, '#settings-boardLateMinutes')).toBe('12');
+    expect(numberText(host, 'settings-boardLateMinutes')).toBe('12');
   });
 
   it('uses the ETag of the last save on the next one', async () => {
@@ -176,13 +179,13 @@ describe('SettingsForm', () => {
   it('does not send a setting that is not a valid number', async () => {
     const { fixture, host, http } = await render();
 
-    type(host, '#settings-basePrepMinutes', '0');
+    typeNumber(host, 'settings-basePrepMinutes', '0');
     type(host, '#settings-registerDifferenceThreshold', 'abc');
     submit(host);
     await fixture.whenStable();
 
     http.expectNone(URL);
-    expect(host.querySelector('#settings-basePrepMinutes')!.getAttribute('aria-invalid')).toBe('true');
+    expect(numberIsInvalid(host, 'settings-basePrepMinutes')).toBe(true);
     expect(
       host.querySelector('#settings-registerDifferenceThreshold')!.getAttribute('aria-invalid'),
     ).toBe('true');
@@ -191,8 +194,8 @@ describe('SettingsForm', () => {
   it('does not send board thresholds where late is not after warning', async () => {
     const { fixture, host, http } = await render();
 
-    type(host, '#settings-boardWarningMinutes', '12');
-    type(host, '#settings-boardLateMinutes', '12');
+    typeNumber(host, 'settings-boardWarningMinutes', '12');
+    typeNumber(host, 'settings-boardLateMinutes', '12');
     submit(host);
     await fixture.whenStable();
 
@@ -227,7 +230,7 @@ describe('SettingsForm', () => {
     async (_name, status, code) => {
       const { fixture, host, http, toast } = await render();
 
-      type(host, '#settings-basePrepMinutes', '99');
+      typeNumber(host, 'settings-basePrepMinutes', '99');
       submit(host);
       http
         .expectOne(URL)
@@ -239,7 +242,7 @@ describe('SettingsForm', () => {
       await fixture.whenStable();
 
       expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-      expect(value(host, '#settings-basePrepMinutes')).toBe('11');
+      expect(numberText(host, 'settings-basePrepMinutes')).toBe('11');
       submit(host);
       const retry = http.expectOne(URL);
       expect(retry.request.headers.get('If-Match')).toBe('"9"');
@@ -261,7 +264,7 @@ describe('SettingsForm', () => {
   it('keeps the form editable and tells the user when saving fails for another reason', async () => {
     const { fixture, host, http, toast } = await render();
 
-    type(host, '#settings-basePrepMinutes', '12');
+    typeNumber(host, 'settings-basePrepMinutes', '12');
     submit(host);
     http.expectOne(URL).flush(
       { type: 'about:blank', status: 422, code: 'store.invalid-board-thresholds', correlationId: 'c' },
@@ -270,7 +273,7 @@ describe('SettingsForm', () => {
     await fixture.whenStable();
 
     expect(toast).toHaveBeenCalled();
-    expect(value(host, '#settings-basePrepMinutes')).toBe('12');
+    expect(numberText(host, 'settings-basePrepMinutes')).toBe('12');
     submit(host);
     expect(http.expectOne(URL).request.headers.get('If-Match')).toBe('"4"');
   });
