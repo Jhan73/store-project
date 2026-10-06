@@ -11,11 +11,32 @@ import { AvailabilityStore, ItemKind } from './availability-store';
   template: `
     <h1 i18n="@@staff.availability.title">Disponibilidad</h1>
 
-    @if (!store.enabled()) {
+    @if (store.failed()) {
+      <div class="offline" role="status" data-testid="offline-banner">
+        <ng-container i18n="@@staff.availability.failed"
+          >No se pudo actualizar la disponibilidad. Los cambios están deshabilitados.</ng-container
+        >
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="retry"
+          (click)="store.load()"
+          i18n="@@staff.availability.retry"
+        >
+          Reintentar
+        </button>
+      </div>
+    } @else if (!store.connected()) {
       <div class="offline" role="status" data-testid="offline-banner">
         <ng-container i18n="@@staff.availability.offline"
-          >Sin conexión en tiempo real. Los cambios se habilitan cuando se actualice el
-          estado.</ng-container
+          >Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</ng-container
+        >
+      </div>
+    } @else if (!store.enabled()) {
+      <div class="offline" role="status" data-testid="offline-banner">
+        <ng-container i18n="@@staff.availability.updating"
+          >Actualizando la disponibilidad. Los cambios se habilitan en unos segundos.</ng-container
         >
       </div>
     }
@@ -90,19 +111,7 @@ import { AvailabilityStore, ItemKind } from './availability-store';
           }
         </section>
       }
-    } @else if (store.failed()) {
-      <p class="muted" i18n="@@staff.availability.failed">No se pudo cargar la disponibilidad.</p>
-      <button
-        pButton
-        type="button"
-        severity="secondary"
-        data-testid="retry"
-        (click)="store.load()"
-        i18n="@@staff.availability.retry"
-      >
-        Reintentar
-      </button>
-    } @else {
+    } @else if (!store.failed()) {
       <p class="muted" i18n="@@staff.availability.loading">Cargando…</p>
     }
   `,

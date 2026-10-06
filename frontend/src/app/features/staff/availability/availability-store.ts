@@ -1,5 +1,5 @@
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
+import { computed, DestroyRef, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import type { Menu, MenuModifierGroup } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
@@ -14,6 +14,7 @@ export class AvailabilityStore {
   private readonly api = inject(AvailabilityApi);
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly current = signal<Menu | null>(null);
   private readonly loadFailed = signal(false);
@@ -23,6 +24,7 @@ export class AvailabilityStore {
 
   readonly menu = this.current.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
+  readonly connected = this.realtime.isConnected;
   readonly pending = new PendingIds();
   // Actions stay off until a read that began on the live connection has been applied.
   readonly enabled = computed(() => this.synced() && this.realtime.isConnected());
@@ -60,24 +62,28 @@ export class AvailabilityStore {
     const request = ++this.lastRequest;
     const epoch = this.connectionEpoch;
     const startedConnected = this.realtime.isConnected();
-    this.api.menu().subscribe({
-      next: (menu) => {
-        if (request !== this.lastRequest) {
-          return;
-        }
-        this.current.set(menu);
-        this.loadFailed.set(false);
-        if (startedConnected && epoch === this.connectionEpoch && this.realtime.isConnected()) {
-          this.synced.set(true);
-        }
-      },
-      error: (error: unknown) => {
-        if (request === this.lastRequest) {
-          this.loadFailed.set(true);
-          this.notifier.show(error);
-        }
-      },
-    });
+    this.api
+      .menu()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (menu) => {
+          if (request !== this.lastRequest) {
+            return;
+          }
+          this.current.set(menu);
+          this.loadFailed.set(false);
+          if (startedConnected && epoch === this.connectionEpoch && this.realtime.isConnected()) {
+            this.synced.set(true);
+          }
+        },
+        error: (error: unknown) => {
+          if (request === this.lastRequest) {
+            this.loadFailed.set(true);
+            this.synced.set(false);
+            this.notifier.show(error);
+          }
+        },
+      });
   }
 
   availableOf(id: string): boolean | undefined {
@@ -102,7 +108,7 @@ export class AvailabilityStore {
     this.pending.add(id);
     const request =
       kind === 'product' ? this.api.setProduct(id, available) : this.api.setOption(id, available);
-    request.subscribe({
+    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result) => {
         this.pending.delete(id);
         this.patch(result.id, result.available);

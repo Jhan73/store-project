@@ -3065,17 +3065,41 @@
         <source>Disponibilidad</source>
       </segment>
     </unit>
-    <unit id="staff.availability.offline">
+    <unit id="staff.availability.failed">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:17,20</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:17,19</note>
       </notes>
       <segment>
-        <source>Sin conexión en tiempo real. Los cambios se habilitan cuando se actualice el estado.</source>
+        <source>No se pudo actualizar la disponibilidad. Los cambios están deshabilitados.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.retry">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:27,29</note>
+      </notes>
+      <segment>
+        <source> Reintentar </source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.offline">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:33,36</note>
+      </notes>
+      <segment>
+        <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.updating">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:39,42</note>
+      </notes>
+      <segment>
+        <source>Actualizando la disponibilidad. Los cambios se habilitan en unos segundos.</source>
       </segment>
     </unit>
     <unit id="staff.availability.products">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:25,26</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:46,47</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -3083,8 +3107,8 @@
     </unit>
     <unit id="staff.availability.available">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:42,43</note>
-        <note category="location">src/app/features/staff/availability/availability.ts:80,82</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:63,64</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:101,103</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -3092,8 +3116,8 @@
     </unit>
     <unit id="staff.availability.unavailable">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:44,46</note>
-        <note category="location">src/app/features/staff/availability/availability.ts:83,85</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:65,67</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:104,106</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -3101,7 +3125,7 @@
     </unit>
     <unit id="staff.availability.emptyCategory">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:51,53</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:72,74</note>
       </notes>
       <segment>
         <source> Esta categoría no tiene productos. </source>
@@ -3109,7 +3133,7 @@
     </unit>
     <unit id="staff.availability.empty">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:56,60</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:77,81</note>
       </notes>
       <segment>
         <source>Todavía no hay productos.</source>
@@ -3117,31 +3141,15 @@
     </unit>
     <unit id="staff.availability.options">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:62,63</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:83,84</note>
       </notes>
       <segment>
         <source>Opciones</source>
       </segment>
     </unit>
-    <unit id="staff.availability.failed">
-      <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:94,97</note>
-      </notes>
-      <segment>
-        <source>No se pudo cargar la disponibilidad.</source>
-      </segment>
-    </unit>
-    <unit id="staff.availability.retry">
-      <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:103,106</note>
-      </notes>
-      <segment>
-        <source> Reintentar </source>
-      </segment>
-    </unit>
     <unit id="staff.availability.loading">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:106,110</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:115,119</note>
       </notes>
       <segment>
         <source>Cargando…</source>

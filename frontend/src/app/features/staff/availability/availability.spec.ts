@@ -290,6 +290,88 @@ describe('Availability', () => {
     expect(host(fixture).textContent).toContain('Jugos');
   });
 
+  const retryButton = (fixture: ComponentFixture<Availability>) =>
+    host(fixture).querySelector<HTMLButtonElement>('[data-testid="retry"]');
+
+  it('disables a loaded screen and offers a retry when a re-read fails, then recovers', async () => {
+    const fixture = await ready();
+
+    realtime.signals.next();
+    http.expectOne(MENU).flush(serverError, failure);
+    await fixture.whenStable();
+
+    expect(host(fixture).textContent).toContain('Jugos');
+    expect(box(fixture, 'product-p1').disabled).toBe(true);
+    expect(retryButton(fixture)).not.toBeNull();
+
+    retryButton(fixture)!.click();
+    http.expectOne(MENU).flush(menu({ p1: false }));
+    await fixture.whenStable();
+
+    expect(retryButton(fixture)).toBeNull();
+    expect(box(fixture, 'product-p1').disabled).toBe(false);
+    expect(box(fixture, 'product-p1').checked).toBe(false);
+  });
+
+  it('offers a retry when the latest read fails after an earlier one was superseded', async () => {
+    const fixture = await ready();
+
+    realtime.signals.next();
+    realtime.signals.next();
+    const [first, second] = http.match(MENU);
+    first.flush(menu({ p1: false }));
+    second.flush(serverError, failure);
+    await fixture.whenStable();
+
+    expect(box(fixture, 'product-p1').disabled).toBe(true);
+    expect(retryButton(fixture)).not.toBeNull();
+
+    retryButton(fixture)!.click();
+    http.expectOne(MENU).flush(menu({ p1: false }));
+    await fixture.whenStable();
+
+    expect(box(fixture, 'product-p1').disabled).toBe(false);
+    expect(box(fixture, 'product-p1').checked).toBe(false);
+  });
+
+  it('tells offline, updating and failed states apart', async () => {
+    const fixture = await open();
+    const offline = banner(fixture)?.textContent ?? '';
+    expect(offline).toContain('Sin conexión');
+    expect(retryButton(fixture)).toBeNull();
+
+    realtime.connected.set(true);
+    await fixture.whenStable();
+    const updating = banner(fixture)?.textContent ?? '';
+    expect(updating).not.toContain('Sin conexión');
+    expect(updating).not.toBe(offline);
+    expect(retryButton(fixture)).toBeNull();
+
+    realtime.signals.next();
+    http.expectOne(MENU).flush(serverError, failure);
+    await fixture.whenStable();
+    const failed = banner(fixture)?.textContent ?? '';
+    expect(failed).not.toContain('Sin conexión');
+    expect(failed).not.toBe(updating);
+    expect(failed).not.toBe(offline);
+    expect(retryButton(fixture)).not.toBeNull();
+  });
+
+  it('cancels a toggle and a read when the screen is destroyed, so no late error toast appears', async () => {
+    const fixture = await ready();
+    const toasts = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+    box(fixture, 'product-p1').click();
+    const toggle = http.expectOne({ method: 'PUT', url: `${CATALOG}/products/p1/availability` });
+    realtime.signals.next();
+    const read = http.expectOne(MENU);
+    fixture.destroy();
+
+    expect(toggle.cancelled).toBe(true);
+    expect(read.cancelled).toBe(true);
+    expect(toasts).not.toHaveBeenCalled();
+  });
+
   it('stops listening to the catalog when the screen is destroyed', async () => {
     const fixture = await ready();
 
