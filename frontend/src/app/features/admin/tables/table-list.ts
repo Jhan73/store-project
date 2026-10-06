@@ -11,6 +11,10 @@ import { TablesApi } from './tables-api';
 
 const MAX_LENGTH = 60;
 
+function byDisplayOrder(a: AdminTable, b: AdminTable): number {
+  return a.displayOrder - b.displayOrder || a.name.localeCompare(b.name);
+}
+
 @Component({
   selector: 'app-table-list',
   imports: [ReactiveFormsModule, ButtonDirective, InputText],
@@ -226,7 +230,7 @@ export class TableList {
         if (target) {
           this.replace(saved);
         } else {
-          this.tables.update((list) => [...list, saved]);
+          this.tables.update((list) => [...list, saved].sort(byDisplayOrder));
         }
         this.cancel();
         this.saving.set(false);
@@ -239,7 +243,9 @@ export class TableList {
   }
 
   private replace(saved: AdminTable): void {
-    this.tables.update((list) => list.map((item) => (item.id === saved.id ? saved : item)));
+    this.tables.update((list) =>
+      list.map((item) => (item.id === saved.id ? saved : item)).sort(byDisplayOrder),
+    );
     if (this.editing()?.id === saved.id) {
       this.editing.set(saved);
     }

@@ -97,6 +97,37 @@ describe('TableList', () => {
     expect(value(host, '#table-name')).toBe('');
   });
 
+  it('places a created table by its display order, then by name', async () => {
+    const { fixture, host, http } = await render([one, two]);
+
+    type(host, '#table-name', 'Barra');
+    type(host, '#table-order', '0');
+    submit(host);
+    http
+      .expectOne(ADMIN)
+      .flush({ ...one, id: 't3', name: 'Barra', area: null, displayOrder: 0 });
+    await fixture.whenStable();
+
+    const [first, second, third] = rows(host);
+    expect(first).toContain('Barra');
+    expect(second).toContain('Mesa 1');
+    expect(third).toContain('Mesa 2');
+  });
+
+  it('moves an edited table to the position of its new display order', async () => {
+    const { fixture, host, http } = await render([one, two]);
+
+    click(host, 'edit-t2');
+    await fixture.whenStable();
+    type(host, '#table-order', '0');
+    submit(host);
+    http.expectOne(`${ADMIN}/t2`).flush({ ...two, displayOrder: 0, etag: '"3"' });
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('Mesa 2');
+    expect(rows(host)[1]).toContain('Mesa 1');
+  });
+
   it('creates a table with an area', async () => {
     const { host, http } = await render([]);
 
