@@ -1,6 +1,8 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { EMPTY } from 'rxjs';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { MessageService } from 'primeng/api';
@@ -10,6 +12,7 @@ import { API_ORIGIN } from '../../core/api/api-config';
 import { authInterceptor } from '../../core/auth/auth-interceptor';
 import { AuthStore } from '../../core/auth/auth-store';
 import { errorInterceptor } from '../../core/errors/error-interceptor';
+import { RealtimeClient } from '../../core/realtime/realtime-client';
 import { AppPreset } from '../../core/theme/app-preset';
 
 const LOGIN = 'http://api.test/api/v1/auth/login';
@@ -29,6 +32,7 @@ describe('staff and admin area', () => {
         MessageService,
         providePrimeNG({ theme: { preset: AppPreset } }),
         { provide: API_ORIGIN, useValue: 'http://api.test' },
+        { provide: RealtimeClient, useValue: { isConnected: signal(false), refetch: () => EMPTY } },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -79,9 +83,35 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/staff');
 
-    expect(navLinks()).toEqual(['/staff']);
+    expect(navLinks()).toEqual(['/staff', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
   });
+
+  it('lets floor staff open the availability screen and marks only its entry as active', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/availability');
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/availability');
+    expect(page().body.textContent).toContain('Disponibilidad');
+    expect(active).toEqual(['/staff/availability']);
+  });
+
+  it('sends a visitor without a session away from the availability screen', async () => {
+    const navigation = harness.navigateByUrl('/staff/availability');
+    (await vi.waitFor(() => http.expectOne(REFRESH))).flush(null, {
+      status: 401,
+      statusText: 'Unauthorized',
+    });
+    await navigation;
+
+    expect(url()).toBe('/login?returnUrl=%2Fstaff%2Favailability');
+  }, 20_000);
 
   it('keeps floor staff out of the admin area', async () => {
     await signInAs('CASHIER');
@@ -99,6 +129,7 @@ describe('staff and admin area', () => {
 
     expect(navLinks()).toEqual([
       '/staff',
+      '/staff/availability',
       '/admin',
       '/admin/catalog',
       '/admin/settings',

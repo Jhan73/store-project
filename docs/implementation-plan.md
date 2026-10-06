@@ -91,7 +91,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 | M1-F1b | **Set-password page**: public `/set-password` route (client-rendered) for the staff invitation and first-admin links; token read from `?token=` and removed from the URL at once, password policy validated client-side, localized error mapping, `Referrer-Policy: no-referrer` from the SSR server | FR-ADM-01 | §6.4, §7.1 | A new staff member opens the emailed link, sets a password, and signs in; a used, expired, or malformed link shows the invalid-link state | done |
 | M1-F2 | **Admin catalog**: categories, products, modifiers, allergens, stations, images, availability | FR-CAT-01, 05–07 | §6.2 | ADMIN creates a product with modifier groups end to end | done |
 | M1-F3 | **Admin store & staff**: settings, opening hours, zones, reason lists, tables, staff accounts | FR-ADM-01/02, FR-INS-09/14 | §6.2 | Each setting round-trips; `412` on concurrent edits handled | done |
-| M1-F4 | **Staff availability ("86")** screen | FR-CAT-03 | §6.3 | Toggle reflects on another open screen in ≤ 5 s | todo |
+| M1-F4 | **Staff availability ("86")** screen | FR-CAT-03 | §6.3 | Toggle reflects on another open screen in ≤ 5 s | done |
 | M1-F5 | **Audit log viewer** | FR-AUD-02 | §6.2 | Search by date, actor, entity | todo |
 
 ### Close M1

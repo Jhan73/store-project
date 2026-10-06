@@ -21,8 +21,8 @@ import { AvailabilityStore, ItemKind } from './availability-store';
     }
 
     @if (store.menu(); as menu) {
-      <section aria-labelledby="availability-products">
-        <h2 id="availability-products" i18n="@@staff.availability.products">Productos</h2>
+      <section>
+        <h2 i18n="@@staff.availability.products">Productos</h2>
         @for (category of menu.categories; track category.id) {
           <h3>{{ category.name }}</h3>
           <ul>
@@ -58,8 +58,8 @@ import { AvailabilityStore, ItemKind } from './availability-store';
       </section>
 
       @if (store.groups().length > 0) {
-        <section aria-labelledby="availability-options">
-          <h2 id="availability-options" i18n="@@staff.availability.options">Opciones</h2>
+        <section>
+          <h2 i18n="@@staff.availability.options">Opciones</h2>
           @for (group of store.groups(); track group.id) {
             <h3>{{ group.name }}</h3>
             <ul>
