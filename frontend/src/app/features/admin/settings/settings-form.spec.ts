@@ -89,6 +89,26 @@ describe('SettingsForm', () => {
     expect(value(host, '#settings-exceptionThreshold')).toBe('3');
   });
 
+  it('warns about delivery zones only while the currency differs from the saved one', async () => {
+    const { fixture, host, http } = await render();
+    const warning = () => host.querySelector('#settings-currency-warning');
+
+    expect(warning()).toBeNull();
+    type(host, '#settings-currency', 'usd');
+    await fixture.whenStable();
+    expect(warning()?.textContent).toContain('zonas de reparto');
+
+    type(host, '#settings-currency', ' pen ');
+    await fixture.whenStable();
+    expect(warning()).toBeNull();
+
+    type(host, '#settings-currency', 'usd');
+    submit(host);
+    http.expectOne(URL).flush({ ...settings, currency: 'USD' }, { headers: { ETag: '"5"' } });
+    await fixture.whenStable();
+    expect(warning()).toBeNull();
+  });
+
   it('saves untouched values back unchanged, guarded by the ETag of the read', async () => {
     const { fixture, host, http } = await render();
 

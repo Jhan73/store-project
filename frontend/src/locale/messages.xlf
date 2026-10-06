@@ -2025,7 +2025,7 @@
     </unit>
     <unit id="admin.settings.general.basePrepMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:39</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:46</note>
       </notes>
       <segment>
         <source>Minutos base de preparación</source>
@@ -2033,7 +2033,7 @@
     </unit>
     <unit id="admin.settings.general.queueMinutesPerOrder">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:44</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:51</note>
       </notes>
       <segment>
         <source>Minutos extra por pedido en cola</source>
@@ -2041,7 +2041,7 @@
     </unit>
     <unit id="admin.settings.general.busyModeMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:49</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:56</note>
       </notes>
       <segment>
         <source>Minutos extra en modo ocupado</source>
@@ -2049,7 +2049,7 @@
     </unit>
     <unit id="admin.settings.general.onlineCapacityLimit">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:54</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:61</note>
       </notes>
       <segment>
         <source>Límite de pedidos en línea simultáneos</source>
@@ -2057,7 +2057,7 @@
     </unit>
     <unit id="admin.settings.general.boardWarningMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:62</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:69</note>
       </notes>
       <segment>
         <source>Minutos para marcar advertencia</source>
@@ -2065,7 +2065,7 @@
     </unit>
     <unit id="admin.settings.general.boardLateMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:67</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:74</note>
       </notes>
       <segment>
         <source>Minutos para marcar atraso</source>
@@ -2073,7 +2073,7 @@
     </unit>
     <unit id="admin.settings.general.exceptionThreshold">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:74</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:81</note>
       </notes>
       <segment>
         <source>Umbral de excepciones</source>
@@ -2081,7 +2081,7 @@
     </unit>
     <unit id="admin.settings.general.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:101,103</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:108,110</note>
       </notes>
       <segment>
         <source>Configuración de la tienda</source>
@@ -2089,7 +2089,7 @@
     </unit>
     <unit id="admin.settings.general.regional">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:123,125</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:130,132</note>
       </notes>
       <segment>
         <source>Región</source>
@@ -2097,7 +2097,7 @@
     </unit>
     <unit id="admin.settings.general.timeZone">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:125,127</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:132,134</note>
       </notes>
       <segment>
         <source>Zona horaria</source>
@@ -2105,7 +2105,7 @@
     </unit>
     <unit id="admin.settings.general.currency">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:137,139</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:144,146</note>
       </notes>
       <segment>
         <source>Moneda (ISO 4217)</source>
@@ -2113,15 +2113,23 @@
     </unit>
     <unit id="admin.settings.general.currencyInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:148,152</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:155,158</note>
       </notes>
       <segment>
         <source>Escribe un código de tres letras, como PEN.</source>
       </segment>
     </unit>
+    <unit id="admin.settings.general.currencyChangeWarning">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:160,164</note>
+      </notes>
+      <segment>
+        <source>Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para actualizarla.</source>
+      </segment>
+    </unit>
     <unit id="admin.settings.general.preparation">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:155,156</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:168,169</note>
       </notes>
       <segment>
         <source>Preparación y pedidos en línea</source>
@@ -2129,7 +2137,7 @@
     </unit>
     <unit id="admin.settings.general.board">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:162,163</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:175,176</note>
       </notes>
       <segment>
         <source>Tablero de preparación</source>
@@ -2137,7 +2145,7 @@
     </unit>
     <unit id="admin.settings.general.boardOrderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:168,173</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:181,186</note>
       </notes>
       <segment>
         <source>El tiempo de atraso debe ser mayor que el de advertencia.</source>
@@ -2145,7 +2153,7 @@
     </unit>
     <unit id="admin.settings.general.cash">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:174,176</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:187,189</note>
       </notes>
       <segment>
         <source>Caja y excepciones</source>
@@ -2153,7 +2161,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifference">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:177,178</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:190,191</note>
       </notes>
       <segment>
         <source>Diferencia de caja permitida (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -2161,7 +2169,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifferenceInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:189,193</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:202,206</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 5.00.</source>
@@ -2169,7 +2177,7 @@
     </unit>
     <unit id="admin.settings.general.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:198,201</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:211,214</note>
       </notes>
       <segment>
         <source> Guardar cambios </source>
@@ -2177,7 +2185,7 @@
     </unit>
     <unit id="admin.settings.general.saved">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:202,207</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:215,220</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -2185,7 +2193,7 @@
     </unit>
     <unit id="admin.settings.general.numberInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:255</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:276</note>
       </notes>
       <segment>
         <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
@@ -2425,7 +2433,7 @@
     </unit>
     <unit id="admin.tables.title">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:20,22</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:24,26</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -2433,7 +2441,7 @@
     </unit>
     <unit id="admin.tables.empty">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:23,26</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:27,29</note>
       </notes>
       <segment>
         <source>Todavía no hay mesas.</source>
@@ -2441,7 +2449,7 @@
     </unit>
     <unit id="admin.tables.name">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:28,29</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:32,33</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -2449,7 +2457,7 @@
     </unit>
     <unit id="admin.tables.area">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:29,30</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:33,34</note>
       </notes>
       <segment>
         <source>Zona</source>
@@ -2457,7 +2465,7 @@
     </unit>
     <unit id="admin.tables.order">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:30,31</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:34,35</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -2465,7 +2473,7 @@
     </unit>
     <unit id="admin.tables.state">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:31,32</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:35,36</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2473,7 +2481,7 @@
     </unit>
     <unit id="admin.tables.actions">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:32,34</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:36,38</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -2481,7 +2489,7 @@
     </unit>
     <unit id="admin.tables.active">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:43,45</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:47,48</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2489,7 +2497,7 @@
     </unit>
     <unit id="admin.tables.inactive">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:45,47</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:49,51</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -2497,7 +2505,7 @@
     </unit>
     <unit id="admin.tables.edit">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:58,59</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:62,63</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -2505,7 +2513,7 @@
     </unit>
     <unit id="admin.tables.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:71,72</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:75,76</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2513,7 +2521,7 @@
     </unit>
     <unit id="admin.tables.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:73,75</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:77,79</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2521,7 +2529,7 @@
     </unit>
     <unit id="admin.tables.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:85,87</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:89,91</note>
       </notes>
       <segment>
         <source>Nombre de la mesa</source>
@@ -2529,7 +2537,7 @@
     </unit>
     <unit id="admin.tables.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:95,98</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:99,102</note>
       </notes>
       <segment>
         <source>Escribe un nombre de hasta 60 caracteres.</source>
@@ -2537,7 +2545,7 @@
     </unit>
     <unit id="admin.tables.areaLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:99,101</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:103,105</note>
       </notes>
       <segment>
         <source>Zona (opcional)</source>
@@ -2545,7 +2553,7 @@
     </unit>
     <unit id="admin.tables.areaInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:109,112</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:113,116</note>
       </notes>
       <segment>
         <source>La zona admite hasta 60 caracteres.</source>
@@ -2553,7 +2561,7 @@
     </unit>
     <unit id="admin.tables.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:113,115</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:117,119</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -2561,7 +2569,7 @@
     </unit>
     <unit id="admin.tables.orderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:124,127</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:128,131</note>
       </notes>
       <segment>
         <source>Escribe un número entero.</source>
@@ -2569,7 +2577,7 @@
     </unit>
     <unit id="admin.tables.save">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:130,131</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:134,135</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -2577,7 +2585,7 @@
     </unit>
     <unit id="admin.tables.create">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:132,134</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:136,138</note>
       </notes>
       <segment>
         <source>Agregar mesa</source>
@@ -2585,7 +2593,7 @@
     </unit>
     <unit id="admin.tables.cancel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:137,139</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:141,142</note>
       </notes>
       <segment>
         <source> Cancelar </source>

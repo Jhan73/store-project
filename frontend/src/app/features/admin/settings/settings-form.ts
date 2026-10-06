@@ -1,5 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -148,6 +155,12 @@ function timeZoneOptions(current: string): string[] {
               >Escribe un código de tres letras, como PEN.</small
             >
           }
+          @if (currencyChanged()) {
+            <small id="settings-currency-warning" role="note" i18n="@@admin.settings.general.currencyChangeWarning"
+              >Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para
+              actualizarla.</small
+            >
+          }
         </div>
       </fieldset>
 
@@ -213,6 +226,11 @@ export class SettingsForm {
   protected readonly exceptionField = EXCEPTION_FIELD;
   protected readonly timeZones = signal<readonly string[]>([]);
   protected readonly currency = signal('');
+  private readonly typedCurrency = signal('');
+  protected readonly currencyChanged = computed(() => {
+    const typed = this.typedCurrency().trim().toUpperCase();
+    return typed.length === 3 && typed !== this.currency();
+  });
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   private etag = '';
@@ -242,7 +260,10 @@ export class SettingsForm {
   constructor() {
     this.form.valueChanges
       .pipe(takeUntilDestroyed(inject(DestroyRef)))
-      .subscribe(() => this.saved.set(false));
+      .subscribe(() => {
+        this.saved.set(false);
+        this.typedCurrency.set(this.form.controls.currency.value);
+      });
     this.load();
   }
 
