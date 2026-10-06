@@ -5,7 +5,7 @@ import { InputText } from 'primeng/inputtext';
 import type { Reason, ReasonType } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
-import { PendingIds } from '../pending-ids';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { SettingsApi } from './settings-api';
 
 interface TypeOption {

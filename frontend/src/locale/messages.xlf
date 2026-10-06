@@ -1984,7 +1984,7 @@
     <unit id="admin.settings.deactivate">
       <notes>
         <note category="location">src/app/features/admin/settings/reason-list.ts:77,78</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:72,73</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:73,74</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -1993,7 +1993,7 @@
     <unit id="admin.settings.reactivate">
       <notes>
         <note category="location">src/app/features/admin/settings/reason-list.ts:79,81</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:74,76</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:75,77</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2321,7 +2321,7 @@
     </unit>
     <unit id="admin.settings.edit">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:59,60</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:60,61</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -2329,7 +2329,7 @@
     </unit>
     <unit id="admin.settings.zones.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:85,88</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:86,89</note>
       </notes>
       <segment>
         <source>Nombre de la zona</source>
@@ -2337,7 +2337,7 @@
     </unit>
     <unit id="admin.settings.zones.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:95,98</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:96,99</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -2345,7 +2345,7 @@
     </unit>
     <unit id="admin.settings.zones.feeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:99,100</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:100,101</note>
       </notes>
       <segment>
         <source>Tarifa (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -2353,7 +2353,7 @@
     </unit>
     <unit id="admin.settings.zones.feeInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:109,112</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:110,113</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 4.00.</source>
@@ -2361,7 +2361,7 @@
     </unit>
     <unit id="admin.settings.zones.minutesLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:113,116</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:114,117</note>
       </notes>
       <segment>
         <source>Minutos de reparto</source>
@@ -2369,7 +2369,7 @@
     </unit>
     <unit id="admin.settings.zones.minutesInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:124,127</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:125,128</note>
       </notes>
       <segment>
         <source>Escribe un número entero mayor que cero.</source>
@@ -2377,7 +2377,7 @@
     </unit>
     <unit id="admin.settings.zones.minimumLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:128,129</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:129,130</note>
       </notes>
       <segment>
         <source>Pedido mínimo (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
@@ -2385,7 +2385,7 @@
     </unit>
     <unit id="admin.settings.zones.minimumInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:138,141</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:139,142</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 15.00, o déjalo vacío.</source>
@@ -2393,7 +2393,7 @@
     </unit>
     <unit id="admin.settings.zones.freeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:142,143</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:143,144</note>
       </notes>
       <segment>
         <source>Reparto gratis desde (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
@@ -2401,7 +2401,7 @@
     </unit>
     <unit id="admin.settings.zones.freeInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:152,155</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:153,156</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 50.00, o déjalo vacío.</source>
@@ -2409,7 +2409,7 @@
     </unit>
     <unit id="admin.settings.zones.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:158,160</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:159,161</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -2417,7 +2417,7 @@
     </unit>
     <unit id="admin.settings.zones.create">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:160,162</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:161,163</note>
       </notes>
       <segment>
         <source>Agregar zona</source>
@@ -2425,7 +2425,7 @@
     </unit>
     <unit id="admin.settings.cancel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:165,167</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:166,168</note>
       </notes>
       <segment>
         <source> Cancelar </source>
@@ -2441,7 +2441,7 @@
     </unit>
     <unit id="admin.tables.empty">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:27,29</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:27,30</note>
       </notes>
       <segment>
         <source>Todavía no hay mesas.</source>
@@ -2489,7 +2489,7 @@
     </unit>
     <unit id="admin.tables.active">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:47,48</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:47,49</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2505,7 +2505,7 @@
     </unit>
     <unit id="admin.tables.edit">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:62,63</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:63,64</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -2513,7 +2513,7 @@
     </unit>
     <unit id="admin.tables.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:75,76</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:76,77</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2521,7 +2521,7 @@
     </unit>
     <unit id="admin.tables.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:77,79</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:78,80</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2529,7 +2529,7 @@
     </unit>
     <unit id="admin.tables.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:89,91</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:90,92</note>
       </notes>
       <segment>
         <source>Nombre de la mesa</source>
@@ -2537,7 +2537,7 @@
     </unit>
     <unit id="admin.tables.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:99,102</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:100,103</note>
       </notes>
       <segment>
         <source>Escribe un nombre de hasta 60 caracteres.</source>
@@ -2545,7 +2545,7 @@
     </unit>
     <unit id="admin.tables.areaLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:103,105</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:104,106</note>
       </notes>
       <segment>
         <source>Zona (opcional)</source>
@@ -2553,7 +2553,7 @@
     </unit>
     <unit id="admin.tables.areaInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:113,116</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:114,117</note>
       </notes>
       <segment>
         <source>La zona admite hasta 60 caracteres.</source>
@@ -2561,7 +2561,7 @@
     </unit>
     <unit id="admin.tables.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:117,119</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:118,120</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -2569,7 +2569,7 @@
     </unit>
     <unit id="admin.tables.orderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:128,131</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:129,132</note>
       </notes>
       <segment>
         <source>Escribe un número entero.</source>
@@ -2577,7 +2577,7 @@
     </unit>
     <unit id="admin.tables.save">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:134,135</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:135,136</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -2585,7 +2585,7 @@
     </unit>
     <unit id="admin.tables.create">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:136,138</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:137,139</note>
       </notes>
       <segment>
         <source>Agregar mesa</source>
@@ -2593,7 +2593,7 @@
     </unit>
     <unit id="admin.tables.cancel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:141,142</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:142,144</note>
       </notes>
       <segment>
         <source> Cancelar </source>
@@ -3057,6 +3057,104 @@
         <source>Ya puedes iniciar sesión con tu nueva contraseña.</source>
       </segment>
     </unit>
+    <unit id="staff.availability.title">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:12,15</note>
+      </notes>
+      <segment>
+        <source>Disponibilidad</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.failed">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:17,19</note>
+      </notes>
+      <segment>
+        <source>No se pudo actualizar la disponibilidad. Los cambios están deshabilitados.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.retry">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:27,29</note>
+      </notes>
+      <segment>
+        <source> Reintentar </source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.offline">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:33,36</note>
+      </notes>
+      <segment>
+        <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.updating">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:39,42</note>
+      </notes>
+      <segment>
+        <source>Actualizando la disponibilidad. Los cambios se habilitan en unos segundos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.products">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:46,47</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.available">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:63,64</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:101,103</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.unavailable">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:65,67</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:104,106</note>
+      </notes>
+      <segment>
+        <source>Agotado</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.emptyCategory">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:72,74</note>
+      </notes>
+      <segment>
+        <source> Esta categoría no tiene productos. </source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.empty">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:77,81</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay productos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.options">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:83,84</note>
+      </notes>
+      <segment>
+        <source>Opciones</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.loading">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:115,119</note>
+      </notes>
+      <segment>
+        <source>Cargando…</source>
+      </segment>
+    </unit>
     <unit id="staff.home.title">
       <notes>
         <note category="location">src/app/features/staff/staff-home.ts:7,8</note>
@@ -3075,15 +3173,23 @@
     </unit>
     <unit id="workspace.nav.staff">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:13</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:21</note>
       </notes>
       <segment>
         <source>Operación</source>
       </segment>
     </unit>
+    <unit id="workspace.nav.availability">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:28</note>
+      </notes>
+      <segment>
+        <source>Disponibilidad</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.admin">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:19</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:34</note>
       </notes>
       <segment>
         <source>Administración</source>
@@ -3091,7 +3197,7 @@
     </unit>
     <unit id="workspace.nav.catalog">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:26</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:41</note>
       </notes>
       <segment>
         <source>Catálogo</source>
@@ -3099,7 +3205,7 @@
     </unit>
     <unit id="workspace.nav.settings">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:32</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:47</note>
       </notes>
       <segment>
         <source>Configuración</source>
@@ -3107,7 +3213,7 @@
     </unit>
     <unit id="workspace.nav.tables">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:38</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:53</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -3115,7 +3221,7 @@
     </unit>
     <unit id="workspace.nav.users">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:44</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:59</note>
       </notes>
       <segment>
         <source>Personal</source>

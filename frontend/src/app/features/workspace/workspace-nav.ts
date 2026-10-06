@@ -4,6 +4,7 @@ import {
   IconHome,
   IconSettings,
   IconTable,
+  IconToggleRight,
   IconUsers,
 } from '@tabler/icons-angular';
 import type { Role } from '../../core/api/api-types';
@@ -19,6 +20,13 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/staff',
     label: $localize`:@@workspace.nav.staff:Operación`,
     icon: IconHome,
+    exact: true,
+    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/availability',
+    label: $localize`:@@workspace.nav.availability:Disponibilidad`,
+    icon: IconToggleRight,
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
   },
   {

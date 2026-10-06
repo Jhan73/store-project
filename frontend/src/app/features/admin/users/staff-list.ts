@@ -9,7 +9,7 @@ import { roleLabel } from '../../../core/auth/role-label';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { isStale, reportFailure } from '../admin-errors';
-import { PendingIds } from '../pending-ids';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { StaffApi } from './staff-api';
 
 const PAGE_SIZE = 20;
