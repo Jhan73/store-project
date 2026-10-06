@@ -285,6 +285,60 @@ describe('TableList', () => {
     expect(http.expectOne(`${ADMIN}/t1`).request.headers.get('If-Match')).toBe('"7"');
   });
 
+  it('keeps unsaved typing when an unrelated table goes stale', async () => {
+    const { fixture, host, http } = await render();
+
+    click(host, 'edit-t1');
+    await fixture.whenStable();
+    type(host, '#table-name', 'Mine');
+    click(host, 'toggle-t2');
+    http
+      .expectOne(`${ADMIN}/t2/deactivate`)
+      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
+    await fixture.whenStable();
+    http.expectOne(ADMIN).flush([one, { ...two, name: 'Fresh', etag: '"9"' }]);
+    await fixture.whenStable();
+
+    expect(rows(host)[1]).toContain('Fresh');
+    expect(value(host, '#table-name')).toBe('Mine');
+  });
+
+  it('re-points the form when a toggle of the table being edited goes stale', async () => {
+    const { fixture, host, http } = await render();
+
+    click(host, 'edit-t1');
+    await fixture.whenStable();
+    type(host, '#table-name', 'Mine');
+    click(host, 'toggle-t1');
+    http
+      .expectOne(`${ADMIN}/t1/deactivate`)
+      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
+    await fixture.whenStable();
+    http.expectOne(ADMIN).flush([{ ...one, name: 'Fresh', etag: '"9"' }, two]);
+    await fixture.whenStable();
+
+    expect(value(host, '#table-name')).toBe('Fresh');
+  });
+
+  it('blocks the edit buttons while a save is in flight', async () => {
+    const { fixture, host, http } = await render();
+    const edit = (id: string) => host.querySelector<HTMLButtonElement>(`[data-testid="edit-${id}"]`)!;
+
+    click(host, 'edit-t1');
+    await fixture.whenStable();
+    submit(host);
+    await fixture.whenStable();
+    expect(edit('t2').disabled).toBe(true);
+    edit('t2').click();
+    http
+      .expectOne(`${ADMIN}/t1`)
+      .flush({ ...one, etag: '"3"' });
+    await fixture.whenStable();
+
+    expect(edit('t2').disabled).toBe(false);
+    expect(value(host, '#table-name')).toBe('');
+  });
+
   it('applies only the latest reload when answers arrive out of order', async () => {
     const { fixture, host, http } = await render();
 

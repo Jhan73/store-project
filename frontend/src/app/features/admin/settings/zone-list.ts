@@ -52,6 +52,7 @@ import { SettingsApi } from './settings-api';
                 type="button"
                 severity="secondary"
                 [size]="'small'"
+                [disabled]="saving()"
                 [attr.data-testid]="'edit-' + zone.id"
                 (click)="edit(zone)"
                 i18n="@@admin.settings.edit"
@@ -179,6 +180,7 @@ export class ZoneList {
   protected readonly saving = signal(false);
   protected readonly pending = new PendingIds();
   private lastLoad = 0;
+  private reconcile = false;
   protected readonly form = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
@@ -251,7 +253,7 @@ export class ZoneList {
       },
       error: (error: unknown) => {
         this.pending.delete(zone.id);
-        this.fail(error);
+        this.fail(error, undefined, zone.id);
       },
     });
   }
@@ -289,7 +291,7 @@ export class ZoneList {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.fail(error, this.form);
+        this.fail(error, this.form, target?.id);
       },
     });
   }
@@ -309,9 +311,10 @@ export class ZoneList {
     }
   }
 
-  private fail(error: unknown, form?: FormGroup): void {
+  private fail(error: unknown, form?: FormGroup, id?: string): void {
     reportFailure(this.notifier, error, form);
     if (isStale(error)) {
+      this.reconcile ||= id !== undefined && id === this.editing()?.id;
       this.load();
     }
   }
@@ -324,11 +327,16 @@ export class ZoneList {
           return;
         }
         this.zones.set(list);
+        const reconcile = this.reconcile;
+        this.reconcile = false;
         const current = this.editing();
-        const fresh = current && list.find((item) => item.id === current.id);
+        if (!reconcile || !current) {
+          return;
+        }
+        const fresh = list.find((item) => item.id === current.id);
         if (fresh) {
           this.edit(fresh);
-        } else if (current) {
+        } else {
           this.cancel();
         }
       },

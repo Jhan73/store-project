@@ -272,6 +272,60 @@ describe('ZoneList', () => {
     expect(http.expectOne(`${ADMIN}/delivery-zones/z1`).request.headers.get('If-Match')).toBe('"7"');
   });
 
+  it('keeps unsaved typing when an unrelated zone goes stale', async () => {
+    const { fixture, host, http } = await render();
+
+    click(host, 'edit-z1');
+    await fixture.whenStable();
+    type(host, '#zone-name', 'Mine');
+    click(host, 'toggle-z2');
+    http
+      .expectOne(`${ADMIN}/delivery-zones/z2/deactivate`)
+      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/delivery-zones`).flush([centro, { ...norte, name: 'Fresh', etag: '"9"' }]);
+    await fixture.whenStable();
+
+    expect(rows(host)[1]).toContain('Fresh');
+    expect(value(host, '#zone-name')).toBe('Mine');
+  });
+
+  it('re-points the form when a toggle of the zone being edited goes stale', async () => {
+    const { fixture, host, http } = await render();
+
+    click(host, 'edit-z1');
+    await fixture.whenStable();
+    type(host, '#zone-name', 'Mine');
+    click(host, 'toggle-z1');
+    http
+      .expectOne(`${ADMIN}/delivery-zones/z1/deactivate`)
+      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/delivery-zones`).flush([{ ...centro, name: 'Fresh', etag: '"9"' }, norte]);
+    await fixture.whenStable();
+
+    expect(value(host, '#zone-name')).toBe('Fresh');
+  });
+
+  it('blocks the edit buttons while a save is in flight', async () => {
+    const { fixture, host, http } = await render();
+    const edit = (id: string) => host.querySelector<HTMLButtonElement>(`[data-testid="edit-${id}"]`)!;
+
+    click(host, 'edit-z1');
+    await fixture.whenStable();
+    submit(host);
+    await fixture.whenStable();
+    expect(edit('z2').disabled).toBe(true);
+    edit('z2').click();
+    http
+      .expectOne(`${ADMIN}/delivery-zones/z1`)
+      .flush({ ...centro, etag: '"3"' });
+    await fixture.whenStable();
+
+    expect(edit('z2').disabled).toBe(false);
+    expect(value(host, '#zone-name')).toBe('');
+  });
+
   it('applies only the latest reload when answers arrive out of order', async () => {
     const { fixture, host, http } = await render();
 

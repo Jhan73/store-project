@@ -55,7 +55,8 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
                   type="button"
                   severity="secondary"
                   [size]="'small'"
-                  [attr.data-testid]="'edit-' + table.id"
+                  [disabled]="saving()"
+                [attr.data-testid]="'edit-' + table.id"
                   (click)="edit(table)"
                   i18n="@@admin.tables.edit"
                 >
@@ -154,6 +155,7 @@ export class TableList {
   protected readonly saving = signal(false);
   protected readonly pending = new PendingIds();
   private lastLoad = 0;
+  private reconcile = false;
   protected readonly form = new FormGroup({
     name: new FormControl('', {
       nonNullable: true,
@@ -201,7 +203,7 @@ export class TableList {
       },
       error: (error: unknown) => {
         this.pending.delete(table.id);
-        this.fail(error);
+        this.fail(error, undefined, table.id);
       },
     });
   }
@@ -237,7 +239,7 @@ export class TableList {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.fail(error, this.form);
+        this.fail(error, this.form, target?.id);
       },
     });
   }
@@ -251,9 +253,10 @@ export class TableList {
     }
   }
 
-  private fail(error: unknown, form?: FormGroup): void {
+  private fail(error: unknown, form?: FormGroup, id?: string): void {
     reportFailure(this.notifier, error, form);
     if (isStale(error)) {
+      this.reconcile ||= id !== undefined && id === this.editing()?.id;
       this.load();
     }
   }
@@ -266,11 +269,16 @@ export class TableList {
           return;
         }
         this.tables.set(list);
+        const reconcile = this.reconcile;
+        this.reconcile = false;
         const current = this.editing();
-        const fresh = current && list.find((item) => item.id === current.id);
+        if (!reconcile || !current) {
+          return;
+        }
+        const fresh = list.find((item) => item.id === current.id);
         if (fresh) {
           this.edit(fresh);
-        } else if (current) {
+        } else {
           this.cancel();
         }
       },
