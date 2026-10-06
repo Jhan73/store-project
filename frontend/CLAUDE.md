@@ -59,7 +59,7 @@ src/app/
     ├── storefront/  cart/  checkout/  account/  orders/
     ├── staff/       tables, tickets, quick-sale, board, register-shift
     ├── display/     customer-facing Preparing/Ready screen
-    └── admin/       dashboard, catalog, tables, reasons, stock, users, settings, reports, audit
+    └── admin/       dashboard, catalog, tables, settings (general, hours, zones, reasons), stock, users, reports, audit
 ```
 
 Folders are named after business features, never after technical types (`components/`, `services/`).
@@ -90,6 +90,7 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - `/set-password` is the public page the staff invitation and first-admin links open (`?token=`). It keeps the token only in the component, replaces the URL without it on load, and never stores or logs the password; the SSR server sends `Referrer-Policy: no-referrer` for it. Do not add analytics or third-party scripts to it.
 - Errors raised by a feature are shown with `ErrorNotifier.show(error)` (toast with the localized message and the correlation id).
 - **Admin catalog** (`features/admin/catalog`): `CatalogApi` is provided by the catalog route, not root. Every catalog update sends the item's own `etag` (from the list or the read) as `If-Match`; on `412`, `404`, or `common.concurrent-modification` the screen re-reads the item and keeps the toast. Availability ("86") switches act immediately and take no `If-Match`; on failure the switch goes back to the server's value. Typed prices go through `parseAmount` (`core/money`) and carry the store currency from `GET /admin/settings`; the form never computes an amount. Selects, checkboxes, and the image file input are native controls (same labels and error pattern as PrimeNG inputs), and the product image is validated client-side (PNG/JPEG/WebP, 2 MB) only for fast feedback.
+- **Admin store and staff** (`features/admin/settings`, `tables`, `users`): each area provides its own `*Api` in its route. The singletons (store settings incl. board thresholds, opening hours) are read with `observe: 'response'` into `Versioned<T>` (`value` + the `ETag` of that response) and written with that ETag as `If-Match`; a response without an `ETag` is an error, so a save is never sent unguarded. After `412`, `404`, or `common.concurrent-modification` the screen keeps the toast, re-reads, and refreshes the form to the server's values, so the next save carries the new ETag. Zones, reasons and tables send the item's own `etag`; when a reload finds the item being edited the form is re-pointed at the fresh item, and when it is gone the form closes. Toggles and other immediate actions are disabled while their request is in flight (`PendingIds`) and a refused native control goes back to the value the list holds now. Lists with several request sources apply only the latest response. Opening hours are the store's local times (never converted); staff accounts are invited by email and role only: the admin never types a password, and the invitation or resend link is never shown.
 
 **Components and state**
 - Container/presentational: route components orchestrate; `shared/ui` components only receive `input()` and emit `output()`.

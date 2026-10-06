@@ -632,7 +632,7 @@ src/app/
     ├── cart/ checkout/ account/ orders/
     ├── staff/        tables, tickets, quick-sale, board, register-shift
     ├── display/      customer-facing Preparing/Ready screen
-    └── admin/        dashboard, catalog (modifiers, allergens, stations), tables, reasons, stock, users, settings, reports, audit
+    └── admin/        dashboard, catalog (modifiers, allergens, stations), tables, settings (general, hours, zones, reasons), stock, users, reports, audit
 ```
 
 - **File and class naming** follows the Angular style guide (v20+): no type suffixes for components, directives, and services (`order-list.ts` → `class OrderList`; never `order-list.component.ts`); other types use a hyphenated suffix (`auth-guard.ts`, `price-pipe.ts`, `error-interceptor.ts`); tests are `*.spec.ts` next to the file. Services are named by role: `<Feature>Api` for HTTP data access (`orders-api.ts` → `OrdersApi`) and `<Feature>Store` for signal state (`cart-store.ts` → `CartStore`).
