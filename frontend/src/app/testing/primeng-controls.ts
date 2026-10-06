@@ -25,6 +25,11 @@ export async function openSelect(fixture: Stable, host: HTMLElement, id: string)
   if (!isOpen(root)) {
     root.click();
     await fixture.whenStable();
+    await vi.waitFor(() => {
+      if (!isOpen(root)) {
+        throw new Error(`The select "${id}" did not open`);
+      }
+    });
   }
 }
 
@@ -46,13 +51,18 @@ export async function chooseOption(
   label: string,
 ): Promise<void> {
   await openSelect(fixture, host, id);
-  const option = optionNodes(selectRoot(host, id)).find(
-    (node) => node.textContent?.trim() === label,
-  );
-  if (!option) {
+  const root = selectRoot(host, id);
+  const find = () => optionNodes(root).find((node) => node.textContent?.trim() === label);
+  try {
+    await vi.waitFor(() => {
+      if (!find()) {
+        throw new Error('missing');
+      }
+    });
+  } catch {
     throw new Error(`No option "${label}" in the select "${id}"`);
   }
-  option.click();
+  find()!.click();
   await fixture.whenStable();
 }
 
