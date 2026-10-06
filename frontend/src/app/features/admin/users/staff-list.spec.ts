@@ -201,6 +201,25 @@ describe('StaffList', () => {
     expect(selectIsDisabled(host, 'role-u1')).toBe(false);
   });
 
+  it('describes each account action with an icon and a tooltip that follows its state', async () => {
+    const { fixture, host } = await render();
+
+    for (const id of ['toggle-u1', 'toggle-u2', 'resend-u1']) {
+      expect(button(host, id)!.querySelector('tabler-icon[aria-hidden="true"] svg')).not.toBeNull();
+    }
+    button(host, 'toggle-u1')!.dispatchEvent(new Event('mouseenter'));
+    await fixture.whenStable();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain(
+      'Impedir que la cuenta inicie sesión',
+    );
+    button(host, 'toggle-u1')!.dispatchEvent(new Event('mouseleave'));
+    button(host, 'toggle-u2')!.dispatchEvent(new Event('mouseenter'));
+    await fixture.whenStable();
+    expect(document.body.querySelector('.p-tooltip')?.textContent).toContain(
+      'Permitir que la cuenta vuelva a iniciar sesión',
+    );
+  });
+
   it('deactivates and reactivates an account and blocks the button meanwhile', async () => {
     const { fixture, host, http } = await render();
 

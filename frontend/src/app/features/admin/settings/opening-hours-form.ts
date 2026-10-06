@@ -7,9 +7,14 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { InputText } from 'primeng/inputtext';
+import { Tooltip } from 'primeng/tooltip';
 import type { DayOfWeek, OpeningHour } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
@@ -80,7 +85,7 @@ function buildRow(hour: OpeningHour): DayRow {
 
 @Component({
   selector: 'app-opening-hours-form',
-  imports: [ReactiveFormsModule, ButtonDirective, Checkbox, InputText],
+  imports: [ReactiveFormsModule, ButtonDirective, Checkbox, InputText, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -143,8 +148,16 @@ function buildRow(hour: OpeningHour): DayRow {
       </table>
 
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()" i18n="@@admin.settings.hours.save">
-          Guardar horario
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          pTooltip="Guardar el horario de atención"
+          i18n-pTooltip="@@admin.settings.hours.save.tooltip"
+          tooltipPosition="top"
+        >
+          <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          <span i18n="@@admin.settings.hours.save">Guardar horario</span>
         </button>
       </div>
       @if (saved()) {
@@ -154,6 +167,7 @@ function buildRow(hour: OpeningHour): DayRow {
   `,
 })
 export class OpeningHoursForm {
+  protected readonly icons = { save: IconDeviceFloppy };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 
