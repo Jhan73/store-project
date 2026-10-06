@@ -1,4 +1,4 @@
-import { IconHome, IconSettings } from '@tabler/icons-angular';
+import { IconBook2, IconHome, IconSettings } from '@tabler/icons-angular';
 import type { Role } from '../../core/api/api-types';
 import type { NavItem } from '../../shared/ui/app-shell/nav-item';
 
@@ -18,12 +18,19 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/admin',
     label: $localize`:@@workspace.nav.admin:Administración`,
     icon: IconSettings,
+    exact: true,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/admin/catalog',
+    label: $localize`:@@workspace.nav.catalog:Catálogo`,
+    icon: IconBook2,
     roles: ['ADMIN'],
   },
 ];
 
 export function navFor(role: Role | null): NavItem[] {
   return NAV_ITEMS.filter((item) => role !== null && item.roles.includes(role)).map(
-    ({ path, label, icon }) => ({ path, label, icon }),
+    ({ path, label, icon, exact }) => ({ path, label, icon, ...(exact && { exact }) }),
   );
 }

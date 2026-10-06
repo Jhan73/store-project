@@ -32,7 +32,12 @@ import type { NavItem } from './nav-item';
         <ul>
           @for (item of items(); track item.path) {
             <li>
-              <a [routerLink]="item.path" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                ariaCurrentWhenActive="page"
+              >
                 <tabler-icon [icon]="item.icon" aria-hidden="true" />
                 <span>{{ item.label }}</span>
               </a>
