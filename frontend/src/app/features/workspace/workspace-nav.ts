@@ -1,4 +1,11 @@
-import { IconAdjustments, IconBook2, IconHome, IconSettings, IconTable, IconUsers } from '@tabler/icons-angular';
+import {
+  IconAdjustments,
+  IconBook2,
+  IconHome,
+  IconSettings,
+  IconTable,
+  IconUsers,
+} from '@tabler/icons-angular';
 import type { Role } from '../../core/api/api-types';
 import type { NavItem } from '../../shared/ui/app-shell/nav-item';
 
