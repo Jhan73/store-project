@@ -276,6 +276,23 @@ describe('ModifierGroupForm', () => {
       expect(host.querySelector<HTMLInputElement>('#option-1-available')!.checked).toBe(true);
     });
 
+    it('blocks the option switch while its change is being saved', async () => {
+      const { fixture, host, http } = await render(size);
+      const box = () => host.querySelector<HTMLInputElement>('#option-1-available')!;
+
+      box().click();
+      await fixture.whenStable();
+      expect(box().disabled).toBe(true);
+      box().click();
+      http
+        .expectOne(`${API}/catalog/modifier-options/o2/availability`)
+        .flush({ id: 'o2', available: true });
+      await fixture.whenStable();
+
+      expect(box().disabled).toBe(false);
+      expect(box().checked).toBe(true);
+    });
+
     it('puts the availability switch back when the change fails', async () => {
       const { fixture, host, http, messages } = await render(size);
       const add = vi.spyOn(messages, 'add');

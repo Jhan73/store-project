@@ -160,4 +160,67 @@ describe('CategoryList', () => {
 
     expect(rows(host)[0]).toContain('Fresh juices');
   });
+
+  const stale = {
+    type: 'about:blank',
+    status: 412,
+    code: 'common.precondition-failed',
+    correlationId: 'c',
+  };
+
+  it('retries a stale save with the refreshed version and shows the current values', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
+    await fixture.whenStable();
+    type(host, '#category-name', 'Mine');
+    submit(host);
+    http
+      .expectOne(`${ADMIN}/categories/c1`)
+      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
+    await fixture.whenStable();
+    http
+      .expectOne(`${ADMIN}/categories`)
+      .flush([{ ...juices, name: 'Fresh juices', etag: '"9"' }, snacks]);
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Fresh juices');
+    submit(host);
+    const retry = http.expectOne(`${ADMIN}/categories/c1`);
+    expect(retry.request.headers.get('If-Match')).toBe('"9"');
+    retry.flush({ ...juices, name: 'Fresh juices', etag: '"10"' });
+  });
+
+  it('leaves edit mode when the category no longer exists after a failed save', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
+    await fixture.whenStable();
+    submit(host);
+    http.expectOne(`${ADMIN}/categories/c1`).flush(
+      { type: 'about:blank', status: 404, code: 'common.not-found', correlationId: 'c' },
+      { status: 404, statusText: 'Not Found' },
+    );
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/categories`).flush([snacks]);
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('');
+    expect(host.querySelector('form [type="button"]')).toBeNull();
+  });
+
+  it('saves with the version returned by a toggle of the category being edited', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
+    await fixture.whenStable();
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-c1"]')!.click();
+    http
+      .expectOne(`${ADMIN}/categories/c1/deactivate`)
+      .flush({ ...juices, active: false, etag: '"7"' });
+    await fixture.whenStable();
+    submit(host);
+
+    expect(http.expectOne(`${ADMIN}/categories/c1`).request.headers.get('If-Match')).toBe('"7"');
+  });
 });
