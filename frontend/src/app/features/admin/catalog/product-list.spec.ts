@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { ProductList } from './product-list';
 
@@ -70,6 +71,8 @@ const rows = (host: HTMLElement) =>
   Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
 const click = (host: HTMLElement, testId: string) =>
   host.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!.click();
+const switchOf = (host: HTMLElement, testId: string) =>
+  host.querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="${testId}"] input`)!;
 
 describe('ProductList', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
@@ -109,9 +112,8 @@ describe('ProductList', () => {
   it('filters by category and goes back to the first page', async () => {
     const { fixture, host, http } = await render();
 
-    const select = host.querySelector<HTMLSelectElement>('#product-category-filter')!;
-    select.value = 'c2';
-    select.dispatchEvent(new Event('change'));
+    expect(selectedLabel(host, 'product-category-filter')).toBe('Todas');
+    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
     http
       .expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`)
       .flush(page([product('p3', 'Chips', { categoryId: 'c2' })]));
@@ -119,17 +121,44 @@ describe('ProductList', () => {
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Chips');
+    expect(selectedLabel(host, 'product-category-filter')).toBe('Snacks');
+  });
+
+  it('searches the categories before filtering by one', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'product-category-filter', 'snack')).toEqual([
+      'Snacks',
+    ]);
+    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
+    http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`).flush(page([]));
+    await fixture.whenStable();
+
+    expect(selectedLabel(host, 'product-category-filter')).toBe('Snacks');
+  });
+
+  it('clears the category filter to list every category again', async () => {
+    const { fixture, host, http } = await render();
+    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
+    http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`).flush(page([]));
+    await fixture.whenStable();
+
+    host.querySelector<SVGElement>('p-select .p-select-clear-icon')!.dispatchEvent(new Event('click'));
+    http
+      .expectOne(`${API}/admin/products?page=0&size=20`)
+      .flush(page([product('p1', 'Orange juice')]));
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('Orange juice');
+    expect(selectedLabel(host, 'product-category-filter')).toBe('Todas');
   });
 
   it('keeps the latest filter when an earlier response arrives late', async () => {
     const { fixture, host, http } = await render();
-    const select = host.querySelector<HTMLSelectElement>('#product-category-filter')!;
 
-    select.value = 'c1';
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(fixture, host, 'product-category-filter', 'Juices');
     const early = http.expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`);
-    select.value = 'c2';
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
     const late = http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`);
 
     late.flush(page([product('p3', 'Chips', { categoryId: 'c2' })]));
@@ -162,21 +191,22 @@ describe('ProductList', () => {
   it('marks a product sold out right away without saving the product', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'available-p1');
+    switchOf(host, 'available-p1').click();
     const request = http.expectOne(`${API}/catalog/products/p1/availability`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ available: false });
     request.flush({ id: 'p1', available: false });
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!.checked).toBe(false);
+    expect(switchOf(host, 'available-p1').checked).toBe(false);
   });
 
   it('puts the availability switch back when the change fails', async () => {
     const { fixture, host, http, messages } = await render();
     const add = vi.spyOn(messages, 'add');
 
-    click(host, 'available-p1');
+    switchOf(host, 'available-p1').click();
+    await fixture.whenStable();
     http.expectOne(`${API}/catalog/products/p1/availability`).flush(
       { type: 'about:blank', status: 404, code: 'catalog.product-not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -184,12 +214,12 @@ describe('ProductList', () => {
     await fixture.whenStable();
 
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-    expect(host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!.checked).toBe(true);
+    expect(switchOf(host, 'available-p1').checked).toBe(true);
   });
 
   it('blocks the availability switch while its change is being saved', async () => {
     const { fixture, host, http } = await render();
-    const box = () => host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!;
+    const box = () => switchOf(host, 'available-p1');
 
     box().click();
     await fixture.whenStable();
@@ -205,13 +235,11 @@ describe('ProductList', () => {
 
   it('puts the switch back to the value the list holds now, not the one it had at the click', async () => {
     const { fixture, host, http } = await render();
-    const box = () => host.querySelector<HTMLInputElement>('[data-testid="available-p1"]')!;
+    const box = () => switchOf(host, 'available-p1');
 
     box().click();
     const availability = http.expectOne(`${API}/catalog/products/p1/availability`);
-    const select = host.querySelector<HTMLSelectElement>('#product-category-filter')!;
-    select.value = 'c1';
-    select.dispatchEvent(new Event('change'));
+    await chooseOption(fixture, host, 'product-category-filter', 'Juices');
     http
       .expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`)
       .flush(page([product('p1', 'Orange juice', { available: false })]));

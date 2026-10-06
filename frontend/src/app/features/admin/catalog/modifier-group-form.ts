@@ -4,13 +4,18 @@ import {
   FormArray,
   FormControl,
   FormGroup,
+  FormsModule,
+  NgModel,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { forkJoin, map, of } from 'rxjs';
 import type {
   Allergen,
@@ -46,7 +51,17 @@ type OptionForm = ReturnType<typeof optionForm>;
 
 @Component({
   selector: 'app-modifier-group-form',
-  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, InputText, AllergenPicker],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonDirective,
+    Checkbox,
+    InputNumber,
+    InputText,
+    ToggleSwitch,
+    AllergenPicker,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -82,17 +97,25 @@ type OptionForm = ReturnType<typeof optionForm>;
 
         <div class="field">
           <span class="check">
-            <input type="checkbox" id="group-required" formControlName="required" />
+            <p-checkbox inputId="group-required" formControlName="required" [binary]="true" />
             <label for="group-required" i18n="@@admin.catalog.groupForm.required">Elección obligatoria</label>
           </span>
         </div>
         <div class="field">
           <label for="group-min" i18n="@@admin.catalog.groupForm.min">Mínimo de opciones</label>
-          <input pInputText id="group-min" type="number" min="0" formControlName="minChoices" />
+          <p-inputnumber
+            inputId="group-min"
+            formControlName="minChoices"
+            [useGrouping]="false"
+          />
         </div>
         <div class="field">
           <label for="group-max" i18n="@@admin.catalog.groupForm.max">Máximo de opciones</label>
-          <input pInputText id="group-max" type="number" min="1" formControlName="maxChoices" />
+          <p-inputnumber
+            inputId="group-max"
+            formControlName="maxChoices"
+            [useGrouping]="false"
+          />
         </div>
 
         @if (attempted() && violations().length > 0) {
@@ -165,12 +188,13 @@ type OptionForm = ReturnType<typeof optionForm>;
               </div>
               @if (option.controls.id.value) {
                 <span class="check">
-                  <input
-                    type="checkbox"
-                    [id]="'option-' + i + '-available'"
-                    [checked]="option.controls.available.value"
+                  <p-toggleswitch
+                    #availability="ngModel"
+                    [inputId]="'option-' + i + '-available'"
+                    [ngModel]="option.controls.available.value"
+                    [ngModelOptions]="{ standalone: true }"
                     [disabled]="savingOptions().has(option.controls.id.value)"
-                    (change)="setAvailability(option, $event)"
+                    (onChange)="setAvailability(option, $event.checked, availability)"
                   />
                   <label [for]="'option-' + i + '-available'" i18n="@@admin.catalog.groupForm.optionAvailable">Disponible</label>
                 </span>
@@ -293,9 +317,8 @@ export class ModifierGroupForm {
     this.options.removeAt(index);
   }
 
-  protected setAvailability(option: OptionForm, event: Event): void {
+  protected setAvailability(option: OptionForm, available: boolean, control: NgModel): void {
     const id = option.controls.id.value;
-    const available = (event.target as HTMLInputElement).checked;
     if (!id) {
       return;
     }
@@ -307,8 +330,8 @@ export class ModifierGroupForm {
       },
       error: (error: unknown) => {
         this.markSaving(id, false);
-        // The checkbox already flipped on screen; put it back to what the server still holds.
-        (event.target as HTMLInputElement).checked = option.controls.available.value;
+        // The switch already flipped on screen; put it back to what the server still holds.
+        control.control.setValue(option.controls.available.value);
         this.notifier.show(error);
       },
     });

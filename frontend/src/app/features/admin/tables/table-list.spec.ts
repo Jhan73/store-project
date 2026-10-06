@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { AdminTable } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { numberIsInvalid, numberText, typeNumber } from '../../../testing/primeng-controls';
 import { TableList } from './table-list';
 import { TablesApi } from './tables-api';
 
@@ -85,7 +86,7 @@ describe('TableList', () => {
     const { fixture, host, http } = await render([]);
 
     type(host, '#table-name', ' Mesa 3 ');
-    type(host, '#table-order', '3');
+    typeNumber(host, 'table-order', '3');
     submit(host);
     const request = http.expectOne(ADMIN);
     expect(request.request.method).toBe('POST');
@@ -101,7 +102,7 @@ describe('TableList', () => {
     const { fixture, host, http } = await render([one, two]);
 
     type(host, '#table-name', 'Barra');
-    type(host, '#table-order', '0');
+    typeNumber(host, 'table-order', '0');
     submit(host);
     http
       .expectOne(ADMIN)
@@ -119,7 +120,7 @@ describe('TableList', () => {
 
     click(host, 'edit-t2');
     await fixture.whenStable();
-    type(host, '#table-order', '0');
+    typeNumber(host, 'table-order', '0');
     submit(host);
     http.expectOne(`${ADMIN}/t2`).flush({ ...two, displayOrder: 0, etag: '"3"' });
     await fixture.whenStable();
@@ -133,7 +134,7 @@ describe('TableList', () => {
 
     type(host, '#table-name', 'Barra 1');
     type(host, '#table-area', ' Barra ');
-    type(host, '#table-order', '0');
+    typeNumber(host, 'table-order', '0');
     submit(host);
 
     expect(http.expectOne(ADMIN).request.body).toEqual({
@@ -148,12 +149,13 @@ describe('TableList', () => {
 
     type(host, '#table-name', 'x'.repeat(61));
     type(host, '#table-area', 'y'.repeat(61));
-    type(host, '#table-order', '-1');
+    typeNumber(host, 'table-order', '-1');
     submit(host);
     await fixture.whenStable();
 
     http.expectNone(ADMIN);
-    for (const id of ['name', 'area', 'order']) {
+    expect(numberIsInvalid(host, 'table-order')).toBe(true);
+    for (const id of ['name', 'area']) {
       expect(host.querySelector(`#table-${id}`)!.getAttribute('aria-invalid')).toBe('true');
     }
   });
@@ -165,9 +167,9 @@ describe('TableList', () => {
     await fixture.whenStable();
     expect(value(host, '#table-name')).toBe('Mesa 1');
     expect(value(host, '#table-area')).toBe('Terraza');
-    expect(value(host, '#table-order')).toBe('1');
+    expect(numberText(host, 'table-order')).toBe('1');
     type(host, '#table-area', '');
-    type(host, '#table-order', '5');
+    typeNumber(host, 'table-order', '5');
     submit(host);
     const request = http.expectOne(`${ADMIN}/t1`);
     expect(request.request.method).toBe('PUT');
@@ -184,7 +186,7 @@ describe('TableList', () => {
     const { fixture, host, http } = await render([]);
 
     type(host, '#table-name', 'Mesa 1');
-    type(host, '#table-order', '1');
+    typeNumber(host, 'table-order', '1');
     submit(host);
     http.expectOne(ADMIN).flush(
       { type: 'about:blank', status: 409, code: 'instore.table-name-already-used', correlationId: 'c' },

@@ -18,8 +18,8 @@ import {
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IconEye, IconEyeOff, TablerIconComponent } from '@tabler/icons-angular';
 import { Button, ButtonDirective } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
+import { PasswordDirective } from 'primeng/password';
 import { firstValueFrom } from 'rxjs';
 import { AuthApi } from '../../core/auth/auth-api';
 import { ApiError } from '../../core/errors/api-error';
@@ -49,8 +49,8 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
     ReactiveFormsModule,
     Button,
     ButtonDirective,
-    InputText,
     Message,
+    PasswordDirective,
     RouterLink,
     TablerIconComponent,
   ],
@@ -71,11 +71,13 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
               <label for="new-password" i18n="@@setPassword.password.label">Contraseña nueva</label>
               <div class="password-row">
                 <input
-                  pInputText
+                  pPassword
+                  type="password"
                   id="new-password"
                   formControlName="newPassword"
                   autocomplete="new-password"
-                  [type]="visible() ? 'text' : 'password'"
+                  [feedback]="false"
+                  [showPassword]="visible()"
                   [attr.aria-invalid]="invalid(form.controls.newPassword) ? 'true' : null"
                   [attr.aria-describedby]="
                     invalid(form.controls.newPassword)
@@ -157,11 +159,13 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
                 >Repite la contraseña</label
               >
               <input
-                pInputText
+                pPassword
+                type="password"
                 id="confirm-password"
                 formControlName="confirmPassword"
                 autocomplete="new-password"
-                [type]="visible() ? 'text' : 'password'"
+                [feedback]="false"
+                [showPassword]="visible()"
                 [attr.aria-invalid]="invalidConfirmation() ? 'true' : null"
                 [attr.aria-describedby]="invalidConfirmation() ? 'confirm-password-errors' : null"
                 fluid

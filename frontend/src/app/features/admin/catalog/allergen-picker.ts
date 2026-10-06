@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Checkbox } from 'primeng/checkbox';
 import type { Allergen } from '../../../core/api/api-types';
 import { ALLERGEN_LABELS } from './allergen-labels';
 
@@ -7,6 +9,7 @@ let nextId = 0;
 // Presentational: the legend is projected so each screen words it for its own context.
 @Component({
   selector: 'app-allergen-picker',
+  imports: [FormsModule, Checkbox],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     fieldset {
@@ -30,11 +33,11 @@ let nextId = 0;
       <legend><ng-content /></legend>
       @for (allergen of allergens(); track allergen) {
         <label [for]="prefix + allergen">
-          <input
-            type="checkbox"
-            [id]="prefix + allergen"
-            [checked]="selected().includes(allergen)"
-            (change)="toggle(allergen)"
+          <p-checkbox
+            [inputId]="prefix + allergen"
+            [value]="allergen"
+            [ngModel]="selected()"
+            (ngModelChange)="selectedChange.emit($event)"
           />
           {{ labels[allergen] }}
         </label>
@@ -49,13 +52,4 @@ export class AllergenPicker {
 
   protected readonly labels = ALLERGEN_LABELS;
   protected readonly prefix = `allergen-${nextId++}-`;
-
-  protected toggle(allergen: Allergen): void {
-    const current = this.selected();
-    this.selectedChange.emit(
-      current.includes(allergen)
-        ? current.filter((item) => item !== allergen)
-        : [...current, allergen],
-    );
-  }
 }

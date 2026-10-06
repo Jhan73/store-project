@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import type { Reason, ReasonType } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
@@ -25,19 +26,33 @@ const TYPES: readonly TypeOption[] = [
 
 @Component({
   selector: 'app-reason-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText],
+  imports: [ReactiveFormsModule, ButtonDirective, InputText, Select],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
     <h2 i18n="@@admin.settings.reasons.title">Motivos</h2>
 
     <div class="field">
-      <label for="reason-type" i18n="@@admin.settings.reasons.typeLabel">Lista de motivos</label>
-      <select id="reason-type" (change)="pick($event)">
-        @for (option of types; track option.value) {
-          <option [value]="option.value" [selected]="option.value === type()">{{ option.label }}</option>
-        }
-      </select>
+      <label
+        for="reason-type"
+        id="reason-type-label"
+        i18n="@@admin.settings.reasons.typeLabel"
+        >Lista de motivos</label
+      >
+      <p-select
+        inputId="reason-type"
+        [ariaLabelledBy]="'reason-type-label'"
+        optionLabel="label"
+        optionValue="value"
+        [options]="types"
+        [filter]="true"
+        filterBy="label"
+        [resetFilterOnHide]="true"
+        filterPlaceholder="Buscar"
+        i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+        [formControl]="typeControl"
+        (onChange)="pick($event.value)"
+      />
     </div>
 
     @if (reasons().length === 0) {
@@ -113,8 +128,11 @@ export class ReasonList {
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 
-  protected readonly types = TYPES;
+  protected readonly types = [...TYPES];
   protected readonly type = signal<ReasonType>(TYPES[0].value);
+  protected readonly typeControl = new FormControl<ReasonType>(TYPES[0].value, {
+    nonNullable: true,
+  });
   protected readonly reasons = signal<readonly Reason[]>([]);
   protected readonly saving = signal(false);
   protected readonly pending = new PendingIds();
@@ -129,8 +147,8 @@ export class ReasonList {
     this.load();
   }
 
-  protected pick(event: Event): void {
-    this.type.set((event.target as HTMLSelectElement).value as ReasonType);
+  protected pick(type: ReasonType): void {
+    this.type.set(type);
     this.load();
   }
 

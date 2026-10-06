@@ -66,16 +66,6 @@ form {
   flex: 1 1 18rem;
 }
 
-select,
-textarea {
-  padding: var(--space-2);
-  color: var(--foreground);
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font: inherit;
-}
-
 .check {
   display: inline-flex;
   align-items: center;

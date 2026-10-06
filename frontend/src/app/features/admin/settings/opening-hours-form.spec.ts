@@ -64,6 +64,10 @@ function input(host: HTMLElement, id: string) {
   return host.querySelector<HTMLInputElement>(`#${id}`)!;
 }
 
+function closedBox(host: HTMLElement, day: string) {
+  return host.querySelector<HTMLInputElement>(`p-checkbox #hours-${day}-closed`)!;
+}
+
 function type(host: HTMLElement, id: string, value: string) {
   const field = input(host, id);
   field.value = value;
@@ -71,7 +75,7 @@ function type(host: HTMLElement, id: string, value: string) {
 }
 
 function toggleClosed(host: HTMLElement, day: DayOfWeek) {
-  input(host, `hours-${day}-closed`).click();
+  closedBox(host, day).click();
 }
 
 function submit(host: HTMLElement) {
@@ -86,9 +90,10 @@ describe('OpeningHoursForm', () => {
 
     const labels = Array.from(host.querySelectorAll('tbody th')).map((cell) => cell.textContent);
     expect(labels).toEqual(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']);
+    expect(input(host, 'hours-MONDAY-opens').classList.contains('p-inputtext')).toBe(true);
     expect(input(host, 'hours-MONDAY-opens').value).toBe('08:00');
     expect(input(host, 'hours-MONDAY-closes').value).toBe('20:00');
-    expect(input(host, 'hours-SUNDAY-closed').checked).toBe(true);
+    expect(closedBox(host, 'SUNDAY').checked).toBe(true);
     expect(input(host, 'hours-SUNDAY-opens').disabled).toBe(true);
     expect(input(host, 'hours-SUNDAY-closes').disabled).toBe(true);
   });

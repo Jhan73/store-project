@@ -7,6 +7,13 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { StaffMember, StaffPage } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import {
+  chooseOption,
+  filterOptions,
+  optionLabels,
+  selectedLabel,
+  selectIsDisabled,
+} from '../../../testing/primeng-controls';
 import { StaffApi } from './staff-api';
 import { StaffList } from './staff-list';
 
@@ -54,12 +61,6 @@ function type(host: HTMLElement, selector: string, value: string) {
   input.dispatchEvent(new Event('input'));
 }
 
-function choose(host: HTMLElement, selector: string, value: string) {
-  const select = host.querySelector<HTMLSelectElement>(selector)!;
-  select.value = value;
-  select.dispatchEvent(new Event('change'));
-}
-
 function submit(host: HTMLElement) {
   host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 }
@@ -99,7 +100,7 @@ describe('StaffList', () => {
 
     expect(host.querySelector('input[type="password"]')).toBeNull();
     type(host, '#staff-email', ' nueva@juguera.pe ');
-    choose(host, '#staff-role', 'CASHIER');
+    await chooseOption(fixture, host, 'staff-role', 'Cajero');
     submit(host);
     const request = http.expectOne(`${API}/staff`);
     expect(request.request.method).toBe('POST');
@@ -129,12 +130,33 @@ describe('StaffList', () => {
   });
 
   it('offers only staff roles when inviting', async () => {
-    const { host } = await render();
+    const { fixture, host } = await render();
 
-    const options = Array.from(host.querySelectorAll<HTMLOptionElement>('#staff-role option')).map(
-      (option) => option.value,
-    );
-    expect(options).toEqual(['SERVER', 'CASHIER', 'ADMIN']);
+    expect(await optionLabels(fixture, host, 'staff-role')).toEqual([
+      'Mozo',
+      'Cajero',
+      'Administrador',
+    ]);
+  });
+
+  it('searches the roles and invites with the one that is picked', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'staff-role', 'caj')).toEqual(['Cajero']);
+    await chooseOption(fixture, host, 'staff-role', 'Cajero');
+    type(host, '#staff-email', 'nueva@juguera.pe');
+    submit(host);
+
+    expect(http.expectOne(`${API}/staff`).request.body).toEqual({
+      email: 'nueva@juguera.pe',
+      role: 'CASHIER',
+    });
+  });
+
+  it('searches the role of an existing account', async () => {
+    const { fixture, host } = await render();
+
+    expect(await filterOptions(fixture, host, 'role-u1', 'admin')).toEqual(['Administrador']);
   });
 
   it('keeps the typed email and tells the user when it is already registered', async () => {
@@ -153,9 +175,9 @@ describe('StaffList', () => {
   it('changes a role and blocks the control meanwhile', async () => {
     const { fixture, host, http } = await render();
 
-    choose(host, '[data-testid="role-u1"]', 'CASHIER');
+    await chooseOption(fixture, host, 'role-u1', 'Cajero');
     await fixture.whenStable();
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-u1"]')!.disabled).toBe(true);
+    expect(selectIsDisabled(host, 'role-u1')).toBe(true);
     const request = http.expectOne(`${API}/staff/u1/role`);
     expect(request.request.method).toBe('PATCH');
     expect(request.request.body).toEqual({ role: 'CASHIER' });
@@ -163,20 +185,20 @@ describe('StaffList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('Cajero');
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-u1"]')!.disabled).toBe(false);
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-u1"]')!.value).toBe('CASHIER');
+    expect(selectIsDisabled(host, 'role-u1')).toBe(false);
+    expect(selectedLabel(host, 'role-u1')).toBe('Cajero');
   });
 
   it('puts the role control back to what the server holds when the change is refused', async () => {
     const { fixture, host, http, toast } = await render();
 
-    choose(host, '[data-testid="role-u1"]', 'ADMIN');
+    await chooseOption(fixture, host, 'role-u1', 'Administrador');
     http.expectOne(`${API}/staff/u1/role`).flush(...problem(409, 'identity.last-active-admin-required'));
     await fixture.whenStable();
 
     expect(toast).toHaveBeenCalled();
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-u1"]')!.value).toBe('SERVER');
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-u1"]')!.disabled).toBe(false);
+    expect(selectedLabel(host, 'role-u1')).toBe('Mozo');
+    expect(selectIsDisabled(host, 'role-u1')).toBe(false);
   });
 
   it('deactivates and reactivates an account and blocks the button meanwhile', async () => {
@@ -213,7 +235,7 @@ describe('StaffList', () => {
     const { host } = await render();
 
     expect(button(host, 'toggle-me')!.disabled).toBe(true);
-    expect(host.querySelector<HTMLSelectElement>('[data-testid="role-me"]')!.disabled).toBe(true);
+    expect(selectIsDisabled(host, 'role-me')).toBe(true);
     expect(button(host, 'resend-me')!.disabled).toBe(true);
   });
 

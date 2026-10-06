@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { DeliveryZone } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { numberIsInvalid, typeNumber } from '../../../testing/primeng-controls';
 import { SettingsApi } from './settings-api';
 import { ZoneList } from './zone-list';
 
@@ -99,7 +100,7 @@ describe('ZoneList', () => {
 
     type(host, '#zone-name', ' Sur ');
     type(host, '#zone-fee', '5,5');
-    type(host, '#zone-minutes', '45');
+    typeNumber(host, 'zone-minutes', '45');
     submit(host);
     const request = http.expectOne(`${ADMIN}/delivery-zones`);
     expect(request.request.method).toBe('POST');
@@ -123,7 +124,7 @@ describe('ZoneList', () => {
 
     type(host, '#zone-name', 'Sur');
     type(host, '#zone-fee', '0');
-    type(host, '#zone-minutes', '45');
+    typeNumber(host, 'zone-minutes', '45');
     type(host, '#zone-minimum', '20');
     type(host, '#zone-free', '60,5');
     submit(host);
@@ -142,13 +143,14 @@ describe('ZoneList', () => {
 
     type(host, '#zone-name', '   ');
     type(host, '#zone-fee', 'abc');
-    type(host, '#zone-minutes', '0');
+    typeNumber(host, 'zone-minutes', '0');
     type(host, '#zone-minimum', 'x');
     submit(host);
     await fixture.whenStable();
 
     http.expectNone(`${ADMIN}/delivery-zones`);
-    for (const id of ['name', 'fee', 'minutes', 'minimum']) {
+    expect(numberIsInvalid(host, 'zone-minutes')).toBe(true);
+    for (const id of ['name', 'fee', 'minimum']) {
       expect(host.querySelector(`#zone-${id}`)!.getAttribute('aria-invalid')).toBe('true');
     }
   });
@@ -162,7 +164,7 @@ describe('ZoneList', () => {
     expect(value(host, '#zone-fee')).toBe('4.00');
     expect(value(host, '#zone-minimum')).toBe('15.00');
     type(host, '#zone-minimum', '');
-    type(host, '#zone-minutes', '35');
+    typeNumber(host, 'zone-minutes', '35');
     submit(host);
     const request = http.expectOne(`${ADMIN}/delivery-zones/z1`);
     expect(request.request.method).toBe('PATCH');
@@ -352,7 +354,7 @@ describe('ZoneList', () => {
 
     type(host, '#zone-name', 'Sur');
     type(host, '#zone-fee', '5');
-    type(host, '#zone-minutes', '45');
+    typeNumber(host, 'zone-minutes', '45');
     submit(host);
     http.expectOne(`${ADMIN}/delivery-zones`).flush(
       {

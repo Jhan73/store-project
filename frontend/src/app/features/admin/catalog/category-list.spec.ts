@@ -5,6 +5,12 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Station } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import {
+  chooseOption,
+  filterOptions,
+  selectedLabel,
+  typeNumber,
+} from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { CategoryList } from './category-list';
 
@@ -49,12 +55,6 @@ function type(host: HTMLElement, selector: string, value: string) {
   input.dispatchEvent(new Event('input'));
 }
 
-function choose(host: HTMLElement, selector: string, value: string) {
-  const select = host.querySelector<HTMLSelectElement>(selector)!;
-  select.value = value;
-  select.dispatchEvent(new Event('change'));
-}
-
 function submit(host: HTMLElement) {
   host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 }
@@ -82,7 +82,7 @@ describe('CategoryList', () => {
     const { fixture, host, http } = await render([]);
 
     type(host, '#category-name', 'Salads');
-    type(host, '#category-order', '3');
+    typeNumber(host, 'category-order', '3');
     submit(host);
     const request = http.expectOne(`${ADMIN}/categories`);
     expect(request.request.method).toBe('POST');
@@ -95,11 +95,12 @@ describe('CategoryList', () => {
   });
 
   it('creates a category on the chosen station', async () => {
-    const { host, http } = await render([]);
+    const { fixture, host, http } = await render([]);
 
+    expect(selectedLabel(host, 'category-station')).toBe('Estación predeterminada');
     type(host, '#category-name', 'Shots');
-    type(host, '#category-order', '1');
-    choose(host, '#category-station', 's2');
+    typeNumber(host, 'category-order', '1');
+    await chooseOption(fixture, host, 'category-station', 'Bar');
     submit(host);
 
     expect(http.expectOne(`${ADMIN}/categories`).request.body).toEqual({
@@ -109,13 +110,26 @@ describe('CategoryList', () => {
     });
   });
 
+  it('searches the stations before choosing one', async () => {
+    const { fixture, host, http } = await render([]);
+
+    type(host, '#category-name', 'Shots');
+    typeNumber(host, 'category-order', '1');
+    expect(await filterOptions(fixture, host, 'category-station', 'ba')).toEqual(['Bar']);
+    await chooseOption(fixture, host, 'category-station', 'Bar');
+    submit(host);
+
+    expect(http.expectOne(`${ADMIN}/categories`).request.body.stationId).toBe('s2');
+  });
+
   it('edits a category with the version it was listed with', async () => {
     const { fixture, host, http } = await render();
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-c2"]')!.click();
     await fixture.whenStable();
     expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Snacks');
-    expect(host.querySelector<HTMLSelectElement>('#category-station')!.value).toBe('s2');
+    expect(selectedLabel(host, 'category-station')).toBe('Bar');
+    expect(host.querySelector('p-select .p-select-clear-icon')).toBeNull();
     type(host, '#category-name', 'Bites');
     submit(host);
     const request = http.expectOne(`${ADMIN}/categories/c2`);

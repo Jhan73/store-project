@@ -25,7 +25,7 @@ describe('AllergenPicker', () => {
     const fixture = TestBed.createComponent(Harness);
     await fixture.whenStable();
     const host = fixture.nativeElement as HTMLElement;
-    const boxes = () => Array.from(host.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+    const boxes = () => Array.from(host.querySelectorAll<HTMLInputElement>('p-checkbox input'));
     return { fixture, host, boxes };
   }
 
@@ -55,5 +55,14 @@ describe('AllergenPicker', () => {
     boxes()[1].click();
     await fixture.whenStable();
     expect(fixture.componentInstance.selected()).toEqual(['MILK']);
+  });
+
+  it('toggles once when the visible box is clicked', async () => {
+    const { fixture, host } = await render();
+
+    host.querySelector<HTMLElement>('p-checkbox .p-checkbox-box')!.click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.selected()).toEqual(['PEANUTS', 'MILK']);
   });
 });

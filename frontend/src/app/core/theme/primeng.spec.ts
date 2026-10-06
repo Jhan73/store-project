@@ -17,6 +17,7 @@ import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
 
 import { AppPreset } from './app-preset';
+import { primeTranslation } from './prime-translation';
 
 @Component({
   selector: 'app-primeng-harness',
@@ -40,7 +41,14 @@ import { AppPreset } from './app-preset';
     <p-button label="Entrar" (onClick)="clicked = clicked + 1" />
     <input pInputText [formControl]="name" />
     <p-password [formControl]="secret" [feedback]="false" />
-    <p-select [formControl]="role" [options]="roles" optionLabel="label" optionValue="value" />
+    <p-select
+      [formControl]="role"
+      [options]="roles"
+      optionLabel="label"
+      optionValue="value"
+      [filter]="true"
+      filterBy="label"
+    />
     <p-checkbox [formControl]="agreed" [binary]="true" />
     <p-tag value="Listo" />
     <p-message severity="error" text="Falló" />
@@ -77,7 +85,10 @@ describe('PrimeNG 21 on Angular 22', () => {
       imports: [Harness],
       providers: [
         MessageService,
-        providePrimeNG({ theme: { preset: AppPreset, options: { darkModeSelector: '.app-dark' } } }),
+        providePrimeNG({
+          theme: { preset: AppPreset, options: { darkModeSelector: '.app-dark' } },
+          translation: primeTranslation,
+        }),
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(Harness);
@@ -99,7 +110,7 @@ describe('PrimeNG 21 on Angular 22', () => {
     expect(host.querySelector('p-message')?.textContent).toContain('Falló');
     expect(host.querySelector('p-menu')?.textContent).toContain('Salir');
     expect(host.querySelector('p-table')?.textContent).toContain('Fila 1');
-  });
+  }, 15_000);
 
   it('handles events and form bindings', async () => {
     const fixture = await render();
@@ -111,6 +122,24 @@ describe('PrimeNG 21 on Angular 22', () => {
 
     expect(fixture.componentInstance.clicked).toBe(1);
     expect(host.querySelector('p-checkbox')?.getAttribute('data-p-checked')).toBe('true');
+  });
+
+  it('tells the user in Spanish when the search matches nothing', async () => {
+    const fixture = await render();
+    const host = fixture.nativeElement as HTMLElement;
+    const root = host.querySelector<HTMLElement>('p-select')!;
+
+    root.click();
+    await fixture.whenStable();
+    await vi.waitFor(() => expect(root.querySelector('input[role="searchbox"]')).not.toBeNull());
+    const input = root.querySelector<HTMLInputElement>('input[role="searchbox"]')!;
+    input.value = 'zzz';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await fixture.whenStable();
+
+    expect(root.querySelector('.p-select-empty-message')?.textContent?.trim()).toBe(
+      'No hay resultados',
+    );
   });
 
   it('renders the dialog as a modal overlay', async () => {

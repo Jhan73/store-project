@@ -103,7 +103,7 @@ export class AvailabilityStore {
     return undefined;
   }
 
-  // `settled` runs once the request is over, so a native control can be put back to what the menu holds.
+  // `settled` runs once the request is over, so a control can be put back to what the menu holds.
   set(kind: ItemKind, id: string, available: boolean, settled: () => void): void {
     this.pending.add(id);
     const request =

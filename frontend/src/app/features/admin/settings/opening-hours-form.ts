@@ -8,6 +8,8 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { InputText } from 'primeng/inputtext';
 import type { DayOfWeek, OpeningHour } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
@@ -78,7 +80,7 @@ function buildRow(hour: OpeningHour): DayRow {
 
 @Component({
   selector: 'app-opening-hours-form',
-  imports: [ReactiveFormsModule, ButtonDirective],
+  imports: [ReactiveFormsModule, ButtonDirective, Checkbox, InputText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -103,15 +105,16 @@ function buildRow(hour: OpeningHour): DayRow {
             <tr [formGroupName]="i">
               <th [attr.scope]="'row'">{{ dayLabel(row.controls.day.value) }}</th>
               <td>
-                <input
-                  type="checkbox"
+                <p-checkbox
                   formControlName="closed"
-                  [id]="'hours-' + row.controls.day.value + '-closed'"
-                  [attr.aria-label]="closedLabel(row.controls.day.value)"
+                  [binary]="true"
+                  [inputId]="'hours-' + row.controls.day.value + '-closed'"
+                  [ariaLabel]="closedLabel(row.controls.day.value)"
                 />
               </td>
               <td>
                 <input
+                  pInputText
                   type="time"
                   formControlName="opensAt"
                   [id]="'hours-' + row.controls.day.value + '-opens'"
@@ -121,6 +124,7 @@ function buildRow(hour: OpeningHour): DayRow {
               </td>
               <td>
                 <input
+                  pInputText
                   type="time"
                   formControlName="closesAt"
                   [id]="'hours-' + row.controls.day.value + '-closes'"

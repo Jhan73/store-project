@@ -28,18 +28,12 @@ li {
   border-bottom: 1px solid var(--border);
 }
 
-label {
+.row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: 3.5rem;
   padding: var(--space-2) var(--space-3);
-}
-
-input[type='checkbox'] {
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: none;
 }
 
 .name {

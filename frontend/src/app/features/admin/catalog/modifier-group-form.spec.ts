@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Allergen, ModifierGroup } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { typeNumber } from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { ModifierGroupForm } from './modifier-group-form';
 
@@ -71,6 +72,9 @@ async function render(group?: ModifierGroup) {
   };
 }
 
+const switchOf = (host: HTMLElement, id: string) =>
+  host.querySelector<HTMLInputElement>(`p-toggleswitch #${id}`)!;
+
 function type(host: HTMLElement, selector: string, value: string) {
   const input = host.querySelector<HTMLInputElement>(selector)!;
   input.value = value;
@@ -97,7 +101,7 @@ describe('ModifierGroupForm', () => {
       expect(host.querySelectorAll('[data-testid^="option-"]')).toHaveLength(1);
 
       type(host, '#group-name', 'Extras');
-      type(host, '#group-max', '2');
+      typeNumber(host, 'group-max', '2');
       type(host, '#option-0-name', 'Honey');
       type(host, '#option-0-price', '1,5');
       submit(host);
@@ -147,13 +151,13 @@ describe('ModifierGroupForm', () => {
 
     it('raises the minimum to one when the group becomes required, and back to zero when not', async () => {
       const { fixture, host } = await render();
-      const min = () => host.querySelector<HTMLInputElement>('#group-min')!.value;
+      const min = () => host.querySelector<HTMLInputElement>('p-inputnumber #group-min')!.value;
 
-      host.querySelector<HTMLInputElement>('#group-required')!.click();
+      host.querySelector<HTMLInputElement>('p-checkbox #group-required')!.click();
       await fixture.whenStable();
       expect(min()).toBe('1');
 
-      host.querySelector<HTMLInputElement>('#group-required')!.click();
+      host.querySelector<HTMLInputElement>('p-checkbox #group-required')!.click();
       await fixture.whenStable();
       expect(min()).toBe('0');
     });
@@ -162,8 +166,8 @@ describe('ModifierGroupForm', () => {
       const { fixture, host } = await render();
 
       type(host, '#group-name', 'Size');
-      type(host, '#group-max', '1');
-      type(host, '#group-min', '3');
+      typeNumber(host, 'group-max', '1');
+      typeNumber(host, 'group-min', '3');
       type(host, '#option-0-name', 'Small');
       submit(host);
       await fixture.whenStable();
@@ -206,11 +210,11 @@ describe('ModifierGroupForm', () => {
       const { host } = await render(size);
 
       expect(host.querySelector<HTMLInputElement>('#group-name')!.value).toBe('Size');
-      expect(host.querySelector<HTMLInputElement>('#group-required')!.checked).toBe(true);
+      expect(host.querySelector<HTMLInputElement>('p-checkbox #group-required')!.checked).toBe(true);
       expect(host.querySelector<HTMLInputElement>('#option-1-name')!.value).toBe('Large');
       expect(host.querySelector<HTMLInputElement>('#option-1-price')!.value).toBe('2.00');
-      expect(host.querySelector<HTMLInputElement>('#option-0-available')!.checked).toBe(true);
-      expect(host.querySelector<HTMLInputElement>('#option-1-available')!.checked).toBe(false);
+      expect(switchOf(host, 'option-0-available').checked).toBe(true);
+      expect(switchOf(host, 'option-1-available').checked).toBe(false);
     });
 
     it('replaces the group with the version it was read with, keeping option ids', async () => {
@@ -266,19 +270,19 @@ describe('ModifierGroupForm', () => {
     it('marks an option available or not right away, without saving the group', async () => {
       const { fixture, host, http } = await render(size);
 
-      host.querySelector<HTMLInputElement>('#option-1-available')!.click();
+      switchOf(host, 'option-1-available').click();
       const request = http.expectOne(`${API}/catalog/modifier-options/o2/availability`);
       expect(request.request.method).toBe('PUT');
       expect(request.request.body).toEqual({ available: true });
       request.flush({ id: 'o2', available: true });
       await fixture.whenStable();
 
-      expect(host.querySelector<HTMLInputElement>('#option-1-available')!.checked).toBe(true);
+      expect(switchOf(host, 'option-1-available').checked).toBe(true);
     });
 
     it('blocks the option switch while its change is being saved', async () => {
       const { fixture, host, http } = await render(size);
-      const box = () => host.querySelector<HTMLInputElement>('#option-1-available')!;
+      const box = () => switchOf(host, 'option-1-available');
 
       box().click();
       await fixture.whenStable();
@@ -297,13 +301,14 @@ describe('ModifierGroupForm', () => {
       const { fixture, host, http, messages } = await render(size);
       const add = vi.spyOn(messages, 'add');
 
-      host.querySelector<HTMLInputElement>('#option-1-available')!.click();
+      switchOf(host, 'option-1-available').click();
+      await fixture.whenStable();
       const { body, init } = problem(404, 'catalog.modifier-option-not-found');
       http.expectOne(`${API}/catalog/modifier-options/o2/availability`).flush(body, init);
       await fixture.whenStable();
 
       expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-      expect(host.querySelector<HTMLInputElement>('#option-1-available')!.checked).toBe(false);
+      expect(switchOf(host, 'option-1-available').checked).toBe(false);
     });
   });
 });

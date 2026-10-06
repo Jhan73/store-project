@@ -137,6 +137,7 @@ describe('SetPassword', () => {
       for (const id of ['#new-password', '#confirm-password']) {
         const input = host.querySelector<HTMLInputElement>(id)!;
         expect(input.type).toBe('password');
+        expect(input.classList.contains('p-password')).toBe(true);
         expect(input.autocomplete).toBe('new-password');
       }
       expect(host.querySelector('button[type="submit"]')).not.toBeNull();

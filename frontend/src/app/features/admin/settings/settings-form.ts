@@ -17,7 +17,10 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
+import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
+import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { StoreSettings } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
@@ -101,7 +104,7 @@ function timeZoneOptions(current: string): string[] {
 
 @Component({
   selector: 'app-settings-form',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText, NgTemplateOutlet],
+  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText, Select, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -111,14 +114,12 @@ function timeZoneOptions(current: string): string[] {
       <ng-template #numberInput let-field>
         <div class="field">
           <label [for]="'settings-' + field.name">{{ field.label }}</label>
-          <input
-            pInputText
-            type="number"
-            step="1"
-            [min]="field.min"
-            [id]="'settings-' + field.name"
+          <p-inputnumber
+            [inputId]="'settings-' + field.name"
             [formControlName]="field.name"
-            [attr.aria-invalid]="invalid(field.name) ? 'true' : null"
+            [useGrouping]="false"
+            [invalid]="invalid(field.name)"
+            [pt]="numberAriaInvalid(invalid(field.name))"
           />
           @if (invalid(field.name)) {
             <small class="error">{{ numberInvalid(field) }}</small>
@@ -129,16 +130,24 @@ function timeZoneOptions(current: string): string[] {
       <fieldset>
         <legend i18n="@@admin.settings.general.regional">Región</legend>
         <div class="field">
-          <label for="settings-timeZone" i18n="@@admin.settings.general.timeZone">Zona horaria</label>
-          <select
-            id="settings-timeZone"
-            formControlName="timeZone"
-            [attr.aria-invalid]="invalid('timeZone') ? 'true' : null"
+          <label
+            for="settings-timeZone"
+            id="settings-timeZone-label"
+            i18n="@@admin.settings.general.timeZone"
+            >Zona horaria</label
           >
-            @for (zone of timeZones(); track zone) {
-              <option [value]="zone">{{ zone }}</option>
-            }
-          </select>
+          <p-select
+            inputId="settings-timeZone"
+            [ariaLabelledBy]="'settings-timeZone-label'"
+            formControlName="timeZone"
+            [options]="timeZones()"
+            [filter]="true"
+            [resetFilterOnHide]="true"
+            filterPlaceholder="Buscar"
+            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+            [invalid]="invalid('timeZone')"
+            [pt]="selectAriaInvalid(invalid('timeZone'))"
+          />
         </div>
         <div class="field">
           <label for="settings-currency" i18n="@@admin.settings.general.currency">Moneda (ISO 4217)</label>
@@ -222,9 +231,11 @@ export class SettingsForm {
   private readonly notifier = inject(ErrorNotifier);
 
   protected readonly preparationFields = PREPARATION_FIELDS;
+  protected readonly numberAriaInvalid = numberAriaInvalid;
+  protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly boardFields = BOARD_FIELDS;
   protected readonly exceptionField = EXCEPTION_FIELD;
-  protected readonly timeZones = signal<readonly string[]>([]);
+  protected readonly timeZones = signal<string[]>([]);
   protected readonly currency = signal('');
   private readonly typedCurrency = signal('');
   protected readonly currencyChanged = computed(() => {

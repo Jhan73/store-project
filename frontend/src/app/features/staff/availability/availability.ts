@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { FormsModule, NgModel } from '@angular/forms';
 import { ButtonDirective } from 'primeng/button';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { AvailabilityStore, ItemKind } from './availability-store';
 
 @Component({
   selector: 'app-availability',
-  imports: [ButtonDirective],
+  imports: [FormsModule, ButtonDirective, ToggleSwitch],
   providers: [AvailabilityStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './availability.scss',
@@ -49,15 +51,17 @@ import { AvailabilityStore, ItemKind } from './availability-store';
           <ul>
             @for (product of category.products; track product.id) {
               <li>
-                <label>
-                  <input
-                    type="checkbox"
-                    [checked]="product.available"
+                <div class="row">
+                  <p-toggleswitch
+                    #toggle="ngModel"
+                    [inputId]="'product-' + product.id"
+                    [ariaLabelledBy]="'product-name-' + product.id"
+                    [ngModel]="product.available"
                     [disabled]="!store.enabled() || store.pending.has(product.id)"
                     [attr.data-testid]="'product-' + product.id"
-                    (change)="change('product', product.id, $event)"
+                    (onChange)="change('product', product.id, $event.checked, toggle)"
                   />
-                  <span class="name">{{ product.name }}</span>
+                  <span class="name" [id]="'product-name-' + product.id">{{ product.name }}</span>
                   <span class="state" [attr.data-testid]="'state-' + product.id">
                     @if (product.available) {
                       <ng-container i18n="@@staff.availability.available">Disponible</ng-container>
@@ -65,7 +69,7 @@ import { AvailabilityStore, ItemKind } from './availability-store';
                       <ng-container i18n="@@staff.availability.unavailable">Agotado</ng-container>
                     }
                   </span>
-                </label>
+                </div>
               </li>
             } @empty {
               <li class="muted" i18n="@@staff.availability.emptyCategory">
@@ -86,15 +90,17 @@ import { AvailabilityStore, ItemKind } from './availability-store';
             <ul>
               @for (option of group.options; track option.id) {
                 <li>
-                  <label>
-                    <input
-                      type="checkbox"
-                      [checked]="option.available"
+                  <div class="row">
+                    <p-toggleswitch
+                      #toggle="ngModel"
+                      [inputId]="'option-' + option.id"
+                      [ariaLabelledBy]="'option-name-' + option.id"
+                      [ngModel]="option.available"
                       [disabled]="!store.enabled() || store.pending.has(option.id)"
                       [attr.data-testid]="'option-' + option.id"
-                      (change)="change('option', option.id, $event)"
+                      (onChange)="change('option', option.id, $event.checked, toggle)"
                     />
-                    <span class="name">{{ option.name }}</span>
+                    <span class="name" [id]="'option-name-' + option.id">{{ option.name }}</span>
                     <span class="state" [attr.data-testid]="'state-' + option.id">
                       @if (option.available) {
                         <ng-container i18n="@@staff.availability.available"
@@ -104,7 +110,7 @@ import { AvailabilityStore, ItemKind } from './availability-store';
                         <ng-container i18n="@@staff.availability.unavailable">Agotado</ng-container>
                       }
                     </span>
-                  </label>
+                  </div>
                 </li>
               }
             </ul>
@@ -119,11 +125,10 @@ import { AvailabilityStore, ItemKind } from './availability-store';
 export class Availability {
   protected readonly store = inject(AvailabilityStore);
 
-  protected change(kind: ItemKind, id: string, event: Event): void {
-    const box = event.target as HTMLInputElement;
-    this.store.set(kind, id, box.checked, () => {
-      // The checkbox flipped on its own; after a refusal it must show the value the screen holds now.
-      box.checked = this.store.availableOf(id) ?? box.checked;
+  protected change(kind: ItemKind, id: string, available: boolean, control: NgModel): void {
+    this.store.set(kind, id, available, () => {
+      // The switch flipped on its own; after a refusal it must show the value the screen holds now.
+      control.control.setValue(this.store.availableOf(id) ?? control.value);
     });
   }
 }

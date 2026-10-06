@@ -851,7 +851,7 @@
     </unit>
     <unit id="admin.catalog.categories.title">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:16,20</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:19,23</note>
       </notes>
       <segment>
         <source>Categorías</source>
@@ -859,7 +859,7 @@
     </unit>
     <unit id="admin.catalog.categories.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:21,22</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:24,25</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -867,7 +867,7 @@
     </unit>
     <unit id="admin.catalog.categories.station">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:22,23</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:25,26</note>
       </notes>
       <segment>
         <source>Estación</source>
@@ -875,7 +875,7 @@
     </unit>
     <unit id="admin.catalog.categories.order">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:23,24</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:26,27</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -883,7 +883,7 @@
     </unit>
     <unit id="admin.catalog.categories.state">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:24,25</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:27,28</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -891,9 +891,9 @@
     </unit>
     <unit id="admin.catalog.actions">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:25,27</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:28,30</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:28,30</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:49,51</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:66,68</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:25,27</note>
       </notes>
       <segment>
@@ -902,7 +902,7 @@
     </unit>
     <unit id="admin.catalog.active">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:36,38</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:39,41</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -910,7 +910,7 @@
     </unit>
     <unit id="admin.catalog.inactive">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:38,40</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:41,43</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -918,9 +918,9 @@
     </unit>
     <unit id="admin.catalog.edit">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:51,52</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:54,55</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:80,81</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:88,89</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:105,106</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -928,8 +928,8 @@
     </unit>
     <unit id="admin.catalog.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:63,64</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:100,101</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:66,67</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:117,118</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -937,8 +937,8 @@
     </unit>
     <unit id="admin.catalog.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:65,67</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:102,104</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:68,70</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:119,121</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -946,7 +946,7 @@
     </unit>
     <unit id="admin.catalog.categories.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:76,79</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:79,82</note>
       </notes>
       <segment>
         <source>Nombre de la categoría</source>
@@ -954,7 +954,7 @@
     </unit>
     <unit id="admin.catalog.categories.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:86,89</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:89,92</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -962,7 +962,7 @@
     </unit>
     <unit id="admin.catalog.categories.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:90,93</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:93,95</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -970,7 +970,7 @@
     </unit>
     <unit id="admin.catalog.categories.orderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:100,103</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:102,105</note>
       </notes>
       <segment>
         <source>Escribe un número entero.</source>
@@ -978,7 +978,7 @@
     </unit>
     <unit id="admin.catalog.categories.stationLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:104,105</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:110,113</note>
       </notes>
       <segment>
         <source>Estación de preparación</source>
@@ -986,15 +986,30 @@
     </unit>
     <unit id="admin.catalog.categories.defaultStation">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:107,109</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:116,117</note>
       </notes>
       <segment>
         <source>Estación predeterminada</source>
       </segment>
     </unit>
+    <unit id="shared.select.filterPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:125</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:127</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:238</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:47</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:52</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:147</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:64</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:174</note>
+      </notes>
+      <segment>
+        <source>Buscar</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.categories.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:117,119</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:132,134</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -1002,7 +1017,7 @@
     </unit>
     <unit id="admin.catalog.categories.create">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:119,122</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:134,136</note>
       </notes>
       <segment>
         <source>Agregar categoría</source>
@@ -1010,7 +1025,7 @@
     </unit>
     <unit id="admin.catalog.cancel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:124,126</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:139,141</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:70,71</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:86,88</note>
       </notes>
@@ -1020,7 +1035,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.editTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:56,58</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:71,73</note>
       </notes>
       <segment>
         <source>Editar grupo de modificadores</source>
@@ -1028,7 +1043,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.newTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:58,61</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:73,76</note>
       </notes>
       <segment>
         <source>Nuevo grupo de modificadores</source>
@@ -1036,8 +1051,8 @@
     </unit>
     <unit id="admin.catalog.back">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:62,66</note>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:51,55</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:77,81</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:75,79</note>
       </notes>
       <segment>
         <source>Volver a la lista</source>
@@ -1045,7 +1060,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:69,71</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:84,86</note>
       </notes>
       <segment>
         <source>Nombre del grupo</source>
@@ -1053,7 +1068,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:79,83</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:94,98</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -1061,7 +1076,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.required">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:86,89</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:101,104</note>
       </notes>
       <segment>
         <source>Elección obligatoria</source>
@@ -1069,7 +1084,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.min">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:90,91</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:105,107</note>
       </notes>
       <segment>
         <source>Mínimo de opciones</source>
@@ -1077,7 +1092,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.max">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:94,95</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:113,115</note>
       </notes>
       <segment>
         <source>Máximo de opciones</source>
@@ -1085,7 +1100,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.noOptions">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:104,106</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:127,129</note>
       </notes>
       <segment>
         <source>Agrega al menos una opción.</source>
@@ -1093,7 +1108,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.maxTooLow">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:108,111</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:131,134</note>
       </notes>
       <segment>
         <source>El máximo debe ser al menos 1 y no menor que el mínimo.</source>
@@ -1101,7 +1116,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.minRequired">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:113,116</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:136,139</note>
       </notes>
       <segment>
         <source>Un grupo obligatorio necesita un mínimo de al menos 1.</source>
@@ -1109,7 +1124,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.minOptional">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:118,121</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:141,144</note>
       </notes>
       <segment>
         <source>Un grupo opcional debe tener un mínimo de 0.</source>
@@ -1117,7 +1132,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.minExceedsOptions">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:123,126</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:146,149</note>
       </notes>
       <segment>
         <source>Agrega más opciones o baja el mínimo de elecciones.</source>
@@ -1125,7 +1140,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.duplicateNames">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:128,131</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:151,154</note>
       </notes>
       <segment>
         <source>Los nombres de las opciones no pueden repetirse.</source>
@@ -1133,7 +1148,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionLegend">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:140,141</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:163,164</note>
       </notes>
       <segment>
         <source>Opción <ph id="0" equiv="INTERPOLATION" disp="{{ i + 1 }}"/></source>
@@ -1141,7 +1156,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionName">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:142,144</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:165,167</note>
       </notes>
       <segment>
         <source>Nombre de la opción</source>
@@ -1149,7 +1164,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionPrice">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:153,154</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:176,177</note>
       </notes>
       <segment>
         <source>Precio adicional (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -1157,7 +1172,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionPriceInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:163,166</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:186,189</note>
       </notes>
       <segment>
         <source>Escribe un monto como 1.50.</source>
@@ -1165,7 +1180,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionAvailable">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:175,178</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:199,202</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -1173,7 +1188,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.optionAllergens">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:183,185</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:207,209</note>
       </notes>
       <segment>
         <source>Alérgenos de esta opción</source>
@@ -1181,7 +1196,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.removeOption">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:195,197</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:219,221</note>
       </notes>
       <segment>
         <source> Quitar opción </source>
@@ -1189,7 +1204,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.addOption">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:210,212</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:234,236</note>
       </notes>
       <segment>
         <source> Agregar opción </source>
@@ -1197,7 +1212,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:213,215</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:237,239</note>
       </notes>
       <segment>
         <source> Guardar grupo </source>
@@ -1205,8 +1220,8 @@
     </unit>
     <unit id="admin.catalog.saved">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:348</note>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:346</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:371</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:418</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -1310,7 +1325,7 @@
     </unit>
     <unit id="admin.catalog.productForm.editTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:45,47</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:69,71</note>
       </notes>
       <segment>
         <source>Editar producto</source>
@@ -1318,7 +1333,7 @@
     </unit>
     <unit id="admin.catalog.productForm.newTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:47,50</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:71,74</note>
       </notes>
       <segment>
         <source>Nuevo producto</source>
@@ -1326,7 +1341,7 @@
     </unit>
     <unit id="admin.catalog.productForm.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:58,60</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:82,84</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -1334,7 +1349,7 @@
     </unit>
     <unit id="admin.catalog.productForm.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:68,72</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:92,96</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -1342,7 +1357,7 @@
     </unit>
     <unit id="admin.catalog.productForm.description">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:73,74</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:97,99</note>
       </notes>
       <segment>
         <source>Descripción (opcional)</source>
@@ -1350,7 +1365,7 @@
     </unit>
     <unit id="admin.catalog.productForm.category">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:78,80</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:112,115</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -1358,7 +1373,7 @@
     </unit>
     <unit id="admin.catalog.productForm.categoryPlaceholder">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:84,85</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:118,119</note>
       </notes>
       <segment>
         <source>Elige una categoría</source>
@@ -1366,7 +1381,7 @@
     </unit>
     <unit id="admin.catalog.productForm.categoryInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:90,94</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:132,136</note>
       </notes>
       <segment>
         <source>Elige una categoría.</source>
@@ -1374,7 +1389,7 @@
     </unit>
     <unit id="admin.catalog.productForm.price">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:95,96</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:137,138</note>
       </notes>
       <segment>
         <source>Precio (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -1382,7 +1397,7 @@
     </unit>
     <unit id="admin.catalog.productForm.priceInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:105,109</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:147,151</note>
       </notes>
       <segment>
         <source>Escribe un monto mayor que cero, como 9.50.</source>
@@ -1390,7 +1405,7 @@
     </unit>
     <unit id="admin.catalog.productForm.order">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:110,111</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:152,154</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -1398,7 +1413,7 @@
     </unit>
     <unit id="admin.catalog.productForm.pinned">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:116,119</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:162,165</note>
       </notes>
       <segment>
         <source>Fijar en venta rápida</source>
@@ -1406,7 +1421,7 @@
     </unit>
     <unit id="admin.catalog.productForm.allergens">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:124,127</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:170,173</note>
       </notes>
       <segment>
         <source>Alérgenos del producto</source>
@@ -1414,7 +1429,7 @@
     </unit>
     <unit id="admin.catalog.productForm.groups">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:128,130</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:174,176</note>
       </notes>
       <segment>
         <source>Grupos de modificadores, en orden</source>
@@ -1422,7 +1437,7 @@
     </unit>
     <unit id="admin.catalog.productForm.moveUp">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:143,145</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:189,191</note>
       </notes>
       <segment>
         <source> Subir </source>
@@ -1430,7 +1445,7 @@
     </unit>
     <unit id="admin.catalog.productForm.moveDown">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:155,157</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:201,203</note>
       </notes>
       <segment>
         <source> Bajar </source>
@@ -1438,7 +1453,7 @@
     </unit>
     <unit id="admin.catalog.productForm.removeGroup">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:167,169</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:213,215</note>
       </notes>
       <segment>
         <source> Quitar </source>
@@ -1446,7 +1461,7 @@
     </unit>
     <unit id="admin.catalog.productForm.addGroupLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:173,174</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:224,227</note>
       </notes>
       <segment>
         <source>Grupo a agregar</source>
@@ -1454,7 +1469,7 @@
     </unit>
     <unit id="admin.catalog.productForm.groupPlaceholder">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:175,176</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:229,230</note>
       </notes>
       <segment>
         <source>Elige un grupo</source>
@@ -1462,7 +1477,7 @@
     </unit>
     <unit id="admin.catalog.productForm.addGroup">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:188,190</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:249,251</note>
       </notes>
       <segment>
         <source> Agregar grupo </source>
@@ -1470,7 +1485,7 @@
     </unit>
     <unit id="admin.catalog.productForm.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:195,197</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:256,258</note>
       </notes>
       <segment>
         <source> Guardar producto </source>
@@ -1478,7 +1493,7 @@
     </unit>
     <unit id="admin.catalog.productForm.imageTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:201,203</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:262,264</note>
       </notes>
       <segment>
         <source>Imagen</source>
@@ -1486,7 +1501,7 @@
     </unit>
     <unit id="admin.catalog.productForm.removeImage">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:214,217</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:275,278</note>
       </notes>
       <segment>
         <source> Quitar imagen </source>
@@ -1494,7 +1509,7 @@
     </unit>
     <unit id="admin.catalog.productForm.imagePick">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:218,219</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:283,284</note>
       </notes>
       <segment>
         <source>Elegir una imagen nueva</source>
@@ -1502,31 +1517,31 @@
     </unit>
     <unit id="admin.catalog.productForm.imageHint">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:220,222</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:293,296</note>
       </notes>
       <segment>
         <source>PNG, JPG o WebP, de hasta 2 MB.</source>
       </segment>
     </unit>
-    <unit id="admin.catalog.productForm.imageInvalid">
-      <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:223,226</note>
-      </notes>
-      <segment>
-        <source>La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.</source>
-      </segment>
-    </unit>
     <unit id="admin.catalog.productForm.imageLater">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:229,232</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:297,300</note>
       </notes>
       <segment>
         <source> Podrás subir la imagen después de guardar el producto. </source>
       </segment>
     </unit>
+    <unit id="admin.catalog.productForm.imageInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:316</note>
+      </notes>
+      <segment>
+        <source>La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.products.title">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:19,20</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:22,23</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -1534,7 +1549,7 @@
     </unit>
     <unit id="admin.catalog.products.new">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:21,25</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:24,28</note>
       </notes>
       <segment>
         <source>Nuevo producto</source>
@@ -1542,7 +1557,7 @@
     </unit>
     <unit id="admin.catalog.products.filter">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:26,27</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:33,36</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -1550,7 +1565,7 @@
     </unit>
     <unit id="admin.catalog.products.allCategories">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:28,29</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:39</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -1558,7 +1573,7 @@
     </unit>
     <unit id="admin.catalog.products.empty">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:38,41</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:55,58</note>
       </notes>
       <segment>
         <source>Todavía no hay productos.</source>
@@ -1566,7 +1581,7 @@
     </unit>
     <unit id="admin.catalog.products.image">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:43,44</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:60,61</note>
       </notes>
       <segment>
         <source>Imagen</source>
@@ -1574,7 +1589,7 @@
     </unit>
     <unit id="admin.catalog.products.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:44,45</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:61,62</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -1582,7 +1597,7 @@
     </unit>
     <unit id="admin.catalog.products.category">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:45,46</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:62,63</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -1590,7 +1605,7 @@
     </unit>
     <unit id="admin.catalog.products.price">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:46,47</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:63,64</note>
       </notes>
       <segment>
         <source>Precio</source>
@@ -1598,7 +1613,7 @@
     </unit>
     <unit id="admin.catalog.products.state">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:47,48</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:64,65</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -1606,7 +1621,7 @@
     </unit>
     <unit id="admin.catalog.products.available">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:48,49</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:65,66</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -1614,7 +1629,7 @@
     </unit>
     <unit id="admin.catalog.products.active">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:65,67</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:82,84</note>
       </notes>
       <segment>
         <source>Activo</source>
@@ -1622,7 +1637,7 @@
     </unit>
     <unit id="admin.catalog.products.inactive">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:67,70</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:84,86</note>
       </notes>
       <segment>
         <source>Inactivo</source>
@@ -1630,7 +1645,7 @@
     </unit>
     <unit id="admin.catalog.products.paging">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:113</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:130</note>
       </notes>
       <segment>
         <source>Paginación</source>
@@ -1638,7 +1653,7 @@
     </unit>
     <unit id="admin.catalog.products.previous">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:123,125</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:140,142</note>
       </notes>
       <segment>
         <source> Anterior </source>
@@ -1646,7 +1661,7 @@
     </unit>
     <unit id="admin.catalog.products.pageOf">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:126,128</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:143,145</note>
       </notes>
       <segment>
         <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
@@ -1654,7 +1669,7 @@
     </unit>
     <unit id="admin.catalog.products.next">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:137,140</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:154,156</note>
       </notes>
       <segment>
         <source> Siguiente </source>
@@ -1734,7 +1749,7 @@
     </unit>
     <unit id="admin.settings.hours.monday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:27</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:29</note>
       </notes>
       <segment>
         <source>Lunes</source>
@@ -1742,7 +1757,7 @@
     </unit>
     <unit id="admin.settings.hours.tuesday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:28</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:30</note>
       </notes>
       <segment>
         <source>Martes</source>
@@ -1750,7 +1765,7 @@
     </unit>
     <unit id="admin.settings.hours.wednesday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:29</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:31</note>
       </notes>
       <segment>
         <source>Miércoles</source>
@@ -1758,7 +1773,7 @@
     </unit>
     <unit id="admin.settings.hours.thursday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:30</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:32</note>
       </notes>
       <segment>
         <source>Jueves</source>
@@ -1766,7 +1781,7 @@
     </unit>
     <unit id="admin.settings.hours.friday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:31</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:33</note>
       </notes>
       <segment>
         <source>Viernes</source>
@@ -1774,7 +1789,7 @@
     </unit>
     <unit id="admin.settings.hours.saturday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:32</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:34</note>
       </notes>
       <segment>
         <source>Sábado</source>
@@ -1782,7 +1797,7 @@
     </unit>
     <unit id="admin.settings.hours.sunday">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:33</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:35</note>
       </notes>
       <segment>
         <source>Domingo</source>
@@ -1790,7 +1805,7 @@
     </unit>
     <unit id="admin.settings.hours.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:85,86</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:87,88</note>
       </notes>
       <segment>
         <source>Horario de atención</source>
@@ -1798,7 +1813,7 @@
     </unit>
     <unit id="admin.settings.hours.hint">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:87,91</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:89,93</note>
       </notes>
       <segment>
         <source> Horas locales de la tienda. Si una hora de cierre es anterior a la de apertura, el local cierra después de medianoche. </source>
@@ -1806,7 +1821,7 @@
     </unit>
     <unit id="admin.settings.hours.day">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:96</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:98</note>
       </notes>
       <segment>
         <source>Día</source>
@@ -1814,7 +1829,7 @@
     </unit>
     <unit id="admin.settings.hours.closed">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:96,97</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:98,99</note>
       </notes>
       <segment>
         <source>Cerrado</source>
@@ -1822,7 +1837,7 @@
     </unit>
     <unit id="admin.settings.hours.opens">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:97,98</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:99,100</note>
       </notes>
       <segment>
         <source>Abre</source>
@@ -1830,7 +1845,7 @@
     </unit>
     <unit id="admin.settings.hours.closes">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:98,101</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:100,103</note>
       </notes>
       <segment>
         <source>Cierra</source>
@@ -1838,7 +1853,7 @@
     </unit>
     <unit id="admin.settings.hours.overnight">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:132,134</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:136,138</note>
       </notes>
       <segment>
         <source>Cierra al día siguiente</source>
@@ -1846,7 +1861,7 @@
     </unit>
     <unit id="admin.settings.hours.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:143,145</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:147,149</note>
       </notes>
       <segment>
         <source> Guardar horario </source>
@@ -1854,7 +1869,7 @@
     </unit>
     <unit id="admin.settings.hours.saved">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:147,152</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:151,156</note>
       </notes>
       <segment>
         <source>Horario guardado.</source>
@@ -1862,7 +1877,7 @@
     </unit>
     <unit id="admin.settings.hours.closedLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:176</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:180</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: cerrado</source>
@@ -1870,7 +1885,7 @@
     </unit>
     <unit id="admin.settings.hours.opensLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:180</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:184</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de apertura</source>
@@ -1878,7 +1893,7 @@
     </unit>
     <unit id="admin.settings.hours.closesLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:184</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:188</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de cierre</source>
@@ -1886,7 +1901,7 @@
     </unit>
     <unit id="admin.settings.reasons.void">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:17</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:18</note>
       </notes>
       <segment>
         <source>Anulaciones</source>
@@ -1894,7 +1909,7 @@
     </unit>
     <unit id="admin.settings.reasons.comp">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:18</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:19</note>
       </notes>
       <segment>
         <source>Cortesías</source>
@@ -1902,7 +1917,7 @@
     </unit>
     <unit id="admin.settings.reasons.cashOut">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:19</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:20</note>
       </notes>
       <segment>
         <source>Salidas de caja</source>
@@ -1910,7 +1925,7 @@
     </unit>
     <unit id="admin.settings.reasons.stockAdjustment">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:22</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:23</note>
       </notes>
       <segment>
         <source>Ajustes de inventario</source>
@@ -1918,7 +1933,7 @@
     </unit>
     <unit id="admin.settings.reasons.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:32,35</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:33,36</note>
       </notes>
       <segment>
         <source>Motivos</source>
@@ -1926,7 +1941,7 @@
     </unit>
     <unit id="admin.settings.reasons.typeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:35,36</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:40,43</note>
       </notes>
       <segment>
         <source>Lista de motivos</source>
@@ -1934,7 +1949,7 @@
     </unit>
     <unit id="admin.settings.reasons.empty">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:44,47</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:59,62</note>
       </notes>
       <segment>
         <source>Todavía no hay motivos en esta lista.</source>
@@ -1942,7 +1957,7 @@
     </unit>
     <unit id="admin.settings.reasons.code">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:49,50</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:64,65</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -1950,7 +1965,7 @@
     </unit>
     <unit id="admin.settings.reasons.state">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:50,51</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:65,66</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -1958,8 +1973,8 @@
     </unit>
     <unit id="admin.settings.actions">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:51,53</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:31,33</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:66,68</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:33,35</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -1967,7 +1982,7 @@
     </unit>
     <unit id="admin.settings.reasons.active">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:60,62</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:75,77</note>
       </notes>
       <segment>
         <source>Activo</source>
@@ -1975,7 +1990,7 @@
     </unit>
     <unit id="admin.settings.reasons.inactive">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:62,65</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:77,80</note>
       </notes>
       <segment>
         <source>Inactivo</source>
@@ -1983,8 +1998,8 @@
     </unit>
     <unit id="admin.settings.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:77,78</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:73,74</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:92,93</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:75,76</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -1992,8 +2007,8 @@
     </unit>
     <unit id="admin.settings.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:79,81</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:75,77</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:94,96</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:77,79</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2001,7 +2016,7 @@
     </unit>
     <unit id="admin.settings.reasons.codeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:91,94</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:106,109</note>
       </notes>
       <segment>
         <source>Nuevo motivo</source>
@@ -2009,7 +2024,7 @@
     </unit>
     <unit id="admin.settings.reasons.codeInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:101,104</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:116,119</note>
       </notes>
       <segment>
         <source>Escribe un motivo.</source>
@@ -2017,7 +2032,7 @@
     </unit>
     <unit id="admin.settings.reasons.create">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:106,109</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:121,124</note>
       </notes>
       <segment>
         <source> Agregar motivo </source>
@@ -2025,7 +2040,7 @@
     </unit>
     <unit id="admin.settings.general.basePrepMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:46</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:49</note>
       </notes>
       <segment>
         <source>Minutos base de preparación</source>
@@ -2033,7 +2048,7 @@
     </unit>
     <unit id="admin.settings.general.queueMinutesPerOrder">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:51</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:54</note>
       </notes>
       <segment>
         <source>Minutos extra por pedido en cola</source>
@@ -2041,7 +2056,7 @@
     </unit>
     <unit id="admin.settings.general.busyModeMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:56</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:59</note>
       </notes>
       <segment>
         <source>Minutos extra en modo ocupado</source>
@@ -2049,7 +2064,7 @@
     </unit>
     <unit id="admin.settings.general.onlineCapacityLimit">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:61</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:64</note>
       </notes>
       <segment>
         <source>Límite de pedidos en línea simultáneos</source>
@@ -2057,7 +2072,7 @@
     </unit>
     <unit id="admin.settings.general.boardWarningMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:69</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:72</note>
       </notes>
       <segment>
         <source>Minutos para marcar advertencia</source>
@@ -2065,7 +2080,7 @@
     </unit>
     <unit id="admin.settings.general.boardLateMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:74</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:77</note>
       </notes>
       <segment>
         <source>Minutos para marcar atraso</source>
@@ -2073,7 +2088,7 @@
     </unit>
     <unit id="admin.settings.general.exceptionThreshold">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:81</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:84</note>
       </notes>
       <segment>
         <source>Umbral de excepciones</source>
@@ -2081,7 +2096,7 @@
     </unit>
     <unit id="admin.settings.general.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:108,110</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:111,113</note>
       </notes>
       <segment>
         <source>Configuración de la tienda</source>
@@ -2089,7 +2104,7 @@
     </unit>
     <unit id="admin.settings.general.regional">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:130,132</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:131,133</note>
       </notes>
       <segment>
         <source>Región</source>
@@ -2097,7 +2112,7 @@
     </unit>
     <unit id="admin.settings.general.timeZone">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:132,134</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:137,140</note>
       </notes>
       <segment>
         <source>Zona horaria</source>
@@ -2105,7 +2120,7 @@
     </unit>
     <unit id="admin.settings.general.currency">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:144,146</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:153,155</note>
       </notes>
       <segment>
         <source>Moneda (ISO 4217)</source>
@@ -2113,7 +2128,7 @@
     </unit>
     <unit id="admin.settings.general.currencyInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:155,158</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:164,167</note>
       </notes>
       <segment>
         <source>Escribe un código de tres letras, como PEN.</source>
@@ -2121,7 +2136,7 @@
     </unit>
     <unit id="admin.settings.general.currencyChangeWarning">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:160,164</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:169,173</note>
       </notes>
       <segment>
         <source>Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para actualizarla.</source>
@@ -2129,7 +2144,7 @@
     </unit>
     <unit id="admin.settings.general.preparation">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:168,169</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:177,178</note>
       </notes>
       <segment>
         <source>Preparación y pedidos en línea</source>
@@ -2137,7 +2152,7 @@
     </unit>
     <unit id="admin.settings.general.board">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:175,176</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:184,185</note>
       </notes>
       <segment>
         <source>Tablero de preparación</source>
@@ -2145,7 +2160,7 @@
     </unit>
     <unit id="admin.settings.general.boardOrderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:181,186</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:190,195</note>
       </notes>
       <segment>
         <source>El tiempo de atraso debe ser mayor que el de advertencia.</source>
@@ -2153,7 +2168,7 @@
     </unit>
     <unit id="admin.settings.general.cash">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:187,189</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:196,198</note>
       </notes>
       <segment>
         <source>Caja y excepciones</source>
@@ -2161,7 +2176,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifference">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:190,191</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:199,200</note>
       </notes>
       <segment>
         <source>Diferencia de caja permitida (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -2169,7 +2184,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifferenceInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:202,206</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:211,215</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 5.00.</source>
@@ -2177,7 +2192,7 @@
     </unit>
     <unit id="admin.settings.general.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:211,214</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:220,223</note>
       </notes>
       <segment>
         <source> Guardar cambios </source>
@@ -2185,7 +2200,7 @@
     </unit>
     <unit id="admin.settings.general.saved">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:215,220</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:224,229</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -2193,7 +2208,7 @@
     </unit>
     <unit id="admin.settings.general.numberInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:276</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:287</note>
       </notes>
       <segment>
         <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
@@ -2249,7 +2264,7 @@
     </unit>
     <unit id="admin.settings.zones.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:20,24</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:22,26</note>
       </notes>
       <segment>
         <source>Zonas de reparto</source>
@@ -2257,7 +2272,7 @@
     </unit>
     <unit id="admin.settings.zones.name">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:25,26</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:27,28</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -2265,7 +2280,7 @@
     </unit>
     <unit id="admin.settings.zones.fee">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:26,27</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:28,29</note>
       </notes>
       <segment>
         <source>Tarifa</source>
@@ -2273,7 +2288,7 @@
     </unit>
     <unit id="admin.settings.zones.minutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:27,28</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:29,30</note>
       </notes>
       <segment>
         <source>Minutos de reparto</source>
@@ -2281,7 +2296,7 @@
     </unit>
     <unit id="admin.settings.zones.minimum">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:28,29</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:30,31</note>
       </notes>
       <segment>
         <source>Pedido mínimo</source>
@@ -2289,7 +2304,7 @@
     </unit>
     <unit id="admin.settings.zones.free">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:29,30</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:31,32</note>
       </notes>
       <segment>
         <source>Reparto gratis desde</source>
@@ -2297,7 +2312,7 @@
     </unit>
     <unit id="admin.settings.zones.state">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:30,31</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:32,33</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2305,7 +2320,7 @@
     </unit>
     <unit id="admin.settings.active">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:44,46</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:46,48</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2313,7 +2328,7 @@
     </unit>
     <unit id="admin.settings.inactive">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:46,48</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:48,50</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -2321,7 +2336,7 @@
     </unit>
     <unit id="admin.settings.edit">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:60,61</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:62,63</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -2329,7 +2344,7 @@
     </unit>
     <unit id="admin.settings.zones.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:86,89</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:88,91</note>
       </notes>
       <segment>
         <source>Nombre de la zona</source>
@@ -2337,7 +2352,7 @@
     </unit>
     <unit id="admin.settings.zones.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:96,99</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:98,101</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -2345,7 +2360,7 @@
     </unit>
     <unit id="admin.settings.zones.feeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:100,101</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:102,103</note>
       </notes>
       <segment>
         <source>Tarifa (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
@@ -2353,7 +2368,7 @@
     </unit>
     <unit id="admin.settings.zones.feeInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:110,113</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:112,115</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 4.00.</source>
@@ -2361,7 +2376,7 @@
     </unit>
     <unit id="admin.settings.zones.minutesLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:114,117</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:116,118</note>
       </notes>
       <segment>
         <source>Minutos de reparto</source>
@@ -2433,7 +2448,7 @@
     </unit>
     <unit id="admin.tables.title">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:24,26</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:26,28</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -2441,7 +2456,7 @@
     </unit>
     <unit id="admin.tables.empty">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:27,30</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:29,32</note>
       </notes>
       <segment>
         <source>Todavía no hay mesas.</source>
@@ -2449,7 +2464,7 @@
     </unit>
     <unit id="admin.tables.name">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:32,33</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:34,35</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -2457,7 +2472,7 @@
     </unit>
     <unit id="admin.tables.area">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:33,34</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:35,36</note>
       </notes>
       <segment>
         <source>Zona</source>
@@ -2465,7 +2480,7 @@
     </unit>
     <unit id="admin.tables.order">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:34,35</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:36,37</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -2473,7 +2488,7 @@
     </unit>
     <unit id="admin.tables.state">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:35,36</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:37,38</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2481,7 +2496,7 @@
     </unit>
     <unit id="admin.tables.actions">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:36,38</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:38,40</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -2489,7 +2504,7 @@
     </unit>
     <unit id="admin.tables.active">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:47,49</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:49,51</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2497,7 +2512,7 @@
     </unit>
     <unit id="admin.tables.inactive">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:49,51</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:51,53</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -2505,7 +2520,7 @@
     </unit>
     <unit id="admin.tables.edit">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:63,64</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:65,66</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -2513,7 +2528,7 @@
     </unit>
     <unit id="admin.tables.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:76,77</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:78,79</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2521,7 +2536,7 @@
     </unit>
     <unit id="admin.tables.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:78,80</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:80,82</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2529,7 +2544,7 @@
     </unit>
     <unit id="admin.tables.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:90,92</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:92,94</note>
       </notes>
       <segment>
         <source>Nombre de la mesa</source>
@@ -2537,7 +2552,7 @@
     </unit>
     <unit id="admin.tables.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:100,103</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:102,105</note>
       </notes>
       <segment>
         <source>Escribe un nombre de hasta 60 caracteres.</source>
@@ -2545,7 +2560,7 @@
     </unit>
     <unit id="admin.tables.areaLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:104,106</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:106,108</note>
       </notes>
       <segment>
         <source>Zona (opcional)</source>
@@ -2553,7 +2568,7 @@
     </unit>
     <unit id="admin.tables.areaInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:114,117</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:116,119</note>
       </notes>
       <segment>
         <source>La zona admite hasta 60 caracteres.</source>
@@ -2561,7 +2576,7 @@
     </unit>
     <unit id="admin.tables.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:118,120</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:120,122</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -2601,7 +2616,7 @@
     </unit>
     <unit id="admin.users.title">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:24,27</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:32,35</note>
       </notes>
       <segment>
         <source>Personal</source>
@@ -2609,7 +2624,7 @@
     </unit>
     <unit id="admin.users.email">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:33,34</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:41,42</note>
       </notes>
       <segment>
         <source>Correo</source>
@@ -2617,7 +2632,7 @@
     </unit>
     <unit id="admin.users.role">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:35</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:42,43</note>
       </notes>
       <segment>
         <source>Rol</source>
@@ -2625,7 +2640,7 @@
     </unit>
     <unit id="admin.users.state">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:35,36</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:43,44</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2633,7 +2648,7 @@
     </unit>
     <unit id="admin.users.created">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:36,37</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:44,45</note>
       </notes>
       <segment>
         <source>Creada</source>
@@ -2641,7 +2656,7 @@
     </unit>
     <unit id="admin.users.actions">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:37,39</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:45,47</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -2649,7 +2664,7 @@
     </unit>
     <unit id="admin.users.active">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:58,60</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:73,74</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2657,7 +2672,7 @@
     </unit>
     <unit id="admin.users.inactive">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:60,62</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:75,77</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -2665,7 +2680,7 @@
     </unit>
     <unit id="admin.users.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:76,77</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:91,92</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2673,7 +2688,7 @@
     </unit>
     <unit id="admin.users.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:78,80</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:93,95</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2681,7 +2696,7 @@
     </unit>
     <unit id="admin.users.resend">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:93,94</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:108,109</note>
       </notes>
       <segment>
         <source> Reenviar enlace </source>
@@ -2689,7 +2704,7 @@
     </unit>
     <unit id="admin.users.paging">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:103</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:118</note>
       </notes>
       <segment>
         <source>Paginación</source>
@@ -2697,7 +2712,7 @@
     </unit>
     <unit id="admin.users.previous">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:113,115</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:128,130</note>
       </notes>
       <segment>
         <source> Anterior </source>
@@ -2705,7 +2720,7 @@
     </unit>
     <unit id="admin.users.pageOf">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:115,116</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:130,131</note>
       </notes>
       <segment>
         <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
@@ -2713,7 +2728,7 @@
     </unit>
     <unit id="admin.users.next">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:125,127</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:140,142</note>
       </notes>
       <segment>
         <source> Siguiente </source>
@@ -2721,7 +2736,7 @@
     </unit>
     <unit id="admin.users.emailLabel">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:132,134</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:147,149</note>
       </notes>
       <segment>
         <source>Correo de la nueva cuenta</source>
@@ -2729,7 +2744,7 @@
     </unit>
     <unit id="admin.users.emailInvalid">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:143,146</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:158,161</note>
       </notes>
       <segment>
         <source>Escribe un correo válido.</source>
@@ -2737,7 +2752,7 @@
     </unit>
     <unit id="admin.users.roleLabel">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:147,148</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:162,164</note>
       </notes>
       <segment>
         <source>Rol</source>
@@ -2745,7 +2760,7 @@
     </unit>
     <unit id="admin.users.inviteHint">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:155,157</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:178,180</note>
       </notes>
       <segment>
         <source> La persona recibirá un enlace por correo para crear su propia contraseña. </source>
@@ -2753,7 +2768,7 @@
     </unit>
     <unit id="admin.users.invite">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:159,161</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:182,184</note>
       </notes>
       <segment>
         <source> Invitar </source>
@@ -2761,7 +2776,7 @@
     </unit>
     <unit id="admin.users.roleOf">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:205</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:227</note>
       </notes>
       <segment>
         <source>Rol de <ph id="0" equiv="email" disp="member.email"/></source>
@@ -2769,7 +2784,7 @@
     </unit>
     <unit id="admin.users.resent">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:257</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:278</note>
       </notes>
       <segment>
         <source>Enlace reenviado a <ph id="0" equiv="email" disp="member.email"/>.</source>
@@ -2777,7 +2792,7 @@
     </unit>
     <unit id="admin.users.invited">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:275</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:296</note>
       </notes>
       <segment>
         <source>Invitación enviada a <ph id="0" equiv="email" disp="address"/>.</source>
@@ -2833,7 +2848,7 @@
     </unit>
     <unit id="login.title">
       <notes>
-        <note category="location">src/app/features/login/login.ts:33,35</note>
+        <note category="location">src/app/features/login/login.ts:34,36</note>
       </notes>
       <segment>
         <source>Iniciar sesión</source>
@@ -2841,7 +2856,7 @@
     </unit>
     <unit id="login.email.label">
       <notes>
-        <note category="location">src/app/features/login/login.ts:36,38</note>
+        <note category="location">src/app/features/login/login.ts:37,39</note>
       </notes>
       <segment>
         <source>Correo electrónico</source>
@@ -2849,7 +2864,7 @@
     </unit>
     <unit id="login.password.label">
       <notes>
-        <note category="location">src/app/features/login/login.ts:49,51</note>
+        <note category="location">src/app/features/login/login.ts:50,52</note>
       </notes>
       <segment>
         <source>Contraseña</source>
@@ -2857,7 +2872,7 @@
     </unit>
     <unit id="login.submit">
       <notes>
-        <note category="location">src/app/features/login/login.ts:74</note>
+        <note category="location">src/app/features/login/login.ts:76</note>
       </notes>
       <segment>
         <source>Entrar</source>
@@ -2889,7 +2904,7 @@
     </unit>
     <unit id="setPassword.toggle.label">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:93,94</note>
+        <note category="location">src/app/features/set-password/set-password.ts:95,96</note>
       </notes>
       <segment>
         <source>Mostrar contraseñas</source>
@@ -2897,7 +2912,7 @@
     </unit>
     <unit id="setPassword.password.required">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:103,105</note>
+        <note category="location">src/app/features/set-password/set-password.ts:105,107</note>
       </notes>
       <segment>
         <source>Escribe una contraseña.</source>
@@ -2905,7 +2920,7 @@
     </unit>
     <unit id="setPassword.rule.length">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:110,111</note>
+        <note category="location">src/app/features/set-password/set-password.ts:112,113</note>
       </notes>
       <segment>
         <source>Debe tener entre 8 y 50 caracteres.</source>
@@ -2913,7 +2928,7 @@
     </unit>
     <unit id="setPassword.rule.bytes">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:115,116</note>
+        <note category="location">src/app/features/set-password/set-password.ts:117,118</note>
       </notes>
       <segment>
         <source>Debe pesar como máximo 72 bytes: evita acentos o emojis en exceso.</source>
@@ -2921,7 +2936,7 @@
     </unit>
     <unit id="setPassword.rule.lineBreak">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:120,121</note>
+        <note category="location">src/app/features/set-password/set-password.ts:122,123</note>
       </notes>
       <segment>
         <source>No uses saltos de línea ni separadores de párrafo.</source>
@@ -2929,7 +2944,7 @@
     </unit>
     <unit id="setPassword.rule.lowercase">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:125,126</note>
+        <note category="location">src/app/features/set-password/set-password.ts:127,128</note>
       </notes>
       <segment>
         <source>Incluye al menos una letra minúscula.</source>
@@ -2937,7 +2952,7 @@
     </unit>
     <unit id="setPassword.rule.uppercase">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:130,131</note>
+        <note category="location">src/app/features/set-password/set-password.ts:132,133</note>
       </notes>
       <segment>
         <source>Incluye al menos una letra mayúscula.</source>
@@ -2945,7 +2960,7 @@
     </unit>
     <unit id="setPassword.rule.digit">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:135,136</note>
+        <note category="location">src/app/features/set-password/set-password.ts:137,138</note>
       </notes>
       <segment>
         <source>Incluye al menos un número.</source>
@@ -2953,7 +2968,7 @@
     </unit>
     <unit id="setPassword.rule.special">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:140,141</note>
+        <note category="location">src/app/features/set-password/set-password.ts:142,143</note>
       </notes>
       <segment>
         <source>Incluye al menos un carácter especial, como ! ? # $ o %.</source>
@@ -2961,7 +2976,7 @@
     </unit>
     <unit id="setPassword.password.rejected">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:148,149</note>
+        <note category="location">src/app/features/set-password/set-password.ts:150,151</note>
       </notes>
       <segment>
         <source> La contraseña no cumple los requisitos de seguridad. </source>
@@ -2969,7 +2984,7 @@
     </unit>
     <unit id="setPassword.confirm.label">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:157,159</note>
+        <note category="location">src/app/features/set-password/set-password.ts:159,161</note>
       </notes>
       <segment>
         <source>Repite la contraseña</source>
@@ -2977,7 +2992,7 @@
     </unit>
     <unit id="setPassword.confirm.required">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:172,174</note>
+        <note category="location">src/app/features/set-password/set-password.ts:176,178</note>
       </notes>
       <segment>
         <source>Repite la contraseña.</source>
@@ -2985,7 +3000,7 @@
     </unit>
     <unit id="setPassword.confirm.mismatch">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:174,176</note>
+        <note category="location">src/app/features/set-password/set-password.ts:178,180</note>
       </notes>
       <segment>
         <source>Las contraseñas no coinciden.</source>
@@ -2993,7 +3008,7 @@
     </unit>
     <unit id="setPassword.submit">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:193,194</note>
+        <note category="location">src/app/features/set-password/set-password.ts:197,198</note>
       </notes>
       <segment>
         <source>Guardar contraseña</source>
@@ -3001,7 +3016,7 @@
     </unit>
     <unit id="setPassword.missing.title">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:202,203</note>
+        <note category="location">src/app/features/set-password/set-password.ts:206,207</note>
       </notes>
       <segment>
         <source>No encontramos tu enlace</source>
@@ -3009,7 +3024,7 @@
     </unit>
     <unit id="setPassword.missing.body">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:204,206</note>
+        <note category="location">src/app/features/set-password/set-password.ts:208,210</note>
       </notes>
       <segment>
         <source> Abre de nuevo el enlace que te llegó por correo para crear tu contraseña. </source>
@@ -3017,9 +3032,9 @@
     </unit>
     <unit id="setPassword.toLogin">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:207,209</note>
-        <note category="location">src/app/features/set-password/set-password.ts:220,222</note>
-        <note category="location">src/app/features/set-password/set-password.ts:228,230</note>
+        <note category="location">src/app/features/set-password/set-password.ts:211,213</note>
+        <note category="location">src/app/features/set-password/set-password.ts:224,226</note>
+        <note category="location">src/app/features/set-password/set-password.ts:232,234</note>
       </notes>
       <segment>
         <source>Ir a iniciar sesión</source>
@@ -3027,7 +3042,7 @@
     </unit>
     <unit id="setPassword.invalid.title">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:213,214</note>
+        <note category="location">src/app/features/set-password/set-password.ts:217,218</note>
       </notes>
       <segment>
         <source>Enlace no válido</source>
@@ -3035,7 +3050,7 @@
     </unit>
     <unit id="setPassword.invalid.help">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:216,218</note>
+        <note category="location">src/app/features/set-password/set-password.ts:220,222</note>
       </notes>
       <segment>
         <source> Pide a un administrador que te envíe un enlace nuevo. Los enlaces vencen a las 48 horas y solo sirven una vez. </source>
@@ -3043,7 +3058,7 @@
     </unit>
     <unit id="setPassword.done.title">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:226,227</note>
+        <note category="location">src/app/features/set-password/set-password.ts:230,231</note>
       </notes>
       <segment>
         <source>Contraseña creada</source>
@@ -3051,7 +3066,7 @@
     </unit>
     <unit id="setPassword.done.body">
       <notes>
-        <note category="location">src/app/features/set-password/set-password.ts:227,228</note>
+        <note category="location">src/app/features/set-password/set-password.ts:231,232</note>
       </notes>
       <segment>
         <source>Ya puedes iniciar sesión con tu nueva contraseña.</source>
@@ -3059,7 +3074,7 @@
     </unit>
     <unit id="staff.availability.title">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:12,15</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:14,17</note>
       </notes>
       <segment>
         <source>Disponibilidad</source>
@@ -3067,7 +3082,7 @@
     </unit>
     <unit id="staff.availability.failed">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:17,19</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:19,21</note>
       </notes>
       <segment>
         <source>No se pudo actualizar la disponibilidad. Los cambios están deshabilitados.</source>
@@ -3075,7 +3090,7 @@
     </unit>
     <unit id="staff.availability.retry">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:27,29</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:29,31</note>
       </notes>
       <segment>
         <source> Reintentar </source>
@@ -3083,7 +3098,7 @@
     </unit>
     <unit id="staff.availability.offline">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:33,36</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:35,38</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
@@ -3091,7 +3106,7 @@
     </unit>
     <unit id="staff.availability.updating">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:39,42</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:41,44</note>
       </notes>
       <segment>
         <source>Actualizando la disponibilidad. Los cambios se habilitan en unos segundos.</source>
@@ -3099,7 +3114,7 @@
     </unit>
     <unit id="staff.availability.products">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:46,47</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:48,49</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -3107,8 +3122,8 @@
     </unit>
     <unit id="staff.availability.available">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:63,64</note>
-        <note category="location">src/app/features/staff/availability/availability.ts:101,103</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:67,68</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:107,109</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -3116,8 +3131,8 @@
     </unit>
     <unit id="staff.availability.unavailable">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:65,67</note>
-        <note category="location">src/app/features/staff/availability/availability.ts:104,106</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:69,71</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:110,112</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -3125,7 +3140,7 @@
     </unit>
     <unit id="staff.availability.emptyCategory">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:72,74</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:76,78</note>
       </notes>
       <segment>
         <source> Esta categoría no tiene productos. </source>
@@ -3133,7 +3148,7 @@
     </unit>
     <unit id="staff.availability.empty">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:77,81</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:81,85</note>
       </notes>
       <segment>
         <source>Todavía no hay productos.</source>
@@ -3141,7 +3156,7 @@
     </unit>
     <unit id="staff.availability.options">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:83,84</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:87,88</note>
       </notes>
       <segment>
         <source>Opciones</source>
@@ -3149,7 +3164,7 @@
     </unit>
     <unit id="staff.availability.loading">
       <notes>
-        <note category="location">src/app/features/staff/availability/availability.ts:115,119</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:121,125</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -3229,7 +3244,7 @@
     </unit>
     <unit id="shell.brand">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,26</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:24,27</note>
       </notes>
       <segment>
         <source>Juguería</source>
@@ -3277,7 +3292,7 @@
     </unit>
     <unit id="shell.logout">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:100,101</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:100,102</note>
       </notes>
       <segment>
         <source>Salir</source>

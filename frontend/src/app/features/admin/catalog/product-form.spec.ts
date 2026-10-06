@@ -6,6 +6,14 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Allergen, Category, ModifierGroup, Product } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import {
+  chooseOption,
+  filterOptions,
+  optionLabels,
+  selectedLabel,
+  selectIsInvalid,
+  typeNumber,
+} from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { ProductForm } from './product-form';
 
@@ -86,12 +94,6 @@ function type(host: HTMLElement, selector: string, value: string) {
   input.dispatchEvent(new Event('input'));
 }
 
-function choose(host: HTMLElement, selector: string, value: string) {
-  const select = host.querySelector<HTMLSelectElement>(selector)!;
-  select.value = value;
-  select.dispatchEvent(new Event('change'));
-}
-
 function submit(host: HTMLElement) {
   host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
 }
@@ -106,7 +108,7 @@ async function click(
 }
 
 function pickFile(host: HTMLElement, file: File) {
-  const input = host.querySelector<HTMLInputElement>('#product-image')!;
+  const input = host.querySelector<HTMLInputElement>('p-fileupload input[type="file"]')!;
   Object.defineProperty(input, 'files', { value: [file], configurable: true });
   input.dispatchEvent(new Event('change'));
 }
@@ -132,14 +134,14 @@ describe('ProductForm', () => {
 
       type(host, '#product-name', 'Orange juice');
       type(host, '#product-description', 'Fresh');
-      choose(host, '#product-category', 'c1');
+      await chooseOption(fixture, host, 'product-category', 'Juices');
       type(host, '#product-price', '9,5');
-      type(host, '#product-order', '2');
-      host.querySelector<HTMLInputElement>('#product-pinned')!.click();
-      host.querySelector<HTMLInputElement>('app-allergen-picker input')!.click();
-      choose(host, '#product-group-add', 'g2');
+      typeNumber(host, 'product-order', '2');
+      host.querySelector<HTMLInputElement>('p-checkbox #product-pinned')!.click();
+      host.querySelector<HTMLInputElement>('app-allergen-picker p-checkbox input')!.click();
+      await chooseOption(fixture, host, 'product-group-add', 'Extras');
       await click(fixture, host, 'add-group');
-      choose(host, '#product-group-add', 'g1');
+      await chooseOption(fixture, host, 'product-group-add', 'Size');
       await click(fixture, host, 'add-group');
       submit(host);
 
@@ -159,13 +161,30 @@ describe('ProductForm', () => {
       await fixture.whenStable();
 
       expect(navigate).toHaveBeenCalledWith(['/admin/catalog/products', 'p9']);
+    }, 15_000);
+
+    it('searches the categories and the groups before picking one', async () => {
+      const { fixture, host, http } = await render();
+
+      expect(await filterOptions(fixture, host, 'product-category', 'sna')).toEqual(['Snacks']);
+      await chooseOption(fixture, host, 'product-category', 'Snacks');
+      expect(await filterOptions(fixture, host, 'product-group-add', 'ex')).toEqual(['Extras']);
+      await chooseOption(fixture, host, 'product-group-add', 'Extras');
+      await click(fixture, host, 'add-group');
+      type(host, '#product-name', 'Water');
+      type(host, '#product-price', '3');
+      submit(host);
+
+      const body = http.expectOne(`${API}/admin/products`).request.body;
+      expect(body.categoryId).toBe('c2');
+      expect(body.modifierGroupIds).toEqual(['g2']);
     });
 
     it('sends no description when it is left blank', async () => {
-      const { host, http } = await render();
+      const { fixture, host, http } = await render();
 
       type(host, '#product-name', 'Water');
-      choose(host, '#product-category', 'c2');
+      await chooseOption(fixture, host, 'product-category', 'Snacks');
       type(host, '#product-price', '3');
       submit(host);
 
@@ -174,23 +193,21 @@ describe('ProductForm', () => {
 
     it('offers only the groups that are not attached yet, and attaches each once', async () => {
       const { fixture, host } = await render();
-      const offered = () =>
-        Array.from(host.querySelectorAll<HTMLOptionElement>('#product-group-add option')).map(
-          (option) => option.value,
-        );
-      expect(offered()).toEqual(['', 'g1', 'g2', 'g3']);
+      const offered = () => optionLabels(fixture, host, 'product-group-add');
+      expect(await offered()).toEqual(['Size', 'Extras', 'Ice']);
 
-      choose(host, '#product-group-add', 'g2');
+      await chooseOption(fixture, host, 'product-group-add', 'Extras');
       await click(fixture, host, 'add-group');
 
-      expect(offered()).toEqual(['', 'g1', 'g3']);
+      expect(await offered()).toEqual(['Size', 'Ice']);
+      expect(selectedLabel(host, 'product-group-add')).toBe('Elige un grupo');
       expect(attachedNames(host)).toEqual(['Extras']);
     });
 
     it('reorders and removes attached groups', async () => {
       const { fixture, host, http } = await render();
-      for (const id of ['g1', 'g2', 'g3']) {
-        choose(host, '#product-group-add', id);
+      for (const name of ['Size', 'Extras', 'Ice']) {
+        await chooseOption(fixture, host, 'product-group-add', name);
         await click(fixture, host, 'add-group');
       }
 
@@ -203,7 +220,7 @@ describe('ProductForm', () => {
       await click(fixture, host, 'remove-group-0');
       expect(attachedNames(host)).toEqual(['Ice', 'Size']);
       type(host, '#product-name', 'Mix');
-      choose(host, '#product-category', 'c1');
+      await chooseOption(fixture, host, 'product-category', 'Juices');
       type(host, '#product-price', '5');
       submit(host);
 
@@ -211,7 +228,7 @@ describe('ProductForm', () => {
         'g3',
         'g1',
       ]);
-    });
+    }, 15_000);
 
     it('sends nothing and marks the fields when the basics are missing', async () => {
       const { fixture, host } = await render();
@@ -220,15 +237,16 @@ describe('ProductForm', () => {
       submit(host);
       await fixture.whenStable();
 
-      for (const id of ['#product-name', '#product-category', '#product-price']) {
+      for (const id of ['#product-name', '#product-price']) {
         expect(host.querySelector(id)!.getAttribute('aria-invalid')).toBe('true');
       }
+      expect(selectIsInvalid(host, 'product-category')).toBe(true);
     });
 
     it('tells the admin that the image comes after the first save', async () => {
       const { host } = await render();
 
-      expect(host.querySelector('#product-image')).toBeNull();
+      expect(host.querySelector('p-fileupload')).toBeNull();
       expect(host.textContent).toContain('después de guardar');
     });
 
@@ -236,7 +254,7 @@ describe('ProductForm', () => {
       const { fixture, host, http } = await render();
 
       type(host, '#product-name', 'Water');
-      choose(host, '#product-category', 'c2');
+      await chooseOption(fixture, host, 'product-category', 'Snacks');
       type(host, '#product-price', '3');
       submit(host);
       const { body, init } = problem(400, 'common.validation-failed', {
@@ -254,10 +272,13 @@ describe('ProductForm', () => {
       const { host } = await render(orange);
 
       expect(host.querySelector<HTMLInputElement>('#product-name')!.value).toBe('Orange juice');
-      expect(host.querySelector<HTMLTextAreaElement>('#product-description')!.value).toBe('Fresh');
-      expect(host.querySelector<HTMLSelectElement>('#product-category')!.value).toBe('c1');
+      expect(host.querySelector<HTMLTextAreaElement>('textarea.p-textarea#product-description')!.value).toBe(
+        'Fresh',
+      );
+      expect(selectedLabel(host, 'product-category')).toBe('Juices');
       expect(host.querySelector<HTMLInputElement>('#product-price')!.value).toBe('9.50');
-      expect(host.querySelector<HTMLInputElement>('#product-pinned')!.checked).toBe(true);
+      expect(host.querySelector<HTMLInputElement>('p-inputnumber #product-order')!.value).toBe('2');
+      expect(host.querySelector<HTMLInputElement>('p-checkbox #product-pinned')!.checked).toBe(true);
       expect(attachedNames(host)).toEqual(['Extras', 'Size']);
     });
 
@@ -329,7 +350,7 @@ describe('ProductForm', () => {
       pickFile(host, make());
       await fixture.whenStable();
 
-      expect(host.querySelector('[data-testid="image-error"]')?.textContent).toContain('2 MB');
+      expect(host.querySelector('p-fileupload p-message')?.textContent).toContain('2 MB');
     });
 
     it('removes the image with the product version', async () => {

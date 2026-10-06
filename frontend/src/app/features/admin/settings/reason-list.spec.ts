@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Reason } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { ReasonList } from './reason-list';
 import { SettingsApi } from './settings-api';
 
@@ -44,11 +45,11 @@ function type(host: HTMLElement, selector: string, value: string) {
   input.dispatchEvent(new Event('input'));
 }
 
-function chooseType(host: HTMLElement, value: string) {
-  const select = host.querySelector<HTMLSelectElement>('#reason-type')!;
-  select.value = value;
-  select.dispatchEvent(new Event('change'));
-}
+const chooseType = (
+  fixture: { whenStable(): Promise<unknown> },
+  host: HTMLElement,
+  label: string,
+) => chooseOption(fixture, host, 'reason-type', label);
 
 function submit(host: HTMLElement) {
   host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
@@ -65,6 +66,7 @@ describe('ReasonList', () => {
     const { host } = await render();
 
     const [first, second] = rows(host);
+    expect(selectedLabel(host, 'reason-type')).toBe('Anulaciones');
     expect(first).toContain('Spilled');
     expect(first).toContain('Activo');
     expect(second).toContain('Wrong order');
@@ -74,7 +76,7 @@ describe('ReasonList', () => {
   it('loads the reasons of the type that is picked', async () => {
     const { fixture, host, http } = await render();
 
-    chooseType(host, 'CASH_OUT');
+    await chooseType(fixture, host, 'Salidas de caja');
     http
       .expectOne(`${ADMIN}/reasons?type=CASH_OUT`)
       .flush([{ ...spilled, id: 'r9', type: 'CASH_OUT', code: 'Supplier' }]);
@@ -84,11 +86,22 @@ describe('ReasonList', () => {
     expect(rows(host)[0]).toContain('Supplier');
   });
 
+  it('searches the types and loads the one that is picked', async () => {
+    const { fixture, host, http } = await render();
+
+    expect(await filterOptions(fixture, host, 'reason-type', 'caja')).toEqual(['Salidas de caja']);
+    await chooseType(fixture, host, 'Salidas de caja');
+    http.expectOne(`${ADMIN}/reasons?type=CASH_OUT`).flush([]);
+    await fixture.whenStable();
+
+    expect(selectedLabel(host, 'reason-type')).toBe('Salidas de caja');
+  });
+
   it('shows only the answer to the latest pick when answers arrive out of order', async () => {
     const { fixture, host, http } = await render();
 
-    chooseType(host, 'COMP');
-    chooseType(host, 'CASH_OUT');
+    await chooseType(fixture, host, 'Cortesías');
+    await chooseType(fixture, host, 'Salidas de caja');
     http
       .expectOne(`${ADMIN}/reasons?type=CASH_OUT`)
       .flush([{ ...spilled, id: 'r9', type: 'CASH_OUT', code: 'Supplier' }]);
@@ -104,7 +117,7 @@ describe('ReasonList', () => {
   it('creates a reason of the picked type', async () => {
     const { fixture, host, http } = await render([]);
 
-    chooseType(host, 'COMP');
+    await chooseType(fixture, host, 'Cortesías');
     http.expectOne(`${ADMIN}/reasons?type=COMP`).flush([]);
     await fixture.whenStable();
     type(host, '#reason-code', ' Birthday ');
