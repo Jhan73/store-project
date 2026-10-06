@@ -16,6 +16,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           >
         </li>
         <li>
+          <a
+            routerLink="modifier-groups"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.catalog.nav.modifierGroups"
+            >Modificadores</a
+          >
+        </li>
+        <li>
           <a routerLink="stations" routerLinkActive="is-active" ariaCurrentWhenActive="page" i18n="@@admin.catalog.nav.stations"
             >Estaciones</a
           >

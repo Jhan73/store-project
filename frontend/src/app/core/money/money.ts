@@ -39,3 +39,15 @@ export function formatMoney(money: Money, locale = 'es-PE'): string {
     toMinorUnits(money) / 100,
   );
 }
+
+const TYPED_AMOUNT = /^(\d{1,10})(?:[.,](\d{1,2}))?$/;
+
+// Turns what a person typed ("9", "9,5") into the API's two-decimal string, or null when it is not an amount.
+export function parseAmount(text: string): string | null {
+  const parts = TYPED_AMOUNT.exec(text.trim());
+  if (!parts) {
+    return null;
+  }
+  const [, whole, cents = ''] = parts;
+  return `${whole.replace(/^0+(?=\d)/, '')}.${cents.padEnd(2, '0')}`;
+}

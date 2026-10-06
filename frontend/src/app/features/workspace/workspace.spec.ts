@@ -119,7 +119,11 @@ describe('staff and admin area', () => {
     const subNav = Array.from(page().querySelectorAll('nav[aria-label="Catálogo"] a')).map((link) =>
       link.getAttribute('href'),
     );
-    expect(subNav).toEqual(['/admin/catalog/categories', '/admin/catalog/stations']);
+    expect(subNav).toEqual([
+      '/admin/catalog/categories',
+      '/admin/catalog/modifier-groups',
+      '/admin/catalog/stations',
+    ]);
     expect(page().body.textContent).toContain('Estaciones');
   });
 

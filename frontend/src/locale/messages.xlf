@@ -689,6 +689,118 @@
         <source>Aquí aparecerán las herramientas de administración.</source>
       </segment>
     </unit>
+    <unit id="allergen.CELERY">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:5</note>
+      </notes>
+      <segment>
+        <source>Apio</source>
+      </segment>
+    </unit>
+    <unit id="allergen.CRUSTACEANS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:6</note>
+      </notes>
+      <segment>
+        <source>Crustáceos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.EGGS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:7</note>
+      </notes>
+      <segment>
+        <source>Huevos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.FISH">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:8</note>
+      </notes>
+      <segment>
+        <source>Pescado</source>
+      </segment>
+    </unit>
+    <unit id="allergen.GLUTEN">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:9</note>
+      </notes>
+      <segment>
+        <source>Gluten</source>
+      </segment>
+    </unit>
+    <unit id="allergen.LUPIN">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:10</note>
+      </notes>
+      <segment>
+        <source>Altramuces</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MILK">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:11</note>
+      </notes>
+      <segment>
+        <source>Leche</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MOLLUSCS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:12</note>
+      </notes>
+      <segment>
+        <source>Moluscos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MUSTARD">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:13</note>
+      </notes>
+      <segment>
+        <source>Mostaza</source>
+      </segment>
+    </unit>
+    <unit id="allergen.PEANUTS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:14</note>
+      </notes>
+      <segment>
+        <source>Maní</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SESAME">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:15</note>
+      </notes>
+      <segment>
+        <source>Sésamo</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SOY">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:16</note>
+      </notes>
+      <segment>
+        <source>Soya</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SULPHITES">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:17</note>
+      </notes>
+      <segment>
+        <source>Sulfitos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.TREE_NUTS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:18</note>
+      </notes>
+      <segment>
+        <source>Frutos secos</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.title">
       <notes>
         <note category="location">src/app/features/admin/catalog/catalog-layout.ts:10,11</note>
@@ -713,9 +825,17 @@
         <source>Categorías</source>
       </segment>
     </unit>
+    <unit id="admin.catalog.nav.modifierGroups">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:24,28</note>
+      </notes>
+      <segment>
+        <source>Modificadores</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.nav.stations">
       <notes>
-        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:20,23</note>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:29,32</note>
       </notes>
       <segment>
         <source>Estaciones</source>
@@ -764,6 +884,7 @@
     <unit id="admin.catalog.actions">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:25,27</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:28,30</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:25,27</note>
       </notes>
       <segment>
@@ -789,6 +910,7 @@
     <unit id="admin.catalog.edit">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:51,52</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:80,81</note>
       </notes>
       <segment>
         <source> Editar </source>
@@ -877,10 +999,299 @@
     <unit id="admin.catalog.cancel">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:124,126</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:70,71</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:86,88</note>
       </notes>
       <segment>
         <source> Cancelar </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.editTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:56,58</note>
+      </notes>
+      <segment>
+        <source>Editar grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.newTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:58,61</note>
+      </notes>
+      <segment>
+        <source>Nuevo grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.back">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:62,66</note>
+      </notes>
+      <segment>
+        <source>Volver a la lista</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:69,71</note>
+      </notes>
+      <segment>
+        <source>Nombre del grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:79,83</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.required">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:86,89</note>
+      </notes>
+      <segment>
+        <source>Elección obligatoria</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.min">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:90,91</note>
+      </notes>
+      <segment>
+        <source>Mínimo de opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.max">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:94,95</note>
+      </notes>
+      <segment>
+        <source>Máximo de opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.noOptions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:104,106</note>
+      </notes>
+      <segment>
+        <source>Agrega al menos una opción.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.maxTooLow">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:108,111</note>
+      </notes>
+      <segment>
+        <source>El máximo debe ser al menos 1 y no menor que el mínimo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minRequired">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:113,116</note>
+      </notes>
+      <segment>
+        <source>Un grupo obligatorio necesita un mínimo de al menos 1.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minOptional">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:118,121</note>
+      </notes>
+      <segment>
+        <source>Un grupo opcional debe tener un mínimo de 0.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minExceedsOptions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:123,126</note>
+      </notes>
+      <segment>
+        <source>Agrega más opciones o baja el mínimo de elecciones.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.duplicateNames">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:128,131</note>
+      </notes>
+      <segment>
+        <source>Los nombres de las opciones no pueden repetirse.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionLegend">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:140,141</note>
+      </notes>
+      <segment>
+        <source>Opción <ph id="0" equiv="INTERPOLATION" disp="{{ i + 1 }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionName">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:142,144</note>
+      </notes>
+      <segment>
+        <source>Nombre de la opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionPrice">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:153,154</note>
+      </notes>
+      <segment>
+        <source>Precio adicional (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionPriceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:163,166</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto como 1.50.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionAvailable">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:174,177</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionAllergens">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:182,184</note>
+      </notes>
+      <segment>
+        <source>Alérgenos de esta opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.removeOption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:194,196</note>
+      </notes>
+      <segment>
+        <source> Quitar opción </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.addOption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:209,211</note>
+      </notes>
+      <segment>
+        <source> Agregar opción </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:212,214</note>
+      </notes>
+      <segment>
+        <source> Guardar grupo </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.saved">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:329</note>
+      </notes>
+      <segment>
+        <source>Cambios guardados.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:16,17</note>
+      </notes>
+      <segment>
+        <source>Grupos de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.new">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:18,23</note>
+      </notes>
+      <segment>
+        <source>Nuevo grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:25,26</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.rule">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:26,27</note>
+      </notes>
+      <segment>
+        <source>Elección</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.options">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:27,28</note>
+      </notes>
+      <segment>
+        <source>Opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.required">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:37,39</note>
+      </notes>
+      <segment>
+        <source>Obligatorio</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.optional">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:39,41</note>
+      </notes>
+      <segment>
+        <source>Opcional</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.range">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:42,43</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="INTERPOLATION" disp="{{ group.minChoices }}"/> a <ph id="1" equiv="INTERPOLATION_1" disp="{{ group.maxChoices }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.optionCount">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:46,48</note>
+      </notes>
+      <segment>
+        <source> <ph id="0" equiv="ICU" disp="{group.options.length, plural, =1 {1 opción} other {{{ group.options.length }} opciones}}" subFlows="4292488431462069373"/> </source>
+      </segment>
+    </unit>
+    <unit id="6805729461716306912">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:46</note>
+      </notes>
+      <segment>
+        <source>{VAR_PLURAL, plural, =1 {1 opción} other {<ph id="0" equiv="INTERPOLATION"/> opciones}}</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.confirmDelete">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:59,61</note>
+      </notes>
+      <segment>
+        <source> Confirmar eliminación </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.delete">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:92,93</note>
+      </notes>
+      <segment>
+        <source> Eliminar </source>
       </segment>
     </unit>
     <unit id="admin.catalog.stations.title">

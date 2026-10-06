@@ -1,4 +1,4 @@
-import { addMoney, formatMoney, fromMinorUnits, toMinorUnits } from './money';
+import { addMoney, formatMoney, fromMinorUnits, parseAmount, toMinorUnits } from './money';
 
 describe('toMinorUnits', () => {
   it.each([
@@ -66,4 +66,25 @@ describe('formatMoney', () => {
     expect(formatMoney({ amount: '0.07', currency: 'PEN' })).toContain('0.07');
     expect(formatMoney({ amount: '-3.20', currency: 'PEN' })).toContain('3.20');
   });
+});
+
+describe('parseAmount', () => {
+  it.each([
+    ['9', '9.00'],
+    ['9.5', '9.50'],
+    ['9.50', '9.50'],
+    ['9,5', '9.50'],
+    [' 0.07 ', '0.07'],
+    ['007.10', '7.10'],
+    ['9999999999.99', '9999999999.99'],
+  ])('turns the typed "%s" into the API amount "%s"', (typed, amount) => {
+    expect(parseAmount(typed)).toBe(amount);
+  });
+
+  it.each(['', 'abc', '-1', '1.234', '1e3', '.5', '12345678901', '1..5'])(
+    'rejects "%s"',
+    (typed) => {
+      expect(parseAmount(typed)).toBeNull();
+    },
+  );
 });
