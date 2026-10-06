@@ -126,7 +126,11 @@ describe('staff and admin area', () => {
     const subNav = Array.from(page().querySelectorAll('nav[aria-label="Configuración"] a')).map(
       (link) => link.getAttribute('href'),
     );
-    expect(subNav).toEqual(['/admin/settings/general', '/admin/settings/hours']);
+    expect(subNav).toEqual([
+      '/admin/settings/general',
+      '/admin/settings/hours',
+      '/admin/settings/zones',
+    ]);
     expect(url()).toBe('/admin/settings/general');
     expect(page().body.textContent).toContain('Configuración de la tienda');
   });

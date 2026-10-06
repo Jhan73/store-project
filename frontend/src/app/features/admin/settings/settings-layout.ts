@@ -28,6 +28,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             >Horario</a
           >
         </li>
+        <li>
+          <a
+            routerLink="zones"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.settings.nav.zones"
+            >Zonas de reparto</a
+          >
+        </li>
       </ul>
     </nav>
     <router-outlet />

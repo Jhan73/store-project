@@ -2084,6 +2084,222 @@
         <source>Horario</source>
       </segment>
     </unit>
+    <unit id="admin.settings.nav.zones">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:37,40</note>
+      </notes>
+      <segment>
+        <source>Zonas de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:20,24</note>
+      </notes>
+      <segment>
+        <source>Zonas de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.name">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:25,26</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.fee">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:26,27</note>
+      </notes>
+      <segment>
+        <source>Tarifa</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:27,28</note>
+      </notes>
+      <segment>
+        <source>Minutos de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimum">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:28,29</note>
+      </notes>
+      <segment>
+        <source>Pedido mínimo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.free">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:29,30</note>
+      </notes>
+      <segment>
+        <source>Reparto gratis desde</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.state">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:30,31</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.actions">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:31,33</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.active">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:44,46</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:46,48</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.edit">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:59,60</note>
+      </notes>
+      <segment>
+        <source> Editar </source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:72,73</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:74,76</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:85,88</note>
+      </notes>
+      <segment>
+        <source>Nombre de la zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:95,98</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.feeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:99,100</note>
+      </notes>
+      <segment>
+        <source>Tarifa (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.feeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:109,112</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 4.00.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutesLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:113,116</note>
+      </notes>
+      <segment>
+        <source>Minutos de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutesInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:124,127</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero mayor que cero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimumLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:128,129</note>
+      </notes>
+      <segment>
+        <source>Pedido mínimo (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimumInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:138,141</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 15.00, o déjalo vacío.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.freeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:142,143</note>
+      </notes>
+      <segment>
+        <source>Reparto gratis desde (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.freeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:152,155</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 50.00, o déjalo vacío.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:158,160</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.create">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:160,162</note>
+      </notes>
+      <segment>
+        <source>Agregar zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:165,167</note>
+      </notes>
+      <segment>
+        <source> Cancelar </source>
+      </segment>
+    </unit>
     <unit id="forbidden.title">
       <notes>
         <note category="location">src/app/features/forbidden/forbidden.ts:11,12</note>
