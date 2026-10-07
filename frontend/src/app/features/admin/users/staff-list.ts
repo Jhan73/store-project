@@ -29,6 +29,7 @@ import { formatInStoreZone } from '../../../core/time/store-time';
 import { isStale, reportFailure } from '../admin-errors';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { StaffApi } from './staff-api';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 const PAGE_SIZE = 20;
 const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
@@ -36,6 +37,7 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
 @Component({
   selector: 'app-staff-list',
   imports: [
+    TableScroll,
     FormsModule,
     ReactiveFormsModule,
     ButtonDirective,
@@ -53,7 +55,8 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
       <p role="status">{{ notice() }}</p>
     }
 
-    <table>
+    <app-table-scroll label="Listado del personal" i18n-label="@@admin.users.tableScroll">
+      <table>
       <thead>
         <tr>
           <th i18n="@@admin.users.email">Correo</th>
@@ -137,7 +140,8 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </app-table-scroll>
 
     @if (current().totalPages > 1) {
       <nav class="toolbar" aria-label="Paginación" i18n-aria-label="@@admin.users.paging">
