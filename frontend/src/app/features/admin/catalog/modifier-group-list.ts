@@ -14,10 +14,11 @@ import type { ModifierGroup } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
 import { isStale } from '../admin-errors';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-modifier-group-list',
-  imports: [RouterLink, ButtonDirective, TablerIconComponent, Tooltip],
+  imports: [TableScroll, RouterLink, ButtonDirective, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -35,7 +36,8 @@ import { isStale } from '../admin-errors';
       </a>
     </div>
 
-    <table>
+    <app-table-scroll label="Listado de grupos de modificadores" i18n-label="@@admin.catalog.groups.tableScroll">
+      <table>
       <thead>
         <tr>
           <th i18n="@@admin.catalog.groups.name">Nombre</th>
@@ -124,7 +126,8 @@ import { isStale } from '../admin-errors';
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </app-table-scroll>
   `,
 })
 export class ModifierGroupList {

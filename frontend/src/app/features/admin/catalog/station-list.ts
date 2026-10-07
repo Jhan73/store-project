@@ -14,16 +14,18 @@ import type { Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
 import { isStale, reportFailure } from '../admin-errors';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-station-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText, TablerIconComponent, Tooltip],
+  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, InputText, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
     <h2 i18n="@@admin.catalog.stations.title">Estaciones</h2>
 
-    <table>
+    <app-table-scroll label="Listado de estaciones" i18n-label="@@admin.catalog.stations.tableScroll">
+      <table>
       <caption class="muted" i18n="@@admin.catalog.stations.caption">
         Dónde se prepara cada categoría
       </caption>
@@ -61,7 +63,8 @@ import { isStale, reportFailure } from '../admin-errors';
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </app-table-scroll>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="field wide">

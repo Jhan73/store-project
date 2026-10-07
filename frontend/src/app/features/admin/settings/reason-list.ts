@@ -15,6 +15,7 @@ import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { SettingsApi } from './settings-api';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 interface TypeOption {
   readonly value: ReasonType;
@@ -33,7 +34,7 @@ const TYPES: readonly TypeOption[] = [
 
 @Component({
   selector: 'app-reason-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText, Select, TablerIconComponent, Tooltip],
+  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, InputText, Select, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -65,7 +66,8 @@ const TYPES: readonly TypeOption[] = [
     @if (reasons().length === 0) {
       <p class="muted" i18n="@@admin.settings.reasons.empty">Todavía no hay motivos en esta lista.</p>
     } @else {
-      <table>
+      <app-table-scroll label="Listado de motivos" i18n-label="@@admin.settings.reasons.tableScroll">
+        <table>
         <thead>
           <tr>
             <th i18n="@@admin.settings.reasons.code">Motivo</th>
@@ -109,7 +111,8 @@ const TYPES: readonly TypeOption[] = [
             </tr>
           }
         </tbody>
-      </table>
+        </table>
+      </app-table-scroll>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>

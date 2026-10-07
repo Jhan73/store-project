@@ -20,6 +20,7 @@ import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { TablesApi } from './tables-api';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 const MAX_LENGTH = 60;
 
@@ -30,6 +31,7 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
 @Component({
   selector: 'app-table-list',
   imports: [
+    TableScroll,
     ReactiveFormsModule,
     ButtonDirective,
     InputNumber,
@@ -45,7 +47,8 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
     @if (tables().length === 0) {
       <p class="muted" i18n="@@admin.tables.empty">Todavía no hay mesas.</p>
     } @else {
-      <table>
+      <app-table-scroll label="Listado de mesas" i18n-label="@@admin.tables.tableScroll">
+        <table>
         <thead>
           <tr>
             <th i18n="@@admin.tables.name">Nombre</th>
@@ -108,7 +111,8 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
             </tr>
           }
         </tbody>
-      </table>
+        </table>
+      </app-table-scroll>
     }
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>

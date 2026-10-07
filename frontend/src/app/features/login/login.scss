@@ -1,8 +1,11 @@
+@use '../../../styles/breakpoints' as bp;
+
 .login {
   display: grid;
   place-items: center;
   min-height: 100vh;
-  padding: var(--space-4);
+  min-height: 100dvh;
+  padding: var(--page-padding);
 }
 
 .card {
@@ -11,7 +14,7 @@
   gap: var(--space-4);
   width: 100%;
   max-width: 24rem;
-  padding: var(--space-6);
+  padding: var(--space-4);
   background: var(--muted);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -32,4 +35,10 @@ h1 {
 .support {
   display: block;
   color: var(--muted-foreground);
+}
+
+@include bp.tablet-up {
+  .card {
+    padding: var(--space-6);
+  }
 }

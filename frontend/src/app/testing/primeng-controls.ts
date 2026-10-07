@@ -15,7 +15,10 @@ function selectRoot(host: HTMLElement, id: string): HTMLElement {
 const WAIT = { timeout: 5000 };
 
 function optionNodes(root: HTMLElement): HTMLElement[] {
-  return Array.from(root.querySelectorAll<HTMLElement>('li[role="option"]'));
+  // An overlay appended to the body is not inside the select; its list id is on the combobox.
+  const listId = root.querySelector('[role="combobox"]')?.getAttribute('aria-controls');
+  const scope = (listId && document.getElementById(listId)) || root;
+  return Array.from(scope.querySelectorAll<HTMLElement>('li[role="option"]'));
 }
 
 function isOpen(root: HTMLElement): boolean {

@@ -19,6 +19,7 @@ import type { DayOfWeek, OpeningHour } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
 import { SettingsApi, Versioned } from './settings-api';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 const WEEK: readonly DayOfWeek[] = [
   'MONDAY',
@@ -85,7 +86,7 @@ function buildRow(hour: OpeningHour): DayRow {
 
 @Component({
   selector: 'app-opening-hours-form',
-  imports: [ReactiveFormsModule, ButtonDirective, Checkbox, InputText, TablerIconComponent, Tooltip],
+  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, Checkbox, InputText, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -96,7 +97,8 @@ function buildRow(hour: OpeningHour): DayRow {
     </p>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <table formArrayName="days">
+      <app-table-scroll label="Horario de atención por día" i18n-label="@@admin.settings.hours.tableScroll">
+        <table formArrayName="days">
         <thead>
           <tr>
             <th i18n="@@admin.settings.hours.day">Día</th>
@@ -145,7 +147,8 @@ function buildRow(hour: OpeningHour): DayRow {
             </tr>
           }
         </tbody>
-      </table>
+        </table>
+      </app-table-scroll>
 
       <div class="actions">
         <button
