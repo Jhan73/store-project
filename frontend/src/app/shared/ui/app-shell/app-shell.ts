@@ -190,7 +190,7 @@ import type { NavItem } from './nav-item';
           optionLabel="label"
           optionValue="value"
           [ngModel]="themeMode()"
-          (ngModelChange)="themeModeChange.emit($event)"
+          (ngModelChange)="pickTheme($event)"
           [appendTo]="'body'"
           ariaLabel="Tema"
           i18n-ariaLabel="@@shell.theme.group"
@@ -199,7 +199,7 @@ import type { NavItem } from './nav-item';
           tooltipPosition="right"
           [tooltipDisabled]="sidebarExpanded()"
           (onShow)="themeOverlayOpen.set(true)"
-          (onHide)="themeOverlayOpen.set(false)"
+          (onHide)="onThemeOverlayHide()"
         >
           <ng-template #selectedItem let-option>
             <span class="theme-value">
@@ -348,6 +348,7 @@ export class AppShell {
   protected readonly sidebarId = 'shell-sidebar';
   protected readonly menuOpen = signal(false);
   protected readonly themeOverlayOpen = signal(false);
+  private themePicked = false;
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
   private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
   private readonly sidebarToggleButton =
@@ -413,6 +414,27 @@ export class AppShell {
       !this.sidebar().nativeElement.contains(next) &&
       !next.closest('.p-select-overlay')
     ) {
+      this.collapseTemporarily();
+    }
+  }
+
+  protected pickTheme(mode: ThemeMode): void {
+    this.themePicked = true;
+    this.themeModeChange.emit(mode);
+  }
+
+  // The overlay swallowed the pointer and focus events, so nothing else re-evaluates the sidebar.
+  protected onThemeOverlayHide(): void {
+    const picked = this.themePicked;
+    this.themePicked = false;
+    this.themeOverlayOpen.set(false);
+    if (this.sidebarPinned() || !this.sidebarExpanded()) {
+      return;
+    }
+    const sidebar = this.sidebar().nativeElement;
+    const pointerAway = !sidebar.matches(':hover');
+    // Choosing an option returns the focus to the select, so the pointer alone decides then.
+    if (pointerAway && (picked || !sidebar.contains(document.activeElement))) {
       this.collapseTemporarily();
     }
   }

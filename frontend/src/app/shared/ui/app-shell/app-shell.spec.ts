@@ -1,8 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type DebugElement,
+  inject,
+  signal,
+} from '@angular/core';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { IconHome, IconSettings } from '@tabler/icons-angular';
+import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import { chooseOption, openSelect, selectedLabel } from '../../../testing/primeng-controls';
 import { SidebarStore } from '../../../core/layout/sidebar-store';
@@ -504,17 +511,129 @@ describe('AppShell', () => {
         expect(options.every((option) => option.querySelector('svg') !== null)).toBe(true);
       });
 
+      const themeSelectComponent = (fixture: { debugElement: DebugElement }) =>
+        fixture.debugElement.query(By.css('aside p-select')).componentInstance as Select;
+      const once = (emitter: { subscribe(next: () => void): { unsubscribe(): void } }) =>
+        new Promise<void>((resolve) => {
+          const subscription = emitter.subscribe(() => {
+            subscription.unsubscribe();
+            resolve();
+          });
+        });
+      const openOverlay = async (fixture: ComponentFixture<Harness>) => {
+        const shown = once(themeSelectComponent(fixture).onShow);
+        await openSelect(fixture, document.body, 'shell-theme');
+        await shown;
+      };
+      const closeOverlay = async (fixture: ComponentFixture<Harness>) => {
+        const hidden = once(themeSelectComponent(fixture).onHide);
+        themeSelectComponent(fixture).hide();
+        await hidden;
+        await fixture.whenStable();
+      };
+
       it('keeps a temporary expansion open while its overlay is open', async () => {
         const { fixture, host } = await render();
         await expand(fixture, host);
+        await openOverlay(fixture);
 
-        await openSelect(fixture, document.body, 'shell-theme');
-        await vi.waitFor(() => expect(document.querySelector('.p-select-overlay')).not.toBeNull());
-        await new Promise((resolve) => setTimeout(resolve, 100));
         aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+        focusOut(firstLink(host), content(host));
         await fixture.whenStable();
 
         expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+      });
+
+      describe('when the overlay closes', () => {
+        const hovering = (host: HTMLElement, value: boolean) => {
+          const original = aside(host).matches.bind(aside(host));
+          vi.spyOn(aside(host), 'matches').mockImplementation((selector: string) =>
+            selector === ':hover' ? value : original(selector),
+          );
+        };
+        const blur = () => (document.activeElement as HTMLElement | null)?.blur();
+
+        it('collapses when the pointer left while it was open', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          hovering(host, false);
+          await openOverlay(fixture);
+          aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+          blur();
+
+          await closeOverlay(fixture);
+
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+        });
+
+        it('collapses when the focus left while it was open', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          hovering(host, false);
+          await openOverlay(fixture);
+          focusOut(firstLink(host), content(host));
+          blur();
+
+          await closeOverlay(fixture);
+
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+        });
+
+        it('stays expanded while the pointer is still over the sidebar', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          hovering(host, true);
+          await openOverlay(fixture);
+          blur();
+
+          await closeOverlay(fixture);
+
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+        });
+
+        it('stays expanded while the focus is inside the sidebar', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          hovering(host, false);
+          await openOverlay(fixture);
+          toggle(host).focus();
+
+          await closeOverlay(fixture);
+
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+        });
+
+        it('keeps a pinned sidebar docked', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          pin(host)!.click();
+          await fixture.whenStable();
+          hovering(host, false);
+          await openOverlay(fixture);
+          aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+          blur();
+
+          await closeOverlay(fixture);
+
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+          expect(content(host).classList).toContain('is-docked');
+        });
+
+        it('collapses after picking an option while the pointer is outside', async () => {
+          const { fixture, host } = await render();
+          await expand(fixture, host);
+          hovering(host, false);
+          await openOverlay(fixture);
+          aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+          const hidden = once(themeSelectComponent(fixture).onHide);
+
+          await chooseOption(fixture, document.body, 'shell-theme', 'Oscuro');
+          await hidden;
+          await fixture.whenStable();
+
+          expect(fixture.componentInstance.changes).toEqual(['dark']);
+          expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+        });
       });
     });
   });
