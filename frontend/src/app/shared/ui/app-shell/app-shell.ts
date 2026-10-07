@@ -56,7 +56,7 @@ import type { NavItem } from './nav-item';
         pTooltip="Abrir el menú"
         i18n-pTooltip="@@shell.menu.open"
         tooltipPosition="top"
-        aria-controls="shell-menu"
+        [attr.aria-controls]="menuId"
         [attr.aria-expanded]="menuOpen()"
         (click)="menuOpen.set(true)"
       >
@@ -72,12 +72,11 @@ import type { NavItem } from './nav-item';
       i18n-header="@@shell.menu.title"
       ariaCloseLabel="Cerrar el menú"
       i18n-ariaCloseLabel="@@shell.menu.close"
-      position="left"
       [modal]="true"
       [dismissible]="true"
       [closeOnEscape]="true"
     >
-      <div id="shell-menu" class="menu">
+      <div [id]="menuId" class="menu">
         <ng-container *ngTemplateOutlet="links" />
         <div class="tools">
           <ng-container *ngTemplateOutlet="tools" />
@@ -185,6 +184,7 @@ export class AppShell {
   readonly themeModeChange = output<ThemeMode>();
   readonly logout = output<void>();
 
+  protected readonly menuId = 'shell-menu';
   protected readonly menuOpen = signal(false);
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
 
