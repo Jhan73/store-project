@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IconDeviceDesktop,
@@ -25,13 +26,24 @@ import {
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Drawer } from 'primeng/drawer';
+import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { ThemeMode } from '../../../core/theme/theme-store';
 import type { NavItem } from './nav-item';
 
 @Component({
   selector: 'app-shell',
-  imports: [ButtonDirective, Drawer, NgTemplateOutlet, RouterLink, RouterLinkActive, TablerIconComponent, Tooltip],
+  imports: [
+    ButtonDirective,
+    Drawer,
+    FormsModule,
+    NgTemplateOutlet,
+    RouterLink,
+    RouterLinkActive,
+    Select,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown.escape)': 'onEscape()' },
   styleUrl: './app-shell.scss',
@@ -170,7 +182,40 @@ import type { NavItem } from './nav-item';
 
       <div class="tools sidebar-tools">
         <span class="role label">{{ roleLabel() }}</span>
-        <ng-container *ngTemplateOutlet="themes" />
+        <p-select
+          class="theme-select"
+          [class.is-rail]="!sidebarExpanded()"
+          inputId="shell-theme"
+          [options]="themeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="themeMode()"
+          (ngModelChange)="themeModeChange.emit($event)"
+          [appendTo]="'body'"
+          ariaLabel="Tema"
+          i18n-ariaLabel="@@shell.theme.group"
+          pTooltip="Tema"
+          i18n-pTooltip="@@shell.theme.group"
+          tooltipPosition="right"
+          [tooltipDisabled]="sidebarExpanded()"
+          (onShow)="themeOverlayOpen.set(true)"
+          (onHide)="themeOverlayOpen.set(false)"
+        >
+          <ng-template #selectedItem let-option>
+            <span class="theme-value">
+              <tabler-icon [icon]="option.icon" aria-hidden="true" />
+              @if (sidebarExpanded()) {
+                <span>{{ option.label }}</span>
+              }
+            </span>
+          </ng-template>
+          <ng-template #item let-option>
+            <span class="theme-value">
+              <tabler-icon [icon]="option.icon" aria-hidden="true" />
+              <span>{{ option.label }}</span>
+            </span>
+          </ng-template>
+        </p-select>
         <button
           pButton
           type="button"
@@ -302,6 +347,7 @@ export class AppShell {
   protected readonly menuId = 'shell-menu';
   protected readonly sidebarId = 'shell-sidebar';
   protected readonly menuOpen = signal(false);
+  protected readonly themeOverlayOpen = signal(false);
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
   private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
   private readonly sidebarToggleButton =
@@ -320,6 +366,16 @@ export class AppShell {
     pin: IconPin,
     unpin: IconPinnedOff,
   };
+
+  protected readonly themeOptions: { value: ThemeMode; label: string; icon: unknown }[] = [
+    { value: 'light', label: $localize`:@@shell.theme.option.light:Claro`, icon: this.icons.light },
+    { value: 'dark', label: $localize`:@@shell.theme.option.dark:Oscuro`, icon: this.icons.dark },
+    {
+      value: 'system',
+      label: $localize`:@@shell.theme.option.system:Sistema`,
+      icon: this.icons.system,
+    },
+  ];
 
   protected readonly toggleIcon = computed(() =>
     this.sidebarExpanded() ? this.icons.collapse : this.icons.expand,
@@ -340,7 +396,7 @@ export class AppShell {
   }
 
   protected onEscape(): void {
-    if (this.sidebarPinned() || !this.sidebarExpanded()) {
+    if (this.sidebarPinned() || !this.sidebarExpanded() || this.themeOverlayOpen()) {
       return;
     }
     const hadFocus = this.sidebar().nativeElement.contains(document.activeElement);
@@ -352,7 +408,11 @@ export class AppShell {
 
   protected onSidebarFocusOut(event: FocusEvent): void {
     const next = event.relatedTarget;
-    if (next instanceof Node && !this.sidebar().nativeElement.contains(next)) {
+    if (
+      next instanceof Element &&
+      !this.sidebar().nativeElement.contains(next) &&
+      !next.closest('.p-select-overlay')
+    ) {
       this.collapseTemporarily();
     }
   }
@@ -363,7 +423,7 @@ export class AppShell {
 
   // The pin button leaves the page when the sidebar collapses, so the focus moves to the toggle first.
   protected collapseTemporarily(): void {
-    if (this.sidebarPinned() || !this.sidebarExpanded()) {
+    if (this.sidebarPinned() || !this.sidebarExpanded() || this.themeOverlayOpen()) {
       return;
     }
     if (document.activeElement === this.sidebarPinButton()?.nativeElement) {

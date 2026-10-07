@@ -4,6 +4,7 @@ import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { IconHome, IconSettings } from '@tabler/icons-angular';
 import { Tooltip } from 'primeng/tooltip';
+import { chooseOption, openSelect, selectedLabel } from '../../../testing/primeng-controls';
 import { SidebarStore } from '../../../core/layout/sidebar-store';
 import type { ThemeMode } from '../../../core/theme/theme-store';
 import { AppShell } from './app-shell';
@@ -66,9 +67,10 @@ describe('AppShell', () => {
   });
 
   it('gives every icon-only and text button a tooltip that matches its name', async () => {
-    const { host } = await render();
+    const { fixture, host } = await render();
+    await openDrawer(fixture, host);
 
-    const themeButtons = [...host.querySelectorAll<HTMLElement>('.themes button')];
+    const themeButtons = [...drawerEl()!.querySelectorAll<HTMLElement>('.themes button')];
     expect(themeButtons).toHaveLength(3);
     for (const button of themeButtons) {
       expect(button.getAttribute('pTooltip')).toBe(button.getAttribute('aria-label'));
@@ -78,6 +80,12 @@ describe('AppShell', () => {
     expect(logout?.getAttribute('pTooltip')).toBe('Cerrar la sesión');
     expect(logout?.textContent?.trim()).toBe('Salir');
   });
+
+  const drawerEl = () => document.body.querySelector<HTMLElement>('.p-drawer');
+  async function openDrawer(fixture: { whenStable(): Promise<unknown> }, host: HTMLElement) {
+    host.querySelector<HTMLButtonElement>('[data-testid="menu-button"]')!.click();
+    await fixture.whenStable();
+  }
 
   async function render() {
     TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }])] });
@@ -127,9 +135,9 @@ describe('AppShell', () => {
   it('offers light, dark and system themes with labelled buttons', async () => {
     const { fixture, host } = await render();
     fixture.componentInstance.mode.set('dark');
-    await fixture.whenStable();
+    await openDrawer(fixture, host);
 
-    const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('[role="group"] button'));
+    const buttons = Array.from(drawerEl()!.querySelectorAll<HTMLButtonElement>('[role="group"] button'));
     expect(buttons).toHaveLength(3);
     expect(buttons.every((button) => !!button.getAttribute('aria-label'))).toBe(true);
     expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual([
@@ -141,9 +149,10 @@ describe('AppShell', () => {
 
   it('emits the chosen theme', async () => {
     const { fixture, host } = await render();
+    await openDrawer(fixture, host);
 
     const [light, dark, system] = Array.from(
-      host.querySelectorAll<HTMLButtonElement>('[role="group"] button'),
+      drawerEl()!.querySelectorAll<HTMLButtonElement>('[role="group"] button'),
     );
     light.click();
     dark.click();
@@ -283,7 +292,7 @@ describe('AppShell', () => {
       await expand(fixture, host);
 
       const buttons = Array.from(aside(host).querySelectorAll<HTMLElement>('button'));
-      expect(buttons.length).toBeGreaterThanOrEqual(6);
+      expect(buttons.length).toBeGreaterThanOrEqual(3);
       for (const button of buttons) {
         expect(button.querySelector('svg')).not.toBeNull();
         expect(button.getAttribute('pTooltip')).toBeTruthy();
@@ -427,6 +436,86 @@ describe('AppShell', () => {
       const { host } = await render();
 
       expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    describe('theme select', () => {
+      const themeSelect = (host: HTMLElement) =>
+        aside(host).querySelector<HTMLElement>('p-select')!;
+      const combobox = (host: HTMLElement) =>
+        aside(host).querySelector<HTMLElement>('p-select [role="combobox"]')!;
+
+      it('replaces the three theme buttons with one labelled select', async () => {
+        const { host } = await render();
+
+        expect(aside(host).querySelectorAll('.themes button')).toHaveLength(0);
+        expect(aside(host).querySelectorAll('p-select')).toHaveLength(1);
+        expect(combobox(host).getAttribute('aria-label')).toBe('Tema');
+      });
+
+      it('emits the chosen theme', async () => {
+        const { fixture, host } = await render();
+        await expand(fixture, host);
+
+        await chooseOption(fixture, document.body, 'shell-theme', 'Oscuro');
+
+        expect(fixture.componentInstance.changes).toEqual(['dark']);
+      });
+
+      it('reflects the current theme with its icon and label when expanded', async () => {
+        const { fixture, host } = await render();
+        fixture.componentInstance.mode.set('dark');
+        await expand(fixture, host);
+
+        expect(selectedLabel(host, 'shell-theme')).toBe('Oscuro');
+        expect(combobox(host).querySelector('svg')).not.toBeNull();
+
+        fixture.componentInstance.mode.set('light');
+        await fixture.whenStable();
+        expect(selectedLabel(host, 'shell-theme')).toBe('Claro');
+      });
+
+      it('shows only the icon in the rail and names the control in a tooltip on the right', async () => {
+        const { fixture, host } = await render();
+        fixture.componentInstance.mode.set('dark');
+        await fixture.whenStable();
+
+        expect(aside(host).classList).not.toContain('is-expanded');
+        expect(combobox(host).querySelector('svg')).not.toBeNull();
+        expect(selectedLabel(host, 'shell-theme')).toBe('');
+        const tooltip = fixture.debugElement.query(By.css('aside p-select')).injector.get(Tooltip);
+        expect(tooltip.content).toBe('Tema');
+        expect(tooltip.tooltipPosition).toBe('right');
+        expect(themeSelect(host)).not.toBeNull();
+      });
+
+      it('lists every theme with an icon in the overlay', async () => {
+        const { fixture } = await render();
+
+        await openSelect(fixture, document.body, 'shell-theme');
+
+        const options = Array.from(
+          document.body.querySelectorAll<HTMLElement>('li[role="option"]'),
+        );
+        expect(options.map((option) => option.textContent?.trim())).toEqual([
+          'Claro',
+          'Oscuro',
+          'Sistema',
+        ]);
+        expect(options.every((option) => option.querySelector('svg') !== null)).toBe(true);
+      });
+
+      it('keeps a temporary expansion open while its overlay is open', async () => {
+        const { fixture, host } = await render();
+        await expand(fixture, host);
+
+        await openSelect(fixture, document.body, 'shell-theme');
+        await vi.waitFor(() => expect(document.querySelector('.p-select-overlay')).not.toBeNull());
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+        await fixture.whenStable();
+
+        expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+      });
     });
   });
 });
