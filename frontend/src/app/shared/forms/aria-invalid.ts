@@ -17,3 +17,7 @@ export function numberAriaInvalid(invalid: boolean): object {
 export function passwordAriaInvalid(invalid: boolean): object {
   return invalid ? NUMBER_INVALID : NUMBER_VALID;
 }
+
+export function datePickerAriaInvalid(invalid: boolean): object {
+  return invalid ? NUMBER_INVALID : NUMBER_VALID;
+}
