@@ -46,3 +46,5 @@ export type StaffMember = Schemas['StaffResponse'];
 export type StaffPage = Schemas['PageResponseStaffResponse'];
 export type CreateStaffRequest = Schemas['CreateStaffRequest'];
 export type ChangeStaffRoleRequest = Schemas['ChangeStaffRoleRequest'];
+export type AuditEntry = Schemas['AuditEntryResponse'];
+export type AuditPage = Schemas['PageResponseAuditEntryResponse'];
