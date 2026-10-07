@@ -136,7 +136,9 @@ const TYPES: readonly TypeOption[] = [
           i18n-pTooltip="@@admin.settings.reasons.create.tooltip"
           tooltipPosition="top"
         >
-          <tabler-icon [icon]="icons.create" aria-hidden="true" />
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.create" aria-hidden="true" />
+          }
           <span i18n="@@admin.settings.reasons.create">Agregar motivo</span>
         </button>
       </div>

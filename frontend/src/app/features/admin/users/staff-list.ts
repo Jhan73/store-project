@@ -217,7 +217,9 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           i18n-pTooltip="@@admin.users.invite.tooltip"
           tooltipPosition="top"
         >
-          <tabler-icon [icon]="icons.invite" aria-hidden="true" />
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.invite" aria-hidden="true" />
+          }
           <span i18n="@@admin.users.invite">Invitar</span>
         </button>
       </div>

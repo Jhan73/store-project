@@ -187,10 +187,14 @@ import { SettingsApi } from './settings-api';
           tooltipPosition="top"
         >
           @if (editing()) {
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.settings.zones.save">Guardar cambios</ng-container>
           } @else {
-            <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.settings.zones.create">Agregar zona</ng-container>
           }
         </button>

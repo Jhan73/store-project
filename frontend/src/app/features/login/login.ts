@@ -8,7 +8,7 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IconLogin, TablerIconComponent } from '@tabler/icons-angular';
-import { Button } from 'primeng/button';
+import { Button, ButtonLabel } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Password } from 'primeng/password';
@@ -27,7 +27,16 @@ interface Failure {
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, Button, InputText, Message, Password, TablerIconComponent, Tooltip],
+  imports: [
+    ReactiveFormsModule,
+    Button,
+    ButtonLabel,
+    InputText,
+    Message,
+    Password,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './login.scss',
   template: `
@@ -80,8 +89,10 @@ interface Failure {
           tooltipPosition="top"
           fluid
         >
-          <tabler-icon [icon]="icons.login" aria-hidden="true" />
-          <span i18n="@@login.submit">Entrar</span>
+          @if (!submitting()) {
+            <tabler-icon [icon]="icons.login" aria-hidden="true" />
+          }
+          <span pButtonLabel i18n="@@login.submit">Entrar</span>
         </p-button>
       </form>
     </main>

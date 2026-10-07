@@ -23,7 +23,7 @@ import {
   IconLogin,
   TablerIconComponent,
 } from '@tabler/icons-angular';
-import { Button, ButtonDirective } from 'primeng/button';
+import { Button, ButtonDirective, ButtonLabel } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { PasswordDirective } from 'primeng/password';
 import { Tooltip } from 'primeng/tooltip';
@@ -56,6 +56,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
     ReactiveFormsModule,
     Button,
     ButtonDirective,
+    ButtonLabel,
     Message,
     PasswordDirective,
     RouterLink,
@@ -211,8 +212,10 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
               tooltipPosition="top"
               fluid
             >
-              <tabler-icon [icon]="icons.save" aria-hidden="true" />
-              <span i18n="@@setPassword.submit">Guardar contraseña</span>
+              @if (!submitting()) {
+                <tabler-icon [icon]="icons.save" aria-hidden="true" />
+              }
+              <span pButtonLabel i18n="@@setPassword.submit">Guardar contraseña</span>
             </p-button>
           </form>
         }

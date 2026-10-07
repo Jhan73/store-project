@@ -162,10 +162,14 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
           tooltipPosition="top"
         >
           @if (editing()) {
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.tables.save">Guardar cambios</ng-container>
           } @else {
-            <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.tables.create">Agregar mesa</ng-container>
           }
         </button>

@@ -52,6 +52,21 @@ describe('button conventions', () => {
     },
   );
 
+  // Best effort: every <tabler-icon> of a [loading] button must sit directly inside
+  // `@if (!<same signal>()) { ... }`; indirect guards (computed, outer @if) are not recognized.
+  it.each(found.filter(({ open }) => /\s\[loading\]=/.test(open)).map((b) => [label(b), b] as const))(
+    'hides its icon while loading: %s',
+    (_name, { open, body }) => {
+      const signal = /\s\[loading\]="([^"]+)"/.exec(open)![1];
+      const guard = `@if (!${signal}) {`;
+      const unguarded = body
+        .split(guard)
+        .map((part, index) => (index === 0 ? part : part.replace(/^\s*<tabler-icon\b[^>]*>/, '')))
+        .join('');
+      expect(unguarded).not.toMatch(/<tabler-icon\b/);
+    },
+  );
+
   it.each(found.map((button) => [label(button), button] as const))(
     'has an i18n tooltip on top: %s',
     (_name, { open }) => {

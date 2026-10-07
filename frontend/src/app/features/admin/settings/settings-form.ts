@@ -238,7 +238,9 @@ function timeZoneOptions(current: string): string[] {
           i18n-pTooltip="@@admin.settings.general.save.tooltip"
           tooltipPosition="top"
         >
-          <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          }
           <span i18n="@@admin.settings.general.save">Guardar cambios</span>
         </button>
       </div>

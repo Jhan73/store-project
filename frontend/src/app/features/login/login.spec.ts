@@ -82,6 +82,27 @@ describe('Login', () => {
     expect(host.querySelector('button[type="submit"]')).not.toBeNull();
   });
 
+  it('shows only the spinner, not the button icon, while signing in', async () => {
+    const { fixture, host } = await render();
+    const button = host.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(button.querySelectorAll('tabler-icon svg').length).toBe(1);
+
+    await submit(host, fixture);
+
+    expect(button.querySelectorAll('tabler-icon').length).toBe(0);
+    expect(button.querySelectorAll('svg[data-p-icon="spinner"]').length).toBe(1);
+    http.expectOne(LOGIN).flush(null, { status: 401, statusText: 'Unauthorized' });
+    await fixture.whenStable();
+  });
+
+  it('keeps the label styled as a PrimeNG button label', async () => {
+    const { host } = await render();
+
+    expect(host.querySelector('button[type="submit"] span.p-button-label')?.textContent).toContain(
+      'Entrar',
+    );
+  });
+
   it('does not call the API with empty fields', async () => {
     const { fixture, host } = await render();
 

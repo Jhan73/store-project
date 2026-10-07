@@ -265,7 +265,9 @@ type OptionForm = ReturnType<typeof optionForm>;
             i18n-pTooltip="@@admin.catalog.groupForm.save.tooltip"
             tooltipPosition="top"
           >
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <span i18n="@@admin.catalog.groupForm.save">Guardar grupo</span>
           </button>
         </div>

@@ -160,10 +160,14 @@ import { isStale, reportFailure } from '../admin-errors';
           tooltipPosition="top"
         >
           @if (editing()) {
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.catalog.categories.save">Guardar cambios</ng-container>
           } @else {
-            <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.catalog.categories.create">Agregar categoría</ng-container>
           }
         </button>

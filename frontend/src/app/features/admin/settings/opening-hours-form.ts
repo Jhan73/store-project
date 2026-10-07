@@ -156,7 +156,9 @@ function buildRow(hour: OpeningHour): DayRow {
           i18n-pTooltip="@@admin.settings.hours.save.tooltip"
           tooltipPosition="top"
         >
-          <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          }
           <span i18n="@@admin.settings.hours.save">Guardar horario</span>
         </button>
       </div>

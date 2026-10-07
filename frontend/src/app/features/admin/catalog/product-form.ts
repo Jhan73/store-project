@@ -293,7 +293,9 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             i18n-pTooltip="@@admin.catalog.productForm.save.tooltip"
             tooltipPosition="top"
           >
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <span i18n="@@admin.catalog.productForm.save">Guardar producto</span>
           </button>
         </div>
