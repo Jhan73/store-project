@@ -1,0 +1,54 @@
+@use '../../../../styles/breakpoints' as bp;
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+}
+
+.count {
+  margin: 0;
+  min-height: 1.5rem;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--destructive);
+  border-radius: var(--radius);
+}
+
+.state p {
+  margin: 0;
+}
+
+small.muted {
+  display: block;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+code.id {
+  margin-left: var(--space-1);
+}
+
+p-datepicker {
+  display: block;
+}
+
+@include bp.tablet-up {
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@include bp.desktop-up {
+  .filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

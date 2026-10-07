@@ -155,6 +155,7 @@ describe('staff and admin area', () => {
       '/admin/settings',
       '/admin/tables',
       '/admin/users',
+      '/admin/audit',
     ]);
     expect(url()).toBe('/admin');
   });
@@ -181,6 +182,33 @@ describe('staff and admin area', () => {
 
     expect(url()).toBe('/admin/users');
     expect(page().body.textContent).toContain('Personal');
+  });
+
+  it('keeps floor staff out of the audit log', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/audit');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the audit log', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/audit?entityType=USER');
+    http
+      .expectOne('http://api.test/api/v1/admin/settings')
+      .flush({ timeZone: 'America/Lima', currency: 'PEN' });
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne((request) => request.url === 'http://api.test/api/v1/audit-entries')
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/audit?entityType=USER');
+    expect(page().body.textContent).toContain('Auditoría');
   });
 
   it('keeps floor staff out of the table configuration', async () => {

@@ -1,6 +1,7 @@
 import {
   IconAdjustments,
   IconBook2,
+  IconHistory,
   IconHome,
   IconSettings,
   IconTable,
@@ -58,6 +59,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/admin/users',
     label: $localize`:@@workspace.nav.users:Personal`,
     icon: IconUsers,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/admin/audit',
+    label: $localize`:@@workspace.nav.audit:Auditoría`,
+    icon: IconHistory,
     roles: ['ADMIN'],
   },
 ];
