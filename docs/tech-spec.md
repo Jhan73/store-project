@@ -1114,7 +1114,8 @@ Coverage gates: backend ≥ 80% lines on `internal` packages; frontend ≥ 80% l
 
 **E2E (Playwright, `e2e/`)**
 
-- Configured only through environment variables (frontend URL, API URL, admin credentials); credentials are never in a file, trace, or screenshot, so those artifacts stay off.
+- Configured only through environment variables (frontend URL, API URL, admin credentials); credentials are never in a file. Typed values are recorded as step titles (`Fill "<value>"`) in html, json and blob reports and in traces, so those reporters and artifacts are not used (only `list` locally and `github`/`line` in CI; trace, video and screenshot stay off), and `test-results` or reports are never uploaded. `npm run check:config` enforces this.
+- The runner refuses any frontend or API URL that is not local unless `E2E_ALLOW_REMOTE=1` is set, and refuses production hosts even then.
 - Every browser context signs in through the login screen: the refresh cookie rotates on use and reuse revokes the session family (§6.4), so a stored `storageState` cannot be shared between contexts or runs.
 - Test data is prefixed `e2e-<timestamp>-` and cleaned up through the API after each journey (products and categories are deactivated, modifier groups deleted).
 
