@@ -257,12 +257,47 @@ describe('AuditLog', () => {
       await press(fixture, host, 'search');
       const fast = http.expectOne(isSearch);
 
+      expect(slow.cancelled).toBe(true);
       fast.flush(page([{ ...update, reason: 'la respuesta nueva' }]));
-      slow.flush(page([{ ...update, reason: 'la respuesta vieja' }]));
       await fixture.whenStable();
 
       expect(rows(host).join()).toContain('la respuesta nueva');
       expect(rows(host).join()).not.toContain('la respuesta vieja');
+    });
+
+    it('cancels the search in flight, with no toast, when the screen is destroyed', async () => {
+      const { http, fixture, toast } = await render();
+      const pending = http.expectOne(isSearch);
+
+      fixture.destroy();
+
+      expect(pending.cancelled).toBe(true);
+      expect(toast).not.toHaveBeenCalled();
+    });
+
+    it('cancels the staff and settings reads when the screen is destroyed', async () => {
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([{ path: 'audit', component: AuditLog, providers: [AuditApi] }]),
+          provideHttpClient(withInterceptors([errorInterceptor])),
+          provideHttpClientTesting(),
+          MessageService,
+          providePrimeNG({ translation: primeTranslation }),
+          { provide: API_ORIGIN, useValue: 'http://api.test' },
+        ],
+      });
+      const harness = await RouterTestingHarness.create();
+      const http = TestBed.inject(HttpTestingController);
+      const toast = vi.spyOn(TestBed.inject(MessageService), 'add');
+      await harness.navigateByUrl('/audit');
+      const settings = http.expectOne(`${API}/admin/settings`);
+      const members = http.expectOne(`${API}/staff?page=0&size=100`);
+
+      harness.fixture.destroy();
+
+      expect(settings.cancelled).toBe(true);
+      expect(members.cancelled).toBe(true);
+      expect(toast).not.toHaveBeenCalled();
     });
   });
 

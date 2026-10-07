@@ -53,6 +53,9 @@ export function dayToDate(day: string): Date | null {
     return null;
   }
   const [year, month, date] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  if (year < 1000) {
+    return null;
+  }
   const result = new Date(year, month - 1, date);
   const real =
     result.getFullYear() === year && result.getMonth() === month - 1 && result.getDate() === date;

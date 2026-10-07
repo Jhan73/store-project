@@ -70,6 +70,13 @@ describe('paramsToFilters', () => {
     expect(filters.to).toBe('2026-10-05');
   });
 
+  it('drops days whose year the Date constructor would shift into the 1900s', () => {
+    const filters = paramsToFilters(convertToParamMap({ from: '0050-01-01', to: '0999-12-31' }));
+
+    expect(filters.from).toBeNull();
+    expect(filters.to).toBeNull();
+  });
+
   it('keeps an entity id that is not an id so the field can say so', () => {
     expect(paramsToFilters(convertToParamMap({ entityId: ' abc ' })).entityId).toBe('abc');
   });

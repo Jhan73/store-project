@@ -45,4 +45,10 @@ describe('day strings', () => {
     expect(dayToDate('05/10/2026')).toBeNull();
     expect(dayToDate('')).toBeNull();
   });
+
+  it('rejects years below 1000, which the Date constructor would read as 19xx', () => {
+    expect(dayToDate('0050-01-01')).toBeNull();
+    expect(dayToDate('0999-12-31')).toBeNull();
+    expect(dayToDate('1000-01-01')).not.toBeNull();
+  });
 });

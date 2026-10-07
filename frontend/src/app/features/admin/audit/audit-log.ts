@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import type { Subscription } from 'rxjs';
 import { ActivatedRoute, Router, type Params } from '@angular/router';
 import {
   IconEye,
@@ -387,6 +388,7 @@ export class AuditLog {
   private readonly staff = signal<readonly StaffMember[]>([]);
   private readonly staffById = computed(() => new Map(this.staff().map((member) => [member.id, member])));
   private lastRequest = 0;
+  private inFlight: Subscription | undefined;
   private listening = false;
   private actorsLoaded = false;
 
@@ -501,7 +503,10 @@ export class AuditLog {
   }
 
   private loadActors(): void {
-    this.api.staffAccounts().subscribe({
+    this.api
+      .staffAccounts()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (members) => {
         this.actorsLoaded = true;
         this.staff.set(members);
@@ -512,7 +517,10 @@ export class AuditLog {
 
   private loadTimeZone(): void {
     this.status.set('loading');
-    this.api.timeZone().subscribe({
+    this.api
+      .timeZone()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (zone) => {
         this.timeZone.set(zone);
         this.listen();
@@ -553,6 +561,7 @@ export class AuditLog {
     this.errors.set(found);
     if (Object.keys(found).length > 0) {
       this.lastRequest++;
+      this.inFlight?.unsubscribe();
       this.result.set(null);
       this.status.set('idle');
       return;
@@ -563,7 +572,11 @@ export class AuditLog {
   private search(): void {
     const request = ++this.lastRequest;
     this.status.set('loading');
-    this.api.search(filtersToQuery(this.applied(), this.timeZone())).subscribe({
+    this.inFlight?.unsubscribe();
+    this.inFlight = this.api
+      .search(filtersToQuery(this.applied(), this.timeZone()))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
       next: (page) => {
         if (request !== this.lastRequest) {
           return;
