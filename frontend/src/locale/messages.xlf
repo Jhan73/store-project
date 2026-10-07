@@ -782,7 +782,7 @@
         <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
       </notes>
       <segment>
-        <source>Categor�a</source>
+        <source>Categoría</source>
       </segment>
     </unit>
     <unit id="admin.audit.entity.deliveryZone">
@@ -838,7 +838,7 @@
         <note category="location">src/app/features/admin/audit/audit-labels.ts:68</note>
       </notes>
       <segment>
-        <source>Estaci�n</source>
+        <source>Estación</source>
       </segment>
     </unit>
     <unit id="admin.audit.entity.storeSettings">

@@ -11,8 +11,8 @@ describe('audit labels', () => {
     expect(AUDIT_ENTITY_TYPES).toEqual(
       expect.arrayContaining(['PRODUCT', 'USER', 'STORE_SETTINGS', 'TABLE', 'MODIFIER_OPTION', 'CATEGORY', 'STATION']),
     );
-    expect(entityTypeLabel('CATEGORY')).toBe('Categoría');
-    expect(entityTypeLabel('STATION')).toBe('Estación');
+    expect(entityTypeLabel('CATEGORY')).toBe('CategorÃ­a');
+    expect(entityTypeLabel('STATION')).toBe('EstaciÃ³n');
     for (const type of AUDIT_ENTITY_TYPES) {
       expect(entityTypeLabel(type)).not.toBe(type);
     }

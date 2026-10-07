@@ -51,7 +51,7 @@ export const AUDIT_ACTIONS: readonly string[] = [
 export function entityTypeLabel(type: string): string {
   switch (type) {
     case 'CATEGORY':
-      return $localize`:@@admin.audit.entity.category:CategorÌa`;
+      return $localize`:@@admin.audit.entity.category:Categor√≠a`;
     case 'DELIVERY_ZONE':
       return $localize`:@@admin.audit.entity.deliveryZone:Zona de reparto`;
     case 'MODIFIER_GROUP':
@@ -65,7 +65,7 @@ export function entityTypeLabel(type: string): string {
     case 'REASON':
       return $localize`:@@admin.audit.entity.reason:Motivo`;
     case 'STATION':
-      return $localize`:@@admin.audit.entity.station:EstaciÛn`;
+      return $localize`:@@admin.audit.entity.station:Estaci√≥n`;
     case 'STORE_SETTINGS':
       return $localize`:@@admin.audit.entity.storeSettings:Configuraci√≥n de la tienda`;
     case 'TABLE':
