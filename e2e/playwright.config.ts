@@ -9,11 +9,11 @@ process.env['PLAYWRIGHT_NO_COPY_PROMPT'] = '1';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
   workers: 1,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
-  reporter: [['list'], ['html', { open: 'never' }]],
+  // html, json, blob and junit persist typed values as step titles, so they are never used.
+  reporter: process.env['CI'] ? [['github'], ['line']] : [['list']],
   timeout: 120_000,
   expect: { timeout: 10_000 },
   use: {
