@@ -1,7 +1,8 @@
 // The only place breakpoints are defined. Styles are written for the smallest screen and
 // enhanced upward with these min-width mixins; there are no max-width overrides.
 $tablet: 48rem; // 768px: two-column forms, larger page padding
-$desktop: 64rem; // 1024px: inline header navigation
+$desktop: 64rem; // 1024px: larger page padding
+$wide: 100rem; // 1600px: the inline header navigation fits in one row from here
 
 @mixin tablet-up {
   @media (min-width: $tablet) {
@@ -11,6 +12,12 @@ $desktop: 64rem; // 1024px: inline header navigation
 
 @mixin desktop-up {
   @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin wide-up {
+  @media (min-width: $wide) {
     @content;
   }
 }

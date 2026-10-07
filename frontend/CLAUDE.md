@@ -27,7 +27,7 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 
 **Responsive:**
 - Mobile-first: write base styles for the smallest screen and enhance upward with `min-width` queries only, never `max-width` overrides. Breakpoints are defined once, in `src/styles/_breakpoints.scss` (`tablet-up` 48rem, `desktop-up` 64rem); layout tokens (`--page-padding`, `--touch-target`) live in `styles.scss`.
-- The header (`shared/ui/app-shell`) shows the brand and a hamburger button below the desktop breakpoint, opening the navigation, theme switch, role and sign-out in a `p-drawer`; from the desktop breakpoint up it shows the inline navigation. Both structures are in the template and CSS decides which one is visible.
+- The header (`shared/ui/app-shell`) shows the brand and a hamburger button below the wide breakpoint (1600px, the width at which the inline navigation fits in one row), so phones, tablets and small laptops all use it; it opens the navigation, theme switch, role and sign-out in a `p-drawer`. From the wide breakpoint up it shows the inline navigation. Both structures are in the template and CSS decides which one is visible.
 - Forms are one column on phones and multi-column from the tablet breakpoint up. Interactive targets are at least 44 px (`--touch-target`).
 - Every data table sits inside `app-table-scroll` (`shared/ui/table-scroll`), a focusable labelled region that scrolls horizontally; `table-conventions.spec.ts` enforces it.
 - No horizontal page overflow at 360 px wide.

@@ -26,7 +26,7 @@
   color: var(--foreground);
 }
 
-// Below the desktop breakpoint the navigation lives in the drawer.
+// Below the wide breakpoint the navigation lives in the drawer: seven links plus the tools need ~1600px in one row.
 .inline {
   display: none;
 }
@@ -87,7 +87,7 @@
   padding: var(--page-padding);
 }
 
-@include bp.desktop-up {
+@include bp.wide-up {
   .menu-button {
     display: none;
   }
