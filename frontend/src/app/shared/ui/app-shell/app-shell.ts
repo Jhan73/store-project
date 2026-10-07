@@ -70,7 +70,7 @@ import type { NavItem } from './nav-item';
         pTooltip="Abrir el menú"
         i18n-pTooltip="@@shell.menu.open"
         tooltipPosition="top"
-        [attr.aria-controls]="menuId"
+        [attr.aria-controls]="menuOpen() ? menuId : null"
         [attr.aria-expanded]="menuOpen()"
         (click)="menuOpen.set(true)"
       >

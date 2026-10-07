@@ -190,7 +190,7 @@ describe('AppShell', () => {
       expect(button.getAttribute('aria-label')).toBe('Abrir el menú');
       expect(button.getAttribute('pTooltip')).toBe('Abrir el menú');
       expect(button.getAttribute('aria-expanded')).toBe('false');
-      expect(button.getAttribute('aria-controls')).toBeTruthy();
+      expect(button.hasAttribute('aria-controls')).toBe(false);
       expect(button.querySelector('svg')).not.toBeNull();
       expect(drawer()).toBeNull();
     });
