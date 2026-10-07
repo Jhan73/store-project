@@ -34,6 +34,7 @@ test('staff availability changes show on another open screen within 5 seconds', 
 
   await expect(boardRow).toContainText('Disponible');
   await expect(staffRow.getByRole('switch', { name: productName })).toBeEnabled();
+  await expect(boardRow.getByRole('switch', { name: productName })).toBeEnabled();
 
   await staffRow.getByRole('switch', { name: productName }).click();
   await expect(staffRow).toContainText('Agotado');
