@@ -38,6 +38,15 @@ describe('TableScroll', () => {
     expect(host.getAttribute('aria-label')).toBe('Listado de mesas');
   });
 
+  it('is the containing block of absolute descendants so they cannot widen the page', async () => {
+    const host = await render();
+
+    const style = getComputedStyle(host);
+
+    expect(style.overflowX).toBe('auto');
+    expect(style.position).toBe('relative');
+  });
+
   it('projects the table inside the scroll container', async () => {
     const host = await render();
 
