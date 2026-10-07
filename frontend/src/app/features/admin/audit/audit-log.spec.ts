@@ -250,10 +250,10 @@ describe('AuditLog', () => {
     it('applies only the latest response when searches overlap', async () => {
       const { host, http, fixture } = await rendered();
 
-      await chooseOption(fixture, host, 'audit-entity-type', 'Personal');
+      type(host, '#audit-entity-id', ENTITY);
       await press(fixture, host, 'search');
       const slow = http.expectOne(isSearch);
-      await chooseOption(fixture, host, 'audit-entity-type', 'Mesa');
+      type(host, '#audit-entity-id', '0199f3a2-7c1e-7b1a-8f00-000000000001');
       await press(fixture, host, 'search');
       const fast = http.expectOne(isSearch);
 
