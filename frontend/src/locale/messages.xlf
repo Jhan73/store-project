@@ -3808,7 +3808,7 @@
     </unit>
     <unit id="shell.brand">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:36,39</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:42,45</note>
       </notes>
       <segment>
         <source>Juguería</source>
@@ -3816,8 +3816,8 @@
     </unit>
     <unit id="shell.menu.open">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:54,55</note>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:56,57</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:53,54</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:55,56</note>
       </notes>
       <segment>
         <source>Abrir el menú</source>
@@ -3825,7 +3825,7 @@
     </unit>
     <unit id="shell.menu.title">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:72</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:71</note>
       </notes>
       <segment>
         <source>Menú</source>
@@ -3833,58 +3833,59 @@
     </unit>
     <unit id="shell.menu.close">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:73,74</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:72,73</note>
       </notes>
       <segment>
         <source>Cerrar el menú</source>
       </segment>
     </unit>
-    <unit id="shell.nav.label">
+    <unit id="shell.sidebar.label">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:92</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:92,93</note>
       </notes>
       <segment>
-        <source>Navegación principal</source>
+        <source>Barra lateral</source>
       </segment>
     </unit>
-    <unit id="shell.theme.group">
+    <unit id="shell.sidebar.brand">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:115</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:100,103</note>
       </notes>
       <segment>
-        <source>Tema</source>
+        <source>Juguería</source>
       </segment>
     </unit>
-    <unit id="shell.theme.light">
+    <unit id="shell.sidebar.toggle">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:122,123</note>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:124,125</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:111,112</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:113,114</note>
       </notes>
       <segment>
-        <source>Tema claro</source>
+        <source>Expandir o contraer la barra lateral</source>
       </segment>
     </unit>
-    <unit id="shell.theme.dark">
+    <unit id="shell.sidebar.pin">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:137,138</note>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:139,140</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:130,131</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:132,133</note>
       </notes>
       <segment>
-        <source>Tema oscuro</source>
+        <source>Anclar la barra lateral</source>
       </segment>
     </unit>
-    <unit id="shell.theme.system">
+    <unit id="shell.sidebar.nav.label">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:152,153</note>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:154,155</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:146,147</note>
       </notes>
       <segment>
-        <source>Tema del sistema</source>
+        <source>Navegación lateral</source>
       </segment>
     </unit>
     <unit id="shell.logout.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:169,170</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:180,181</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:182,183</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:229,230</note>
       </notes>
       <segment>
         <source>Cerrar la sesión</source>
@@ -3892,10 +3893,54 @@
     </unit>
     <unit id="shell.logout">
       <notes>
-        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:175,177</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:188,190</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:235,237</note>
       </notes>
       <segment>
         <source>Salir</source>
+      </segment>
+    </unit>
+    <unit id="shell.nav.label">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:198</note>
+      </notes>
+      <segment>
+        <source>Navegación principal</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.group">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:240</note>
+      </notes>
+      <segment>
+        <source>Tema</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.light">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:247,248</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:249,250</note>
+      </notes>
+      <segment>
+        <source>Tema claro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.dark">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:262,263</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:264,265</note>
+      </notes>
+      <segment>
+        <source>Tema oscuro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.system">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:277,278</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:279,280</note>
+      </notes>
+      <segment>
+        <source>Tema del sistema</source>
       </segment>
     </unit>
   </file>
