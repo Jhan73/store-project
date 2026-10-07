@@ -565,10 +565,22 @@ export class AuditLog {
     this.status.set('loading');
     this.api.search(filtersToQuery(this.applied(), this.timeZone())).subscribe({
       next: (page) => {
-        if (request === this.lastRequest) {
-          this.result.set(page);
-          this.status.set('ready');
+        if (request !== this.lastRequest) {
+          return;
         }
+        const lastPage = page.totalPages - 1;
+        const pastTheEnd =
+          page.content.length === 0 && page.totalElements > 0 && lastPage >= 0 && lastPage < this.applied().page;
+        if (pastTheEnd) {
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: filtersToParams({ ...this.applied(), page: lastPage }),
+            replaceUrl: true,
+          });
+          return;
+        }
+        this.result.set(page);
+        this.status.set('ready');
       },
       error: (error: unknown) => {
         if (request === this.lastRequest) {

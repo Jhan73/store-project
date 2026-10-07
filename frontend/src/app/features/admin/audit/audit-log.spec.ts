@@ -466,6 +466,61 @@ describe('AuditLog', () => {
       expect(current?.textContent?.trim()).toBe('2');
     });
 
+    it('moves to the last page, replacing the URL, when the requested page is past the end', async () => {
+      const { host, http, fixture, router } = await render('/audit?entityType=USER&page=7');
+      const navigate = vi.spyOn(router, 'navigate');
+
+      http.expectOne(isSearch).flush(page([], { page: 7, totalElements: 45, totalPages: 3 }));
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { entityType: 'USER', page: 2 },
+          replaceUrl: true,
+        }),
+      );
+      const request = http.expectOne(isSearch);
+      expect(sent(request)['page']).toBe('2');
+      request.flush(page([update], { page: 2, totalElements: 45, totalPages: 3 }));
+      await fixture.whenStable();
+      expect(rows(host)).toHaveLength(1);
+      expect(host.querySelector('p-paginator')).not.toBeNull();
+      expect(host.textContent).not.toContain('No hay registros con estos filtros');
+    });
+
+    it('does not keep navigating when the server keeps answering an empty page', async () => {
+      const { host, http, fixture, router } = await render('/audit?page=7');
+      const navigate = vi.spyOn(router, 'navigate');
+
+      http.expectOne(isSearch).flush(page([], { page: 7, totalElements: 45, totalPages: 3 }));
+      await fixture.whenStable();
+      http.expectOne(isSearch).flush(page([], { page: 2, totalElements: 45, totalPages: 3 }));
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledTimes(1);
+      http.expectNone(isSearch);
+      expect(host.textContent).toContain('No hay registros con estos filtros');
+    });
+
+    it('does not navigate when the server reports no pages at all', async () => {
+      const { http, fixture, router } = await render('/audit?page=7');
+      const navigate = vi.spyOn(router, 'navigate');
+
+      http.expectOne(isSearch).flush(page([], { page: 7, totalElements: 45, totalPages: 0 }));
+      await fixture.whenStable();
+
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('keeps the plain empty state when nothing matches on the first page', async () => {
+      const { host, router } = await rendered('/audit', page([], { totalElements: 0, totalPages: 0 }));
+      const navigate = vi.spyOn(router, 'navigate');
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(host.textContent).toContain('No hay registros con estos filtros');
+    });
+
     it('has no paginator when there is nothing to page', async () => {
       const { host } = await rendered('/audit', page([], { totalElements: 0, totalPages: 0 }));
 
