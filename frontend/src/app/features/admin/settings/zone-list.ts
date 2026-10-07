@@ -22,10 +22,12 @@ import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { SettingsApi } from './settings-api';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-zone-list',
   imports: [
+    TableScroll,
     ReactiveFormsModule,
     ButtonDirective,
     InputNumber,
@@ -38,7 +40,8 @@ import { SettingsApi } from './settings-api';
   template: `
     <h2 i18n="@@admin.settings.zones.title">Zonas de reparto</h2>
 
-    <table>
+    <app-table-scroll label="Listado de zonas de reparto" i18n-label="@@admin.settings.zones.tableScroll">
+      <table>
       <thead>
         <tr>
           <th i18n="@@admin.settings.zones.name">Nombre</th>
@@ -105,7 +108,8 @@ import { SettingsApi } from './settings-api';
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </app-table-scroll>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="field wide">
