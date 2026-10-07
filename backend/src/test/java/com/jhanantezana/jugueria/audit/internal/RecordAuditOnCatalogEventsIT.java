@@ -22,6 +22,11 @@ import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.catalog.Allergen;
 import com.jhanantezana.jugueria.catalog.AvailabilityChanged;
 import com.jhanantezana.jugueria.catalog.AvailabilityTarget;
+import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
+import com.jhanantezana.jugueria.catalog.CategoryChanged;
+import com.jhanantezana.jugueria.catalog.CategorySnapshot;
+import com.jhanantezana.jugueria.catalog.StationChanged;
+import com.jhanantezana.jugueria.catalog.StationSnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
 import com.jhanantezana.jugueria.catalog.ModifierGroupSnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierOptionSnapshot;
@@ -165,6 +170,107 @@ class RecordAuditOnCatalogEventsIT {
 		assertThat(entry.getEntityType()).isEqualTo("MODIFIER_OPTION");
 		assertThat(entry.getBefore()).containsEntry("available", false);
 		assertThat(entry.getAfter()).containsEntry("available", true);
+	}
+
+	@Test
+	void recordsACategoryCreation() {
+		var categoryId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+		var stationId = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.CREATED, null,
+				new CategorySnapshot("Juices", 2, stationId, true), actorId, Role.ADMIN, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_CREATED");
+		assertThat(entry.getEntityType()).isEqualTo("CATEGORY");
+		assertThat(entry.getActorId()).isEqualTo(actorId);
+		assertThat(entry.getBefore()).isNull();
+		assertThat(entry.getAfter()).containsEntry("name", "Juices")
+			.containsEntry("displayOrder", 2)
+			.containsEntry("stationId", stationId.toString())
+			.containsEntry("active", true);
+	}
+
+	@Test
+	void recordsACategoryUpdateWithBothSides() {
+		var categoryId = UUID.randomUUID();
+		var oldStation = UUID.randomUUID();
+		var newStation = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.UPDATED,
+				new CategorySnapshot("Juices", 2, oldStation, true), new CategorySnapshot("Smoothies", 3, newStation, true),
+				null, null, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_UPDATED");
+		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
+		assertThat(entry.getBefore()).containsEntry("name", "Juices")
+			.containsEntry("displayOrder", 2)
+			.containsEntry("stationId", oldStation.toString());
+		assertThat(entry.getAfter()).containsEntry("name", "Smoothies")
+			.containsEntry("displayOrder", 3)
+			.containsEntry("stationId", newStation.toString());
+	}
+
+	@Test
+	void recordsACategoryDeactivation() {
+		var categoryId = UUID.randomUUID();
+		var stationId = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.DEACTIVATED,
+				new CategorySnapshot("Juices", 2, stationId, true), new CategorySnapshot("Juices", 2, stationId, false),
+				null, null, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_DEACTIVATED");
+		assertThat(entry.getBefore()).containsEntry("active", true);
+		assertThat(entry.getAfter()).containsEntry("active", false);
+	}
+
+	@Test
+	void recordsACategoryReactivation() {
+		var categoryId = UUID.randomUUID();
+		var stationId = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.ACTIVATED,
+				new CategorySnapshot("Juices", 2, stationId, false), new CategorySnapshot("Juices", 2, stationId, true),
+				null, null, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_REACTIVATED");
+		assertThat(entry.getBefore()).containsEntry("active", false);
+		assertThat(entry.getAfter()).containsEntry("active", true);
+	}
+
+	@Test
+	void recordsAStationCreation() {
+		var stationId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), actorId,
+				Role.ADMIN, NOW));
+
+		var entry = findByEntityId(stationId);
+		assertThat(entry.getAction()).isEqualTo("STATION_CREATED");
+		assertThat(entry.getEntityType()).isEqualTo("STATION");
+		assertThat(entry.getActorId()).isEqualTo(actorId);
+		assertThat(entry.getBefore()).isNull();
+		assertThat(entry.getAfter()).containsEntry("name", "Bar");
+	}
+
+	@Test
+	void recordsAStationRenameWithBothNames() {
+		var stationId = UUID.randomUUID();
+
+		publish(new StationChanged(stationId, CatalogChangeKind.UPDATED, new StationSnapshot("Bar"),
+				new StationSnapshot("Juice bar"), null, null, NOW));
+
+		var entry = findByEntityId(stationId);
+		assertThat(entry.getAction()).isEqualTo("STATION_UPDATED");
+		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
+		assertThat(entry.getBefore()).containsEntry("name", "Bar");
+		assertThat(entry.getAfter()).containsEntry("name", "Juice bar");
 	}
 
 	private static ProductSnapshot product(String name, String price, boolean active) {
