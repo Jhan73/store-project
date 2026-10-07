@@ -25,6 +25,13 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 
 **Buttons:** every button (`pButton`, `p-button`, `p-fileupload`) has a Tabler icon before its label (the label goes in its own `<span i18n>` so the icon stays out of the message), a `pTooltip` with `tooltipPosition="top"` and an i18n description of the action (`i18n-pTooltip`, or a `$localize` string when the text depends on state), and, when icon-only, an i18n `aria-label`. The same action uses the same icon everywhere. A button with `[loading]` wraps its icon in `@if (!<same signal>())` so only PrimeNG's spinner shows while loading, and a `p-button` label span carries `pButtonLabel` (keeps `p-button-label` styling). `a[pButton]` has no underline: a global rule in `styles.scss` removes it, so do not add per-component fixes. `button-conventions.spec.ts` enforces this. Tooltips do not show on disabled buttons, so never put the only explanation of an action in one.
 
+**Responsive:**
+- Mobile-first: write base styles for the smallest screen and enhance upward with `min-width` queries only, never `max-width` overrides. Breakpoints are defined once, in `src/styles/_breakpoints.scss` (`tablet-up` 48rem, `desktop-up` 64rem); layout tokens (`--page-padding`, `--touch-target`) live in `styles.scss`.
+- The header (`shared/ui/app-shell`) shows the brand and a hamburger button below the desktop breakpoint, opening the navigation, theme switch, role and sign-out in a `p-drawer`; from the desktop breakpoint up it shows the inline navigation. Both structures are in the template and CSS decides which one is visible.
+- Forms are one column on phones and multi-column from the tablet breakpoint up. Interactive targets are at least 44 px (`--touch-target`).
+- Every data table sits inside `app-table-scroll` (`shared/ui/table-scroll`), a focusable labelled region that scrolls horizontally; `table-conventions.spec.ts` enforces it.
+- No horizontal page overflow at 360 px wide.
+
 **Light and dark mode:**
 - Both modes are supported everywhere. Default follows `prefers-color-scheme`; the user's choice is stored in `localStorage` and applied as a class on `<html>`.
 - The class is applied by an inline script in `index.html` before first paint, so SSR pages never flash the wrong theme.
