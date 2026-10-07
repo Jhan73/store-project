@@ -12,6 +12,7 @@ import { API_ORIGIN } from '../../core/api/api-config';
 import { authInterceptor } from '../../core/auth/auth-interceptor';
 import { AuthStore } from '../../core/auth/auth-store';
 import { errorInterceptor } from '../../core/errors/error-interceptor';
+import { SidebarStore } from '../../core/layout/sidebar-store';
 import { RealtimeClient } from '../../core/realtime/realtime-client';
 import { AppPreset } from '../../core/theme/app-preset';
 
@@ -85,6 +86,23 @@ describe('staff and admin area', () => {
 
     expect(navLinks()).toEqual(['/staff', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
+  });
+
+  it('wires the sidebar toggle and pin to the sidebar store', async () => {
+    localStorage.clear();
+    await signInAs('SERVER');
+    await harness.navigateByUrl('/staff');
+    const store = TestBed.inject(SidebarStore);
+
+    page().querySelector<HTMLButtonElement>('[data-testid="sidebar-toggle"]')!.click();
+    await harness.fixture.whenStable();
+    expect(store.expanded()).toBe(true);
+    expect(store.pinned()).toBe(false);
+
+    page().querySelector<HTMLButtonElement>('[data-testid="sidebar-pin"]')!.click();
+    await harness.fixture.whenStable();
+    expect(store.pinned()).toBe(true);
+    localStorage.clear();
   });
 
   it('lets floor staff open the availability screen and marks only its entry as active', async () => {

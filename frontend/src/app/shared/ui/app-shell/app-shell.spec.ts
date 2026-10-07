@@ -1,7 +1,10 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
 import { IconHome, IconSettings } from '@tabler/icons-angular';
+import { Tooltip } from 'primeng/tooltip';
+import { SidebarStore } from '../../../core/layout/sidebar-store';
 import type { ThemeMode } from '../../../core/theme/theme-store';
 import { AppShell } from './app-shell';
 import type { NavItem } from './nav-item';
@@ -20,6 +23,11 @@ const items: NavItem[] = [
       [items]="items"
       roleLabel="Cajero"
       [themeMode]="mode()"
+      [sidebarExpanded]="sidebar.expanded()"
+      [sidebarPinned]="sidebar.pinned()"
+      (sidebarToggle)="sidebar.toggle()"
+      (sidebarPinToggle)="sidebar.togglePin()"
+      (sidebarDismiss)="sidebar.dismiss()"
       (themeModeChange)="changes.push($event)"
       (logout)="logouts.set(logouts() + 1)"
     >
@@ -29,6 +37,7 @@ const items: NavItem[] = [
 })
 class Harness {
   readonly items = items;
+  readonly sidebar = inject(SidebarStore);
   readonly mode = signal<ThemeMode>('system');
   readonly changes: ThemeMode[] = [];
   readonly logouts = signal(0);
@@ -48,6 +57,14 @@ class NestedHarness {
 }
 
 describe('AppShell', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('gives every icon-only and text button a tooltip that matches its name', async () => {
     const { host } = await render();
 
@@ -73,7 +90,8 @@ describe('AppShell', () => {
     const { host } = await render();
 
     expect(host.querySelector('header')?.textContent).toContain('Juguería');
-    expect(host.querySelector('header')?.textContent).toContain('Cajero');
+    expect(host.querySelector('aside')?.textContent).toContain('Juguería');
+    expect(host.querySelector('aside')?.textContent).toContain('Cajero');
     expect(host.querySelector('main')?.textContent).toContain('Contenido de la página');
   });
 
@@ -212,6 +230,203 @@ describe('AppShell', () => {
 
       expect(fixture.componentInstance.logouts()).toBe(1);
       expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+    });
+  });
+
+  describe('sidebar', () => {
+    const aside = (host: HTMLElement) => host.querySelector<HTMLElement>('aside')!;
+    const toggle = (host: HTMLElement) =>
+      host.querySelector<HTMLButtonElement>('[data-testid="sidebar-toggle"]')!;
+    const pin = (host: HTMLElement) =>
+      host.querySelector<HTMLButtonElement>('[data-testid="sidebar-pin"]');
+    const content = (host: HTMLElement) => host.querySelector<HTMLElement>('main')!;
+    const firstLink = (host: HTMLElement) =>
+      aside(host).querySelector<HTMLAnchorElement>('nav a')!;
+    const expand = async (fixture: { whenStable(): Promise<unknown> }, host: HTMLElement) => {
+      toggle(host).click();
+      await fixture.whenStable();
+    };
+    const focusOut = (from: Element, to: Element | null) =>
+      from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: to }));
+    const keydown = (target: HTMLElement, key: string) =>
+      target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+
+    it('starts as a rail: toggle collapsed, no pin button, content not docked', async () => {
+      const { host } = await render();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+      expect(toggle(host).getAttribute('aria-controls')).toBe(aside(host).id);
+      expect(toggle(host).getAttribute('aria-label')).toBeTruthy();
+      expect(toggle(host).getAttribute('pTooltip')).toBe(toggle(host).getAttribute('aria-label'));
+      expect(toggle(host).querySelector('svg')).not.toBeNull();
+      expect(aside(host).classList).not.toContain('is-expanded');
+      expect(pin(host)).toBeNull();
+      expect(content(host).classList).not.toContain('is-docked');
+    });
+
+    it('labels the rail links and shows their name in a tooltip on the right', async () => {
+      const { fixture, host } = await render();
+
+      const links = Array.from(aside(host).querySelectorAll<HTMLAnchorElement>('nav a'));
+      const names = ['Operación', 'Administración'];
+      expect(links.map((link) => link.getAttribute('aria-label'))).toEqual(names);
+      const tooltips = fixture.debugElement
+        .queryAll(By.css('aside nav a'))
+        .map((link) => link.injector.get(Tooltip));
+      expect(tooltips.map((tooltip) => tooltip.content)).toEqual(names);
+      expect(tooltips.every((tooltip) => tooltip.tooltipPosition === 'right')).toBe(true);
+      expect(links.every((link) => link.querySelector('svg') !== null)).toBe(true);
+    });
+
+    it('gives every sidebar button an icon, a tooltip and a name', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      const buttons = Array.from(aside(host).querySelectorAll<HTMLElement>('button'));
+      expect(buttons.length).toBeGreaterThanOrEqual(6);
+      for (const button of buttons) {
+        expect(button.querySelector('svg')).not.toBeNull();
+        expect(button.getAttribute('pTooltip')).toBeTruthy();
+        expect(button.getAttribute('aria-label')).toBeTruthy();
+      }
+    });
+
+    it('keeps the sidebar and the drawer navigations under different names', async () => {
+      const { fixture, host } = await render();
+      host.querySelector<HTMLButtonElement>('[data-testid="menu-button"]')!.click();
+      await fixture.whenStable();
+
+      const names = Array.from(document.body.querySelectorAll('nav')).map((nav) =>
+        nav.getAttribute('aria-label'),
+      );
+      expect(names).toHaveLength(2);
+      expect(new Set(names).size).toBe(2);
+    });
+
+    it('expands as an overlay without moving the content', async () => {
+      const { fixture, host } = await render();
+
+      await expand(fixture, host);
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+      expect(aside(host).classList).toContain('is-expanded');
+      expect(pin(host)).not.toBeNull();
+      expect(pin(host)!.getAttribute('aria-pressed')).toBe('false');
+      expect(content(host).classList).not.toContain('is-docked');
+    });
+
+    it('docks the sidebar when pinned and pushes the content', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      pin(host)!.click();
+      await fixture.whenStable();
+
+      expect(pin(host)!.getAttribute('aria-pressed')).toBe('true');
+      expect(content(host).classList).toContain('is-docked');
+      expect(aside(host).classList).toContain('is-docked');
+    });
+
+    it('unpins and returns to the rail when a pinned sidebar is collapsed', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+      pin(host)!.click();
+      await fixture.whenStable();
+
+      toggle(host).click();
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+      expect(pin(host)).toBeNull();
+      expect(content(host).classList).not.toContain('is-docked');
+      expect(localStorage.getItem('app-sidebar-pinned')).toBeNull();
+    });
+
+    it('collapses a temporary expansion on Escape and returns the focus to the toggle', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+      pin(host)!.focus();
+
+      keydown(pin(host)!, 'Escape');
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(toggle(host));
+    });
+
+    it('collapses a temporary expansion when a link is followed', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      firstLink(host).click();
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('collapses a temporary expansion when the focus leaves it', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      focusOut(firstLink(host), content(host));
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('stays expanded while the focus moves inside the sidebar', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      focusOut(toggle(host), pin(host));
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('collapses a temporary expansion when the pointer leaves it', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+
+      aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('keeps a pinned sidebar docked on Escape, link, focus-out and pointer leave', async () => {
+      const { fixture, host } = await render();
+      await expand(fixture, host);
+      pin(host)!.click();
+      await fixture.whenStable();
+
+      keydown(pin(host)!, 'Escape');
+      firstLink(host).click();
+      focusOut(firstLink(host), content(host));
+      aside(host).dispatchEvent(new MouseEvent('mouseleave'));
+      await fixture.whenStable();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+      expect(content(host).classList).toContain('is-docked');
+    });
+
+    it('restores a pinned sidebar as docked', async () => {
+      localStorage.setItem('app-sidebar-pinned', 'true');
+
+      const { host } = await render();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('true');
+      expect(content(host).classList).toContain('is-docked');
+    });
+
+    it('renders when the storage throws', async () => {
+      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+        throw new Error('blocked');
+      });
+
+      const { host } = await render();
+
+      expect(toggle(host).getAttribute('aria-expanded')).toBe('false');
     });
   });
 });

@@ -2,6 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   ElementRef,
   input,
   output,
@@ -12,9 +13,13 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IconDeviceDesktop,
   IconGlassFull,
+  IconLayoutSidebarLeftCollapse,
+  IconLayoutSidebarLeftExpand,
   IconLogout,
   IconMenu2,
   IconMoon,
+  IconPin,
+  IconPinnedOff,
   IconSun,
   TablerIconComponent,
 } from '@tabler/icons-angular';
@@ -28,19 +33,13 @@ import type { NavItem } from './nav-item';
   selector: 'app-shell',
   imports: [ButtonDirective, Drawer, NgTemplateOutlet, RouterLink, RouterLinkActive, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '(document:keydown.escape)': 'onEscape()' },
   styleUrl: './app-shell.scss',
   template: `
     <header class="bar">
       <div class="brand">
         <tabler-icon [icon]="icons.brand" aria-hidden="true" />
         <strong i18n="@@shell.brand">Juguería</strong>
-      </div>
-
-      <div class="inline">
-        <ng-container *ngTemplateOutlet="links" />
-        <div class="tools">
-          <ng-container *ngTemplateOutlet="tools" />
-        </div>
       </div>
 
       <button
@@ -84,7 +83,114 @@ import type { NavItem } from './nav-item';
       </div>
     </p-drawer>
 
-    <main class="content">
+    <aside
+      #sidebar
+      class="sidebar"
+      [id]="sidebarId"
+      [class.is-expanded]="sidebarExpanded()"
+      [class.is-docked]="sidebarPinned()"
+      aria-label="Barra lateral"
+      i18n-aria-label="@@shell.sidebar.label"
+      (focusout)="onSidebarFocusOut($event)"
+      (mouseleave)="collapseTemporarily()"
+    >
+      <div class="sidebar-top">
+        <div class="brand">
+          <tabler-icon [icon]="icons.brand" aria-hidden="true" />
+          <strong class="label" i18n="@@shell.sidebar.brand">Juguería</strong>
+        </div>
+
+        <div class="sidebar-actions">
+          <button
+            #sidebarToggleButton
+            pButton
+            type="button"
+            severity="secondary"
+            [text]="true"
+            data-testid="sidebar-toggle"
+            aria-label="Expandir o contraer la barra lateral"
+            i18n-aria-label="@@shell.sidebar.toggle"
+            pTooltip="Expandir o contraer la barra lateral"
+            i18n-pTooltip="@@shell.sidebar.toggle"
+            tooltipPosition="top"
+            [attr.aria-controls]="sidebarId"
+            [attr.aria-expanded]="sidebarExpanded()"
+            (click)="sidebarToggle.emit()"
+          >
+            <tabler-icon [icon]="toggleIcon()" aria-hidden="true" />
+          </button>
+          @if (sidebarExpanded()) {
+            <button
+              #sidebarPinButton
+              pButton
+              type="button"
+              severity="secondary"
+              [text]="true"
+              data-testid="sidebar-pin"
+              aria-label="Anclar la barra lateral"
+              i18n-aria-label="@@shell.sidebar.pin"
+              pTooltip="Anclar la barra lateral"
+              i18n-pTooltip="@@shell.sidebar.pin"
+              tooltipPosition="top"
+              [attr.aria-pressed]="sidebarPinned()"
+              (click)="sidebarPinToggle.emit()"
+            >
+              <tabler-icon [icon]="pinIcon()" aria-hidden="true" />
+            </button>
+          }
+        </div>
+      </div>
+
+      <nav
+        class="nav sidebar-nav"
+        aria-label="Navegación lateral"
+        i18n-aria-label="@@shell.sidebar.nav.label"
+      >
+        <ul>
+          @for (item of items(); track item.path) {
+            <li>
+              <a
+                [routerLink]="item.path"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                ariaCurrentWhenActive="page"
+                [attr.aria-label]="item.label"
+                [pTooltip]="item.label"
+                tooltipPosition="right"
+                [tooltipDisabled]="sidebarExpanded()"
+                (click)="followSidebarLink()"
+              >
+                <tabler-icon [icon]="item.icon" aria-hidden="true" />
+                <span class="label">{{ item.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+
+      <div class="tools sidebar-tools">
+        <span class="role label">{{ roleLabel() }}</span>
+        <ng-container *ngTemplateOutlet="themes" />
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          data-testid="logout"
+          aria-label="Cerrar la sesión"
+          i18n-aria-label="@@shell.logout.tooltip"
+          pTooltip="Cerrar la sesión"
+          i18n-pTooltip="@@shell.logout.tooltip"
+          tooltipPosition="top"
+          (click)="signOut()"
+        >
+          <tabler-icon [icon]="icons.logout" aria-hidden="true" />
+          <span class="label" i18n="@@shell.logout">Salir</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="content" [class.is-docked]="sidebarPinned()">
       <ng-content />
     </main>
 
@@ -112,6 +218,25 @@ import type { NavItem } from './nav-item';
     <ng-template #tools>
       <span class="role">{{ roleLabel() }}</span>
 
+      <ng-container *ngTemplateOutlet="themes" />
+
+      <button
+        pButton
+        type="button"
+        severity="secondary"
+        [outlined]="true"
+        data-testid="logout"
+        pTooltip="Cerrar la sesión"
+        i18n-pTooltip="@@shell.logout.tooltip"
+        tooltipPosition="top"
+        (click)="signOut()"
+      >
+        <tabler-icon [icon]="icons.logout" aria-hidden="true" />
+        <span i18n="@@shell.logout">Salir</span>
+      </button>
+    </ng-template>
+
+    <ng-template #themes>
       <div class="themes" role="group" aria-label="Tema" i18n-aria-label="@@shell.theme.group">
         <button
           pButton
@@ -159,21 +284,6 @@ import type { NavItem } from './nav-item';
           <tabler-icon [icon]="icons.system" aria-hidden="true" />
         </button>
       </div>
-
-      <button
-        pButton
-        type="button"
-        severity="secondary"
-        [outlined]="true"
-        data-testid="logout"
-        pTooltip="Cerrar la sesión"
-        i18n-pTooltip="@@shell.logout.tooltip"
-        tooltipPosition="top"
-        (click)="signOut()"
-      >
-        <tabler-icon [icon]="icons.logout" aria-hidden="true" />
-        <span i18n="@@shell.logout">Salir</span>
-      </button>
     </ng-template>
   `,
 })
@@ -181,12 +291,22 @@ export class AppShell {
   readonly items = input.required<readonly NavItem[]>();
   readonly roleLabel = input.required<string>();
   readonly themeMode = input.required<ThemeMode>();
+  readonly sidebarExpanded = input(false);
+  readonly sidebarPinned = input(false);
   readonly themeModeChange = output<ThemeMode>();
+  readonly sidebarToggle = output<void>();
+  readonly sidebarPinToggle = output<void>();
+  readonly sidebarDismiss = output<void>();
   readonly logout = output<void>();
 
   protected readonly menuId = 'shell-menu';
+  protected readonly sidebarId = 'shell-sidebar';
   protected readonly menuOpen = signal(false);
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
+  private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
+  private readonly sidebarToggleButton =
+    viewChild.required<ElementRef<HTMLButtonElement>>('sidebarToggleButton');
+  private readonly sidebarPinButton = viewChild<ElementRef<HTMLButtonElement>>('sidebarPinButton');
 
   protected readonly icons = {
     brand: IconGlassFull,
@@ -195,7 +315,18 @@ export class AppShell {
     system: IconDeviceDesktop,
     logout: IconLogout,
     menu: IconMenu2,
+    expand: IconLayoutSidebarLeftExpand,
+    collapse: IconLayoutSidebarLeftCollapse,
+    pin: IconPin,
+    unpin: IconPinnedOff,
   };
+
+  protected readonly toggleIcon = computed(() =>
+    this.sidebarExpanded() ? this.icons.collapse : this.icons.expand,
+  );
+  protected readonly pinIcon = computed(() =>
+    this.sidebarPinned() ? this.icons.unpin : this.icons.pin,
+  );
 
   protected closeMenu(): void {
     if (this.menuOpen()) {
@@ -206,6 +337,39 @@ export class AppShell {
 
   protected restoreFocus(): void {
     this.menuButton().nativeElement.focus();
+  }
+
+  protected onEscape(): void {
+    if (this.sidebarPinned() || !this.sidebarExpanded()) {
+      return;
+    }
+    const hadFocus = this.sidebar().nativeElement.contains(document.activeElement);
+    this.collapseTemporarily();
+    if (hadFocus) {
+      this.sidebarToggleButton().nativeElement.focus();
+    }
+  }
+
+  protected onSidebarFocusOut(event: FocusEvent): void {
+    const next = event.relatedTarget;
+    if (next instanceof Node && !this.sidebar().nativeElement.contains(next)) {
+      this.collapseTemporarily();
+    }
+  }
+
+  protected followSidebarLink(): void {
+    this.collapseTemporarily();
+  }
+
+  // The pin button leaves the page when the sidebar collapses, so the focus moves to the toggle first.
+  protected collapseTemporarily(): void {
+    if (this.sidebarPinned() || !this.sidebarExpanded()) {
+      return;
+    }
+    if (document.activeElement === this.sidebarPinButton()?.nativeElement) {
+      this.sidebarToggleButton().nativeElement.focus();
+    }
+    this.sidebarDismiss.emit();
   }
 
   protected signOut(): void {

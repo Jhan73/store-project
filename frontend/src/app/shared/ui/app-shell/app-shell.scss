@@ -1,6 +1,9 @@
 @use '../../../../styles/breakpoints' as bp;
 
 :host {
+  --sidebar-rail: 4.5rem;
+  --sidebar-expanded: 15rem;
+
   display: block;
   min-height: 100vh;
 }
@@ -24,11 +27,6 @@
 
 .brand strong {
   color: var(--foreground);
-}
-
-// Below the wide breakpoint the navigation lives in the drawer: seven links plus the tools need ~1600px in one row.
-.inline {
-  display: none;
 }
 
 .menu-button {
@@ -84,35 +82,110 @@
 }
 
 .content {
+  min-width: 0;
   padding: var(--page-padding);
 }
 
-@include bp.wide-up {
-  .menu-button {
+// Below the desktop breakpoint the navigation lives in the drawer of the top bar.
+.sidebar {
+  display: none;
+}
+
+@include bp.desktop-up {
+  .bar {
     display: none;
   }
 
-  .inline {
+  .sidebar {
     display: flex;
-    flex: 1;
-    align-items: center;
+    flex-direction: column;
     gap: var(--space-4);
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 20;
+    width: var(--sidebar-rail);
+    padding: var(--space-3) var(--space-2);
+    overflow: hidden auto;
+    background: var(--muted);
+    border-inline-end: 1px solid var(--border);
   }
 
-  .inline .nav {
-    flex: 1;
+  .sidebar.is-expanded {
+    width: var(--sidebar-expanded);
   }
 
-  .inline .nav ul {
-    flex-direction: row;
-    flex-wrap: wrap;
+  // An unpinned expansion floats over the content, which keeps its rail offset.
+  .sidebar.is-expanded:not(.is-docked) {
+    box-shadow: var(--shadow-md);
+  }
+
+  .content {
+    margin-inline-start: var(--sidebar-rail);
+  }
+
+  .content.is-docked {
+    margin-inline-start: var(--sidebar-expanded);
+  }
+
+  .sidebar-top,
+  .sidebar-actions,
+  .sidebar-tools,
+  .sidebar .themes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: var(--space-2);
   }
 
-  .inline .tools {
+  .sidebar-nav {
+    flex: 1;
+  }
+
+  .sidebar .nav a {
+    justify-content: center;
+    padding-inline: var(--space-2);
+  }
+
+  .sidebar-tools {
+    padding-top: var(--space-3);
+  }
+
+  .sidebar:not(.is-expanded) .label {
+    display: none;
+  }
+
+  .sidebar.is-expanded .sidebar-top,
+  .sidebar.is-expanded .sidebar-tools {
+    align-items: stretch;
+  }
+
+  .sidebar.is-expanded .brand {
+    padding-inline: var(--space-2);
+  }
+
+  .sidebar.is-expanded .sidebar-actions,
+  .sidebar.is-expanded .themes {
     flex-direction: row;
-    align-items: center;
-    padding-top: 0;
-    border-top: 0;
+    justify-content: flex-start;
+  }
+
+  .sidebar.is-expanded .nav a {
+    justify-content: flex-start;
+    padding-inline: var(--space-3);
+  }
+
+  .sidebar.is-expanded .role {
+    padding-inline: var(--space-2);
   }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar,
+  .content {
+    transition:
+      width 0.2s ease,
+      margin-inline-start 0.2s ease;
+  }
+}
+
