@@ -49,6 +49,27 @@ describe('paramsToFilters', () => {
     expect(filters).toEqual(EMPTY_FILTERS);
   });
 
+  it('reads a lone from as that single whole day', () => {
+    const filters = paramsToFilters(convertToParamMap({ from: '2026-10-05' }));
+
+    expect(filters.from).toBe('2026-10-05');
+    expect(filters.to).toBe('2026-10-05');
+  });
+
+  it('reads a lone to as that single whole day', () => {
+    const filters = paramsToFilters(convertToParamMap({ to: '2026-10-05' }));
+
+    expect(filters.from).toBe('2026-10-05');
+    expect(filters.to).toBe('2026-10-05');
+  });
+
+  it('uses the valid end when the other one is not a day', () => {
+    const filters = paramsToFilters(convertToParamMap({ from: 'ayer', to: '2026-10-05' }));
+
+    expect(filters.from).toBe('2026-10-05');
+    expect(filters.to).toBe('2026-10-05');
+  });
+
   it('keeps an entity id that is not an id so the field can say so', () => {
     expect(paramsToFilters(convertToParamMap({ entityId: ' abc ' })).entityId).toBe('abc');
   });

@@ -48,9 +48,12 @@ export function paramsToFilters(params: ParamMap): AuditFilters {
   const actorId = text(params.get('actorId'));
   const page = Number(params.get('page') ?? 0);
   const size = Number(params.get('size') ?? DEFAULT_PAGE_SIZE);
+  // The picker offers one day or a full range, so a lone end means that single whole day.
+  const from = day(params.get('from')) ?? day(params.get('to'));
+  const to = day(params.get('to')) ?? from;
   return {
-    from: day(params.get('from')),
-    to: day(params.get('to')),
+    from,
+    to,
     actorId: actorId !== null && UUID.test(actorId) ? actorId : null,
     entityType: text(params.get('entityType')),
     entityId: text(params.get('entityId')) ?? '',

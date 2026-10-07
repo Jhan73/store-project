@@ -353,6 +353,28 @@ describe('AuditLog', () => {
       expect(host.querySelector<HTMLInputElement>('#audit-entity-id')!.value).toBe(ENTITY);
     });
 
+    it.each([['from'], ['to']])(
+      'treats a lone %s in the URL as one whole day in the picker, the request and the next search',
+      async (name) => {
+        const { host, http, fixture, router } = await render(`/audit?${name}=2026-10-05`);
+
+        const first = http.expectOne(isSearch);
+        expect(sent(first)['from']).toBe('2026-10-05T05:00:00.000Z');
+        expect(sent(first)['to']).toBe('2026-10-06T04:59:59.999999Z');
+        first.flush(page([]));
+        await fixture.whenStable();
+        expect(host.querySelector<HTMLInputElement>('#audit-range')!.value).toContain('05/10/2026');
+
+        await press(fixture, host, 'search');
+        const again = http.expectOne(isSearch);
+        expect(sent(again)['from']).toBe('2026-10-05T05:00:00.000Z');
+        expect(sent(again)['to']).toBe('2026-10-06T04:59:59.999999Z');
+        again.flush(page([]));
+        await fixture.whenStable();
+        expect(router.url).toBe(`/audit?${name}=2026-10-05`);
+      },
+    );
+
     it('follows the URL when the browser goes back', async () => {
       const { host, http, fixture, router } = await rendered('/audit?entityType=USER');
 
