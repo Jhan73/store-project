@@ -63,7 +63,7 @@ describe('AppShell', () => {
   });
 
   async function render() {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideRouter([{ path: '**', children: [] }])] });
     const fixture = TestBed.createComponent(Harness);
     await fixture.whenStable();
     return { fixture, host: fixture.nativeElement as HTMLElement };
@@ -140,5 +140,78 @@ describe('AppShell', () => {
     host.querySelector<HTMLButtonElement>('button[data-testid="logout"]')?.click();
 
     expect(fixture.componentInstance.logouts()).toBe(1);
+  });
+
+  describe('menu drawer', () => {
+    const drawer = () => document.body.querySelector<HTMLElement>('.p-drawer');
+    const hamburger = (host: HTMLElement) =>
+      host.querySelector<HTMLButtonElement>('[data-testid="menu-button"]')!;
+
+    it('starts with a closed drawer and a labelled hamburger button', async () => {
+      const { host } = await render();
+
+      const button = hamburger(host);
+      expect(button.getAttribute('aria-label')).toBe('Abrir el menú');
+      expect(button.getAttribute('pTooltip')).toBe('Abrir el menú');
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(button.getAttribute('aria-controls')).toBeTruthy();
+      expect(button.querySelector('svg')).not.toBeNull();
+      expect(drawer()).toBeNull();
+    });
+
+    it('opens the drawer with the navigation, themes, role and sign-out', async () => {
+      const { fixture, host } = await render();
+
+      hamburger(host).click();
+      await fixture.whenStable();
+
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('true');
+      const open = drawer()!;
+      expect(open).not.toBeNull();
+      expect(open.querySelector(`#${hamburger(host).getAttribute('aria-controls')}`)).not.toBeNull();
+      const links = Array.from(open.querySelectorAll('nav a'));
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/staff', '/admin']);
+      expect(open.textContent).toContain('Cajero');
+      expect(open.querySelectorAll('.themes button')).toHaveLength(3);
+      expect(open.querySelector('[data-testid="logout"]')).not.toBeNull();
+    });
+
+    it('closes on Escape and gives the focus back to the hamburger', async () => {
+      const { fixture, host } = await render();
+      hamburger(host).click();
+      await fixture.whenStable();
+
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', which: 27, bubbles: true }),
+      );
+      await fixture.whenStable();
+
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(hamburger(host));
+    });
+
+    it('closes when a navigation link is followed', async () => {
+      const { fixture, host } = await render();
+      hamburger(host).click();
+      await fixture.whenStable();
+
+      drawer()!.querySelector<HTMLAnchorElement>('nav a')!.click();
+      await fixture.whenStable();
+
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(hamburger(host));
+    });
+
+    it('closes when the sign-out button is used', async () => {
+      const { fixture, host } = await render();
+      hamburger(host).click();
+      await fixture.whenStable();
+
+      drawer()!.querySelector<HTMLButtonElement>('[data-testid="logout"]')!.click();
+      await fixture.whenStable();
+
+      expect(fixture.componentInstance.logouts()).toBe(1);
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+    });
   });
 });
