@@ -1,7 +1,7 @@
 import { request, type APIRequestContext } from '@playwright/test';
 import { adminCredentials, apiUrl } from './env';
 
-export const RUN_PREFIX = 'e2e-';
+export const E2E_NAME = /^e2e-\d{13}-/;
 
 export interface Money {
   amount: string;
@@ -31,7 +31,7 @@ interface Page<T> {
 }
 
 export function uniqueName(label: string): string {
-  return `${RUN_PREFIX}${Date.now()}-${label}`;
+  return `e2e-${Date.now()}-${label}`;
 }
 
 export class AdminApi {
@@ -80,32 +80,57 @@ export class AdminApi {
   }
 
   // Removes everything this suite created, whichever run left it behind. Products and categories can only be
-  // deactivated; modifier groups are deleted after being detached from the products that used them.
+  // deactivated; modifier groups are deleted after being detached from the products that used them. Items are
+  // processed independently and failures are reported together at the end.
   async cleanUp(): Promise<void> {
-    for (const product of await this.products()) {
-      if (!product.name.startsWith(RUN_PREFIX)) continue;
-      let current: Product = product;
-      if (current.modifierGroupIds.length > 0) {
-        current = await this.send<Product>(
-          'PUT',
-          `/api/v1/admin/products/${current.id}`,
-          this.saveBody(current, []),
-          current.etag,
-        );
+    const errors: string[] = [];
+    const attempt = async (what: string, action: () => Promise<unknown>) => {
+      try {
+        await action();
+      } catch (error) {
+        errors.push(`${what}: ${error instanceof Error ? error.message : String(error)}`);
       }
-      if (current.active) {
-        await this.send('POST', `/api/v1/admin/products/${current.id}/deactivate`, undefined, current.etag);
-      }
+    };
+
+    const products = await this.products();
+    const usedByOthers = new Set(
+      products.filter((product) => !E2E_NAME.test(product.name)).flatMap((product) => product.modifierGroupIds),
+    );
+    for (const product of products.filter((candidate) => E2E_NAME.test(candidate.name))) {
+      await attempt(`product ${product.id}`, async () => {
+        let current: Product = product;
+        if (current.modifierGroupIds.length > 0) {
+          current = await this.send<Product>(
+            'PUT',
+            `/api/v1/admin/products/${current.id}`,
+            this.saveBody(current, []),
+            current.etag,
+          );
+        }
+        if (current.active) {
+          await this.send('POST', `/api/v1/admin/products/${current.id}/deactivate`, undefined, current.etag);
+        }
+      });
     }
     for (const group of await this.get<Versioned[]>('/api/v1/admin/modifier-groups')) {
-      if (group.name.startsWith(RUN_PREFIX)) {
-        await this.send('DELETE', `/api/v1/admin/modifier-groups/${group.id}`, undefined, group.etag);
+      if (!E2E_NAME.test(group.name)) continue;
+      if (usedByOthers.has(group.id)) {
+        console.warn(`Skipped modifier group ${group.id}: it is attached to a product this suite did not create.`);
+        continue;
       }
+      await attempt(`modifier group ${group.id}`, () =>
+        this.send('DELETE', `/api/v1/admin/modifier-groups/${group.id}`, undefined, group.etag),
+      );
     }
     for (const category of await this.get<Category[]>('/api/v1/admin/categories')) {
-      if (category.name.startsWith(RUN_PREFIX) && category.active) {
-        await this.send('POST', `/api/v1/admin/categories/${category.id}/deactivate`, undefined, category.etag);
+      if (E2E_NAME.test(category.name) && category.active) {
+        await attempt(`category ${category.id}`, () =>
+          this.send('POST', `/api/v1/admin/categories/${category.id}/deactivate`, undefined, category.etag),
+        );
       }
+    }
+    if (errors.length > 0) {
+      throw new Error([`Cleanup left ${errors.length} item(s) behind:`, ...errors].join('\n'));
     }
   }
 

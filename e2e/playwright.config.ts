@@ -14,7 +14,7 @@ export default defineConfig({
   retries: process.env['CI'] ? 1 : 0,
   // html, json, blob and junit persist typed values as step titles, so they are never used.
   reporter: process.env['CI'] ? [['github'], ['line']] : [['list']],
-  timeout: 120_000,
+  timeout: 60_000,
   expect: { timeout: 10_000 },
   use: {
     baseURL: baseUrl,
@@ -25,6 +25,7 @@ export default defineConfig({
     screenshot: 'off',
   },
   projects: [
+    { name: 'unit', testMatch: /\.spec\.ts/ },
     { name: 'setup', testMatch: /auth\.setup\.ts/ },
     {
       name: 'chromium',
