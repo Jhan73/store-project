@@ -1,4 +1,18 @@
 @use './styles/theme';
+@use './styles/breakpoints' as bp;
+
+:root {
+  --touch-target: 2.75rem;
+  --page-padding: var(--space-3);
+
+  @include bp.tablet-up {
+    --page-padding: var(--space-6);
+  }
+
+  @include bp.desktop-up {
+    --page-padding: var(--space-8);
+  }
+}
 
 *,
 *::before,
@@ -28,4 +42,25 @@ a[pButton],
 a[pButton]:hover,
 a[pButton]:focus {
   text-decoration: none;
+}
+
+// Touch targets: sizing only, the look stays with the PrimeNG preset.
+.p-button,
+.p-inputtext,
+.p-select {
+  min-height: var(--touch-target);
+}
+
+.p-button {
+  min-width: var(--touch-target);
+}
+
+// A wide table scrolls inside app-table-scroll instead of squashing its columns.
+app-table-scroll > table {
+  min-width: 36rem;
+}
+
+app-table-scroll th,
+app-table-scroll td {
+  white-space: nowrap;
 }
