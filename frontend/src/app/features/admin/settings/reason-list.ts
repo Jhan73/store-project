@@ -1,8 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { Tooltip } from 'primeng/tooltip';
 import type { Reason, ReasonType } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
@@ -26,7 +33,7 @@ const TYPES: readonly TypeOption[] = [
 
 @Component({
   selector: 'app-reason-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText, Select],
+  imports: [ReactiveFormsModule, ButtonDirective, InputText, Select, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -87,10 +94,14 @@ const TYPES: readonly TypeOption[] = [
                   [disabled]="pending.has(reason.id)"
                   [attr.data-testid]="'toggle-' + reason.id"
                   (click)="toggle(reason)"
+                  [pTooltip]="reason.active ? tips.deactivate : tips.reactivate"
+                  tooltipPosition="top"
                 >
                   @if (reason.active) {
+                    <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.settings.deactivate">Desactivar</ng-container>
                   } @else {
+                    <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.settings.reactivate">Reactivar</ng-container>
                   }
                 </button>
@@ -117,14 +128,33 @@ const TYPES: readonly TypeOption[] = [
         }
       </div>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()" i18n="@@admin.settings.reasons.create">
-          Agregar motivo
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          pTooltip="Agregar un motivo nuevo a la lista"
+          i18n-pTooltip="@@admin.settings.reasons.create.tooltip"
+          tooltipPosition="top"
+        >
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.create" aria-hidden="true" />
+          }
+          <span i18n="@@admin.settings.reasons.create">Agregar motivo</span>
         </button>
       </div>
     </form>
   `,
 })
 export class ReasonList {
+  protected readonly icons = {
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    create: IconPlus,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.settings.reasons.deactivate.tooltip:Dejar de ofrecer este motivo`,
+    reactivate: $localize`:@@admin.settings.reasons.reactivate.tooltip:Volver a ofrecer este motivo`,
+  };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 

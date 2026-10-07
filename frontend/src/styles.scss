@@ -22,3 +22,10 @@ a {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+// A link rendered as a button must not look like a text link.
+a[pButton],
+a[pButton]:hover,
+a[pButton]:focus {
+  text-decoration: none;
+}

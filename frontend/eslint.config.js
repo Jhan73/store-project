@@ -54,6 +54,7 @@ module.exports = defineConfig([
             "inputId",
             "ariaCurrentWhenActive",
             "data-testid",
+            "tooltipPosition",
           ],
         },
       ],

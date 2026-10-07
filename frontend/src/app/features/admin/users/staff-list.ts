@@ -7,9 +7,19 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconMail,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconSend,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { Tooltip } from 'primeng/tooltip';
 import type { Observable } from 'rxjs';
 import type { Role, StaffMember, StaffPage } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
@@ -25,7 +35,15 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
 
 @Component({
   selector: 'app-staff-list',
-  imports: [FormsModule, ReactiveFormsModule, ButtonDirective, InputText, Select],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputText,
+    Select,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -86,10 +104,14 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
                 [disabled]="pending.has(member.id) || isOwn(member)"
                 [attr.data-testid]="'toggle-' + member.id"
                 (click)="toggle(member)"
+                [pTooltip]="member.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
               >
                 @if (member.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.users.deactivate">Desactivar</ng-container>
                 } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.users.reactivate">Reactivar</ng-container>
                 }
               </button>
@@ -103,9 +125,12 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
                   [disabled]="pending.has(member.id) || isOwn(member)"
                   [attr.data-testid]="'resend-' + member.id"
                   (click)="resend(member)"
-                  i18n="@@admin.users.resend"
+                  pTooltip="Enviar de nuevo el enlace para crear la contraseña"
+                  i18n-pTooltip="@@admin.users.resend.tooltip"
+                  tooltipPosition="top"
                 >
-                  Reenviar enlace
+                  <tabler-icon [icon]="icons.resend" aria-hidden="true" />
+                  <span i18n="@@admin.users.resend">Reenviar enlace</span>
                 </button>
               }
             </td>
@@ -123,9 +148,12 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           data-testid="previous-page"
           [disabled]="current().page === 0"
           (click)="go(current().page - 1)"
-          i18n="@@admin.users.previous"
+          pTooltip="Ir a la página anterior"
+          i18n-pTooltip="@@admin.users.previous.tooltip"
+          tooltipPosition="top"
         >
-          Anterior
+          <tabler-icon [icon]="icons.previous" aria-hidden="true" />
+          <span i18n="@@admin.users.previous">Anterior</span>
         </button>
         <span i18n="@@admin.users.pageOf">Página {{ current().page + 1 }} de {{ current().totalPages }}</span>
         <button
@@ -135,9 +163,12 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
           data-testid="next-page"
           [disabled]="current().page + 1 >= current().totalPages"
           (click)="go(current().page + 1)"
-          i18n="@@admin.users.next"
+          pTooltip="Ir a la página siguiente"
+          i18n-pTooltip="@@admin.users.next.tooltip"
+          tooltipPosition="top"
         >
-          Siguiente
+          <tabler-icon [icon]="icons.next" aria-hidden="true" />
+          <span i18n="@@admin.users.next">Siguiente</span>
         </button>
       </nav>
     }
@@ -178,8 +209,18 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         La persona recibirá un enlace por correo para crear su propia contraseña.
       </p>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()" i18n="@@admin.users.invite">
-          Invitar
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          pTooltip="Enviar la invitación por correo"
+          i18n-pTooltip="@@admin.users.invite.tooltip"
+          tooltipPosition="top"
+        >
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.invite" aria-hidden="true" />
+          }
+          <span i18n="@@admin.users.invite">Invitar</span>
         </button>
       </div>
     </form>
@@ -189,6 +230,19 @@ export class StaffList {
   private readonly api = inject(StaffApi);
   private readonly notifier = inject(ErrorNotifier);
   private readonly auth = inject(AuthStore);
+
+  protected readonly icons = {
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    resend: IconSend,
+    invite: IconMail,
+    previous: IconChevronLeft,
+    next: IconChevronRight,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.users.deactivate.tooltip:Impedir que la cuenta inicie sesión`,
+    reactivate: $localize`:@@admin.users.reactivate.tooltip:Permitir que la cuenta vuelva a iniciar sesión`,
+  };
 
   protected readonly roleOptions = STAFF_ROLES.map((role) => ({
     value: role,

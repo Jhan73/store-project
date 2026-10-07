@@ -16,6 +16,16 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import {
+  IconArrowDown,
+  IconArrowLeft,
+  IconArrowUp,
+  IconDeviceFloppy,
+  IconPlus,
+  IconTrash,
+  IconUpload,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
@@ -23,6 +33,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
+import { Tooltip } from 'primeng/tooltip';
 import { selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import { forkJoin, of } from 'rxjs';
 import type {
@@ -59,6 +70,8 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
     Select,
     Textarea,
     AllergenPicker,
+    TablerIconComponent,
+    Tooltip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
@@ -71,9 +84,17 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
           <ng-container i18n="@@admin.catalog.productForm.newTitle">Nuevo producto</ng-container>
         }
       </h2>
-      <a pButton severity="secondary" routerLink="/admin/catalog/products" i18n="@@admin.catalog.back"
-        >Volver a la lista</a
+      <a
+        pButton
+        severity="secondary"
+        routerLink="/admin/catalog/products"
+        pTooltip="Volver a la lista de productos"
+        i18n-pTooltip="@@admin.catalog.productForm.back.tooltip"
+        tooltipPosition="top"
       >
+        <tabler-icon [icon]="icons.back" aria-hidden="true" />
+        <span i18n="@@admin.catalog.back">Volver a la lista</span>
+      </a>
     </div>
 
     @if (ready()) {
@@ -184,9 +205,12 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
                   [disabled]="i === 0"
                   [attr.data-testid]="'move-up-' + i"
                   (click)="move(i, -1)"
-                  i18n="@@admin.catalog.productForm.moveUp"
+                  pTooltip="Subir este grupo una posición"
+                  i18n-pTooltip="@@admin.catalog.productForm.moveUp.tooltip"
+                  tooltipPosition="top"
                 >
-                  Subir
+                  <tabler-icon [icon]="icons.up" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.productForm.moveUp">Subir</span>
                 </button>
                 <button
                   pButton
@@ -196,9 +220,12 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
                   [disabled]="last"
                   [attr.data-testid]="'move-down-' + i"
                   (click)="move(i, 1)"
-                  i18n="@@admin.catalog.productForm.moveDown"
+                  pTooltip="Bajar este grupo una posición"
+                  i18n-pTooltip="@@admin.catalog.productForm.moveDown.tooltip"
+                  tooltipPosition="top"
                 >
-                  Bajar
+                  <tabler-icon [icon]="icons.down" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.productForm.moveDown">Bajar</span>
                 </button>
                 <button
                   pButton
@@ -208,9 +235,12 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
                   [size]="'small'"
                   [attr.data-testid]="'remove-group-' + i"
                   (click)="detach(i)"
-                  i18n="@@admin.catalog.productForm.removeGroup"
+                  pTooltip="Quitar este grupo del producto"
+                  i18n-pTooltip="@@admin.catalog.productForm.removeGroup.tooltip"
+                  tooltipPosition="top"
                 >
-                  Quitar
+                  <tabler-icon [icon]="icons.remove" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.productForm.removeGroup">Quitar</span>
                 </button>
               </li>
             }
@@ -244,16 +274,29 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
               severity="secondary"
               data-testid="add-group"
               (click)="attach()"
-              i18n="@@admin.catalog.productForm.addGroup"
+              pTooltip="Agregar el grupo elegido al producto"
+              i18n-pTooltip="@@admin.catalog.productForm.addGroup.tooltip"
+              tooltipPosition="top"
             >
-              Agregar grupo
+              <tabler-icon [icon]="icons.add" aria-hidden="true" />
+              <span i18n="@@admin.catalog.productForm.addGroup">Agregar grupo</span>
             </button>
           </div>
         </fieldset>
 
         <div class="actions">
-          <button pButton type="submit" [loading]="saving()" i18n="@@admin.catalog.productForm.save">
-            Guardar producto
+          <button
+            pButton
+            type="submit"
+            [loading]="saving()"
+            pTooltip="Guardar los datos del producto"
+            i18n-pTooltip="@@admin.catalog.productForm.save.tooltip"
+            tooltipPosition="top"
+          >
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
+            <span i18n="@@admin.catalog.productForm.save">Guardar producto</span>
           </button>
         </div>
       </form>
@@ -270,9 +313,12 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
               [outlined]="true"
               data-testid="remove-image"
               (click)="removeImage()"
-              i18n="@@admin.catalog.productForm.removeImage"
+              pTooltip="Quitar la imagen del producto"
+              i18n-pTooltip="@@admin.catalog.productForm.removeImage.tooltip"
+              tooltipPosition="top"
             >
-              Quitar imagen
+              <tabler-icon [icon]="icons.remove" aria-hidden="true" />
+              <span i18n="@@admin.catalog.productForm.removeImage">Quitar imagen</span>
             </button>
           }
           <div class="field">
@@ -289,7 +335,14 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
               [invalidFileSizeMessageSummary]="imageInvalid"
               invalidFileSizeMessageDetail=""
               (onSelect)="upload($event)"
-            />
+              pTooltip="Subir una imagen para el producto"
+              i18n-pTooltip="@@admin.catalog.productForm.imagePick.tooltip"
+              tooltipPosition="top"
+            >
+              <ng-template #chooseicon>
+                <tabler-icon [icon]="icons.upload" aria-hidden="true" />
+              </ng-template>
+            </p-fileupload>
             <small class="muted" i18n="@@admin.catalog.productForm.imageHint">PNG, JPG o WebP, de hasta 2 MB.</small>
           </div>
         } @else {
@@ -302,6 +355,15 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
   `,
 })
 export class ProductForm {
+  protected readonly icons = {
+    back: IconArrowLeft,
+    up: IconArrowUp,
+    down: IconArrowDown,
+    remove: IconTrash,
+    add: IconPlus,
+    save: IconDeviceFloppy,
+    upload: IconUpload,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
   private readonly messages = inject(MessageService);

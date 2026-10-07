@@ -1,8 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  IconX,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { DeliveryZone, Money } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
@@ -15,7 +25,14 @@ import { SettingsApi } from './settings-api';
 
 @Component({
   selector: 'app-zone-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputNumber,
+    InputText,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -57,9 +74,12 @@ import { SettingsApi } from './settings-api';
                 [disabled]="saving()"
                 [attr.data-testid]="'edit-' + zone.id"
                 (click)="edit(zone)"
-                i18n="@@admin.settings.edit"
+                pTooltip="Editar los datos de esta zona"
+                i18n-pTooltip="@@admin.settings.edit.tooltip"
+                tooltipPosition="top"
               >
-                Editar
+                <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                <span i18n="@@admin.settings.edit">Editar</span>
               </button>
               <button
                 pButton
@@ -70,10 +90,14 @@ import { SettingsApi } from './settings-api';
                 [disabled]="pending.has(zone.id)"
                 [attr.data-testid]="'toggle-' + zone.id"
                 (click)="toggle(zone)"
+                [pTooltip]="zone.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
               >
                 @if (zone.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.settings.deactivate">Desactivar</ng-container>
                 } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                   <ng-container i18n="@@admin.settings.reactivate">Reactivar</ng-container>
                 }
               </button>
@@ -154,16 +178,38 @@ import { SettingsApi } from './settings-api';
         }
       </div>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()" [disabled]="!currency()">
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          [disabled]="!currency()"
+          [pTooltip]="editing() ? tips.save : tips.create"
+          tooltipPosition="top"
+        >
           @if (editing()) {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.settings.zones.save">Guardar cambios</ng-container>
           } @else {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.settings.zones.create">Agregar zona</ng-container>
           }
         </button>
         @if (editing()) {
-          <button pButton type="button" severity="secondary" (click)="cancel()" i18n="@@admin.settings.cancel">
-            Cancelar
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            (click)="cancel()"
+            pTooltip="Descartar los cambios y cerrar el formulario"
+            i18n-pTooltip="@@admin.settings.cancel.tooltip"
+            tooltipPosition="top"
+          >
+            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+            <span i18n="@@admin.settings.cancel">Cancelar</span>
           </button>
         }
       </div>
@@ -171,6 +217,20 @@ import { SettingsApi } from './settings-api';
   `,
 })
 export class ZoneList {
+  protected readonly icons = {
+    edit: IconPencil,
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    save: IconDeviceFloppy,
+    create: IconPlus,
+    cancel: IconX,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.settings.deactivate.tooltip:Dejar de usar esta zona de entrega`,
+    reactivate: $localize`:@@admin.settings.reactivate.tooltip:Volver a usar esta zona de entrega`,
+    save: $localize`:@@admin.settings.zones.save.tooltip:Guardar los cambios de la zona`,
+    create: $localize`:@@admin.settings.zones.create.tooltip:Agregar una zona de entrega nueva`,
+  };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 

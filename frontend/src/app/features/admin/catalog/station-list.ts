@@ -1,7 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconPlus,
+  IconX,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
+import { Tooltip } from 'primeng/tooltip';
 import type { Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
@@ -9,7 +17,7 @@ import { isStale, reportFailure } from '../admin-errors';
 
 @Component({
   selector: 'app-station-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText],
+  imports: [ReactiveFormsModule, ButtonDirective, InputText, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -42,9 +50,12 @@ import { isStale, reportFailure } from '../admin-errors';
                 [size]="'small'"
                 [attr.data-testid]="'edit-' + station.id"
                 (click)="edit(station)"
-                i18n="@@admin.catalog.stations.edit"
+                pTooltip="Cambiar el nombre de esta estación"
+                i18n-pTooltip="@@admin.catalog.stations.edit.tooltip"
+                tooltipPosition="top"
               >
-                Renombrar
+                <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                <span i18n="@@admin.catalog.stations.edit">Renombrar</span>
               </button>
             </td>
           </tr>
@@ -68,10 +79,22 @@ import { isStale, reportFailure } from '../admin-errors';
         }
       </div>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()">
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          [pTooltip]="editing() ? tips.save : tips.create"
+          tooltipPosition="top"
+        >
           @if (editing()) {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.catalog.stations.save">Guardar cambios</ng-container>
           } @else {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.catalog.stations.create">Agregar estación</ng-container>
           }
         </button>
@@ -81,9 +104,12 @@ import { isStale, reportFailure } from '../admin-errors';
             type="button"
             severity="secondary"
             (click)="cancel()"
-            i18n="@@admin.catalog.cancel"
+            pTooltip="Descartar los cambios y cerrar el formulario"
+            i18n-pTooltip="@@admin.catalog.cancel.tooltip"
+            tooltipPosition="top"
           >
-            Cancelar
+            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+            <span i18n="@@admin.catalog.cancel">Cancelar</span>
           </button>
         }
       </div>
@@ -91,6 +117,16 @@ import { isStale, reportFailure } from '../admin-errors';
   `,
 })
 export class StationList {
+  protected readonly icons = {
+    edit: IconPencil,
+    save: IconDeviceFloppy,
+    create: IconPlus,
+    cancel: IconX,
+  };
+  protected readonly tips = {
+    save: $localize`:@@admin.catalog.stations.save.tooltip:Guardar el nuevo nombre de la estación`,
+    create: $localize`:@@admin.catalog.stations.create.tooltip:Agregar una estación de preparación nueva`,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 

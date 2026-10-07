@@ -16,10 +16,17 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { IconEye, IconEyeOff, TablerIconComponent } from '@tabler/icons-angular';
-import { Button, ButtonDirective } from 'primeng/button';
+import {
+  IconDeviceFloppy,
+  IconEye,
+  IconEyeOff,
+  IconLogin,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
+import { Button, ButtonDirective, ButtonLabel } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { PasswordDirective } from 'primeng/password';
+import { Tooltip } from 'primeng/tooltip';
 import { firstValueFrom } from 'rxjs';
 import { AuthApi } from '../../core/auth/auth-api';
 import { ApiError } from '../../core/errors/api-error';
@@ -49,10 +56,12 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
     ReactiveFormsModule,
     Button,
     ButtonDirective,
+    ButtonLabel,
     Message,
     PasswordDirective,
     RouterLink,
     TablerIconComponent,
+    Tooltip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../login/login.scss', './set-password.scss'],
@@ -94,6 +103,9 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
                   [attr.aria-pressed]="visible()"
                   aria-label="Mostrar contraseñas"
                   i18n-aria-label="@@setPassword.toggle.label"
+                  pTooltip="Mostrar contraseñas"
+                  i18n-pTooltip="@@setPassword.toggle.label"
+                  tooltipPosition="top"
                   (click)="visible.set(!visible())"
                 >
                   <tabler-icon [icon]="visible() ? icons.hide : icons.show" aria-hidden="true" />
@@ -194,11 +206,17 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
 
             <p-button
               type="submit"
-              label="Guardar contraseña"
-              i18n-label="@@setPassword.submit"
               [loading]="submitting()"
+              pTooltip="Guardar tu nueva contraseña"
+              i18n-pTooltip="@@setPassword.submit.tooltip"
+              tooltipPosition="top"
               fluid
-            />
+            >
+              @if (!submitting()) {
+                <tabler-icon [icon]="icons.save" aria-hidden="true" />
+              }
+              <span pButtonLabel i18n="@@setPassword.submit">Guardar contraseña</span>
+            </p-button>
           </form>
         }
         @case ('missing-token') {
@@ -207,9 +225,17 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
             <p i18n="@@setPassword.missing.body">
               Abre de nuevo el enlace que te llegó por correo para crear tu contraseña.
             </p>
-            <a pButton routerLink="/login" severity="secondary" i18n="@@setPassword.toLogin"
-              >Ir a iniciar sesión</a
+            <a
+              pButton
+              routerLink="/login"
+              severity="secondary"
+              pTooltip="Ir a la página de inicio de sesión"
+              i18n-pTooltip="@@setPassword.toLogin.tooltip"
+              tooltipPosition="top"
             >
+              <tabler-icon [icon]="icons.login" aria-hidden="true" />
+              <span i18n="@@setPassword.toLogin">Ir a iniciar sesión</span>
+            </a>
           </section>
         }
         @case ('invalid-link') {
@@ -220,16 +246,33 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
               Pide a un administrador que te envíe un enlace nuevo. Los enlaces vencen a las 48
               horas y solo sirven una vez.
             </p>
-            <a pButton routerLink="/login" severity="secondary" i18n="@@setPassword.toLogin"
-              >Ir a iniciar sesión</a
+            <a
+              pButton
+              routerLink="/login"
+              severity="secondary"
+              pTooltip="Ir a la página de inicio de sesión"
+              i18n-pTooltip="@@setPassword.toLogin.tooltip"
+              tooltipPosition="top"
             >
+              <tabler-icon [icon]="icons.login" aria-hidden="true" />
+              <span i18n="@@setPassword.toLogin">Ir a iniciar sesión</span>
+            </a>
           </section>
         }
         @case ('done') {
           <section class="card">
             <h1 tabindex="-1" i18n="@@setPassword.done.title">Contraseña creada</h1>
             <p i18n="@@setPassword.done.body">Ya puedes iniciar sesión con tu nueva contraseña.</p>
-            <a pButton routerLink="/login" i18n="@@setPassword.toLogin">Ir a iniciar sesión</a>
+            <a
+              pButton
+              routerLink="/login"
+              pTooltip="Ir a la página de inicio de sesión"
+              i18n-pTooltip="@@setPassword.toLogin.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.login" aria-hidden="true" />
+              <span i18n="@@setPassword.toLogin">Ir a iniciar sesión</span>
+            </a>
           </section>
         }
       }
@@ -246,7 +289,12 @@ export class SetPassword {
   private token: string | null;
 
   protected readonly invalidLinkMessage = ERROR_MESSAGES['auth.invalid-set-password-token'];
-  protected readonly icons = { show: IconEye, hide: IconEyeOff };
+  protected readonly icons = {
+    show: IconEye,
+    hide: IconEyeOff,
+    save: IconDeviceFloppy,
+    login: IconLogin,
+  };
   protected readonly form = new FormGroup(
     {
       newPassword: new FormControl('', {

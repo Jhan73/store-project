@@ -9,12 +9,13 @@ import {
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
+import { Tooltip } from 'primeng/tooltip';
 import type { ThemeMode } from '../../../core/theme/theme-store';
 import type { NavItem } from './nav-item';
 
 @Component({
   selector: 'app-shell',
-  imports: [ButtonDirective, RouterLink, RouterLinkActive, TablerIconComponent],
+  imports: [ButtonDirective, RouterLink, RouterLinkActive, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './app-shell.scss',
   template: `
@@ -58,6 +59,9 @@ import type { NavItem } from './nav-item';
             [attr.aria-pressed]="themeMode() === 'light'"
             aria-label="Tema claro"
             i18n-aria-label="@@shell.theme.light"
+            pTooltip="Tema claro"
+            i18n-pTooltip="@@shell.theme.light"
+            tooltipPosition="top"
             (click)="themeModeChange.emit('light')"
           >
             <tabler-icon [icon]="icons.light" aria-hidden="true" />
@@ -70,6 +74,9 @@ import type { NavItem } from './nav-item';
             [attr.aria-pressed]="themeMode() === 'dark'"
             aria-label="Tema oscuro"
             i18n-aria-label="@@shell.theme.dark"
+            pTooltip="Tema oscuro"
+            i18n-pTooltip="@@shell.theme.dark"
+            tooltipPosition="top"
             (click)="themeModeChange.emit('dark')"
           >
             <tabler-icon [icon]="icons.dark" aria-hidden="true" />
@@ -82,6 +89,9 @@ import type { NavItem } from './nav-item';
             [attr.aria-pressed]="themeMode() === 'system'"
             aria-label="Tema del sistema"
             i18n-aria-label="@@shell.theme.system"
+            pTooltip="Tema del sistema"
+            i18n-pTooltip="@@shell.theme.system"
+            tooltipPosition="top"
             (click)="themeModeChange.emit('system')"
           >
             <tabler-icon [icon]="icons.system" aria-hidden="true" />
@@ -94,6 +104,9 @@ import type { NavItem } from './nav-item';
           severity="secondary"
           [outlined]="true"
           data-testid="logout"
+          pTooltip="Cerrar la sesión"
+          i18n-pTooltip="@@shell.logout.tooltip"
+          tooltipPosition="top"
           (click)="logout.emit()"
         >
           <tabler-icon [icon]="icons.logout" aria-hidden="true" />

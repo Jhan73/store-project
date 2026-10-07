@@ -16,10 +16,15 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
+import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { StoreSettings } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
@@ -104,7 +109,16 @@ function timeZoneOptions(current: string): string[] {
 
 @Component({
   selector: 'app-settings-form',
-  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText, Select, NgTemplateOutlet],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputNumber,
+    InputText,
+    Select,
+    NgTemplateOutlet,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -216,8 +230,18 @@ function timeZoneOptions(current: string): string[] {
       </fieldset>
 
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()" i18n="@@admin.settings.general.save">
-          Guardar cambios
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          pTooltip="Guardar los cambios de la configuración"
+          i18n-pTooltip="@@admin.settings.general.save.tooltip"
+          tooltipPosition="top"
+        >
+          @if (!saving()) {
+            <tabler-icon [icon]="icons.save" aria-hidden="true" />
+          }
+          <span i18n="@@admin.settings.general.save">Guardar cambios</span>
         </button>
       </div>
       @if (saved()) {
@@ -227,6 +251,7 @@ function timeZoneOptions(current: string): string[] {
   `,
 })
 export class SettingsForm {
+  protected readonly icons = { save: IconDeviceFloppy };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 

@@ -1,6 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import {
+  IconCheck,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+  IconX,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
+import { Tooltip } from 'primeng/tooltip';
 import type { ModifierGroup } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
@@ -8,15 +17,22 @@ import { isStale } from '../admin-errors';
 
 @Component({
   selector: 'app-modifier-group-list',
-  imports: [RouterLink, ButtonDirective],
+  imports: [RouterLink, ButtonDirective, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
     <div class="toolbar">
       <h2 i18n="@@admin.catalog.groups.title">Grupos de modificadores</h2>
-      <a pButton routerLink="/admin/catalog/modifier-groups/new" i18n="@@admin.catalog.groups.new"
-        >Nuevo grupo</a
+      <a
+        pButton
+        routerLink="/admin/catalog/modifier-groups/new"
+        pTooltip="Crear un grupo de modificadores nuevo"
+        i18n-pTooltip="@@admin.catalog.groups.new.tooltip"
+        tooltipPosition="top"
       >
+        <tabler-icon [icon]="icons.create" aria-hidden="true" />
+        <span i18n="@@admin.catalog.groups.new">Nuevo grupo</span>
+      </a>
     </div>
 
     <table>
@@ -54,9 +70,12 @@ import { isStale } from '../admin-errors';
                   [size]="'small'"
                   [attr.data-testid]="'confirm-delete-' + group.id"
                   (click)="remove(group)"
-                  i18n="@@admin.catalog.groups.confirmDelete"
+                  pTooltip="Eliminar el grupo de forma definitiva"
+                  i18n-pTooltip="@@admin.catalog.groups.confirmDelete.tooltip"
+                  tooltipPosition="top"
                 >
-                  Confirmar eliminación
+                  <tabler-icon [icon]="icons.confirm" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.groups.confirmDelete">Confirmar eliminación</span>
                 </button>
                 <button
                   pButton
@@ -65,9 +84,12 @@ import { isStale } from '../admin-errors';
                   [size]="'small'"
                   [attr.data-testid]="'cancel-delete-' + group.id"
                   (click)="confirming.set(null)"
-                  i18n="@@admin.catalog.cancel"
+                  pTooltip="Conservar el grupo y no eliminarlo"
+                  i18n-pTooltip="@@admin.catalog.groups.cancelDelete.tooltip"
+                  tooltipPosition="top"
                 >
-                  Cancelar
+                  <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.cancel">Cancelar</span>
                 </button>
               } @else {
                 <a
@@ -75,9 +97,12 @@ import { isStale } from '../admin-errors';
                   severity="secondary"
                   [size]="'small'"
                   [routerLink]="['/admin/catalog/modifier-groups', group.id]"
-                  i18n="@@admin.catalog.edit"
+                  pTooltip="Editar este grupo de modificadores"
+                  i18n-pTooltip="@@admin.catalog.groups.edit.tooltip"
+                  tooltipPosition="top"
                 >
-                  Editar
+                  <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.edit">Editar</span>
                 </a>
                 <button
                   pButton
@@ -87,9 +112,12 @@ import { isStale } from '../admin-errors';
                   [size]="'small'"
                   [attr.data-testid]="'delete-' + group.id"
                   (click)="confirming.set(group.id)"
-                  i18n="@@admin.catalog.groups.delete"
+                  pTooltip="Eliminar este grupo de modificadores"
+                  i18n-pTooltip="@@admin.catalog.groups.delete.tooltip"
+                  tooltipPosition="top"
                 >
-                  Eliminar
+                  <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                  <span i18n="@@admin.catalog.groups.delete">Eliminar</span>
                 </button>
               }
             </td>
@@ -100,6 +128,13 @@ import { isStale } from '../admin-errors';
   `,
 })
 export class ModifierGroupList {
+  protected readonly icons = {
+    create: IconPlus,
+    edit: IconPencil,
+    delete: IconTrash,
+    confirm: IconCheck,
+    cancel: IconX,
+  };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 

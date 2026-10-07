@@ -23,6 +23,8 @@ Angular 22 · zoneless · signals · SSR with Express (`src/server.ts`) · Vites
 
 **Icons:** Tabler, through `@tabler/icons-angular` (official, MIT). Import each icon individually (tree-shaking); no icon fonts, no other icon sets. Decorative icons are `aria-hidden="true"`; icon-only buttons need an i18n `aria-label`.
 
+**Buttons:** every button (`pButton`, `p-button`, `p-fileupload`) has a Tabler icon before its label (the label goes in its own `<span i18n>` so the icon stays out of the message), a `pTooltip` with `tooltipPosition="top"` and an i18n description of the action (`i18n-pTooltip`, or a `$localize` string when the text depends on state), and, when icon-only, an i18n `aria-label`. The same action uses the same icon everywhere. A button with `[loading]` wraps its icon in `@if (!<same signal>())` so only PrimeNG's spinner shows while loading, and a `p-button` label span carries `pButtonLabel` (keeps `p-button-label` styling). `a[pButton]` has no underline: a global rule in `styles.scss` removes it, so do not add per-component fixes. `button-conventions.spec.ts` enforces this. Tooltips do not show on disabled buttons, so never put the only explanation of an action in one.
+
 **Light and dark mode:**
 - Both modes are supported everywhere. Default follows `prefers-color-scheme`; the user's choice is stored in `localStorage` and applied as a class on `<html>`.
 - The class is applied by an inline script in `index.html` before first paint, so SSR pages never flash the wrong theme.

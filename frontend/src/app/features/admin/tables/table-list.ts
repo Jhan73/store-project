@@ -1,8 +1,18 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  IconX,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { AdminTable } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
@@ -19,7 +29,14 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
 
 @Component({
   selector: 'app-table-list',
-  imports: [ReactiveFormsModule, ButtonDirective, InputNumber, InputText],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputNumber,
+    InputText,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: '../admin-section.scss',
   template: `
@@ -60,9 +77,12 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
                   [disabled]="saving()"
                 [attr.data-testid]="'edit-' + table.id"
                   (click)="edit(table)"
-                  i18n="@@admin.tables.edit"
+                  pTooltip="Editar los datos de esta mesa"
+                  i18n-pTooltip="@@admin.tables.edit.tooltip"
+                  tooltipPosition="top"
                 >
-                  Editar
+                  <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                  <span i18n="@@admin.tables.edit">Editar</span>
                 </button>
                 <button
                   pButton
@@ -73,10 +93,14 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
                   [disabled]="pending.has(table.id)"
                   [attr.data-testid]="'toggle-' + table.id"
                   (click)="toggle(table)"
+                  [pTooltip]="table.active ? tips.deactivate : tips.reactivate"
+                  tooltipPosition="top"
                 >
                   @if (table.active) {
+                    <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.tables.deactivate">Desactivar</ng-container>
                   } @else {
+                    <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
                     <ng-container i18n="@@admin.tables.reactivate">Reactivar</ng-container>
                   }
                 </button>
@@ -130,16 +154,37 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
         }
       </div>
       <div class="actions">
-        <button pButton type="submit" [loading]="saving()">
+        <button
+          pButton
+          type="submit"
+          [loading]="saving()"
+          [pTooltip]="editing() ? tips.save : tips.create"
+          tooltipPosition="top"
+        >
           @if (editing()) {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.save" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.tables.save">Guardar cambios</ng-container>
           } @else {
+            @if (!saving()) {
+              <tabler-icon [icon]="icons.create" aria-hidden="true" />
+            }
             <ng-container i18n="@@admin.tables.create">Agregar mesa</ng-container>
           }
         </button>
         @if (editing()) {
-          <button pButton type="button" severity="secondary" (click)="cancel()" i18n="@@admin.tables.cancel">
-            Cancelar
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            (click)="cancel()"
+            pTooltip="Descartar los cambios y cerrar el formulario"
+            i18n-pTooltip="@@admin.tables.cancel.tooltip"
+            tooltipPosition="top"
+          >
+            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+            <span i18n="@@admin.tables.cancel">Cancelar</span>
           </button>
         }
       </div>
@@ -147,6 +192,20 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
   `,
 })
 export class TableList {
+  protected readonly icons = {
+    edit: IconPencil,
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+    save: IconDeviceFloppy,
+    create: IconPlus,
+    cancel: IconX,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.tables.deactivate.tooltip:Ocultar esta mesa sin borrarla`,
+    reactivate: $localize`:@@admin.tables.reactivate.tooltip:Volver a activar esta mesa`,
+    save: $localize`:@@admin.tables.save.tooltip:Guardar los cambios de la mesa`,
+    create: $localize`:@@admin.tables.create.tooltip:Agregar una mesa nueva`,
+  };
   private readonly api = inject(TablesApi);
   private readonly notifier = inject(ErrorNotifier);
 
