@@ -22,6 +22,10 @@ export const ADMIN_ROUTES: Routes = [
         path: 'users',
         loadChildren: () => import('./users/users.routes').then((m) => m.USERS_ROUTES),
       },
+      {
+        path: 'audit',
+        loadChildren: () => import('./audit/audit.routes').then((m) => m.AUDIT_ROUTES),
+      },
     ],
   },
 ];
