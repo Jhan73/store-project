@@ -25,6 +25,7 @@ describe('staff and admin area', () => {
   let harness: RouterTestingHarness;
 
   beforeEach(async () => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
@@ -40,7 +41,10 @@ describe('staff and admin area', () => {
     harness = await RouterTestingHarness.create();
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    localStorage.clear();
+    http.verify();
+  });
 
   async function signInAs(role: 'SERVER' | 'CASHIER' | 'ADMIN') {
     const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
@@ -89,7 +93,6 @@ describe('staff and admin area', () => {
   });
 
   it('wires the sidebar toggle and pin to the sidebar store', async () => {
-    localStorage.clear();
     await signInAs('SERVER');
     await harness.navigateByUrl('/staff');
     const store = TestBed.inject(SidebarStore);
@@ -102,7 +105,6 @@ describe('staff and admin area', () => {
     page().querySelector<HTMLButtonElement>('[data-testid="sidebar-pin"]')!.click();
     await harness.fixture.whenStable();
     expect(store.pinned()).toBe(true);
-    localStorage.clear();
   });
 
   it('lets floor staff open the availability screen and marks only its entry as active', async () => {
