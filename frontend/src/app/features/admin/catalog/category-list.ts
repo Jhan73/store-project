@@ -19,10 +19,12 @@ import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { CatalogApi } from './catalog-api';
 import { isStale, reportFailure } from '../admin-errors';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-category-list',
   imports: [
+    TableScroll,
     ReactiveFormsModule,
     ButtonDirective,
     InputNumber,
@@ -36,7 +38,8 @@ import { isStale, reportFailure } from '../admin-errors';
   template: `
     <h2 i18n="@@admin.catalog.categories.title">Categorías</h2>
 
-    <table>
+    <app-table-scroll label="Listado de categorías" i18n-label="@@admin.catalog.categories.tableScroll">
+      <table>
       <thead>
         <tr>
           <th i18n="@@admin.catalog.categories.name">Nombre</th>
@@ -97,7 +100,8 @@ import { isStale, reportFailure } from '../admin-errors';
           </tr>
         }
       </tbody>
-    </table>
+      </table>
+    </app-table-scroll>
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="field wide">

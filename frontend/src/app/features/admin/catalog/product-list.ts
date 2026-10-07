@@ -19,12 +19,14 @@ import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney } from '../../../core/money/money';
 import { CatalogApi } from './catalog-api';
 import { isStale } from '../admin-errors';
+import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-product-list',
   imports: [
+    TableScroll,
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
@@ -80,7 +82,8 @@ const PAGE_SIZE = 20;
     @if (current().content.length === 0) {
       <p class="muted" i18n="@@admin.catalog.products.empty">Todavía no hay productos.</p>
     } @else {
-      <table>
+      <app-table-scroll label="Listado de productos" i18n-label="@@admin.catalog.products.tableScroll">
+        <table>
         <thead>
           <tr>
             <th><span class="sr-only" i18n="@@admin.catalog.products.image">Imagen</span></th>
@@ -156,7 +159,8 @@ const PAGE_SIZE = 20;
             </tr>
           }
         </tbody>
-      </table>
+        </table>
+      </app-table-scroll>
     }
 
     @if (current().totalPages > 1) {
