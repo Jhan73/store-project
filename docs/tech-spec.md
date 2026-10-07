@@ -1112,6 +1112,12 @@ Coverage gates: backend ≥ 80% lines on `internal` packages; frontend ≥ 80% l
 - HTTP services: `provideHttpClient()` + `provideHttpClientTesting()` with `HttpTestingController`.
 - Timers (undo window, countdowns): Vitest fake timers (`vi.useFakeTimers()`).
 
+**E2E (Playwright, `e2e/`)**
+
+- Configured only through environment variables (frontend URL, API URL, admin credentials); credentials are never in a file, trace, or screenshot, so those artifacts stay off.
+- Every browser context signs in through the login screen: the refresh cookie rotates on use and reuse revokes the session family (§6.4), so a stored `storageState` cannot be shared between contexts or runs.
+- Test data is prefixed `e2e-<timestamp>-` and cleaned up through the API after each journey (products and categories are deactivated, modifier groups deleted).
+
 ## 12. Observability and operations
 
 | Signal | Implementation |
