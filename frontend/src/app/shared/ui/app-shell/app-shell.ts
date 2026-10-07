@@ -1,11 +1,14 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   ElementRef,
+  inject,
   input,
   output,
+  PLATFORM_ID,
   signal,
   viewChild,
 } from '@angular/core';
@@ -350,6 +353,7 @@ export class AppShell {
   protected readonly themeOverlayOpen = signal(false);
   private themePicked = false;
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
+  private readonly themeSelect = viewChild(Select);
   private readonly sidebar = viewChild.required<ElementRef<HTMLElement>>('sidebar');
   private readonly sidebarToggleButton =
     viewChild.required<ElementRef<HTMLButtonElement>>('sidebarToggleButton');
@@ -378,12 +382,39 @@ export class AppShell {
     },
   ];
 
+  constructor() {
+    if (!isPlatformBrowser(inject(PLATFORM_ID)) || typeof matchMedia !== 'function') {
+      return;
+    }
+    // The desktop width is defined once in _breakpoints.scss and exposed by styles.scss.
+    const desktop = getComputedStyle(inject(DOCUMENT).documentElement)
+      .getPropertyValue('--bp-desktop')
+      .trim();
+    if (!desktop) {
+      return;
+    }
+    const query = matchMedia(`(min-width: ${desktop})`);
+    const onChange = () => this.resetForBreakpoint();
+    query.addEventListener('change', onChange);
+    inject(DestroyRef).onDestroy(() => query.removeEventListener('change', onChange));
+  }
+
   protected readonly toggleIcon = computed(() =>
     this.sidebarExpanded() ? this.icons.collapse : this.icons.expand,
   );
   protected readonly pinIcon = computed(() =>
     this.sidebarPinned() ? this.icons.unpin : this.icons.pin,
   );
+
+  // Each layout hides the other one's controls, so whatever the old layout left open must not linger.
+  private resetForBreakpoint(): void {
+    this.menuOpen.set(false);
+    this.themeOverlayOpen.set(false);
+    this.themeSelect()?.hide();
+    if (!this.sidebarPinned() && this.sidebarExpanded()) {
+      this.sidebarDismiss.emit();
+    }
+  }
 
   protected closeMenu(): void {
     if (this.menuOpen()) {

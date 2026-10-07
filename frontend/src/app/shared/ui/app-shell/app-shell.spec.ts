@@ -71,6 +71,8 @@ describe('AppShell', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    document.documentElement.style.removeProperty('--bp-desktop');
   });
 
   it('gives every icon-only and text button a tooltip that matches its name', async () => {
@@ -246,6 +248,124 @@ describe('AppShell', () => {
 
       expect(fixture.componentInstance.logouts()).toBe(1);
       expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+    });
+  });
+
+  describe('desktop breakpoint', () => {
+    const hamburger = (host: HTMLElement) =>
+      host.querySelector<HTMLButtonElement>('[data-testid="menu-button"]')!;
+    const sidebarToggle = (host: HTMLElement) =>
+      host.querySelector<HTMLButtonElement>('[data-testid="sidebar-toggle"]')!;
+
+    function stubDesktopQuery() {
+      document.documentElement.style.setProperty('--bp-desktop', '64.0625rem');
+      const listeners = new Set<() => void>();
+      const query = {
+        matches: false,
+        addEventListener: vi.fn((_: string, listener: () => void) => listeners.add(listener)),
+        removeEventListener: vi.fn((_: string, listener: () => void) => listeners.delete(listener)),
+      };
+      const inert = {
+        matches: false,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      };
+      const media: string[] = [];
+      vi.stubGlobal('matchMedia', (text: string) => {
+        media.push(text);
+        return text.includes('min-width') ? query : inert;
+      });
+      const flip = async (fixture: { whenStable(): Promise<unknown> }, matches: boolean) => {
+        query.matches = matches;
+        listeners.forEach((listener) => listener());
+        await fixture.whenStable();
+      };
+      return { query, listeners, media, flip };
+    }
+
+    it('listens to the breakpoint taken from the shared custom property and stops on destroy', async () => {
+      const { query, listeners, media } = stubDesktopQuery();
+      const { fixture } = await render();
+
+      expect(media).toContain('(min-width: 64.0625rem)');
+      expect(listeners.size).toBe(1);
+
+      fixture.destroy();
+
+      expect(query.removeEventListener).toHaveBeenCalledTimes(1);
+      expect(listeners.size).toBe(0);
+    });
+
+    it('closes the drawer when the viewport becomes desktop', async () => {
+      const { flip } = stubDesktopQuery();
+      const { fixture, host } = await render();
+      await openDrawer(fixture, host);
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('true');
+
+      await flip(fixture, true);
+
+      expect(hamburger(host).getAttribute('aria-expanded')).toBe('false');
+      await vi.waitFor(() => expect(drawerEl()).toBeNull());
+    });
+
+    it('dismisses a temporary expansion when the breakpoint changes', async () => {
+      const { flip } = stubDesktopQuery();
+      const { fixture, host } = await render();
+      sidebarToggle(host).click();
+      await fixture.whenStable();
+      expect(sidebarToggle(host).getAttribute('aria-expanded')).toBe('true');
+
+      await flip(fixture, false);
+
+      expect(sidebarToggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('leaves a pinned sidebar pinned', async () => {
+      const { flip } = stubDesktopQuery();
+      const { fixture, host } = await render();
+      sidebarToggle(host).click();
+      await fixture.whenStable();
+      host.querySelector<HTMLButtonElement>('[data-testid="sidebar-pin"]')!.click();
+      await fixture.whenStable();
+
+      await flip(fixture, false);
+      await flip(fixture, true);
+
+      expect(sidebarToggle(host).getAttribute('aria-expanded')).toBe('true');
+      expect(host.querySelector('main')!.classList).toContain('is-docked');
+    });
+
+    it('closes the theme overlay and collapses the sidebar when the breakpoint changes', async () => {
+      const { flip } = stubDesktopQuery();
+      const { fixture, host } = await render();
+      sidebarToggle(host).click();
+      await fixture.whenStable();
+      const select = fixture.debugElement.query(By.css('aside p-select'))
+        .componentInstance as Select;
+      await openSelect(fixture, document.body, 'shell-theme');
+      expect(select.overlayVisible).toBe(true);
+
+      await flip(fixture, false);
+
+      expect(select.overlayVisible).toBe(false);
+      expect(sidebarToggle(host).getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('ignores Escape once the breakpoint change dismissed the expansion', async () => {
+      const { flip } = stubDesktopQuery();
+      const { fixture, host } = await render();
+      const dismiss = vi.spyOn(fixture.componentInstance.sidebar, 'dismiss');
+      sidebarToggle(host).click();
+      await fixture.whenStable();
+      await flip(fixture, false);
+      dismiss.mockClear();
+      const focused = document.activeElement;
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await fixture.whenStable();
+
+      expect(dismiss).not.toHaveBeenCalled();
+      expect(document.activeElement).toBe(focused);
     });
   });
 

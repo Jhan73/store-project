@@ -2,6 +2,7 @@
 @use './styles/breakpoints' as bp;
 
 :root {
+  --bp-desktop: #{bp.$desktop};
   --touch-target: 2.75rem;
   --page-padding: var(--space-3);
 
