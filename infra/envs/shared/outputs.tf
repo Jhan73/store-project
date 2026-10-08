@@ -45,3 +45,7 @@ output "deploy_role_arns" {
 output "power_role_arn" {
   value = aws_iam_role.power.arn
 }
+
+output "custom_domain_hosts" {
+  value = { for host, record in aws_route53_record.app : host => local.custom_domain_hosts[host].environment }
+}
