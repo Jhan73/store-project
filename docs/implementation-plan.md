@@ -98,7 +98,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 
 | ID | Work package | Done when | Status |
 |----|--------------|-----------|--------|
-| M1-close | E2E: admin builds a product with modifiers; staff toggles availability. Exit criteria. Release to `prod`. | Exit criteria met; release tagged | todo |
+| M1-close | E2E: admin builds a product with modifiers; staff toggles availability. Exit criteria. Release to `prod`. | Exit criteria met; release tagged | doing |
 
 ---
 

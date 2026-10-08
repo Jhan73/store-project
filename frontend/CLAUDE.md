@@ -169,4 +169,4 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Test public behavior: rendered DOM for components, signal values for stores. Never test private methods.
 - `*Api` services: `provideHttpClient()` + `provideHttpClientTesting()` with `HttpTestingController`.
 - Timers (undo window, countdowns): `vi.useFakeTimers()`.
-- E2E: Playwright in the root `e2e/` folder (planned), run against the `test` environment, with axe-core and device viewports.
+- E2E: Playwright in the root `e2e/` folder (see `e2e/CLAUDE.md`), run against the `test` environment, with axe-core and device viewports.
