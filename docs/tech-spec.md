@@ -69,7 +69,7 @@ flowchart LR
 
 `<domain>` is **`jugueria.jhanantezana.com`** (PRD Q4): a subdomain, so the parent domain stays free for other uses. Frontend and API are on different hosts of the **same site** (`jhanantezana.com`), so the refresh cookie works with `SameSite=Strict` and CORS allows only the matching frontend origin. The frontend derives the API origin as `api.<page hostname>`, so the API host must be exactly the frontend host with an `api.` prefix.
 
-The hosts are wired at the ALB that Express Mode creates (D18): the project's ACM certificate is attached to the HTTPS listener, each service's Express host-header rule matches its generated endpoint **and** its custom host, Route 53 `A` aliases (Terraform, `shared`) point the custom hosts at the ALB, and the frontend service allows its custom host through `NG_ALLOWED_HOSTS`. The one-time steps are in `docs/runbooks/custom-domains.md`; `prod` is not wired yet.
+The hosts are wired at the ALB that Express Mode creates (D18): the project's ACM certificate is attached to the HTTPS listener, each service's Express host-header rule matches its generated endpoint **and** its custom host, Route 53 `A` aliases (Terraform, `shared`) point the custom hosts at the ALB, and the frontend service allows its custom host through `NG_ALLOWED_HOSTS`. The one-time steps are in `docs/runbooks/custom-domains.md`; `test` and `prod` are both wired.
 
 ## 3. Technology stack and versions
 
