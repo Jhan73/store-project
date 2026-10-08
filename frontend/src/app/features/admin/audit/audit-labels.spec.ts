@@ -9,8 +9,10 @@ import {
 describe('audit labels', () => {
   it('names every entity type the audit module writes', () => {
     expect(AUDIT_ENTITY_TYPES).toEqual(
-      expect.arrayContaining(['PRODUCT', 'USER', 'STORE_SETTINGS', 'TABLE', 'MODIFIER_OPTION']),
+      expect.arrayContaining(['PRODUCT', 'USER', 'STORE_SETTINGS', 'TABLE', 'MODIFIER_OPTION', 'CATEGORY', 'STATION']),
     );
+    expect(entityTypeLabel('CATEGORY')).toBe('Categoría');
+    expect(entityTypeLabel('STATION')).toBe('Estación');
     for (const type of AUDIT_ENTITY_TYPES) {
       expect(entityTypeLabel(type)).not.toBe(type);
     }
@@ -22,6 +24,16 @@ describe('audit labels', () => {
 
   it('lists the actions as the stable codes the API filters on', () => {
     expect(AUDIT_ACTIONS).toContain('PRODUCT_UPDATED');
+    expect(AUDIT_ACTIONS).toEqual(
+      expect.arrayContaining([
+        'CATEGORY_CREATED',
+        'CATEGORY_UPDATED',
+        'CATEGORY_DEACTIVATED',
+        'CATEGORY_REACTIVATED',
+        'STATION_CREATED',
+        'STATION_UPDATED',
+      ]),
+    );
     expect(AUDIT_ACTIONS).toContain('MODIFIER_OPTION_AVAILABILITY_CHANGED');
     expect([...AUDIT_ACTIONS]).toEqual([...AUDIT_ACTIONS].sort());
   });

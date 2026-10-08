@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.catalog.internal;
 
 import java.time.Instant;
 
+import com.jhanantezana.jugueria.catalog.StationSnapshot;
 import com.jhanantezana.jugueria.shared.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -43,6 +44,10 @@ public class Station extends BaseEntity {
 	public void rename(String name, Instant now) {
 		this.name = name;
 		this.updatedAt = now;
+	}
+
+	public StationSnapshot snapshot() {
+		return new StationSnapshot(name);
 	}
 
 }

@@ -90,7 +90,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Cross-module reactions use domain events with `@ApplicationModuleListener` (async, after commit, persisted in the Modulith JDBC outbox).
 - Exception: `audit` listens with a plain synchronous `@EventListener` so an audit failure rolls back the business change.
 - Exception: commands needing an atomic decision across two modules (voiding a line, cancelling an order vs board state) call the other module's API synchronously in the same transaction. Keep this list short and documented in the module's API.
-- Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer.
+- Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer. The event carries the before/after snapshot the audit row needs (products, categories, stations, and modifier groups do).
 - No cyclic dependencies between modules.
 
 **Consistency and concurrency**

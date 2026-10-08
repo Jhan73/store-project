@@ -777,6 +777,14 @@
         <source>Después</source>
       </segment>
     </unit>
+    <unit id="admin.audit.entity.category">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
     <unit id="admin.audit.entity.deliveryZone">
       <notes>
         <note category="location">src/app/features/admin/audit/audit-labels.ts:46</note>
@@ -823,6 +831,14 @@
       </notes>
       <segment>
         <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.station">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:68</note>
+      </notes>
+      <segment>
+        <source>Estación</source>
       </segment>
     </unit>
     <unit id="admin.audit.entity.storeSettings">

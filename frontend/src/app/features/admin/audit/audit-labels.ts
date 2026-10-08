@@ -3,18 +3,24 @@ import type { Role } from '../../../core/api/api-types';
 
 // The API takes any text for both; these are what the backend writes today, so the selects can offer them.
 export const AUDIT_ENTITY_TYPES: readonly string[] = [
+  'CATEGORY',
   'DELIVERY_ZONE',
   'MODIFIER_GROUP',
   'MODIFIER_OPTION',
   'OPENING_HOURS',
   'PRODUCT',
   'REASON',
+  'STATION',
   'STORE_SETTINGS',
   'TABLE',
   'USER',
 ];
 
 export const AUDIT_ACTIONS: readonly string[] = [
+  'CATEGORY_CREATED',
+  'CATEGORY_DEACTIVATED',
+  'CATEGORY_REACTIVATED',
+  'CATEGORY_UPDATED',
   'DELIVERY_ZONE_CREATED',
   'DELIVERY_ZONE_STATUS_CHANGED',
   'DELIVERY_ZONE_UPDATED',
@@ -29,6 +35,8 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'REASON_CREATED',
   'REASON_STATUS_CHANGED',
   'SET_PASSWORD_LINK_REISSUED',
+  'STATION_CREATED',
+  'STATION_UPDATED',
   'STORE_SETTINGS_CHANGED',
   'TABLE_CREATED',
   'TABLE_STATUS_CHANGED',
@@ -42,6 +50,8 @@ export const AUDIT_ACTIONS: readonly string[] = [
 
 export function entityTypeLabel(type: string): string {
   switch (type) {
+    case 'CATEGORY':
+      return $localize`:@@admin.audit.entity.category:Categoría`;
     case 'DELIVERY_ZONE':
       return $localize`:@@admin.audit.entity.deliveryZone:Zona de reparto`;
     case 'MODIFIER_GROUP':
@@ -54,6 +64,8 @@ export function entityTypeLabel(type: string): string {
       return $localize`:@@admin.audit.entity.product:Producto`;
     case 'REASON':
       return $localize`:@@admin.audit.entity.reason:Motivo`;
+    case 'STATION':
+      return $localize`:@@admin.audit.entity.station:Estación`;
     case 'STORE_SETTINGS':
       return $localize`:@@admin.audit.entity.storeSettings:Configuración de la tienda`;
     case 'TABLE':
