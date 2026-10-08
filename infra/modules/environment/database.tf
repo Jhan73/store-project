@@ -16,10 +16,10 @@ resource "aws_db_parameter_group" "main" {
 }
 
 resource "aws_db_instance" "main" {
-  identifier     = local.name
+  identifier     = local.db_identifier
   engine         = "postgres"
   engine_version = "18"
-  instance_class = "db.t4g.micro"
+  instance_class = var.db_instance_class
 
   allocated_storage = 20
   storage_type      = "gp3"
@@ -39,7 +39,7 @@ resource "aws_db_instance" "main" {
   backup_retention_period    = var.backup_retention_days
   deletion_protection        = var.deletion_protection
   skip_final_snapshot        = !var.deletion_protection
-  final_snapshot_identifier  = var.deletion_protection ? "${local.name}-final" : null
+  final_snapshot_identifier  = var.deletion_protection ? "${local.db_identifier}-final" : null
   copy_tags_to_snapshot      = true
   auto_minor_version_upgrade = true
 }
