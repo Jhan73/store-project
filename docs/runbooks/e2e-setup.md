@@ -30,7 +30,7 @@ Remove-Variable Password, Secure
 
 ## 4. Set the environment variables
 
-Take the endpoints of the running services; `https://` is added when the value has no scheme:
+Take the endpoints of the running services. Each value is a host name without a scheme, which is why the commands below add `https://`:
 
 ```powershell
 $Account = aws sts get-caller-identity --query Account --output text
@@ -50,7 +50,7 @@ gh variable set E2E_ADMIN_EMAIL --env test --body "<the account's email>"
 gh variable set E2E_ENABLED --env test --body true
 ```
 
-The endpoints change if a service is recreated; update the variables then. To switch the suite off, set `E2E_ENABLED` to `false` or delete it.
+Set `E2E_ENABLED` last: the account from step 1 must exist and have set its password, because the first run signs in with it. The endpoints change if a service is recreated; update the variables then. To switch the suite off, set `E2E_ENABLED` to `false` or delete it.
 
 ## Rotation
 

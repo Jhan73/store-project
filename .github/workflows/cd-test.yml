@@ -245,7 +245,13 @@ jobs:
         env:
           E2E_ENABLED: ${{ vars.E2E_ENABLED }}
         run: |
-          echo "enabled=$([[ "$E2E_ENABLED" == true ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          if [[ "$E2E_ENABLED" == true ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::E2E_ENABLED is not true; the Playwright suite did not run."
+            echo "The Playwright suite did not run: E2E_ENABLED is not true." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - if: steps.gate.outputs.enabled == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -304,11 +310,12 @@ jobs:
     needs: [changes, build-backend, build-frontend, smoke, e2e]
     # Also runs when nothing was deployed: a release promotes whatever commit reaches main, and a
     # docs-only commit with no record of its own could not be promoted at all.
-    # e2e is skipped when nothing was deployed, so skipped passes and only failure or cancellation blocks.
+    # e2e is skipped only when nothing was deployed; once an app was deployed it must have succeeded,
+    # so a cancelled run cannot record digests that never passed the suite.
     if: >-
       always() && needs.changes.result == 'success'
       && (needs.smoke.result == 'success' || needs.changes.outputs.any != 'true')
-      && (needs.e2e.result == 'success' || needs.e2e.result == 'skipped')
+      && (needs.changes.outputs.any != 'true' || needs.e2e.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
