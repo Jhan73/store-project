@@ -30,27 +30,18 @@ Remove-Variable Password, Secure
 
 ## 4. Set the environment variables
 
-Take the endpoints of the running services. Each value is a host name without a scheme, which is why the commands below add `https://`:
-
-```powershell
-$Account = aws sts get-caller-identity --query Account --output text
-foreach ($App in "backend", "frontend") {
-  aws ecs describe-express-gateway-service `
-    --service-arn "arn:aws:ecs:us-east-1:${Account}:service/jugueria-test/jugueria-test-$App" `
-    --query "service.activeConfigurations[0].ingressPaths[0].endpoint" --output text
-}
-```
+`E2E_BASE_URL` and `E2E_API_URL` must be the custom hosts of `test`, not the raw ECS endpoints: the frontend derives its API origin as `api.<page hostname>`, so from a raw endpoint it cannot reach its API. The custom domain of `test` must be wired first (`custom-domains.md`).
 
 The services must be running (`test` is on-demand, see `env-control.yml`). Then:
 
 ```bash
-gh variable set E2E_BASE_URL --env test --body "https://<frontend endpoint>"
-gh variable set E2E_API_URL --env test --body "https://<backend endpoint>"
+gh variable set E2E_BASE_URL --env test --body "https://test.jugueria.jhanantezana.com"
+gh variable set E2E_API_URL --env test --body "https://api.test.jugueria.jhanantezana.com"
 gh variable set E2E_ADMIN_EMAIL --env test --body "<the account's email>"
 gh variable set E2E_ENABLED --env test --body true
 ```
 
-Set `E2E_ENABLED` last: the account from step 1 must exist and have set its password, because the first run signs in with it. The endpoints change if a service is recreated; update the variables then. To switch the suite off, set `E2E_ENABLED` to `false` or delete it.
+Set `E2E_ENABLED` last: the account from step 1 must exist and have set its password, because the first run signs in with it. The custom hosts do not change when a service is recreated, but its rule hosts must be redone (`custom-domains.md`). To switch the suite off, set `E2E_ENABLED` to `false` or delete it.
 
 ## Rotation
 
