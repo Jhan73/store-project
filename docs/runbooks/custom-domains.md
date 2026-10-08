@@ -10,7 +10,7 @@ The app expects its own hostnames: the frontend derives the API origin as `api.<
 | API | `api.test.jugueria.jhanantezana.com` | `api.jugueria.jhanantezana.com` |
 | State | wired | **not wired** |
 
-The ALB, its listener, and its rules are shared by `test` and `prod` (D15). CD never touches the listener certificate or the rules: Express rewrites only the rule **actions** on a deploy (it flips the target group weights), and the custom host condition survives. CD only passes the custom frontend host to Angular (`NG_ALLOWED_HOSTS`) and checks the custom hosts in the smoke test. CD has no ELB permission, because rule permissions cannot be scoped per environment.
+The ALB, its listener, and its rules are shared by `test` and `prod` (D15). CD never touches the listener certificate or the rules: Express rewrites only the rule **actions** on a deploy (it flips the target group weights), and the custom host condition survives. CD only passes the custom frontend host to Angular (`NG_ALLOWED_HOSTS`) and checks the custom hosts in the smoke test. That check makes at most four attempts per URL with a 15 s request limit, so even if the ALB blackholes it ends within about 5 minutes, inside the 6 minute step limit. CD has no ELB permission, because rule permissions cannot be scoped per environment.
 
 ## Prerequisites
 
@@ -163,7 +163,7 @@ curl -sS -i --http1.1 -m 5 https://api.test.jugueria.jhanantezana.com/ws \
   -H "Sec-WebSocket-Key: $(openssl rand -base64 16)" -H 'Origin: https://test.jugueria.jhanantezana.com' | head -n 5
 ```
 
-Any answer from the backend proves the route (`101`, or `401`/`403` if the handshake requires a token). A `404` or `503` from the ALB, or a `400` from Angular, means the host is on the wrong rule.
+`curl -m 5` against `/ws` exits with 28 (timeout) even when it received `101 Switching Protocols`, because the connection stays open; the status line is what matters. Any answer from the backend proves the route (`101`, or `401`/`403` if the handshake requires a token). A `404` or `503` from the ALB, or a `400` from Angular, means the host is on the wrong rule.
 
 Real client IP: make an audited change (for example rename a category in the admin UI) from a known network, then read the newest `audit.audit_log` row (`database-bootstrap.md` explains database access) and compare its `client_ip` with `curl https://checkip.amazonaws.com`. It must be your address, not a private ALB address.
 
