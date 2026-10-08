@@ -165,11 +165,16 @@ jobs:
           APP: ${{ inputs.app }}
           ENDPOINT: ${{ steps.known.outputs.endpoint }}
           VARIABLES: ${{ steps.config.outputs.environment_variables }}
+          CUSTOM_FRONTEND_HOST: ${{ vars.CUSTOM_FRONTEND_HOST }}
         run: |
           variables="$VARIABLES"
           if [[ "$APP" == frontend && -n "$ENDPOINT" ]]; then
             host="${ENDPOINT#*://}"
-            variables="$(jq -nc --argjson current "$variables" --arg host "${host%%/*}" \
+            host="${host%%/*}"
+            if [[ -n "$CUSTOM_FRONTEND_HOST" ]]; then
+              host="$host,${CUSTOM_FRONTEND_HOST// /}"
+            fi
+            variables="$(jq -nc --argjson current "$variables" --arg host "$host" \
               '$current + [{name: "NG_ALLOWED_HOSTS", value: $host}]')"
           fi
           echo "variables=$variables" >> "$GITHUB_OUTPUT"
@@ -208,9 +213,14 @@ jobs:
         env:
           ENDPOINT: ${{ steps.deploy.outputs.endpoint }}
           VARIABLES: ${{ steps.config.outputs.environment_variables }}
+          CUSTOM_FRONTEND_HOST: ${{ vars.CUSTOM_FRONTEND_HOST }}
         run: |
           host="${ENDPOINT#*://}"
-          jq -nc --argjson current "$VARIABLES" --arg host "${host%%/*}" \
+          host="${host%%/*}"
+          if [[ -n "$CUSTOM_FRONTEND_HOST" ]]; then
+            host="$host,${CUSTOM_FRONTEND_HOST// /}"
+          fi
+          jq -nc --argjson current "$VARIABLES" --arg host "$host" \
             '$current + [{name: "NG_ALLOWED_HOSTS", value: $host}]' \
             | sed 's/^/variables=/' >> "$GITHUB_OUTPUT"
 

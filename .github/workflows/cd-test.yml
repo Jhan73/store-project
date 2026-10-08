@@ -226,6 +226,8 @@ jobs:
       - uses: ./.github/actions/smoke
         with:
           environment: test
+          custom-frontend-host: ${{ vars.CUSTOM_FRONTEND_HOST }}
+          custom-api-host: ${{ vars.CUSTOM_API_HOST }}
 
   e2e:
     name: e2e
