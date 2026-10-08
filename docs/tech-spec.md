@@ -817,7 +817,7 @@ Release 1 ships only Spanish, but every text is externalized so a translation is
 | ECS Express service `frontend` | 0.25 vCPU / 0.5 GB, 1 task | 0.25 vCPU / 0.5 GB, min 1 · max 3 tasks |
 | ALB | **One ALB shared by both environments** (D15), created and owned by Express Mode: its own generated hostname, its own ACM certificate, host-header listener rules. Our domain is added as extra values on those rules, with the project certificate attached to the listener (D18) | same ALB |
 | Custom domain (D18) | `test.jugueria.jhanantezana.com` and `api.test.jugueria.jhanantezana.com`: Route 53 `A` aliases to the ALB, project certificate on the listener, hosts on the Express rules. Wired | `jugueria.jhanantezana.com` and `api.jugueria.jhanantezana.com`, same mechanism. Not wired yet |
-| RDS PostgreSQL 18 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection |
+| RDS PostgreSQL 18 | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 1 day | `db.t4g.micro`, single-AZ, 20 GB gp3, backups 14 days + PITR, deletion protection; runs `db.t3.micro` while `db.t4g.micro` has no capacity |
 | Power mode (below) | `on-demand` | `on-demand` until launch · `store-hours` during the M2 pilot · `always-on` from launch |
 | S3 + CloudFront (media) | `jugueria-test-media`, versioning off; private, SSE-S3, read only through CloudFront Origin Access Control on the default `*.cloudfront.net` domain (custom domain pending); `Managed-CachingOptimized` honors the objects' `Cache-Control: immutable`; the task role is the only role granted `s3:PutObject` (on `products/*`) | `jugueria-prod-media`, versioning on (noncurrent versions expire after 30 days); same setup |
 | SES | Account-level SES shared with `prod`; an application **recipient allowlist** prevents emailing real people from `test` | Production access (requested at M1, tech-spec R5) |
@@ -843,7 +843,7 @@ Shared: VPC and ALB (§8.2); ECR repositories `jugueria/backend`, `jugueria/fron
 
 **Why these sizes are enough:** NFR-05 (10× peak ≈ 300 orders/hour, 1,000 concurrent shoppers) is dominated by cached menu reads. A 0.5 vCPU Spring Boot task with virtual threads serves hundreds of requests/second of cached reads; the database sees mostly checkout writes. Load test at M4 confirms or adjusts.
 
-**Connection budget:** Hikari pool 10 + 1 `LISTEN` connection per task → max 44 connections at 4 tasks, within `db.t4g.micro` limits.
+**Connection budget:** Hikari pool 10 + 1 `LISTEN` connection per task → max 44 connections at 4 tasks, within `db.t4g.micro` limits (`db.t3.micro` has the same memory).
 
 ### 8.2 Networking (no NAT gateway)
 
@@ -862,7 +862,7 @@ Estimate in USD/month, assuming `on-demand` environments run ~4 h/day (power mod
 | Item | `test` (on-demand) | `prod` before launch (on-demand) | `prod` from launch (always-on) |
 |------|--------------------|----------------------------------|--------------------------------|
 | Fargate (backend + frontend) | ~4.5 | ~4.5 | ~27 |
-| RDS `db.t4g.micro` (instance hours + storage/backups) | ~4 | ~5 | ~16 |
+| RDS `db.t4g.micro` (`prod`: `db.t3.micro`, similar price) (instance hours + storage/backups) | ~4 | ~5 | ~16 |
 | Public IPv4 of running tasks | ~1 | ~1 | ~7 |
 | CloudWatch, ECR, Route 53, SES, SSM, S3, CloudFront (media, see below) | ~2 | ~3 | ~6 |
 | **Subtotal** | **~12** | **~14** | **~56** |
