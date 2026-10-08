@@ -65,6 +65,7 @@ runs:
         if [[ -z "$identifier" || "$identifier" == "None" ]]; then
           identifier="jugueria-$ENVIRONMENT"
         fi
+        echo "Database: $identifier"
         echo "identifier=$identifier" >> "$GITHUB_OUTPUT"
 
     - name: Stop the database
