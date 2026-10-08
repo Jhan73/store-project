@@ -7,6 +7,17 @@ variable "environment" {
   }
 }
 
+variable "db_identifier" {
+  description = "RDS instance identifier. Null keeps jugueria-<environment>."
+  type        = string
+  default     = null
+}
+
+variable "db_instance_class" {
+  type    = string
+  default = "db.t4g.micro"
+}
+
 variable "backup_retention_days" {
   type = number
 }

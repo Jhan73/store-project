@@ -70,7 +70,12 @@ jobs:
             --query 'Parameter.Value' --output text 2>/dev/null || true)"
           echo "Stop after: ${stop_after:-unset}"
 
-          status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+          db_instance="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/db-instance" \
+            --query 'Parameter.Value' --output text 2>/dev/null || true)"
+          if [[ -z "$db_instance" || "$db_instance" == "None" ]]; then
+            db_instance="jugueria-$ENVIRONMENT"
+          fi
+          status="$(aws rds describe-db-instances --db-instance-identifier "$db_instance" \
             --query 'DBInstances[0].DBInstanceStatus' --output text)"
           echo "Database status: $status"
           capacity="$(aws application-autoscaling describe-scalable-targets --service-namespace ecs \

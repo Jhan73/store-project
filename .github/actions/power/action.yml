@@ -52,17 +52,34 @@ runs:
           echo "Saved scaling: $saved"
         fi
 
+    # The instance can be replaced (e.g. on capacity errors), so its name comes from the parameter
+    # Terraform keeps in step with it; environments without one keep the default name.
+    - name: Find the database
+      id: db
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+      run: |
+        identifier="$(aws ssm get-parameter --name "/jugueria/$ENVIRONMENT/power/db-instance" \
+          --query 'Parameter.Value' --output text 2>/dev/null || true)"
+        if [[ -z "$identifier" || "$identifier" == "None" ]]; then
+          identifier="jugueria-$ENVIRONMENT"
+        fi
+        echo "Database: $identifier"
+        echo "identifier=$identifier" >> "$GITHUB_OUTPUT"
+
     - name: Stop the database
       if: inputs.state == 'stop'
       shell: bash
       env:
         ENVIRONMENT: ${{ inputs.environment }}
+        DB_INSTANCE: ${{ steps.db.outputs.identifier }}
       run: |
-        status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+        status="$(aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE" \
           --query 'DBInstances[0].DBInstanceStatus' --output text)"
         echo "Database status: $status"
         if [[ "$status" == "available" ]]; then
-          aws rds stop-db-instance --db-instance-identifier "jugueria-$ENVIRONMENT" >/dev/null
+          aws rds stop-db-instance --db-instance-identifier "$DB_INSTANCE" >/dev/null
           echo "Stopping."
         fi
         aws ssm put-parameter --name "/jugueria/$ENVIRONMENT/power/stop-after" --type String \
@@ -73,15 +90,15 @@ runs:
       if: inputs.state == 'start'
       shell: bash
       env:
-        ENVIRONMENT: ${{ inputs.environment }}
+        DB_INSTANCE: ${{ steps.db.outputs.identifier }}
       run: |
-        status="$(aws rds describe-db-instances --db-instance-identifier "jugueria-$ENVIRONMENT" \
+        status="$(aws rds describe-db-instances --db-instance-identifier "$DB_INSTANCE" \
           --query 'DBInstances[0].DBInstanceStatus' --output text)"
         echo "Database status: $status"
         if [[ "$status" == "stopped" ]]; then
-          aws rds start-db-instance --db-instance-identifier "jugueria-$ENVIRONMENT" >/dev/null
+          aws rds start-db-instance --db-instance-identifier "$DB_INSTANCE" >/dev/null
         fi
-        aws rds wait db-instance-available --db-instance-identifier "jugueria-$ENVIRONMENT"
+        aws rds wait db-instance-available --db-instance-identifier "$DB_INSTANCE"
 
     - name: Scale the services up
       if: inputs.state == 'start'

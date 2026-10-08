@@ -120,6 +120,16 @@ resource "aws_iam_role_policy_attachment" "infra_apply_admin" {
 
 locals {
   ecr_repository_arns = [for repo in aws_ecr_repository.app : repo.arn]
+
+  # prod keeps its old instance listed until it is deleted, so it can still be started or stopped.
+  database_instance_ids = {
+    test = ["jugueria-test"]
+    prod = ["jugueria-prod", "jugueria-prod-t3"]
+  }
+  database_instance_arns = {
+    for environment, ids in local.database_instance_ids :
+    environment => [for id in ids : "arn:aws:rds:${var.region}:${var.account_id}:db:${id}"]
+  }
 }
 
 data "aws_iam_policy_document" "deploy" {
@@ -200,7 +210,7 @@ data "aws_iam_policy_document" "deploy" {
   statement {
     sid       = "StartEnvironmentDatabase"
     actions   = ["rds:StartDBInstance", "rds:StopDBInstance"]
-    resources = ["arn:aws:rds:${var.region}:${var.account_id}:db:jugueria-${each.key}"]
+    resources = local.database_instance_arns[each.key]
   }
 
   statement {
@@ -282,12 +292,9 @@ data "aws_iam_policy_document" "power" {
   }
 
   statement {
-    sid     = "StartAndStopDatabases"
-    actions = ["rds:StartDBInstance", "rds:StopDBInstance"]
-    resources = [
-      for environment in ["test", "prod"] :
-      "arn:aws:rds:${var.region}:${var.account_id}:db:jugueria-${environment}"
-    ]
+    sid       = "StartAndStopDatabases"
+    actions   = ["rds:StartDBInstance", "rds:StopDBInstance"]
+    resources = flatten(values(local.database_instance_arns))
   }
 
   statement {
