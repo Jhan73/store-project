@@ -52,7 +52,6 @@ runs:
     # that lost its host or a missing DNS record must block the digest recording.
     - name: Custom domains answer
       shell: bash
-      timeout-minutes: 6
       env:
         ENVIRONMENT: ${{ inputs.environment }}
         FRONTEND_HOST: ${{ inputs.custom-frontend-host }}

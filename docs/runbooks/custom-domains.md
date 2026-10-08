@@ -10,7 +10,7 @@ The app expects its own hostnames: the frontend derives the API origin as `api.<
 | API | `api.test.jugueria.jhanantezana.com` | `api.jugueria.jhanantezana.com` |
 | State | wired | **not wired** |
 
-The ALB, its listener, and its rules are shared by `test` and `prod` (D15). CD never touches the listener certificate or the rules: Express rewrites only the rule **actions** on a deploy (it flips the target group weights), and the custom host condition survives. CD only passes the custom frontend host to Angular (`NG_ALLOWED_HOSTS`) and checks the custom hosts in the smoke test. That check makes at most four attempts per URL with a 15 s request limit, so even if the ALB blackholes it ends within about 5 minutes, inside the 6 minute step limit. CD has no ELB permission, because rule permissions cannot be scoped per environment.
+The ALB, its listener, and its rules are shared by `test` and `prod` (D15). CD never touches the listener certificate or the rules: Express rewrites only the rule **actions** on a deploy (it flips the target group weights), and the custom host condition survives. CD only passes the custom frontend host to Angular (`NG_ALLOWED_HOSTS`) and checks the custom hosts in the smoke test. That check makes at most four attempts per URL with a 15 s request limit, so even if the ALB blackholes it ends within about 5 minutes, inside the 15 minute timeout of the smoke job. CD has no ELB permission, because rule permissions cannot be scoped per environment.
 
 ## Prerequisites
 
