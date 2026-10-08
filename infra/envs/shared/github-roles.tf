@@ -121,10 +121,9 @@ resource "aws_iam_role_policy_attachment" "infra_apply_admin" {
 locals {
   ecr_repository_arns = [for repo in aws_ecr_repository.app : repo.arn]
 
-  # prod keeps its old instance listed until it is deleted, so it can still be started or stopped.
   database_instance_ids = {
     test = ["jugueria-test"]
-    prod = ["jugueria-prod", "jugueria-prod-t3"]
+    prod = ["jugueria-prod-t3"]
   }
   database_instance_arns = {
     for environment, ids in local.database_instance_ids :
