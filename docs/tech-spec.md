@@ -862,7 +862,7 @@ Estimate in USD/month, assuming `on-demand` environments run ~4 h/day (power mod
 | Item | `test` (on-demand) | `prod` before launch (on-demand) | `prod` from launch (always-on) |
 |------|--------------------|----------------------------------|--------------------------------|
 | Fargate (backend + frontend) | ~4.5 | ~4.5 | ~27 |
-| RDS `db.t4g.micro` (`prod`: `db.t3.micro`, similar price) (instance hours + storage/backups) | ~4 | ~5 | ~16 |
+| RDS `db.t4g.micro`, `db.t3.micro` in `prod` at a similar price (instance hours + storage/backups) | ~4 | ~5 | ~16 |
 | Public IPv4 of running tasks | ~1 | ~1 | ~7 |
 | CloudWatch, ECR, Route 53, SES, SSM, S3, CloudFront (media, see below) | ~2 | ~3 | ~6 |
 | **Subtotal** | **~12** | **~14** | **~56** |

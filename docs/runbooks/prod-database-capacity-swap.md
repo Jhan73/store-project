@@ -12,17 +12,30 @@ The repository now describes `prod` with that instance (`db_identifier` and `db_
 
 ## 2. Import the instance and apply `prod`
 
+`terraform import` refuses an address that is already in the state, and the state binds `module.environment.aws_db_instance.main` to `jugueria-prod`. So the old binding must be removed first. State surgery cannot go through CI, so this step is an owner exception to the rule "never apply locally against `prod`": run it yourself with the admin profile.
+
 ```powershell
 $env:AWS_PROFILE = "jugueria-admin"
 terraform -chdir=infra/envs/prod init -backend-config=backend.hcl
+terraform -chdir=infra/envs/prod state pull > prod-state-backup.json
+terraform -chdir=infra/envs/prod state rm module.environment.aws_db_instance.main
 terraform -chdir=infra/envs/prod import module.environment.aws_db_instance.main jugueria-prod-t3
 terraform -chdir=infra/envs/prod plan -out=prod.tfplan
 ```
 
-Before applying, read the plan:
+`state rm` only forgets `jugueria-prod`; it deletes nothing in AWS. Between `state rm` and `import`, do not plan or apply: with the instance missing from the state, a plan would try to create `jugueria-prod-t3` and fail with `DBInstanceAlreadyExists` (it would not destroy anything). Keep `prod-state-backup.json` outside the repo; it is the way back.
 
-- `aws_db_instance.main` must show **no** `must be replaced` (`-/+`). An in-place update of tags or similar is fine. If it wants to replace, stop and do not apply.
-- The old `aws_db_instance.main` of `jugueria-prod` is in the state today; the import replaces that binding, so the state forgets `jugueria-prod` without deleting it. If Terraform refuses because the address is already bound, run `terraform state rm module.environment.aws_db_instance.main` first and import again.
+Read the plan before applying:
+
+- `aws_db_instance.main` must show **no** `must be replaced` (`-/+`). If it does, stop and do not apply.
+- Expected in-place changes on the imported instance: `skip_final_snapshot` (an import cannot know it), `final_snapshot_identifier` becoming `jugueria-prod-t3-final`, `apply_immediately`, `manage_master_user_password` false to true, and possibly tags. Anything else deserves a look first.
+- **Master secret:** the point-in-time restore does not carry RDS's managed master secret, so the instance has none. Applying `manage_master_user_password = true` makes RDS create a new Secrets Manager secret and **rotate the master password**. The `app` and `migrator` database roles are unaffected, so the application keeps working. After the apply, read the new secret ARN and use it for any admin work from now on:
+
+  ```powershell
+  aws rds describe-db-instances --db-instance-identifier jugueria-prod-t3 --query "DBInstances[0].MasterUserSecret.SecretArn" --output text
+  ```
+
+  The module output `database_master_secret_arn` tolerates the missing secret while planning (it is null until the apply creates it).
 - The plan also creates `/jugueria/prod/power/db-instance` and updates `/jugueria/prod/db/url`.
 
 ```powershell
@@ -60,5 +73,5 @@ aws rds delete-db-instance --db-instance-identifier jugueria-prod --final-db-sna
 
 ## Risks
 
-- The new instance has no final-snapshot history of its own yet; its automated backups start at the restore.
+- Deleting the old `jugueria-prod` also deletes its automated snapshots unless a manual or final snapshot is taken first. The new instance's own automated backups start at the restore.
 - `db.t3.micro` is burstable like `t4g`; watch `CPUCreditBalance` after traffic grows.
