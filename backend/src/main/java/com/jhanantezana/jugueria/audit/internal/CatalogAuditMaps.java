@@ -8,9 +8,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.jhanantezana.jugueria.catalog.Allergen;
+import com.jhanantezana.jugueria.catalog.CategorySnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierGroupSnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierOptionSnapshot;
 import com.jhanantezana.jugueria.catalog.ProductSnapshot;
+import com.jhanantezana.jugueria.catalog.StationSnapshot;
 
 // Snapshots become plain maps here so the audit row does not depend on the catalog's record shapes over time.
 final class CatalogAuditMaps {
@@ -50,6 +52,21 @@ final class CatalogAuditMaps {
 		map.put("imageKey", snapshot.imageKey());
 		map.put("allergens", names(snapshot.allergens()));
 		map.put("modifierGroupIds", snapshot.modifierGroupIds().stream().map(UUID::toString).toList());
+		return map;
+	}
+
+	static Map<String, Object> toMap(CategorySnapshot snapshot) {
+		var map = new LinkedHashMap<String, Object>();
+		map.put("name", snapshot.name());
+		map.put("displayOrder", snapshot.displayOrder());
+		map.put("stationId", snapshot.stationId().toString());
+		map.put("active", snapshot.active());
+		return map;
+	}
+
+	static Map<String, Object> toMap(StationSnapshot snapshot) {
+		var map = new LinkedHashMap<String, Object>();
+		map.put("name", snapshot.name());
 		return map;
 	}
 

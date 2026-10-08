@@ -23,11 +23,13 @@ import com.jhanantezana.jugueria.catalog.AvailabilityChanged;
 import com.jhanantezana.jugueria.catalog.AvailabilityTarget;
 import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
 import com.jhanantezana.jugueria.catalog.CategoryChanged;
+import com.jhanantezana.jugueria.catalog.CategorySnapshot;
 import com.jhanantezana.jugueria.catalog.ModifierGroupChanged;
 import com.jhanantezana.jugueria.catalog.ProductChanged;
 import com.jhanantezana.jugueria.catalog.ProductSnapshot;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.catalog.StationChanged;
+import com.jhanantezana.jugueria.catalog.StationSnapshot;
 
 // identity and shared are force-included for the same reason as the store-status signal tests.
 @ApplicationModuleTest(extraIncludes = { "identity", "shared" })
@@ -56,7 +58,7 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var stationId = UUID.randomUUID();
 
-		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, null, NOW))
+		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), null, null, NOW))
 			.andWaitForStateChange(() -> probe.countMatching(stationId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(stationId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
@@ -69,7 +71,8 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var categoryId = UUID.randomUUID();
 
-		scenario.publish(new CategoryChanged(categoryId, CatalogChangeKind.UPDATED, null, null, NOW))
+		scenario.publish(new CategoryChanged(categoryId, CatalogChangeKind.UPDATED, null,
+				new CategorySnapshot("Juices", 0, UUID.randomUUID(), true), null, null, NOW))
 			.andWaitForStateChange(() -> probe.countMatching(categoryId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(categoryId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
@@ -136,7 +139,7 @@ class SignalCatalogOnCatalogEventsIT {
 	void deliveringTheSameStationEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		var id = UUID.randomUUID();
 
-		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, null, NOW), id);
+		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, new StationSnapshot("Bar"), null, null, NOW), id);
 	}
 
 	@Test
@@ -180,7 +183,8 @@ class SignalCatalogOnCatalogEventsIT {
 	void deliveringTheSameCategoryEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		probe = new AppEventsProbe(connectionDetails);
 		var categoryId = UUID.randomUUID();
-		var event = new CategoryChanged(categoryId, CatalogChangeKind.UPDATED, null, null, NOW);
+		var event = new CategoryChanged(categoryId, CatalogChangeKind.UPDATED, null,
+				new CategorySnapshot("Juices", 0, UUID.randomUUID(), true), null, null, NOW);
 
 		scenario.publish(event)
 			.andWaitForStateChange(() -> probe.countMatching(categoryId.toString()), count -> count >= 1)

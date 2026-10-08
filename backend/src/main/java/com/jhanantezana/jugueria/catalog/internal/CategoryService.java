@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.jhanantezana.jugueria.catalog.CatalogChangeKind;
 import com.jhanantezana.jugueria.catalog.CatalogError;
 import com.jhanantezana.jugueria.catalog.CategoryChanged;
+import com.jhanantezana.jugueria.catalog.CategorySnapshot;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
@@ -54,7 +55,7 @@ public class CategoryService {
 		catch (DataIntegrityViolationException e) {
 			throw nameAlreadyUsed();
 		}
-		publish(category, CatalogChangeKind.CREATED, now);
+		publish(category, CatalogChangeKind.CREATED, null, now);
 		return category;
 	}
 
@@ -63,6 +64,7 @@ public class CategoryService {
 		var category = findOrThrow(id);
 		EntityVersions.requireMatching(category.getVersion(), expectedVersion);
 		var now = Instant.now(clock);
+		var before = category.snapshot();
 		category.change(name.strip(), resolveStation(stationId), displayOrder, now);
 		try {
 			categories.flush();
@@ -70,7 +72,7 @@ public class CategoryService {
 		catch (DataIntegrityViolationException e) {
 			throw nameAlreadyUsed();
 		}
-		publish(category, CatalogChangeKind.UPDATED, now);
+		publish(category, CatalogChangeKind.UPDATED, before, now);
 		return category;
 	}
 
@@ -82,8 +84,9 @@ public class CategoryService {
 			return category;
 		}
 		var now = Instant.now(clock);
+		var before = category.snapshot();
 		category.deactivate(now);
-		publish(category, CatalogChangeKind.DEACTIVATED, now);
+		publish(category, CatalogChangeKind.DEACTIVATED, before, now);
 		return category;
 	}
 
@@ -95,8 +98,9 @@ public class CategoryService {
 			return category;
 		}
 		var now = Instant.now(clock);
+		var before = category.snapshot();
 		category.reactivate(now);
-		publish(category, CatalogChangeKind.ACTIVATED, now);
+		publish(category, CatalogChangeKind.ACTIVATED, before, now);
 		return category;
 	}
 
@@ -112,8 +116,9 @@ public class CategoryService {
 		return stationId;
 	}
 
-	private void publish(Category category, CatalogChangeKind kind, Instant now) {
-		changes.publish(new CategoryChanged(category.getId(), kind, currentActor.id(), currentActor.role(), now));
+	private void publish(Category category, CatalogChangeKind kind, @Nullable CategorySnapshot before, Instant now) {
+		changes.publish(new CategoryChanged(category.getId(), kind, before, category.snapshot(), currentActor.id(),
+				currentActor.role(), now));
 	}
 
 	private Category findOrThrow(UUID id) {
