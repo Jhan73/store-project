@@ -34,7 +34,7 @@ Output is the terminal only (`list` locally, `github` and `line` in CI). Stop th
 
 ## In CI
 
-`cd-test.yml` runs the suite in the `e2e` job after `smoke`, and `record` waits for it, so a red suite blocks promotion. The job runs only when the `test` environment variable `E2E_ENABLED` is `true`. It reads the password of a dedicated `ADMIN` account from the SSM SecureString `/jugueria/test/e2e/admin-password` with the `test` deploy role, masks it, and exports it only for the `playwright test` step; `E2E_BASE_URL`, `E2E_API_URL` and `E2E_ADMIN_EMAIL` are `test` environment variables. Setup: `docs/runbooks/e2e-setup.md`.
+`cd-test.yml` runs the suite in the `e2e` job after `smoke`, and `record` waits for it, so a red suite blocks promotion. The job runs only when the `test` environment variable `E2E_ENABLED` is `true`. It reads the password of a dedicated `ADMIN` account from the SSM SecureString `/jugueria/test/e2e/admin-password` with the `test` deploy role, masks it, and exports it only for the `playwright test` step; `E2E_BASE_URL`, `E2E_API_URL` and `E2E_ADMIN_EMAIL` are `test` environment variables; the first two are the custom hosts of `test` (`https://test.jugueria.jhanantezana.com`, `https://api.test.jugueria.jhanantezana.com`), never the raw ECS endpoints. Setup: `docs/runbooks/e2e-setup.md`.
 
 ## Layout
 

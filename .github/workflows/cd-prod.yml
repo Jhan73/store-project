@@ -221,6 +221,8 @@ jobs:
       - uses: ./.github/actions/smoke
         with:
           environment: prod
+          custom-frontend-host: ${{ vars.CUSTOM_FRONTEND_HOST }}
+          custom-api-host: ${{ vars.CUSTOM_API_HOST }}
 
   release:
     name: tag and release
