@@ -226,13 +226,98 @@ jobs:
       - uses: ./.github/actions/smoke
         with:
           environment: test
+          custom-frontend-host: ${{ vars.CUSTOM_FRONTEND_HOST }}
+          custom-api-host: ${{ vars.CUSTOM_API_HOST }}
+
+  e2e:
+    name: e2e
+    needs: [changes, smoke]
+    # The environment variables of a GitHub environment are not visible to a job-level condition,
+    # so the switch is read by the first step and the rest of the job is skipped when it is off.
+    if: always() && needs.smoke.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: test
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check the switch
+        id: gate
+        env:
+          E2E_ENABLED: ${{ vars.E2E_ENABLED }}
+        run: |
+          if [[ "$E2E_ENABLED" == true ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::E2E_ENABLED is not true; the Playwright suite did not run."
+            echo "The Playwright suite did not run: E2E_ENABLED is not true." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - if: steps.gate.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - if: steps.gate.outputs.enabled == 'true'
+        name: Install dependencies and Chromium
+        working-directory: e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - if: steps.gate.outputs.enabled == 'true'
+        name: Check the reporter configuration
+        working-directory: e2e
+        run: npm run check:config
+
+      - if: steps.gate.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # The password is read and masked in the step that uses it, so it never reaches GITHUB_ENV,
+      # GITHUB_OUTPUT, a file or a later step. No report or test-results folder is uploaded: typed
+      # values are recorded in them.
+      - if: steps.gate.outputs.enabled == 'true'
+        name: Run the journeys against test
+        working-directory: e2e
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+          E2E_API_URL: ${{ vars.E2E_API_URL }}
+          E2E_ADMIN_EMAIL: ${{ vars.E2E_ADMIN_EMAIL }}
+          E2E_ALLOW_REMOTE: "1"
+        run: |
+          password="$(aws ssm get-parameter --name /jugueria/test/e2e/admin-password --with-decryption --query Parameter.Value --output text)"
+          echo "::add-mask::$password"
+          if [[ -z "$password" || "$password" == None ]]; then
+            echo "::error::The e2e admin password parameter is empty."
+            exit 1
+          fi
+          export E2E_ADMIN_PASSWORD="$password"
+          unset password
+          npx playwright test
 
   record:
     name: record digests
-    needs: [changes, build-backend, build-frontend, smoke]
+    needs: [changes, build-backend, build-frontend, smoke, e2e]
     # Also runs when nothing was deployed: a release promotes whatever commit reaches main, and a
     # docs-only commit with no record of its own could not be promoted at all.
-    if: always() && needs.changes.result == 'success' && (needs.smoke.result == 'success' || needs.changes.outputs.any != 'true')
+    # e2e is skipped only when nothing was deployed; once an app was deployed it must have succeeded,
+    # so a cancelled run cannot record digests that never passed the suite.
+    if: >-
+      always() && needs.changes.result == 'success'
+      && (needs.smoke.result == 'success' || needs.changes.outputs.any != 'true')
+      && (needs.changes.outputs.any != 'true' || needs.e2e.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

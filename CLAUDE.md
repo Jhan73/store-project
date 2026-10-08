@@ -25,11 +25,11 @@ Each area has its own `CLAUDE.md` with local rules — read it before working th
 | `db/` | Flyway migrations (`db/migration/<module>/`) and database conventions | `db/CLAUDE.md` |
 | `infra/` | Terraform for AWS foundation resources | `infra/CLAUDE.md` |
 | `docs/` | PRD, tech-spec, runbooks | — |
-| `.github/` | Workflows, composite actions (planned, tech-spec §10) | — |
+| `.github/` | Workflows (CI, delivery to `test` and `prod`, rollback, environment power control) and composite actions (tech-spec §10) | — |
 | `e2e/` | Playwright journeys against the running stack | `e2e/CLAUDE.md` |
 | `compose.yaml` | Local PostgreSQL 18 + Mailpit, started by Spring Boot's Docker Compose support | — |
 
-**Current state:** early scaffold. CI and the backend and frontend skeletons exist; most of the tech-spec (business modules, CD workflows, Terraform; `e2e/` runs locally and is not wired into CI yet) is not implemented yet; tech-spec §3 "Scaffold changes at M0" lists the pending setup. Never assume a file described in the spec exists — check first.
+**Current state:** milestones M0 and M1 are built. CI, the delivery workflows, rollback, Terraform for the foundation, and the backend and frontend exist; the backend has the `shared`, `identity`, `store`, `catalog`, `notifications`, `audit` modules and the configuration side of `instore`. `ordering`, `payments`, `inventory`, `preparation` and `reporting` do not exist yet, and `e2e/` runs locally and in `cd-test.yml` after the smoke checks, only when the `test` variable `E2E_ENABLED` is `true` (`docs/runbooks/e2e-setup.md`). `docs/implementation-plan.md` has the status of every work package. Never assume a file described in the spec exists — check first.
 
 ## Deployment overview
 

@@ -71,7 +71,7 @@ Rerunning after a successful bootstrap prints `An active ADMIN already exists; n
 
 ## Set the password, sign in, and add staff
 
-The link points to the frontend's `/set-password` page. Until the frontend has it (and a sign-in page), do these steps against the API. They are the same for every staff member, not only the first admin.
+Open the link from the email (or the `Set-password link` line of this run's log) in a browser: it opens the frontend's `/set-password` page. Choose a password, sign in at `/login`, and add staff at `/admin/users`; each new member gets their own link and repeats this. The steps below do the same against the API: use them when the frontend is not reachable or to script it. They are the same for every staff member, not only the first admin.
 
 Find the backend's base URL:
 

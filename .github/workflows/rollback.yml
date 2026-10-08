@@ -104,6 +104,8 @@ jobs:
       - uses: ./.github/actions/smoke
         with:
           environment: ${{ inputs.environment }}
+          custom-frontend-host: ${{ vars.CUSTOM_FRONTEND_HOST }}
+          custom-api-host: ${{ vars.CUSTOM_API_HOST }}
 
   record:
     name: record

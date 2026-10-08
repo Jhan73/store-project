@@ -185,6 +185,18 @@ data "aws_iam_policy_document" "deploy" {
     resources = ["arn:aws:ssm:${var.region}:${var.account_id}:parameter/jugueria/${each.key}/power/*"]
   }
 
+  # The end-to-end suite signs in as a dedicated admin whose password is a manual SecureString under the
+  # default aws/ssm key, which needs no kms grant. Only test has one: the suite never targets prod.
+  dynamic "statement" {
+    for_each = each.key == "test" ? [1] : []
+
+    content {
+      sid       = "ReadE2eCredentials"
+      actions   = ["ssm:GetParameter"]
+      resources = ["arn:aws:ssm:${var.region}:${var.account_id}:parameter/jugueria/test/e2e/*"]
+    }
+  }
+
   statement {
     sid       = "StartEnvironmentDatabase"
     actions   = ["rds:StartDBInstance", "rds:StopDBInstance"]
