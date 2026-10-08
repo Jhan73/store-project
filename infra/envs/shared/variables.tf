@@ -29,3 +29,14 @@ variable "developer_username" {
   type        = string
   default     = "jugueria-dev"
 }
+
+variable "custom_domain_environments" {
+  description = "Environments whose custom hostnames point at the shared ALB. Add prod only after its listener rules and NG_ALLOWED_HOSTS are wired: DNS reaching the ALB before the rules exist returns 404."
+  type        = list(string)
+  default     = ["test"]
+
+  validation {
+    condition     = alltrue([for env in var.custom_domain_environments : contains(["test", "prod"], env)])
+    error_message = "Only test and prod are allowed."
+  }
+}
