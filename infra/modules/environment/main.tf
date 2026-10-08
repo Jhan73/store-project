@@ -33,4 +33,6 @@ data "aws_subnets" "private" {
 locals {
   name       = "jugueria-${var.environment}"
   ssm_prefix = "/jugueria/${var.environment}"
+
+  db_identifier = coalesce(var.db_identifier, local.name)
 }
