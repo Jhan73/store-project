@@ -66,6 +66,38 @@ class CatalogAuditRollbackIT {
 	}
 
 	@Test
+	void anAuditWriteFailureRollsBackACategoryCreation() {
+		auditWritesNowFail();
+		var name = "Cat-" + UUID.randomUUID();
+
+		var result = mvc.post()
+			.uri("/api/v1/admin/categories")
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"%s\",\"displayOrder\":0}".formatted(name))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(count("select count(*) from catalog.category where name = ?", name)).isZero();
+	}
+
+	@Test
+	void anAuditWriteFailureRollsBackAStationCreation() {
+		auditWritesNowFail();
+		var name = "Bar-" + UUID.randomUUID();
+
+		var result = mvc.post()
+			.uri("/api/v1/admin/stations")
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"%s\"}".formatted(name))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(count("select count(*) from catalog.station where name = ?", name)).isZero();
+	}
+
+	@Test
 	void anAuditWriteFailureRollsBackAProductCreation() {
 		var categoryId = createCategory();
 		auditWritesNowFail();

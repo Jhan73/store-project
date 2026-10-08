@@ -1,0 +1,214 @@
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  --sidebar-rail: 4.5rem;
+  --sidebar-expanded: 15rem;
+
+  display: block;
+  min-height: 100vh;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--page-padding);
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary);
+}
+
+.brand strong {
+  color: var(--foreground);
+}
+
+.menu-button {
+  flex: none;
+}
+
+.nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.nav a.is-active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tools {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.role {
+  color: var(--muted-foreground);
+}
+
+.themes {
+  display: flex;
+}
+
+.theme-value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.content {
+  min-width: 0;
+  padding: var(--page-padding);
+}
+
+// Below the desktop breakpoint the navigation lives in the drawer of the top bar.
+.sidebar {
+  display: none;
+}
+
+@include bp.desktop-up {
+  .bar {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 20;
+    width: var(--sidebar-rail);
+    padding: var(--space-3) var(--space-2);
+    overflow: hidden auto;
+    background: var(--muted);
+    border-inline-end: 1px solid var(--border);
+  }
+
+  .sidebar.is-expanded {
+    width: var(--sidebar-expanded);
+  }
+
+  // An unpinned expansion floats over the content, which keeps its rail offset.
+  .sidebar.is-expanded:not(.is-docked) {
+    box-shadow: var(--shadow-md);
+  }
+
+  .content {
+    margin-inline-start: var(--sidebar-rail);
+  }
+
+  .content.is-docked {
+    margin-inline-start: var(--sidebar-expanded);
+  }
+
+  .sidebar-top,
+  .sidebar-actions,
+  .sidebar-tools {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .sidebar-nav {
+    flex: 1;
+  }
+
+  .sidebar .nav a {
+    justify-content: center;
+    padding-inline: var(--space-2);
+  }
+
+  .sidebar-tools {
+    padding-top: var(--space-3);
+  }
+
+  .sidebar:not(.is-expanded) .label {
+    display: none;
+  }
+
+  .sidebar.is-expanded .sidebar-top,
+  .sidebar.is-expanded .sidebar-tools {
+    align-items: stretch;
+  }
+
+  .sidebar.is-expanded .brand {
+    padding-inline: var(--space-2);
+  }
+
+  .sidebar.is-expanded .sidebar-actions {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  .sidebar.is-expanded .nav a {
+    justify-content: flex-start;
+    padding-inline: var(--space-3);
+  }
+
+  .theme-select {
+    min-block-size: var(--touch-target);
+  }
+
+  // The rail has no room for the label or the caret: the select shrinks to its icon.
+  .theme-select.is-rail {
+    inline-size: var(--touch-target);
+  }
+
+  .theme-select.is-rail ::ng-deep .p-select-dropdown {
+    display: none;
+  }
+
+  .theme-select.is-rail ::ng-deep .p-select-label {
+    display: flex;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .sidebar.is-expanded .role {
+    padding-inline: var(--space-2);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sidebar,
+  .content {
+    transition:
+      width 0.2s ease,
+      margin-inline-start 0.2s ease;
+  }
+}
+

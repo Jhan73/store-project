@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -157,6 +158,22 @@ class SecurityIT {
 			.hasHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, webOrigins.allowedOrigins().getFirst())
 			.hasHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
 		assertThat(foreign).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void exposesTheResponseHeadersTheFrontendReadsToTheFrontendOrigin() {
+		var result = mvc.get()
+			.uri("/.well-known/oauth-protected-resource")
+			.header(HttpHeaders.ORIGIN, webOrigins.allowedOrigins().getFirst())
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).headers().hasHeaderSatisfying(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+				values -> assertThat(values.stream()
+					.flatMap(value -> Arrays.stream(value.split(",")))
+					.map(String::trim)
+					.toList()).contains(HttpHeaders.DATE, HttpHeaders.ETAG, HttpHeaders.LOCATION,
+							HttpHeaders.RETRY_AFTER));
 	}
 
 	private MvcTestResult call(String token) {

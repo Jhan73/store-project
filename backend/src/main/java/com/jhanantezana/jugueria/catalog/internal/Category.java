@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.catalog.internal;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.jhanantezana.jugueria.catalog.CategorySnapshot;
 import com.jhanantezana.jugueria.shared.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -64,6 +65,10 @@ public class Category extends BaseEntity {
 	public void reactivate(Instant now) {
 		this.active = true;
 		this.updatedAt = now;
+	}
+
+	public CategorySnapshot snapshot() {
+		return new CategorySnapshot(name, displayOrder, stationId, active);
 	}
 
 }

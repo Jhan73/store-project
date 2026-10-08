@@ -1,0 +1,4472 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="2.0" xmlns="urn:oasis:names:tc:xliff:document:2.0" srcLang="es-PE">
+  <file id="ngi18n" original="ng.template">
+    <unit id="setPassword.pageTitle">
+      <notes>
+        <note category="location">src/app/app.routes.ts:15</note>
+      </notes>
+      <segment>
+        <source>Crear contraseña</source>
+      </segment>
+    </unit>
+    <unit id="role.server">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:6</note>
+      </notes>
+      <segment>
+        <source>Mozo</source>
+      </segment>
+    </unit>
+    <unit id="role.cashier">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:8</note>
+      </notes>
+      <segment>
+        <source>Cajero</source>
+      </segment>
+    </unit>
+    <unit id="role.admin">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:10</note>
+      </notes>
+      <segment>
+        <source>Administrador</source>
+      </segment>
+    </unit>
+    <unit id="role.customer">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:12</note>
+      </notes>
+      <segment>
+        <source>Cliente</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.account-locked">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:6</note>
+      </notes>
+      <segment>
+        <source>Tu cuenta está bloqueada temporalmente por demasiados intentos fallidos. Inténtalo más tarde.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.forbidden">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:7</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para realizar esta acción.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-credentials">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:8</note>
+      </notes>
+      <segment>
+        <source>El correo o la contraseña no son correctos.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-refresh-token">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:9</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.invalid-set-password-token">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:10</note>
+      </notes>
+      <segment>
+        <source>El enlace para crear tu contraseña no es válido o ya venció.</source>
+      </segment>
+    </unit>
+    <unit id="error.auth.unauthenticated">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:11</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.category-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:12</note>
+      </notes>
+      <segment>
+        <source>Ya existe una categoría con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.category-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:13</note>
+      </notes>
+      <segment>
+        <source>La categoría no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:14</note>
+      </notes>
+      <segment>
+        <source>La moneda no coincide con la del catálogo.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-image">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:15</note>
+      </notes>
+      <segment>
+        <source>La imagen no es válida.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-modifier-group">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:16</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-modifier-selection">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:17</note>
+      </notes>
+      <segment>
+        <source>La selección de modificadores no cumple las reglas del producto.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-price">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:18</note>
+      </notes>
+      <segment>
+        <source>El precio no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.invalid-product">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:19</note>
+      </notes>
+      <segment>
+        <source>Los datos del producto no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-in-use">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:20</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores está en uso y no se puede eliminar.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:21</note>
+      </notes>
+      <segment>
+        <source>Ya existe un grupo de modificadores con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-group-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:22</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-option-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:23</note>
+      </notes>
+      <segment>
+        <source>La opción de modificador no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.modifier-option-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:24</note>
+      </notes>
+      <segment>
+        <source>Una de las opciones elegidas no está disponible.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.price-currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:25</note>
+      </notes>
+      <segment>
+        <source>La moneda del precio no coincide con la de la tienda.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:26</note>
+      </notes>
+      <segment>
+        <source>Ya existe un producto con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:27</note>
+      </notes>
+      <segment>
+        <source>El producto no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.product-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:28</note>
+      </notes>
+      <segment>
+        <source>El producto no está disponible por ahora.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.provider-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:29</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la imagen en este momento. Inténtalo de nuevo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.station-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:30</note>
+      </notes>
+      <segment>
+        <source>Ya existe una estación con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.station-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:31</note>
+      </notes>
+      <segment>
+        <source>La estación no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-category">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:32</note>
+      </notes>
+      <segment>
+        <source>La categoría elegida no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-modifier-group">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:33</note>
+      </notes>
+      <segment>
+        <source>El grupo de modificadores elegido no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.unknown-station">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:34</note>
+      </notes>
+      <segment>
+        <source>La estación elegida no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.concurrent-modification">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:35</note>
+      </notes>
+      <segment>
+        <source>Otra persona modificó este dato al mismo tiempo. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.content-too-large">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:36</note>
+      </notes>
+      <segment>
+        <source>El contenido enviado es demasiado grande.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.internal-error">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:37</note>
+      </notes>
+      <segment>
+        <source>Ocurrió un error inesperado. Inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.malformed-request">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:38</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.method-not-allowed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:39</note>
+      </notes>
+      <segment>
+        <source>Esta operación no está permitida.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.not-acceptable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:40</note>
+      </notes>
+      <segment>
+        <source>No pudimos entregar la respuesta en el formato pedido.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:41</note>
+      </notes>
+      <segment>
+        <source>No encontramos lo que buscas.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.precondition-failed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:42</note>
+      </notes>
+      <segment>
+        <source>Los datos cambiaron mientras los editabas. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.precondition-required">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:43</note>
+      </notes>
+      <segment>
+        <source>Recarga la página e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.service-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:44</note>
+      </notes>
+      <segment>
+        <source>El servicio no está disponible por ahora. Inténtalo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.unsupported-media-type">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:45</note>
+      </notes>
+      <segment>
+        <source>El tipo de archivo no es compatible.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.validation-failed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:46</note>
+      </notes>
+      <segment>
+        <source>Revisa los campos marcados.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.cannot-modify-own-account">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:47</note>
+      </notes>
+      <segment>
+        <source>No puedes modificar tu propia cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.email-already-registered">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:48</note>
+      </notes>
+      <segment>
+        <source>Ya existe una cuenta con ese correo.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.invalid-staff-role">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:49</note>
+      </notes>
+      <segment>
+        <source>El rol elegido no es válido para el personal.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.last-active-admin-required">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:50</note>
+      </notes>
+      <segment>
+        <source>Debe quedar al menos un administrador activo.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:51</note>
+      </notes>
+      <segment>
+        <source>Ya existe una mesa con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:52</note>
+      </notes>
+      <segment>
+        <source>La mesa no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-currency-mismatch">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:53</note>
+      </notes>
+      <segment>
+        <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:54</note>
+      </notes>
+      <segment>
+        <source>Ya existe una zona de reparto con ese nombre.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.delivery-zone-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+      </notes>
+      <segment>
+        <source>La zona de reparto no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-board-thresholds">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+      </notes>
+      <segment>
+        <source>Los tiempos del tablero no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-delivery-zone">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+      </notes>
+      <segment>
+        <source>Los datos de la zona de reparto no son válidos.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-opening-hours">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+      </notes>
+      <segment>
+        <source>El horario de atención no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.invalid-settings-value">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+      </notes>
+      <segment>
+        <source>Uno de los valores de la configuración no es válido.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.reason-code-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+      </notes>
+      <segment>
+        <source>Ya existe un motivo con ese código.</source>
+      </segment>
+    </unit>
+    <unit id="error.store.reason-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+      </notes>
+      <segment>
+        <source>El motivo no existe.</source>
+      </segment>
+    </unit>
+    <unit id="error.generic">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+      </notes>
+      <segment>
+        <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.0">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:67</note>
+      </notes>
+      <segment>
+        <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.400">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:68</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.401">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:69</note>
+      </notes>
+      <segment>
+        <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.403">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:70</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para realizar esta acción.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.404">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+      </notes>
+      <segment>
+        <source>No encontramos lo que buscas.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.409">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+      </notes>
+      <segment>
+        <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.422">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+      </notes>
+      <segment>
+        <source>Los datos no cumplen las reglas de la operación.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.429">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+      </notes>
+      <segment>
+        <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.status.500">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+      </notes>
+      <segment>
+        <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
+      </segment>
+    </unit>
+    <unit id="error.supportCode">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+      </notes>
+      <segment>
+        <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
+      </segment>
+    </unit>
+    <unit id="primeng.accept">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:18</note>
+      </notes>
+      <segment>
+        <source>Aceptar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.reject">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:19</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.choose">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:20</note>
+      </notes>
+      <segment>
+        <source>Elegir</source>
+      </segment>
+    </unit>
+    <unit id="primeng.clear">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:21</note>
+      </notes>
+      <segment>
+        <source>Limpiar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.apply">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:22</note>
+      </notes>
+      <segment>
+        <source>Aplicar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.cancel">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:23</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptyMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:24</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptyFilterMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:25</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.searchMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:26</note>
+      </notes>
+      <segment>
+        <source>Hay resultados disponibles</source>
+      </segment>
+    </unit>
+    <unit id="primeng.selectionMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:27</note>
+      </notes>
+      <segment>
+        <source>Elementos seleccionados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptySearchMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:28</note>
+      </notes>
+      <segment>
+        <source>No hay resultados</source>
+      </segment>
+    </unit>
+    <unit id="primeng.today">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:35</note>
+      </notes>
+      <segment>
+        <source>Hoy</source>
+      </segment>
+    </unit>
+    <unit id="primeng.weekHeader">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:36</note>
+      </notes>
+      <segment>
+        <source>Sem</source>
+      </segment>
+    </unit>
+    <unit id="primeng.emptySelectionMessage">
+      <notes>
+        <note category="location">src/app/core/theme/prime-translation.ts:37</note>
+      </notes>
+      <segment>
+        <source>No hay elementos seleccionados</source>
+      </segment>
+    </unit>
+    <unit id="admin.home.title">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:7,8</note>
+      </notes>
+      <segment>
+        <source>Administración</source>
+      </segment>
+    </unit>
+    <unit id="admin.home.empty">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:8,11</note>
+      </notes>
+      <segment>
+        <source>Aquí aparecerán las herramientas de administración.</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.when">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:10,12</note>
+      </notes>
+      <segment>
+        <source>Cuándo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.actor">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:12,14</note>
+      </notes>
+      <segment>
+        <source>Quién</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.action">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Acción</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.entity">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:18,20</note>
+      </notes>
+      <segment>
+        <source>Entidad</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.reason">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:22,23</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.correlation">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:24,26</note>
+      </notes>
+      <segment>
+        <source>Id de la solicitud</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.none">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:46,49</note>
+      </notes>
+      <segment>
+        <source>Sin valor registrado</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.before">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:61</note>
+      </notes>
+      <segment>
+        <source>Antes</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.after">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:66</note>
+      </notes>
+      <segment>
+        <source>Después</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.category">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.deliveryZone">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:46</note>
+      </notes>
+      <segment>
+        <source>Zona de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.modifierGroup">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:48</note>
+      </notes>
+      <segment>
+        <source>Grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.modifierOption">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:50</note>
+      </notes>
+      <segment>
+        <source>Opción de modificador</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.openingHours">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:52</note>
+      </notes>
+      <segment>
+        <source>Horario de atención</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.product">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
+      </notes>
+      <segment>
+        <source>Producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.reason">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:56</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.station">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:68</note>
+      </notes>
+      <segment>
+        <source>Estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.storeSettings">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:58</note>
+      </notes>
+      <segment>
+        <source>Configuración de la tienda</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.table">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:60</note>
+      </notes>
+      <segment>
+        <source>Mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.user">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:62</note>
+      </notes>
+      <segment>
+        <source>Personal</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.role.system">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:77</note>
+      </notes>
+      <segment>
+        <source>Sistema</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.role.anonymous">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:79</note>
+      </notes>
+      <segment>
+        <source>Anónimo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.title">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:73,75</note>
+      </notes>
+      <segment>
+        <source>Auditoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.range">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:77,79</note>
+      </notes>
+      <segment>
+        <source>Fechas</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.range.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:83,84</note>
+      </notes>
+      <segment>
+        <source>dd/mm/aaaa - dd/mm/aaaa</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.range.order">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:93,95</note>
+      </notes>
+      <segment>
+        <source> La fecha inicial no puede ser posterior a la final. </source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.actor">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:98,100</note>
+      </notes>
+      <segment>
+        <source>Persona</source>
+      </segment>
+    </unit>
+    <unit id="shared.select.filterPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:110</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:133</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:172</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:154</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:148</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:268</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:75</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:60</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:161</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
+      </notes>
+      <segment>
+        <source>Buscar</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.actor.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:112</note>
+      </notes>
+      <segment>
+        <source>Todas</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityType">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:120,122</note>
+      </notes>
+      <segment>
+        <source> Tipo de entidad </source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityType.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:135</note>
+      </notes>
+      <segment>
+        <source>Todos</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityId">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:142,144</note>
+      </notes>
+      <segment>
+        <source>Id de la entidad</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityId.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:155,158</note>
+      </notes>
+      <segment>
+        <source> Escribe un id válido (formato UUID). </source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.action">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:160,162</note>
+      </notes>
+      <segment>
+        <source>Acción</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.action.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:174</note>
+      </notes>
+      <segment>
+        <source>Todas</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.search.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:185,186</note>
+      </notes>
+      <segment>
+        <source>Buscar con estos filtros</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.search">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:190,192</note>
+      </notes>
+      <segment>
+        <source>Buscar</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.clear.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:199,200</note>
+      </notes>
+      <segment>
+        <source>Quitar todos los filtros y buscar de nuevo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.clear">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:204,206</note>
+      </notes>
+      <segment>
+        <source>Limpiar</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.count">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:212,215</note>
+      </notes>
+      <segment>
+        <source> <ph id="0" equiv="ICU" disp="{current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}" subFlows="1260611991748454381"/> </source>
+      </segment>
+    </unit>
+    <unit id="1813585563108443776">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:212</note>
+      </notes>
+      <segment>
+        <source>{VAR_PLURAL, plural, =0 {Sin registros} =1 {1 registro} other {<ph id="0" equiv="INTERPOLATION"/> registros}}</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.loading">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:219,221</note>
+      </notes>
+      <segment>
+        <source>Cargando…</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.error">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:223,225</note>
+      </notes>
+      <segment>
+        <source>No se pudo cargar el registro de auditoría.</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:230,231</note>
+      </notes>
+      <segment>
+        <source>Volver a intentar la búsqueda</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.retry">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:235,237</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.empty">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:242,244</note>
+      </notes>
+      <segment>
+        <source>No hay registros con estos filtros.</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:244</note>
+      </notes>
+      <segment>
+        <source>Registro de auditoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.caption">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:247,248</note>
+      </notes>
+      <segment>
+        <source> Cambios registrados, del más reciente al más antiguo </source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.when">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:251,252</note>
+      </notes>
+      <segment>
+        <source>Cuándo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.actor">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:252,253</note>
+      </notes>
+      <segment>
+        <source>Quién</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.action">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:253,254</note>
+      </notes>
+      <segment>
+        <source>Acción</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.entity">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:254,255</note>
+      </notes>
+      <segment>
+        <source>Entidad</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.reason">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:255,256</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.detail">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:256,258</note>
+      </notes>
+      <segment>
+        <source>Detalle</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:301,302</note>
+      </notes>
+      <segment>
+        <source>Ver los valores antes y después del cambio</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:306,307</note>
+      </notes>
+      <segment>
+        <source>Detalle</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.title">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:327,328</note>
+      </notes>
+      <segment>
+        <source>Detalle del cambio</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.close.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:346,347</note>
+      </notes>
+      <segment>
+        <source>Cerrar el detalle</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.close">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:351,353</note>
+      </notes>
+      <segment>
+        <source>Cerrar</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.detail.aria">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:448</note>
+      </notes>
+      <segment>
+        <source>Detalle del cambio <ph id="0" equiv="action" disp="entry.action"/> del <ph id="1" equiv="when" disp="this.when(entry)"/></source>
+      </segment>
+    </unit>
+    <unit id="allergen.CELERY">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:5</note>
+      </notes>
+      <segment>
+        <source>Apio</source>
+      </segment>
+    </unit>
+    <unit id="allergen.CRUSTACEANS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:6</note>
+      </notes>
+      <segment>
+        <source>Crustáceos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.EGGS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:7</note>
+      </notes>
+      <segment>
+        <source>Huevos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.FISH">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:8</note>
+      </notes>
+      <segment>
+        <source>Pescado</source>
+      </segment>
+    </unit>
+    <unit id="allergen.GLUTEN">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:9</note>
+      </notes>
+      <segment>
+        <source>Gluten</source>
+      </segment>
+    </unit>
+    <unit id="allergen.LUPIN">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:10</note>
+      </notes>
+      <segment>
+        <source>Altramuces</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MILK">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:11</note>
+      </notes>
+      <segment>
+        <source>Leche</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MOLLUSCS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:12</note>
+      </notes>
+      <segment>
+        <source>Moluscos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.MUSTARD">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:13</note>
+      </notes>
+      <segment>
+        <source>Mostaza</source>
+      </segment>
+    </unit>
+    <unit id="allergen.PEANUTS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:14</note>
+      </notes>
+      <segment>
+        <source>Maní</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SESAME">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:15</note>
+      </notes>
+      <segment>
+        <source>Sésamo</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SOY">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:16</note>
+      </notes>
+      <segment>
+        <source>Soya</source>
+      </segment>
+    </unit>
+    <unit id="allergen.SULPHITES">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:17</note>
+      </notes>
+      <segment>
+        <source>Sulfitos</source>
+      </segment>
+    </unit>
+    <unit id="allergen.TREE_NUTS">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/allergen-labels.ts:18</note>
+      </notes>
+      <segment>
+        <source>Frutos secos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:10,11</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.label">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:11</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.products">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:19,22</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.categories">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:24,27</note>
+      </notes>
+      <segment>
+        <source>Categorías</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.modifierGroups">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:33,37</note>
+      </notes>
+      <segment>
+        <source>Modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.nav.stations">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/catalog-layout.ts:38,41</note>
+      </notes>
+      <segment>
+        <source>Estaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:39,41</note>
+      </notes>
+      <segment>
+        <source>Categorías</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:41</note>
+      </notes>
+      <segment>
+        <source>Listado de categorías</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:45,46</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.station">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:46,47</note>
+      </notes>
+      <segment>
+        <source>Estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.order">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:47,48</note>
+      </notes>
+      <segment>
+        <source>Orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.state">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:48,49</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.actions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:49,51</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:46,48</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:95,97</note>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:35,37</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.active">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:60,62</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:62,64</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:73,74</note>
+      </notes>
+      <segment>
+        <source>Editar los datos de esta categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.edit">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:78,79</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:107,109</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:137,139</note>
+      </notes>
+      <segment>
+        <source>Editar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:93,94</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:152,153</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:96,98</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:155,157</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:108,111</note>
+      </notes>
+      <segment>
+        <source>Nombre de la categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:118,121</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.orderLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:122,124</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.orderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:131,134</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.stationLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:139,142</note>
+      </notes>
+      <segment>
+        <source>Estación de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.defaultStation">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:145,146</note>
+      </notes>
+      <segment>
+        <source>Estación predeterminada</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:170,172</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.create">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:175,177</note>
+      </notes>
+      <segment>
+        <source>Agregar categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:184,185</note>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:110,111</note>
+      </notes>
+      <segment>
+        <source>Descartar los cambios y cerrar el formulario</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:189,191</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:94,95</note>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:115,117</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:206</note>
+      </notes>
+      <segment>
+        <source>Ocultar esta categoría del menú</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:207</note>
+      </notes>
+      <segment>
+        <source>Volver a mostrar esta categoría en el menú</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:208</note>
+      </notes>
+      <segment>
+        <source>Guardar los cambios de la categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.categories.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:209</note>
+      </notes>
+      <segment>
+        <source>Agregar una categoría nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.editTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:81,83</note>
+      </notes>
+      <segment>
+        <source>Editar grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.newTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:83,86</note>
+      </notes>
+      <segment>
+        <source>Nuevo grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.back.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:90,91</note>
+      </notes>
+      <segment>
+        <source>Volver a la lista de grupos de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.back">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:95,98</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:96,99</note>
+      </notes>
+      <segment>
+        <source>Volver a la lista</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:102,104</note>
+      </notes>
+      <segment>
+        <source>Nombre del grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:112,116</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.required">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:119,122</note>
+      </notes>
+      <segment>
+        <source>Elección obligatoria</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.min">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:123,125</note>
+      </notes>
+      <segment>
+        <source>Mínimo de opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.max">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:131,133</note>
+      </notes>
+      <segment>
+        <source>Máximo de opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.noOptions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:145,147</note>
+      </notes>
+      <segment>
+        <source>Agrega al menos una opción.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.maxTooLow">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:149,151</note>
+      </notes>
+      <segment>
+        <source>El máximo debe ser al menos 1 y no menor que el mínimo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minRequired">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:154,157</note>
+      </notes>
+      <segment>
+        <source>Un grupo obligatorio necesita un mínimo de al menos 1.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minOptional">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:159,162</note>
+      </notes>
+      <segment>
+        <source>Un grupo opcional debe tener un mínimo de 0.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.minExceedsOptions">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:164,167</note>
+      </notes>
+      <segment>
+        <source>Agrega más opciones o baja el mínimo de elecciones.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.violation.duplicateNames">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:169,172</note>
+      </notes>
+      <segment>
+        <source>Los nombres de las opciones no pueden repetirse.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionLegend">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:181,182</note>
+      </notes>
+      <segment>
+        <source>Opción <ph id="0" equiv="INTERPOLATION" disp="{{ i + 1 }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionName">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:183,185</note>
+      </notes>
+      <segment>
+        <source>Nombre de la opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionPrice">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:194,195</note>
+      </notes>
+      <segment>
+        <source>Precio adicional (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionPriceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:204,207</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto como 1.50.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionAvailable">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:217,220</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.optionAllergens">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:225,227</note>
+      </notes>
+      <segment>
+        <source>Alérgenos de esta opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.removeOption.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:235,236</note>
+      </notes>
+      <segment>
+        <source>Quitar esta opción del grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.removeOption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:240,242</note>
+      </notes>
+      <segment>
+        <source>Quitar opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.addOption.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:253,254</note>
+      </notes>
+      <segment>
+        <source>Agregar una opción nueva al grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.addOption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:258,260</note>
+      </notes>
+      <segment>
+        <source>Agregar opción</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:264,265</note>
+      </notes>
+      <segment>
+        <source>Guardar el grupo y sus opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groupForm.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:271,273</note>
+      </notes>
+      <segment>
+        <source>Guardar grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.saved">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:411</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:480</note>
+      </notes>
+      <segment>
+        <source>Cambios guardados.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:26,29</note>
+      </notes>
+      <segment>
+        <source>Grupos de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.new.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:30,31</note>
+      </notes>
+      <segment>
+        <source>Crear un grupo de modificadores nuevo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.new">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:35,39</note>
+      </notes>
+      <segment>
+        <source>Nuevo grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:39</note>
+      </notes>
+      <segment>
+        <source>Listado de grupos de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:43,44</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.rule">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:44,45</note>
+      </notes>
+      <segment>
+        <source>Elección</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.options">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:45,46</note>
+      </notes>
+      <segment>
+        <source>Opciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.required">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:55,57</note>
+      </notes>
+      <segment>
+        <source>Obligatorio</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.optional">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:57,59</note>
+      </notes>
+      <segment>
+        <source>Opcional</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.range">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:60,61</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="INTERPOLATION" disp="{{ group.minChoices }}"/> a <ph id="1" equiv="INTERPOLATION_1" disp="{{ group.maxChoices }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.optionCount">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:64,66</note>
+      </notes>
+      <segment>
+        <source> <ph id="0" equiv="ICU" disp="{group.options.length, plural, =1 {1 opción} other {{{ group.options.length }} opciones}}" subFlows="4292488431462069373"/> </source>
+      </segment>
+    </unit>
+    <unit id="6805729461716306912">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:64</note>
+      </notes>
+      <segment>
+        <source>{VAR_PLURAL, plural, =1 {1 opción} other {<ph id="0" equiv="INTERPOLATION"/> opciones}}</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.confirmDelete.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:75,76</note>
+      </notes>
+      <segment>
+        <source>Eliminar el grupo de forma definitiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.confirmDelete">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:80,82</note>
+      </notes>
+      <segment>
+        <source>Confirmar eliminación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.cancelDelete.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:89,90</note>
+      </notes>
+      <segment>
+        <source>Conservar el grupo y no eliminarlo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:102,103</note>
+      </notes>
+      <segment>
+        <source>Editar este grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.delete.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:117,118</note>
+      </notes>
+      <segment>
+        <source>Eliminar este grupo de modificadores</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.groups.delete">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:122,124</note>
+      </notes>
+      <segment>
+        <source>Eliminar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.editTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:82,84</note>
+      </notes>
+      <segment>
+        <source>Editar producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.newTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:84,87</note>
+      </notes>
+      <segment>
+        <source>Nuevo producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.back.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:91,92</note>
+      </notes>
+      <segment>
+        <source>Volver a la lista de productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:103,105</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:113,117</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.description">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:118,120</note>
+      </notes>
+      <segment>
+        <source>Descripción (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.category">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:133,136</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.categoryPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:139,140</note>
+      </notes>
+      <segment>
+        <source>Elige una categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.categoryInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:153,157</note>
+      </notes>
+      <segment>
+        <source>Elige una categoría.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.price">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:158,159</note>
+      </notes>
+      <segment>
+        <source>Precio (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.priceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:168,172</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto mayor que cero, como 9.50.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.order">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:173,175</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.pinned">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:183,186</note>
+      </notes>
+      <segment>
+        <source>Fijar en venta rápida</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.allergens">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:191,194</note>
+      </notes>
+      <segment>
+        <source>Alérgenos del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.groups">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:195,197</note>
+      </notes>
+      <segment>
+        <source>Grupos de modificadores, en orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveUp.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:208,209</note>
+      </notes>
+      <segment>
+        <source>Subir este grupo una posición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveUp">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:213,215</note>
+      </notes>
+      <segment>
+        <source>Subir</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveDown.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:223,224</note>
+      </notes>
+      <segment>
+        <source>Bajar este grupo una posición</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.moveDown">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:228,230</note>
+      </notes>
+      <segment>
+        <source>Bajar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeGroup.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:238,239</note>
+      </notes>
+      <segment>
+        <source>Quitar este grupo del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeGroup">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:243,245</note>
+      </notes>
+      <segment>
+        <source>Quitar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.addGroupLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:254,257</note>
+      </notes>
+      <segment>
+        <source>Grupo a agregar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.groupPlaceholder">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:259,260</note>
+      </notes>
+      <segment>
+        <source>Elige un grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.addGroup.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:277,278</note>
+      </notes>
+      <segment>
+        <source>Agregar el grupo elegido al producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.addGroup">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:282,284</note>
+      </notes>
+      <segment>
+        <source>Agregar grupo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:292,293</note>
+      </notes>
+      <segment>
+        <source>Guardar los datos del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:299,301</note>
+      </notes>
+      <segment>
+        <source>Guardar producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageTitle">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:305,307</note>
+      </notes>
+      <segment>
+        <source>Imagen</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeImage.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:316,317</note>
+      </notes>
+      <segment>
+        <source>Quitar la imagen del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.removeImage">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:321,324</note>
+      </notes>
+      <segment>
+        <source>Quitar imagen</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imagePick">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:329,330</note>
+      </notes>
+      <segment>
+        <source>Elegir una imagen nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imagePick.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:338,339</note>
+      </notes>
+      <segment>
+        <source>Subir una imagen para el producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageHint">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:346,349</note>
+      </notes>
+      <segment>
+        <source>PNG, JPG o WebP, de hasta 2 MB.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageLater">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:350,353</note>
+      </notes>
+      <segment>
+        <source> Podrás subir la imagen después de guardar el producto. </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.productForm.imageInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:378</note>
+      </notes>
+      <segment>
+        <source>La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:43,46</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.new.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:47,48</note>
+      </notes>
+      <segment>
+        <source>Crear un producto nuevo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.new">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:52,56</note>
+      </notes>
+      <segment>
+        <source>Nuevo producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.filter">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:61,64</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.allCategories">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:67</note>
+      </notes>
+      <segment>
+        <source>Todas</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.empty">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:83,85</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay productos.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:85</note>
+      </notes>
+      <segment>
+        <source>Listado de productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.image">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:89,90</note>
+      </notes>
+      <segment>
+        <source>Imagen</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:90,91</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.category">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:91,92</note>
+      </notes>
+      <segment>
+        <source>Categoría</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.price">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:92,93</note>
+      </notes>
+      <segment>
+        <source>Precio</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.state">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:93,94</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.available">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:94,95</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.active">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:111,113</note>
+      </notes>
+      <segment>
+        <source>Activo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:113,115</note>
+      </notes>
+      <segment>
+        <source>Inactivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:132,133</note>
+      </notes>
+      <segment>
+        <source>Editar los datos de este producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.paging">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:167</note>
+      </notes>
+      <segment>
+        <source>Paginación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.previous.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:175,176</note>
+      </notes>
+      <segment>
+        <source>Ir a la página anterior</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.previous">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:180,182</note>
+      </notes>
+      <segment>
+        <source>Anterior</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.pageOf">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:183,185</note>
+      </notes>
+      <segment>
+        <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.next.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:192,193</note>
+      </notes>
+      <segment>
+        <source>Ir a la página siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.next">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:197,200</note>
+      </notes>
+      <segment>
+        <source>Siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:213</note>
+      </notes>
+      <segment>
+        <source>Ocultar este producto del menú</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.products.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:214</note>
+      </notes>
+      <segment>
+        <source>Volver a mostrar este producto en el menú</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.title">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:25,27</note>
+      </notes>
+      <segment>
+        <source>Estaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:27</note>
+      </notes>
+      <segment>
+        <source>Listado de estaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.caption">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:30,33</note>
+      </notes>
+      <segment>
+        <source> Dónde se prepara cada categoría </source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.name">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:34,35</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.default">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:44,47</note>
+      </notes>
+      <segment>
+        <source>Predeterminada</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:55,56</note>
+      </notes>
+      <segment>
+        <source>Cambiar el nombre de esta estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.edit">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:60,62</note>
+      </notes>
+      <segment>
+        <source>Renombrar</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:71,73</note>
+      </notes>
+      <segment>
+        <source>Nombre de la estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:81,84</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.save">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:96,98</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.create">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:101,103</note>
+      </notes>
+      <segment>
+        <source>Agregar estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:130</note>
+      </notes>
+      <segment>
+        <source>Guardar el nuevo nombre de la estación</source>
+      </segment>
+    </unit>
+    <unit id="admin.catalog.stations.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/station-list.ts:131</note>
+      </notes>
+      <segment>
+        <source>Agregar una estación de preparación nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.monday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:35</note>
+      </notes>
+      <segment>
+        <source>Lunes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.tuesday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:36</note>
+      </notes>
+      <segment>
+        <source>Martes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.wednesday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:37</note>
+      </notes>
+      <segment>
+        <source>Miércoles</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.thursday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:38</note>
+      </notes>
+      <segment>
+        <source>Jueves</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.friday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:39</note>
+      </notes>
+      <segment>
+        <source>Viernes</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.saturday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:40</note>
+      </notes>
+      <segment>
+        <source>Sábado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.sunday">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:41</note>
+      </notes>
+      <segment>
+        <source>Domingo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:93,94</note>
+      </notes>
+      <segment>
+        <source>Horario de atención</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.hint">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:95,99</note>
+      </notes>
+      <segment>
+        <source> Horas locales de la tienda. Si una hora de cierre es anterior a la de apertura, el local cierra después de medianoche. </source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:100</note>
+      </notes>
+      <segment>
+        <source>Horario de atención por día</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.day">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:104,105</note>
+      </notes>
+      <segment>
+        <source>Día</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closed">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:105,106</note>
+      </notes>
+      <segment>
+        <source>Cerrado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.opens">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:106,107</note>
+      </notes>
+      <segment>
+        <source>Abre</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:107,110</note>
+      </notes>
+      <segment>
+        <source>Cierra</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.overnight">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:143,145</note>
+      </notes>
+      <segment>
+        <source>Cierra al día siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:158,159</note>
+      </notes>
+      <segment>
+        <source>Guardar el horario de atención</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:165,167</note>
+      </notes>
+      <segment>
+        <source>Guardar horario</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.saved">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:169,174</note>
+      </notes>
+      <segment>
+        <source>Horario guardado.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closedLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:199</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: cerrado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.opensLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:203</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de apertura</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.hours.closesLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:207</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="day" disp="DAY_LABELS[day]"/>: hora de cierre</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.void">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:26</note>
+      </notes>
+      <segment>
+        <source>Anulaciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.comp">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:27</note>
+      </notes>
+      <segment>
+        <source>Cortesías</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.cashOut">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:28</note>
+      </notes>
+      <segment>
+        <source>Salidas de caja</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.stockAdjustment">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:31</note>
+      </notes>
+      <segment>
+        <source>Ajustes de inventario</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:41,44</note>
+      </notes>
+      <segment>
+        <source>Motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.typeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:48,51</note>
+      </notes>
+      <segment>
+        <source>Lista de motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.empty">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:67,69</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay motivos en esta lista.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:69</note>
+      </notes>
+      <segment>
+        <source>Listado de motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.code">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:73,74</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.state">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:74,75</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.actions">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:75,77</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:53,55</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.active">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:84,86</note>
+      </notes>
+      <segment>
+        <source>Activo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:86,88</note>
+      </notes>
+      <segment>
+        <source>Inactivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:104,105</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:101,102</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:107,109</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:104,106</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.codeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:120,122</note>
+      </notes>
+      <segment>
+        <source>Nuevo motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.codeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:130,133</note>
+      </notes>
+      <segment>
+        <source>Escribe un motivo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:138,139</note>
+      </notes>
+      <segment>
+        <source>Agregar un motivo nuevo a la lista</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.create">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:145,148</note>
+      </notes>
+      <segment>
+        <source>Agregar motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:158</note>
+      </notes>
+      <segment>
+        <source>Dejar de ofrecer este motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reasons.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:159</note>
+      </notes>
+      <segment>
+        <source>Volver a ofrecer este motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.basePrepMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:54</note>
+      </notes>
+      <segment>
+        <source>Minutos base de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.queueMinutesPerOrder">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:59</note>
+      </notes>
+      <segment>
+        <source>Minutos extra por pedido en cola</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.busyModeMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:64</note>
+      </notes>
+      <segment>
+        <source>Minutos extra en modo ocupado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.onlineCapacityLimit">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:69</note>
+      </notes>
+      <segment>
+        <source>Límite de pedidos en línea simultáneos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardWarningMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:77</note>
+      </notes>
+      <segment>
+        <source>Minutos para marcar advertencia</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardLateMinutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:82</note>
+      </notes>
+      <segment>
+        <source>Minutos para marcar atraso</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.exceptionThreshold">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:89</note>
+      </notes>
+      <segment>
+        <source>Umbral de excepciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:125,127</note>
+      </notes>
+      <segment>
+        <source>Configuración de la tienda</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.regional">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:145,147</note>
+      </notes>
+      <segment>
+        <source>Región</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.timeZone">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:151,154</note>
+      </notes>
+      <segment>
+        <source>Zona horaria</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.currency">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:167,169</note>
+      </notes>
+      <segment>
+        <source>Moneda (ISO 4217)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.currencyInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:178,181</note>
+      </notes>
+      <segment>
+        <source>Escribe un código de tres letras, como PEN.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.currencyChangeWarning">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:183,187</note>
+      </notes>
+      <segment>
+        <source>Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para actualizarla.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.preparation">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:191,192</note>
+      </notes>
+      <segment>
+        <source>Preparación y pedidos en línea</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.board">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:198,199</note>
+      </notes>
+      <segment>
+        <source>Tablero de preparación</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.boardOrderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:204,209</note>
+      </notes>
+      <segment>
+        <source>El tiempo de atraso debe ser mayor que el de advertencia.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.cash">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:210,212</note>
+      </notes>
+      <segment>
+        <source>Caja y excepciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.registerDifference">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:213,214</note>
+      </notes>
+      <segment>
+        <source>Diferencia de caja permitida (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.registerDifferenceInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:225,229</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 5.00.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:237,238</note>
+      </notes>
+      <segment>
+        <source>Guardar los cambios de la configuración</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:244,247</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.saved">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:248,253</note>
+      </notes>
+      <segment>
+        <source>Cambios guardados.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.general.numberInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:312</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:10,11</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.label">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:11</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.general">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:19,22</note>
+      </notes>
+      <segment>
+        <source>General</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.hours">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:28,31</note>
+      </notes>
+      <segment>
+        <source>Horario</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.zones">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:37,40</note>
+      </notes>
+      <segment>
+        <source>Zonas de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.nav.reasons">
+      <notes>
+        <note category="location">src/app/features/admin/settings/settings-layout.ts:46,49</note>
+      </notes>
+      <segment>
+        <source>Motivos</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.title">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:41,43</note>
+      </notes>
+      <segment>
+        <source>Zonas de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:43</note>
+      </notes>
+      <segment>
+        <source>Listado de zonas de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.name">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:47,48</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.fee">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:48,49</note>
+      </notes>
+      <segment>
+        <source>Tarifa</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutes">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:49,50</note>
+      </notes>
+      <segment>
+        <source>Minutos de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimum">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:50,51</note>
+      </notes>
+      <segment>
+        <source>Pedido mínimo</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.free">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:51,52</note>
+      </notes>
+      <segment>
+        <source>Reparto gratis desde</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.state">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:52,53</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.active">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:66,68</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:68,70</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:80,81</note>
+      </notes>
+      <segment>
+        <source>Editar los datos de esta zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.edit">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:85,87</note>
+      </notes>
+      <segment>
+        <source>Editar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:116,118</note>
+      </notes>
+      <segment>
+        <source>Nombre de la zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:126,129</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.feeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:130,131</note>
+      </notes>
+      <segment>
+        <source>Tarifa (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.feeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:140,143</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 4.00.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutesLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:144,146</note>
+      </notes>
+      <segment>
+        <source>Minutos de reparto</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minutesInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:153,156</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero mayor que cero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimumLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:157,158</note>
+      </notes>
+      <segment>
+        <source>Pedido mínimo (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.minimumInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:167,170</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 15.00, o déjalo vacío.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.freeLabel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:171,172</note>
+      </notes>
+      <segment>
+        <source>Reparto gratis desde (<ph id="0" equiv="INTERPOLATION" disp="{{ currency() }}"/>, opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.freeInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:181,184</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 50.00, o déjalo vacío.</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.save">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:197,199</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.create">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:202,204</note>
+      </notes>
+      <segment>
+        <source>Agregar zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:211,212</note>
+      </notes>
+      <segment>
+        <source>Descartar los cambios y cerrar el formulario</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:216,218</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:233</note>
+      </notes>
+      <segment>
+        <source>Dejar de usar esta zona de entrega</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:234</note>
+      </notes>
+      <segment>
+        <source>Volver a usar esta zona de entrega</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:235</note>
+      </notes>
+      <segment>
+        <source>Guardar los cambios de la zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.settings.zones.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:236</note>
+      </notes>
+      <segment>
+        <source>Agregar una zona de entrega nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.title">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:45,47</note>
+      </notes>
+      <segment>
+        <source>Mesas</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.empty">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:48,50</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay mesas.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:50</note>
+      </notes>
+      <segment>
+        <source>Listado de mesas</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.name">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:54,55</note>
+      </notes>
+      <segment>
+        <source>Nombre</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.area">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:55,56</note>
+      </notes>
+      <segment>
+        <source>Zona</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.order">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:56,57</note>
+      </notes>
+      <segment>
+        <source>Orden</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.state">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:57,58</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.actions">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:58,60</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.active">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:69,70</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:71,73</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:83,84</note>
+      </notes>
+      <segment>
+        <source>Editar los datos de esta mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.edit">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:88,89</note>
+      </notes>
+      <segment>
+        <source>Editar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:104,105</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:107,109</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.nameLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:120,122</note>
+      </notes>
+      <segment>
+        <source>Nombre de la mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.nameInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:130,133</note>
+      </notes>
+      <segment>
+        <source>Escribe un nombre de hasta 60 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.areaLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:134,136</note>
+      </notes>
+      <segment>
+        <source>Zona (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.areaInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:144,147</note>
+      </notes>
+      <segment>
+        <source>La zona admite hasta 60 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.orderLabel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:148,150</note>
+      </notes>
+      <segment>
+        <source>Orden de aparición</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.orderInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:157,160</note>
+      </notes>
+      <segment>
+        <source>Escribe un número entero.</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.save">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:172,173</note>
+      </notes>
+      <segment>
+        <source>Guardar cambios</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.create">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:177,179</note>
+      </notes>
+      <segment>
+        <source>Agregar mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:186,187</note>
+      </notes>
+      <segment>
+        <source>Descartar los cambios y cerrar el formulario</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:191,193</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:208</note>
+      </notes>
+      <segment>
+        <source>Ocultar esta mesa sin borrarla</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:209</note>
+      </notes>
+      <segment>
+        <source>Volver a activar esta mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:210</note>
+      </notes>
+      <segment>
+        <source>Guardar los cambios de la mesa</source>
+      </segment>
+    </unit>
+    <unit id="admin.tables.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:211</note>
+      </notes>
+      <segment>
+        <source>Agregar una mesa nueva</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.title">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:52,55</note>
+      </notes>
+      <segment>
+        <source>Personal</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:58</note>
+      </notes>
+      <segment>
+        <source>Listado del personal</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.email">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:62,63</note>
+      </notes>
+      <segment>
+        <source>Correo</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.role">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:63,64</note>
+      </notes>
+      <segment>
+        <source>Rol</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.state">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:64,65</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.created">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:65,66</note>
+      </notes>
+      <segment>
+        <source>Creada</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.actions">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:66,68</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.active">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:94,95</note>
+      </notes>
+      <segment>
+        <source>Activa</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.inactive">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:96,98</note>
+      </notes>
+      <segment>
+        <source>Inactiva</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.deactivate">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:115,116</note>
+      </notes>
+      <segment>
+        <source>Desactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.reactivate">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:118,120</note>
+      </notes>
+      <segment>
+        <source>Reactivar</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.resend.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:131,132</note>
+      </notes>
+      <segment>
+        <source>Enviar de nuevo el enlace para crear la contraseña</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.resend">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:136,137</note>
+      </notes>
+      <segment>
+        <source>Reenviar enlace</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.paging">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:147</note>
+      </notes>
+      <segment>
+        <source>Paginación</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.previous.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:155,156</note>
+      </notes>
+      <segment>
+        <source>Ir a la página anterior</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.previous">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:160,162</note>
+      </notes>
+      <segment>
+        <source>Anterior</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.pageOf">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:162,163</note>
+      </notes>
+      <segment>
+        <source>Página <ph id="0" equiv="INTERPOLATION" disp="{{ current().page + 1 }}"/> de <ph id="1" equiv="INTERPOLATION_1" disp="{{ current().totalPages }}"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.users.next.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:170,171</note>
+      </notes>
+      <segment>
+        <source>Ir a la página siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.next">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:175,177</note>
+      </notes>
+      <segment>
+        <source>Siguiente</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.emailLabel">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:182,184</note>
+      </notes>
+      <segment>
+        <source>Correo de la nueva cuenta</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.emailInvalid">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:193,196</note>
+      </notes>
+      <segment>
+        <source>Escribe un correo válido.</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.roleLabel">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:197,199</note>
+      </notes>
+      <segment>
+        <source>Rol</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.inviteHint">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:213,215</note>
+      </notes>
+      <segment>
+        <source> La persona recibirá un enlace por correo para crear su propia contraseña. </source>
+      </segment>
+    </unit>
+    <unit id="admin.users.invite.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:220,221</note>
+      </notes>
+      <segment>
+        <source>Enviar la invitación por correo</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.invite">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:227,229</note>
+      </notes>
+      <segment>
+        <source>Invitar</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.deactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:247</note>
+      </notes>
+      <segment>
+        <source>Impedir que la cuenta inicie sesión</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.reactivate.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:248</note>
+      </notes>
+      <segment>
+        <source>Permitir que la cuenta vuelva a iniciar sesión</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.roleOf">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:285</note>
+      </notes>
+      <segment>
+        <source>Rol de <ph id="0" equiv="email" disp="member.email"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.users.resent">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:336</note>
+      </notes>
+      <segment>
+        <source>Enlace reenviado a <ph id="0" equiv="email" disp="member.email"/>.</source>
+      </segment>
+    </unit>
+    <unit id="admin.users.invited">
+      <notes>
+        <note category="location">src/app/features/admin/users/staff-list.ts:354</note>
+      </notes>
+      <segment>
+        <source>Invitación enviada a <ph id="0" equiv="email" disp="address"/>.</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.title">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:27,28</note>
+      </notes>
+      <segment>
+        <source>No tienes permiso para ver esta página</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.hint">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:28,30</note>
+      </notes>
+      <segment>
+        <source>Si crees que es un error, pide acceso a un administrador.</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.home.tooltip">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:33,34</note>
+      </notes>
+      <segment>
+        <source>Ir a la página de inicio</source>
+      </segment>
+    </unit>
+    <unit id="forbidden.home">
+      <notes>
+        <note category="location">src/app/features/forbidden/forbidden.ts:38,40</note>
+      </notes>
+      <segment>
+        <source>Volver al inicio</source>
+      </segment>
+    </unit>
+    <unit id="landing.hero.title">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:27,28</note>
+      </notes>
+      <segment>
+        <source>Juguería</source>
+      </segment>
+    </unit>
+    <unit id="landing.hero.subtitle">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:28,31</note>
+      </notes>
+      <segment>
+        <source>Muy pronto: pedidos online y en el local.</source>
+      </segment>
+    </unit>
+    <unit id="landing.staffLink.tooltip">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:33,34</note>
+      </notes>
+      <segment>
+        <source>Entrar a la zona del personal</source>
+      </segment>
+    </unit>
+    <unit id="landing.staffLink.label">
+      <notes>
+        <note category="location">src/app/features/landing/landing.ts:38,41</note>
+      </notes>
+      <segment>
+        <source>Acceso del personal</source>
+      </segment>
+    </unit>
+    <unit id="login.title">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:45,47</note>
+      </notes>
+      <segment>
+        <source>Iniciar sesión</source>
+      </segment>
+    </unit>
+    <unit id="login.email.label">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:48,50</note>
+      </notes>
+      <segment>
+        <source>Correo electrónico</source>
+      </segment>
+    </unit>
+    <unit id="login.password.label">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:61,63</note>
+      </notes>
+      <segment>
+        <source>Contraseña</source>
+      </segment>
+    </unit>
+    <unit id="login.submit.tooltip">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:87,88</note>
+      </notes>
+      <segment>
+        <source>Iniciar sesión con tu correo y contraseña</source>
+      </segment>
+    </unit>
+    <unit id="login.submit">
+      <notes>
+        <note category="location">src/app/features/login/login.ts:95,96</note>
+      </notes>
+      <segment>
+        <source>Entrar</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:73,74</note>
+      </notes>
+      <segment>
+        <source>Crea tu contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.hint">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:75,77</note>
+      </notes>
+      <segment>
+        <source> Entre 8 y 50 caracteres, con una mayúscula, una minúscula, un número y un carácter especial. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:80,81</note>
+      </notes>
+      <segment>
+        <source>Contraseña nueva</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toggle.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:104,105</note>
+        <note category="location">src/app/features/set-password/set-password.ts:106,107</note>
+      </notes>
+      <segment>
+        <source>Mostrar contraseñas</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.required">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:117,119</note>
+      </notes>
+      <segment>
+        <source>Escribe una contraseña.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.length">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:124,125</note>
+      </notes>
+      <segment>
+        <source>Debe tener entre 8 y 50 caracteres.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.bytes">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:129,130</note>
+      </notes>
+      <segment>
+        <source>Debe pesar como máximo 72 bytes: evita acentos o emojis en exceso.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.lineBreak">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:134,135</note>
+      </notes>
+      <segment>
+        <source>No uses saltos de línea ni separadores de párrafo.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.lowercase">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:139,140</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos una letra minúscula.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.uppercase">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:144,145</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos una letra mayúscula.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.digit">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:149,150</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos un número.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.rule.special">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:154,155</note>
+      </notes>
+      <segment>
+        <source>Incluye al menos un carácter especial, como ! ? # $ o %.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.password.rejected">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:162,163</note>
+      </notes>
+      <segment>
+        <source> La contraseña no cumple los requisitos de seguridad. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.label">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:171,173</note>
+      </notes>
+      <segment>
+        <source>Repite la contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.required">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:188,190</note>
+      </notes>
+      <segment>
+        <source>Repite la contraseña.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.confirm.mismatch">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:190,192</note>
+      </notes>
+      <segment>
+        <source>Las contraseñas no coinciden.</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.submit.tooltip">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:210,211</note>
+      </notes>
+      <segment>
+        <source>Guardar tu nueva contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.submit">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:218,219</note>
+      </notes>
+      <segment>
+        <source>Guardar contraseña</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.missing.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:224,225</note>
+      </notes>
+      <segment>
+        <source>No encontramos tu enlace</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.missing.body">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:226,228</note>
+      </notes>
+      <segment>
+        <source> Abre de nuevo el enlace que te llegó por correo para crear tu contraseña. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toLogin.tooltip">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:232,233</note>
+        <note category="location">src/app/features/set-password/set-password.ts:253,254</note>
+        <note category="location">src/app/features/set-password/set-password.ts:269,270</note>
+      </notes>
+      <segment>
+        <source>Ir a la página de inicio de sesión</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.toLogin">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:237,239</note>
+        <note category="location">src/app/features/set-password/set-password.ts:258,260</note>
+        <note category="location">src/app/features/set-password/set-password.ts:274,276</note>
+      </notes>
+      <segment>
+        <source>Ir a iniciar sesión</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.invalid.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:243,244</note>
+      </notes>
+      <segment>
+        <source>Enlace no válido</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.invalid.help">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:246,248</note>
+      </notes>
+      <segment>
+        <source> Pide a un administrador que te envíe un enlace nuevo. Los enlaces vencen a las 48 horas y solo sirven una vez. </source>
+      </segment>
+    </unit>
+    <unit id="setPassword.done.title">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:264,265</note>
+      </notes>
+      <segment>
+        <source>Contraseña creada</source>
+      </segment>
+    </unit>
+    <unit id="setPassword.done.body">
+      <notes>
+        <note category="location">src/app/features/set-password/set-password.ts:265,267</note>
+      </notes>
+      <segment>
+        <source>Ya puedes iniciar sesión con tu nueva contraseña.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.title">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:16,19</note>
+      </notes>
+      <segment>
+        <source>Disponibilidad</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.failed">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:21,23</note>
+      </notes>
+      <segment>
+        <source>No se pudo actualizar la disponibilidad. Los cambios están deshabilitados.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:29,30</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar la disponibilidad</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.retry">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:34,36</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.offline">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:40,43</note>
+      </notes>
+      <segment>
+        <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.updating">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:46,49</note>
+      </notes>
+      <segment>
+        <source>Actualizando la disponibilidad. Los cambios se habilitan en unos segundos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.products">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:53,54</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.available">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:72,73</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:112,114</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.unavailable">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:74,76</note>
+        <note category="location">src/app/features/staff/availability/availability.ts:115,117</note>
+      </notes>
+      <segment>
+        <source>Agotado</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.emptyCategory">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:81,83</note>
+      </notes>
+      <segment>
+        <source> Esta categoría no tiene productos. </source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.empty">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:86,90</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay productos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.options">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:92,93</note>
+      </notes>
+      <segment>
+        <source>Opciones</source>
+      </segment>
+    </unit>
+    <unit id="staff.availability.loading">
+      <notes>
+        <note category="location">src/app/features/staff/availability/availability.ts:126,130</note>
+      </notes>
+      <segment>
+        <source>Cargando…</source>
+      </segment>
+    </unit>
+    <unit id="staff.home.title">
+      <notes>
+        <note category="location">src/app/features/staff/staff-home.ts:7,8</note>
+      </notes>
+      <segment>
+        <source>Operación</source>
+      </segment>
+    </unit>
+    <unit id="staff.home.empty">
+      <notes>
+        <note category="location">src/app/features/staff/staff-home.ts:8,11</note>
+      </notes>
+      <segment>
+        <source>Aquí aparecerán las herramientas del local.</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.staff">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:22</note>
+      </notes>
+      <segment>
+        <source>Operación</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.availability">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:29</note>
+      </notes>
+      <segment>
+        <source>Disponibilidad</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.admin">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:35</note>
+      </notes>
+      <segment>
+        <source>Administración</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.catalog">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:42</note>
+      </notes>
+      <segment>
+        <source>Catálogo</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.settings">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:48</note>
+      </notes>
+      <segment>
+        <source>Configuración</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.tables">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:54</note>
+      </notes>
+      <segment>
+        <source>Mesas</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.users">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:60</note>
+      </notes>
+      <segment>
+        <source>Personal</source>
+      </segment>
+    </unit>
+    <unit id="workspace.nav.audit">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:66</note>
+      </notes>
+      <segment>
+        <source>Auditoría</source>
+      </segment>
+    </unit>
+    <unit id="shell.brand">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:57,59</note>
+      </notes>
+      <segment>
+        <source>Juguería</source>
+      </segment>
+    </unit>
+    <unit id="shell.menu.open">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:68,69</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:70,71</note>
+      </notes>
+      <segment>
+        <source>Abrir el menú</source>
+      </segment>
+    </unit>
+    <unit id="shell.menu.title">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:86</note>
+      </notes>
+      <segment>
+        <source>Menú</source>
+      </segment>
+    </unit>
+    <unit id="shell.menu.close">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:87,88</note>
+      </notes>
+      <segment>
+        <source>Cerrar el menú</source>
+      </segment>
+    </unit>
+    <unit id="shell.sidebar.label">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:107,108</note>
+      </notes>
+      <segment>
+        <source>Barra lateral</source>
+      </segment>
+    </unit>
+    <unit id="shell.sidebar.brand">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:115,118</note>
+      </notes>
+      <segment>
+        <source>Juguería</source>
+      </segment>
+    </unit>
+    <unit id="shell.sidebar.toggle">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:126,127</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:128,129</note>
+      </notes>
+      <segment>
+        <source>Expandir o contraer la barra lateral</source>
+      </segment>
+    </unit>
+    <unit id="shell.sidebar.pin">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:145,146</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:147,148</note>
+      </notes>
+      <segment>
+        <source>Anclar la barra lateral</source>
+      </segment>
+    </unit>
+    <unit id="shell.sidebar.nav.label">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:161,162</note>
+      </notes>
+      <segment>
+        <source>Navegación lateral</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.group">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:199</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:201</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:288</note>
+      </notes>
+      <segment>
+        <source>Tema</source>
+      </segment>
+    </unit>
+    <unit id="shell.logout.tooltip">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:228,229</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:230,231</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:277,278</note>
+      </notes>
+      <segment>
+        <source>Cerrar la sesión</source>
+      </segment>
+    </unit>
+    <unit id="shell.logout">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:236,237</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:283,285</note>
+      </notes>
+      <segment>
+        <source>Salir</source>
+      </segment>
+    </unit>
+    <unit id="shell.nav.label">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:246</note>
+      </notes>
+      <segment>
+        <source>Navegación principal</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.light">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:295,296</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:297,298</note>
+      </notes>
+      <segment>
+        <source>Tema claro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.dark">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:310,311</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:312,313</note>
+      </notes>
+      <segment>
+        <source>Tema oscuro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.system">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:325,326</note>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:327,328</note>
+      </notes>
+      <segment>
+        <source>Tema del sistema</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.option.light">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:376</note>
+      </notes>
+      <segment>
+        <source>Claro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.option.dark">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:377</note>
+      </notes>
+      <segment>
+        <source>Oscuro</source>
+      </segment>
+    </unit>
+    <unit id="shell.theme.option.system">
+      <notes>
+        <note category="location">src/app/shared/ui/app-shell/app-shell.ts:380</note>
+      </notes>
+      <segment>
+        <source>Sistema</source>
+      </segment>
+    </unit>
+  </file>
+</xliff>

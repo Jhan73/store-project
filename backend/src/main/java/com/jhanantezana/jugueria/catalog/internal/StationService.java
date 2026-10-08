@@ -48,8 +48,8 @@ public class StationService {
 		catch (DataIntegrityViolationException e) {
 			throw nameAlreadyUsed();
 		}
-		changes.publish(new StationChanged(station.getId(), CatalogChangeKind.CREATED, currentActor.id(),
-				currentActor.role(), now));
+		changes.publish(new StationChanged(station.getId(), CatalogChangeKind.CREATED, null, station.snapshot(),
+				currentActor.id(), currentActor.role(), now));
 		return station;
 	}
 
@@ -58,6 +58,7 @@ public class StationService {
 		var station = stations.findById(id).orElseThrow(StationService::notFound);
 		EntityVersions.requireMatching(station.getVersion(), expectedVersion);
 		var now = Instant.now(clock);
+		var before = station.snapshot();
 		station.rename(name.strip(), now);
 		try {
 			stations.flush();
@@ -65,8 +66,8 @@ public class StationService {
 		catch (DataIntegrityViolationException e) {
 			throw nameAlreadyUsed();
 		}
-		changes.publish(new StationChanged(station.getId(), CatalogChangeKind.UPDATED, currentActor.id(),
-				currentActor.role(), now));
+		changes.publish(new StationChanged(station.getId(), CatalogChangeKind.UPDATED, before, station.snapshot(),
+				currentActor.id(), currentActor.role(), now));
 		return station;
 	}
 

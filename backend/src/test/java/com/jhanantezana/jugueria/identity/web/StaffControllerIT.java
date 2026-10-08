@@ -314,6 +314,49 @@ class StaffControllerIT {
 				Instant.now().plusSeconds(3600), Instant.now()));
 	}
 
+	@Test
+	void clampsANegativePageToTheFirstPage() {
+		var result = mvc.get().uri(STAFF + "?page=-1").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.page").isEqualTo(0);
+	}
+
+	@Test
+	void raisesAZeroPageSizeToOne() {
+		var result = mvc.get().uri(STAFF + "?size=0").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.size").isEqualTo(1);
+	}
+
+	@Test
+	void raisesANegativePageSizeToOne() {
+		var result = mvc.get().uri(STAFF + "?size=-5").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.size").isEqualTo(1);
+	}
+
+	@Test
+	void answersAnEmptyPageWhenThePageOffsetOverflowsAnInt() {
+		var result = mvc.get().uri(STAFF + "?page=21474837&size=100").with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content").asList().isEmpty();
+	}
+
+	@Test
+	void acceptsThePageSizeBoundaries() {
+		var min = mvc.get().uri(STAFF + "?size=1").with(admin()).exchange();
+		var max = mvc.get().uri(STAFF + "?size=100").with(admin()).exchange();
+		var above = mvc.get().uri(STAFF + "?size=101").with(admin()).exchange();
+
+		assertThat(min).bodyJson().extractingPath("$.size").isEqualTo(1);
+		assertThat(max).bodyJson().extractingPath("$.size").isEqualTo(100);
+		assertThat(above).bodyJson().extractingPath("$.size").isEqualTo(100);
+	}
+
 	private static RequestPostProcessor admin() {
 		return AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN);
 	}

@@ -1,0 +1,54 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+ul {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+li {
+  border-bottom: 1px solid var(--border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 3.5rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.offline {
+  padding: var(--space-3) var(--space-4);
+  color: var(--warning-foreground);
+  background: var(--warning);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted-foreground);
+}

@@ -90,7 +90,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Cross-module reactions use domain events with `@ApplicationModuleListener` (async, after commit, persisted in the Modulith JDBC outbox).
 - Exception: `audit` listens with a plain synchronous `@EventListener` so an audit failure rolls back the business change.
 - Exception: commands needing an atomic decision across two modules (voiding a line, cancelling an order vs board state) call the other module's API synchronously in the same transaction. Keep this list short and documented in the module's API.
-- Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer.
+- Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer. The event carries the before/after snapshot the audit row needs (products, categories, stations, and modifier groups do).
 - No cyclic dependencies between modules.
 
 **Consistency and concurrency**
@@ -110,9 +110,10 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Create → `201` + `Location` + resource. Update/command → `200` + updated resource. Delete → `204`.
 - JSON `camelCase`; enums as `UPPER_SNAKE_CASE` strings; optional values as `null`, collections never `null`; moments ISO-8601 UTC with `Z`; durations as integers with the unit in the name (`deliveryMinutes`).
 - Money in JSON: `{ "amount": "12.50", "currency": "PEN" }` (amount as string).
-- Pagination `?page=&size=` (max 100) returning `PageResponse<T>` from `shared` — never Spring Data's `Page`. Sorting only on explicitly allowed fields. `ETag`/`If-Match` on catalog and settings updates.
+- Pagination `?page=&size=` (max 100; numeric values in the `int` range are clamped through `shared`'s `PageRequests`; a non-numeric or out-of-`int` value is a `400` from type conversion) returning `PageResponse<T>` from `shared` — never Spring Data's `Page`. Sorting only on explicitly allowed fields. `ETag`/`If-Match` on catalog and settings updates.
 - Bean Validation on every request DTO. Controllers never expose entities.
-- Document each endpoint's success response and possible error `code`s in OpenAPI: `@ApiResponse` for a success other than `200` (`201`, `204`) and `@ApiErrors({"<wire code>", …})` for the endpoint's own codes. The 401/403, validation, `If-Match`, and `500` codes are added automatically from the handler's signature and security annotations.
+- Document each endpoint's success response and possible error `code`s in OpenAPI: `@ApiResponse` for a success other than `200` (`201`, `204`) and `@ApiErrors({"<wire code>", …})` for the endpoint's own codes. The 401/403, validation (only where a body, `@Valid`, or a constraint is present), `If-Match`, `415` (handlers reading a body or part), `406` (handlers returning a body), and `500` codes are added automatically from the handler's signature and security annotations, as are the `Location` header on every `201` and the `ETag` header of a handler that takes `If-Match` or returns a body with an `etag` component. Any other handler that sets an `ETag` carries `@ReturnsETag`; a `GET` carrying it also documents `If-None-Match` and `304`, so mark one only when its ETag moves with every change to the body (the product and modifier-group ETags do not move with availability, so their `GET /{id}` returns a bare body with `Cache-Control: no-store` and the `ETag` set on the servlet response; a `ResponseEntity` carrying an ETag, or an ETag already on the response, would let Spring answer a matching `If-None-Match` with a stale `304`).
+- Required and nullable come from the records: every response component is `required`, and a `@Nullable` one is also typed with `null`, because Jackson writes nulls. A request component is `required` unless it is `@Nullable` (a primitive is required, so a request that may omit it uses a boxed type with `@Schema(defaultValue = …)`, as `CreateTableRequest.displayOrder`).
 - The generated OpenAPI spec is committed as `api/openapi.json`; CI fails on drift. Regenerate and commit it with any API change (command in "Commands"). The app never serves the spec: springdoc is off in every profile and `OpenApiSpecIT` enables it to write the file.
 
 **External systems**

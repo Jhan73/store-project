@@ -32,11 +32,11 @@
 		<java-uuid-generator.version>5.2.0</java-uuid-generator.version>
 		<!-- Ahead of the Spring Boot BOM: 11.0.24 carries an authentication bypass. -->
 		<tomcat.version>11.0.26</tomcat.version>
-		<!-- Ahead of the Spring Boot BOM: 3.1.5 is exposed to CPU denial of service via unbounded numeric parsing. -->
-		<jackson-bom.version>3.1.6</jackson-bom.version>
-		<!-- Same flaw in Jackson 2, which springdoc brings in through swagger-core: 2.21.5 is exposed. -->
-		<jackson-2-bom.version>2.21.6</jackson-2-bom.version>
-		<aws-sdk.version>2.55.6</aws-sdk.version>
+		<!-- Ahead of the Spring Boot BOM: the version it manages has fixable HIGH jackson-databind CVEs. -->
+		<jackson-bom.version>3.1.7</jackson-bom.version>
+		<!-- Same for Jackson 2, which springdoc brings in through swagger-core. -->
+		<jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+		<aws-sdk.version>2.55.8</aws-sdk.version>
 		<wiremock.version>3.13.2</wiremock.version>
 		<springdoc-openapi.version>3.1.1</springdoc-openapi.version>
 	</properties>

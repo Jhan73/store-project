@@ -16,6 +16,12 @@ app.get('/healthz', (_req, res) => {
   res.json({ status: 'UP' });
 });
 
+// The one-time token is in this page's URL until the client removes it, so no request may carry it as Referer.
+app.use('/set-password', (_req, res, next) => {
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  next();
+});
+
 app.use(
   express.static(browserDistFolder, {
     maxAge: '1y',

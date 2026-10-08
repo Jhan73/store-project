@@ -1,10 +1,11 @@
 // @ts-check
 const eslint = require("@eslint/js");
-const { defineConfig } = require("eslint/config");
+const { defineConfig, globalIgnores } = require("eslint/config");
 const tseslint = require("typescript-eslint");
 const angular = require("angular-eslint");
 
 module.exports = defineConfig([
+  globalIgnores(["src/app/core/api/schema.d.ts"]),
   {
     files: ["**/*.ts"],
     extends: [
@@ -40,7 +41,28 @@ module.exports = defineConfig([
       angular.configs.templateAccessibility,
     ],
     rules: {
-      "@angular-eslint/template/i18n": ["error", { checkId: true }],
+      "@angular-eslint/template/i18n": [
+        "error",
+        {
+          checkId: true,
+          // Identifiers, enumerations and test hooks, not text a user reads.
+          ignoreAttributes: [
+            "severity",
+            "optionLabel",
+            "optionValue",
+            "filterBy",
+            "inputId",
+            "ariaCurrentWhenActive",
+            "data-testid",
+            "tooltipPosition",
+          ],
+        },
+      ],
     },
+  },
+  {
+    // Test harness templates are never shown to users.
+    files: ["**/*.spec.ts/*.html"],
+    rules: { "@angular-eslint/template/i18n": "off" },
   }
 ]);

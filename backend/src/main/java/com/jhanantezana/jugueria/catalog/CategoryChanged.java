@@ -7,6 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.jhanantezana.jugueria.shared.Role;
 
-public record CategoryChanged(UUID categoryId, CatalogChangeKind kind, @Nullable UUID actorId,
-		@Nullable Role actorRole, Instant occurredAt) {
+/** {@code before} is null when the category was created. */
+public record CategoryChanged(UUID categoryId, CatalogChangeKind kind, @Nullable CategorySnapshot before,
+		CategorySnapshot after, @Nullable UUID actorId, @Nullable Role actorRole, Instant occurredAt) {
 }

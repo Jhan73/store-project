@@ -42,6 +42,8 @@ aws ecs describe-express-gateway-service `
 
 The workflow records the result, so the next release compares against the rolled-back image rather than the one it replaced.
 
+A rollback keeps the custom domain: the frontend deploy re-applies `CUSTOM_FRONTEND_HOST` to `NG_ALLOWED_HOSTS`, and the smoke test checks the custom hosts when `CUSTOM_API_HOST` is set. If a service was recreated (new endpoint), follow `custom-domains.md` first.
+
 ## 4. Afterwards
 
 A rollback buys time; it does not close the incident.

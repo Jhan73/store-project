@@ -27,7 +27,6 @@ public record IdentityProperties(@Valid @NotNull Jwt jwt, @Valid @NotNull Lockou
 	public record RefreshToken(@NotNull Duration idleTtl, @NotNull Duration absoluteTtl) {
 	}
 
-	// No frontend page consumes ?token= yet; that is deliberate, not an oversight.
 	public record SetPassword(@NotBlank String frontendBaseUrl, @NotBlank String frontendPath,
 			@NotNull Duration tokenTtl) {
 	}

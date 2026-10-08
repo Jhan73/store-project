@@ -10,6 +10,10 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp package -DskipTests \
     && java -Djarmode=tools -jar target/backend.jar extract --layers --launcher --destination /workspace/extracted
 
 FROM eclipse-temurin:25-jre@sha256:bb036ed6cfdc57e3da7c22634d15f1b840d2caf76183861c80e81ca4b5104abb
+# Ahead of the base image: openssl 3.5.5-1ubuntu3.5 has a fixable HIGH CVE. Drop once the base ships ubuntu3.6.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade libssl3t64 openssl openssl-provider-legacy \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 COPY --from=build /workspace/extracted/dependencies/ ./

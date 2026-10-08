@@ -5,6 +5,14 @@ inputs:
   environment:
     description: Environment to check, test or prod.
     required: true
+  custom-frontend-host:
+    description: Custom hostname of the frontend, without scheme. Empty skips the custom domain checks.
+    required: false
+    default: ""
+  custom-api-host:
+    description: Custom hostname of the API, without scheme. Empty skips the custom domain checks.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -28,7 +36,7 @@ runs:
           fi
           code="$(curl --silent --show-error --location --retry 5 --retry-delay 10 \
             --retry-all-errors --max-time 20 --output /dev/null \
-            --write-out '%{http_code}' "${endpoint%/}$path" || echo 000)"
+            --write-out '%{http_code}' "${endpoint%/}$path" || true)"
           echo "$app $path -> $code"
           if [[ "$code" != 200 ]]; then
             failed=true
@@ -37,5 +45,98 @@ runs:
         done
         if [[ "$failed" == true ]]; then
           echo "::error::A smoke check did not return 200 in $ENVIRONMENT."
+          exit 1
+        fi
+
+    # Nothing heals the custom hosts, so this is the guard: a service that Express recreated, a rule
+    # that lost its host or a missing DNS record must block the digest recording.
+    - name: Custom domains answer
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        FRONTEND_HOST: ${{ inputs.custom-frontend-host }}
+        API_HOST: ${{ inputs.custom-api-host }}
+      run: |
+        if [[ -z "$FRONTEND_HOST" || -z "$API_HOST" ]]; then
+          echo "::notice::CUSTOM_FRONTEND_HOST and CUSTOM_API_HOST are not both set in $ENVIRONMENT, so the custom domain checks were skipped."
+          exit 0
+        fi
+        for host in "$FRONTEND_HOST" "$API_HOST"; do
+          if [[ ! "$host" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]; then
+            echo "::error::'$host' is not a bare hostname. Set the variable without scheme or path."
+            exit 1
+          fi
+        done
+        if [[ "$API_HOST" != "api.$FRONTEND_HOST" ]]; then
+          echo "::error::Custom domain check failed in $ENVIRONMENT: CUSTOM_API_HOST must be api.<CUSTOM_FRONTEND_HOST> (the frontend derives its API origin that way), got $API_HOST for $FRONTEND_HOST"
+          exit 1
+        fi
+
+        origin="https://$FRONTEND_HOST"
+        failed=false
+        headers="$(mktemp)"
+
+        status_of() {
+          curl --silent --show-error --max-time 15 --output /dev/null --write-out '%{http_code}' "$@" || true
+        }
+
+        # Retries because a new DNS record or listener change can take a minute to answer.
+        expect_200() {
+          local url="$1" hint="$2" code="" attempt
+          for attempt in 1 2 3 4; do
+            code="$(status_of "$url")"
+            if [[ "$code" == 200 ]]; then
+              break
+            fi
+            if [[ "$attempt" -lt 4 ]]; then
+              sleep 5
+            fi
+          done
+          echo "$url -> $code"
+          echo "- custom \`$url\` → $code" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$code" != 200 ]]; then
+            echo "::error::Custom domain check failed in $ENVIRONMENT: $url returned $code instead of 200. $hint"
+            failed=true
+          fi
+        }
+
+        allow_origin_of() {
+          tr -d '\r' | sed -n 's/^[Aa][Cc][Cc][Ee][Ss][Ss]-[Cc][Oo][Nn][Tt][Rr][Oo][Ll]-[Aa][Ll][Ll][Oo][Ww]-[Oo][Rr][Ii][Gg][Ii][Nn]:[[:space:]]*//p' | head -n 1
+        }
+
+        expect_200 "$origin/healthz" "Check the DNS record for $FRONTEND_HOST, the certificate on the ALB HTTPS listener, the host condition of the frontend listener rule, and NG_ALLOWED_HOSTS on the frontend service."
+        expect_200 "$origin/login" "Check NG_ALLOWED_HOSTS on the frontend service and the host condition of the frontend listener rule."
+        expect_200 "https://$API_HOST/actuator/health/readiness" "Check the DNS record for $API_HOST, the certificate on the ALB HTTPS listener, and the host condition of the backend listener rule."
+
+        preflight="https://$API_HOST/api/v1/auth/login"
+        code=000
+        allowed=""
+        for attempt in 1 2 3 4; do
+          code="$(status_of --request OPTIONS --dump-header "$headers" \
+            --header "Origin: $origin" \
+            --header 'Access-Control-Request-Method: POST' \
+            --header 'Access-Control-Request-Headers: content-type,x-requested-with' "$preflight")"
+          allowed="$(allow_origin_of < "$headers")"
+          if [[ "$code" == 2?? && "$allowed" == "$origin" ]]; then
+            break
+          fi
+          if [[ "$attempt" -lt 4 ]]; then
+            sleep 5
+          fi
+        done
+        echo "preflight $preflight from $origin -> $code, allow-origin '$allowed'"
+        echo "- custom preflight \`$preflight\` → $code, allow-origin \`$allowed\`" >> "$GITHUB_STEP_SUMMARY"
+        if [[ "$code" == 403 ]]; then
+          echo "::error::Custom domain check failed in $ENVIRONMENT: the CORS preflight to $preflight returned 403 instead of 2xx. The backend refused the origin (CORS): check that CUSTOM_FRONTEND_HOST is the allowed web origin of that environment and CUSTOM_API_HOST is api.<frontend>."
+          failed=true
+        elif [[ "$code" != 2?? ]]; then
+          echo "::error::Custom domain check failed in $ENVIRONMENT: the CORS preflight to $preflight returned $code instead of 2xx. Check the host condition of the backend listener rule and the DNS record for $API_HOST."
+          failed=true
+        elif [[ "$allowed" != "$origin" ]]; then
+          echo "::error::Custom domain check failed in $ENVIRONMENT: the CORS preflight allowed origin '$allowed' instead of '$origin'. The frontend derives its API origin as https://api.<page host> and the backend allows the configured frontend origin, so check which service answers $API_HOST and the allowed origin of the backend."
+          failed=true
+        fi
+
+        if [[ "$failed" == true ]]; then
           exit 1
         fi
