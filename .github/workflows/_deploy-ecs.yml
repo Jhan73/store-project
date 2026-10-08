@@ -172,6 +172,10 @@ jobs:
             host="${ENDPOINT#*://}"
             host="${host%%/*}"
             if [[ -n "$CUSTOM_FRONTEND_HOST" ]]; then
+              if [[ ! "$CUSTOM_FRONTEND_HOST" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]; then
+                echo "::error::CUSTOM_FRONTEND_HOST '$CUSTOM_FRONTEND_HOST' is not a bare hostname. Set the variable without scheme, path, port or spaces."
+                exit 1
+              fi
               host="$host,${CUSTOM_FRONTEND_HOST// /}"
             fi
             variables="$(jq -nc --argjson current "$variables" --arg host "$host" \
@@ -218,6 +222,10 @@ jobs:
           host="${ENDPOINT#*://}"
           host="${host%%/*}"
           if [[ -n "$CUSTOM_FRONTEND_HOST" ]]; then
+            if [[ ! "$CUSTOM_FRONTEND_HOST" =~ ^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$ ]]; then
+              echo "::error::CUSTOM_FRONTEND_HOST '$CUSTOM_FRONTEND_HOST' is not a bare hostname. Set the variable without scheme, path, port or spaces."
+              exit 1
+            fi
             host="$host,${CUSTOM_FRONTEND_HOST// /}"
           fi
           jq -nc --argjson current "$VARIABLES" --arg host "$host" \
