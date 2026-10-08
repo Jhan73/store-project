@@ -1118,6 +1118,7 @@ Coverage gates: backend ≥ 80% lines on `internal` packages; frontend ≥ 80% l
 - The runner refuses any frontend or API URL that is not local unless `E2E_ALLOW_REMOTE=1` is set, and refuses production hosts even then.
 - Every browser context signs in through the login screen: the refresh cookie rotates on use and reuse revokes the session family (§6.4), so a stored `storageState` cannot be shared between contexts or runs.
 - Test data is prefixed `e2e-<timestamp>-` and cleaned up through the API after each journey (products and categories are deactivated, modifier groups deleted).
+- Wired into `cd-test.yml` (`e2e` job after `smoke`; `record` waits for it) behind the `test` environment variable `E2E_ENABLED`. The admin password is a manual SecureString at `/jugueria/test/e2e/admin-password`, read through the `test` deploy role and masked; the other settings are `test` environment variables. Setup in `docs/runbooks/e2e-setup.md`.
 
 ## 12. Observability and operations
 

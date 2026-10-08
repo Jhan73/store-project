@@ -29,7 +29,7 @@ Each area has its own `CLAUDE.md` with local rules — read it before working th
 | `e2e/` | Playwright journeys against the running stack | `e2e/CLAUDE.md` |
 | `compose.yaml` | Local PostgreSQL 18 + Mailpit, started by Spring Boot's Docker Compose support | — |
 
-**Current state:** milestones M0 and M1 are built. CI, the delivery workflows, rollback, Terraform for the foundation, and the backend and frontend exist; the backend has the `shared`, `identity`, `store`, `catalog`, `notifications`, `audit` modules and the configuration side of `instore`. `ordering`, `payments`, `inventory`, `preparation` and `reporting` do not exist yet, and `e2e/` runs locally and is not wired into CI. `docs/implementation-plan.md` has the status of every work package. Never assume a file described in the spec exists — check first.
+**Current state:** milestones M0 and M1 are built. CI, the delivery workflows, rollback, Terraform for the foundation, and the backend and frontend exist; the backend has the `shared`, `identity`, `store`, `catalog`, `notifications`, `audit` modules and the configuration side of `instore`. `ordering`, `payments`, `inventory`, `preparation` and `reporting` do not exist yet, and `e2e/` runs locally and in `cd-test.yml` after the smoke checks, only when the `test` variable `E2E_ENABLED` is `true` (`docs/runbooks/e2e-setup.md`). `docs/implementation-plan.md` has the status of every work package. Never assume a file described in the spec exists — check first.
 
 ## Deployment overview
 

@@ -15,7 +15,7 @@ Playwright journeys that drive the real frontend and backend through the browser
 | `E2E_ADMIN_EMAIL` | none, required | An existing `ADMIN` account |
 | `E2E_ADMIN_PASSWORD` | none, required | Its password |
 
-The run fails before starting a browser when either credential is missing. **Credentials never go in a file**: not in `.env`, config, fixtures, docs, or commit messages. Export them in a shell session from a password manager (never typed inline on the command line, which lands in shell history and the process list), or take them from the CI secret source.
+The run fails before starting a browser when either credential is missing. **Credentials never go in a file**: not in `.env`, config, fixtures, docs, or commit messages. Export them in a shell session from a password manager (never typed inline on the command line, which lands in shell history and the process list), or take them from the CI secret source (in CI the password comes from SSM Parameter Store, see below).
 
 ## Run locally
 
@@ -31,6 +31,10 @@ npx playwright test
 `tsconfig.json` strictness is editor-only: there is no typecheck script and `typescript` is not a dependency.
 
 Output is the terminal only (`list` locally, `github` and `line` in CI). Stop the servers when done. `npm run check:config` fails if the config enables a step-persisting reporter, trace, video or screenshot, or drops `PLAYWRIGHT_NO_COPY_PROMPT`; it reads the config text with regular expressions, so it only sees literal settings.
+
+## In CI
+
+`cd-test.yml` runs the suite in the `e2e` job after `smoke`, and `record` waits for it, so a red suite blocks promotion. The job runs only when the `test` environment variable `E2E_ENABLED` is `true`. It reads the password of a dedicated `ADMIN` account from the SSM SecureString `/jugueria/test/e2e/admin-password` with the `test` deploy role, masks it, and exports it only for the `playwright test` step; `E2E_BASE_URL`, `E2E_API_URL` and `E2E_ADMIN_EMAIL` are `test` environment variables. Setup: `docs/runbooks/e2e-setup.md`.
 
 ## Layout
 
