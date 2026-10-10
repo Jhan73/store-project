@@ -48,7 +48,7 @@
     "@angular/localize": "^22.2.1",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.1",
-    "@types/node": "^24.19.0",
+    "@types/node": "^24.19.1",
     "angular-eslint": "22.5.0",
     "eslint": "^10.12.0",
     "istanbul-lib-instrument": "^6.0.3",
