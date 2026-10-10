@@ -66,6 +66,8 @@ test('the admin builds a product with a modifier group', async ({ browser }) => 
 
   await test.step('the product is listed under its category', async () => {
     await page.getByRole('link', { name: 'Volver a la lista' }).click();
+    // The form has its own Categoría select, which stays on screen until the lazy list replaces it.
+    await expect(page.getByRole('heading', { name: 'Productos', exact: true })).toBeVisible();
     await pickOption(page, 'Categoría', categoryName);
     const row = page.getByRole('row', { name: new RegExp(productName) });
     await expect(row).toContainText(categoryName);
