@@ -289,9 +289,33 @@
         <source>El contenido enviado es demasiado grande.</source>
       </segment>
     </unit>
-    <unit id="error.common.internal-error">
+    <unit id="error.common.idempotency-in-progress">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:37</note>
+      </notes>
+      <segment>
+        <source>Esta operación ya se está procesando. Espera un momento e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.idempotency-key-required">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:38</note>
+      </notes>
+      <segment>
+        <source>No pudimos procesar la solicitud. Recarga la página e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.idempotency-key-reused">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:39</note>
+      </notes>
+      <segment>
+        <source>Esta solicitud ya se envió con otros datos. Recarga la página e inténtalo de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="error.common.internal-error">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:40</note>
       </notes>
       <segment>
         <source>Ocurrió un error inesperado. Inténtalo de nuevo.</source>
@@ -299,7 +323,7 @@
     </unit>
     <unit id="error.common.malformed-request">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:38</note>
+        <note category="location">src/app/core/errors/error-messages.ts:41</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -307,7 +331,7 @@
     </unit>
     <unit id="error.common.method-not-allowed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:39</note>
+        <note category="location">src/app/core/errors/error-messages.ts:42</note>
       </notes>
       <segment>
         <source>Esta operación no está permitida.</source>
@@ -315,7 +339,7 @@
     </unit>
     <unit id="error.common.not-acceptable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:40</note>
+        <note category="location">src/app/core/errors/error-messages.ts:43</note>
       </notes>
       <segment>
         <source>No pudimos entregar la respuesta en el formato pedido.</source>
@@ -323,7 +347,7 @@
     </unit>
     <unit id="error.common.not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:41</note>
+        <note category="location">src/app/core/errors/error-messages.ts:44</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -331,7 +355,7 @@
     </unit>
     <unit id="error.common.precondition-failed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:42</note>
+        <note category="location">src/app/core/errors/error-messages.ts:45</note>
       </notes>
       <segment>
         <source>Los datos cambiaron mientras los editabas. Recarga e inténtalo de nuevo.</source>
@@ -339,7 +363,7 @@
     </unit>
     <unit id="error.common.precondition-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:43</note>
+        <note category="location">src/app/core/errors/error-messages.ts:46</note>
       </notes>
       <segment>
         <source>Recarga la página e inténtalo de nuevo.</source>
@@ -347,7 +371,7 @@
     </unit>
     <unit id="error.common.service-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:44</note>
+        <note category="location">src/app/core/errors/error-messages.ts:47</note>
       </notes>
       <segment>
         <source>El servicio no está disponible por ahora. Inténtalo en unos minutos.</source>
@@ -355,7 +379,7 @@
     </unit>
     <unit id="error.common.unsupported-media-type">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:45</note>
+        <note category="location">src/app/core/errors/error-messages.ts:48</note>
       </notes>
       <segment>
         <source>El tipo de archivo no es compatible.</source>
@@ -363,7 +387,7 @@
     </unit>
     <unit id="error.common.validation-failed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:46</note>
+        <note category="location">src/app/core/errors/error-messages.ts:49</note>
       </notes>
       <segment>
         <source>Revisa los campos marcados.</source>
@@ -371,7 +395,7 @@
     </unit>
     <unit id="error.identity.cannot-modify-own-account">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:47</note>
+        <note category="location">src/app/core/errors/error-messages.ts:50</note>
       </notes>
       <segment>
         <source>No puedes modificar tu propia cuenta.</source>
@@ -379,7 +403,7 @@
     </unit>
     <unit id="error.identity.email-already-registered">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:48</note>
+        <note category="location">src/app/core/errors/error-messages.ts:51</note>
       </notes>
       <segment>
         <source>Ya existe una cuenta con ese correo.</source>
@@ -387,7 +411,7 @@
     </unit>
     <unit id="error.identity.invalid-staff-role">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:49</note>
+        <note category="location">src/app/core/errors/error-messages.ts:52</note>
       </notes>
       <segment>
         <source>El rol elegido no es válido para el personal.</source>
@@ -395,7 +419,7 @@
     </unit>
     <unit id="error.identity.last-active-admin-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:50</note>
+        <note category="location">src/app/core/errors/error-messages.ts:53</note>
       </notes>
       <segment>
         <source>Debe quedar al menos un administrador activo.</source>
@@ -403,7 +427,7 @@
     </unit>
     <unit id="error.instore.table-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:51</note>
+        <note category="location">src/app/core/errors/error-messages.ts:54</note>
       </notes>
       <segment>
         <source>Ya existe una mesa con ese nombre.</source>
@@ -411,7 +435,7 @@
     </unit>
     <unit id="error.instore.table-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:52</note>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
       </notes>
       <segment>
         <source>La mesa no existe.</source>
@@ -419,7 +443,7 @@
     </unit>
     <unit id="error.store.delivery-zone-currency-mismatch">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:53</note>
+        <note category="location">src/app/core/errors/error-messages.ts:56</note>
       </notes>
       <segment>
         <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
@@ -427,7 +451,7 @@
     </unit>
     <unit id="error.store.delivery-zone-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:54</note>
+        <note category="location">src/app/core/errors/error-messages.ts:57</note>
       </notes>
       <segment>
         <source>Ya existe una zona de reparto con ese nombre.</source>
@@ -435,7 +459,7 @@
     </unit>
     <unit id="error.store.delivery-zone-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+        <note category="location">src/app/core/errors/error-messages.ts:58</note>
       </notes>
       <segment>
         <source>La zona de reparto no existe.</source>
@@ -443,7 +467,7 @@
     </unit>
     <unit id="error.store.invalid-board-thresholds">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+        <note category="location">src/app/core/errors/error-messages.ts:59</note>
       </notes>
       <segment>
         <source>Los tiempos del tablero no son válidos.</source>
@@ -451,7 +475,7 @@
     </unit>
     <unit id="error.store.invalid-delivery-zone">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
       </notes>
       <segment>
         <source>Los datos de la zona de reparto no son válidos.</source>
@@ -459,7 +483,7 @@
     </unit>
     <unit id="error.store.invalid-opening-hours">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
       </notes>
       <segment>
         <source>El horario de atención no es válido.</source>
@@ -467,7 +491,7 @@
     </unit>
     <unit id="error.store.invalid-settings-value">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+        <note category="location">src/app/core/errors/error-messages.ts:62</note>
       </notes>
       <segment>
         <source>Uno de los valores de la configuración no es válido.</source>
@@ -475,7 +499,7 @@
     </unit>
     <unit id="error.store.reason-code-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+        <note category="location">src/app/core/errors/error-messages.ts:63</note>
       </notes>
       <segment>
         <source>Ya existe un motivo con ese código.</source>
@@ -483,7 +507,7 @@
     </unit>
     <unit id="error.store.reason-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+        <note category="location">src/app/core/errors/error-messages.ts:64</note>
       </notes>
       <segment>
         <source>El motivo no existe.</source>
@@ -491,7 +515,7 @@
     </unit>
     <unit id="error.generic">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+        <note category="location">src/app/core/errors/error-messages.ts:67</note>
       </notes>
       <segment>
         <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
@@ -499,7 +523,7 @@
     </unit>
     <unit id="error.status.0">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:67</note>
+        <note category="location">src/app/core/errors/error-messages.ts:70</note>
       </notes>
       <segment>
         <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
@@ -507,7 +531,7 @@
     </unit>
     <unit id="error.status.400">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:68</note>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -515,7 +539,7 @@
     </unit>
     <unit id="error.status.401">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:69</note>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
       </notes>
       <segment>
         <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
@@ -523,7 +547,7 @@
     </unit>
     <unit id="error.status.403">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:70</note>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
       </notes>
       <segment>
         <source>No tienes permiso para realizar esta acción.</source>
@@ -531,7 +555,7 @@
     </unit>
     <unit id="error.status.404">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -539,7 +563,7 @@
     </unit>
     <unit id="error.status.409">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
       </notes>
       <segment>
         <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
@@ -547,7 +571,7 @@
     </unit>
     <unit id="error.status.422">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+        <note category="location">src/app/core/errors/error-messages.ts:76</note>
       </notes>
       <segment>
         <source>Los datos no cumplen las reglas de la operación.</source>
@@ -555,7 +579,7 @@
     </unit>
     <unit id="error.status.429">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+        <note category="location">src/app/core/errors/error-messages.ts:77</note>
       </notes>
       <segment>
         <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
@@ -563,7 +587,7 @@
     </unit>
     <unit id="error.status.500">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+        <note category="location">src/app/core/errors/error-messages.ts:78</note>
       </notes>
       <segment>
         <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
@@ -571,7 +595,7 @@
     </unit>
     <unit id="error.supportCode">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+        <note category="location">src/app/core/errors/error-messages.ts:98</note>
       </notes>
       <segment>
         <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
@@ -755,7 +779,7 @@
     </unit>
     <unit id="admin.audit.detail.none">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:46,49</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:46,48</note>
       </notes>
       <segment>
         <source>Sin valor registrado</source>
@@ -787,7 +811,7 @@
     </unit>
     <unit id="admin.audit.entity.deliveryZone">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:46</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:56</note>
       </notes>
       <segment>
         <source>Zona de reparto</source>
@@ -795,7 +819,7 @@
     </unit>
     <unit id="admin.audit.entity.modifierGroup">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:48</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:58</note>
       </notes>
       <segment>
         <source>Grupo de modificadores</source>
@@ -803,7 +827,7 @@
     </unit>
     <unit id="admin.audit.entity.modifierOption">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:50</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:60</note>
       </notes>
       <segment>
         <source>Opción de modificador</source>
@@ -811,7 +835,7 @@
     </unit>
     <unit id="admin.audit.entity.openingHours">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:52</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:62</note>
       </notes>
       <segment>
         <source>Horario de atención</source>
@@ -819,7 +843,7 @@
     </unit>
     <unit id="admin.audit.entity.product">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:64</note>
       </notes>
       <segment>
         <source>Producto</source>
@@ -827,7 +851,7 @@
     </unit>
     <unit id="admin.audit.entity.reason">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:56</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:66</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -843,7 +867,7 @@
     </unit>
     <unit id="admin.audit.entity.storeSettings">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:58</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:70</note>
       </notes>
       <segment>
         <source>Configuración de la tienda</source>
@@ -851,7 +875,7 @@
     </unit>
     <unit id="admin.audit.entity.table">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:60</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:72</note>
       </notes>
       <segment>
         <source>Mesa</source>
@@ -859,7 +883,7 @@
     </unit>
     <unit id="admin.audit.entity.user">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:62</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:74</note>
       </notes>
       <segment>
         <source>Personal</source>
@@ -867,7 +891,7 @@
     </unit>
     <unit id="admin.audit.role.system">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:77</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:89</note>
       </notes>
       <segment>
         <source>Sistema</source>
@@ -875,7 +899,7 @@
     </unit>
     <unit id="admin.audit.role.anonymous">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:79</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:91</note>
       </notes>
       <segment>
         <source>Anónimo</source>
@@ -883,7 +907,7 @@
     </unit>
     <unit id="admin.audit.title">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:73,75</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:74,76</note>
       </notes>
       <segment>
         <source>Auditoría</source>
@@ -891,7 +915,7 @@
     </unit>
     <unit id="admin.audit.range">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:77,79</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:78,79</note>
       </notes>
       <segment>
         <source>Fechas</source>
@@ -899,7 +923,7 @@
     </unit>
     <unit id="admin.audit.range.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:83,84</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:84,85</note>
       </notes>
       <segment>
         <source>dd/mm/aaaa - dd/mm/aaaa</source>
@@ -907,7 +931,7 @@
     </unit>
     <unit id="admin.audit.range.order">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:93,95</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:94,96</note>
       </notes>
       <segment>
         <source> La fecha inicial no puede ser posterior a la final. </source>
@@ -915,7 +939,7 @@
     </unit>
     <unit id="admin.audit.actor">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:98,100</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:99,101</note>
       </notes>
       <segment>
         <source>Persona</source>
@@ -923,9 +947,9 @@
     </unit>
     <unit id="shared.select.filterPlaceholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:110</note>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:133</note>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:172</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:111</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:134</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:173</note>
         <note category="location">src/app/features/admin/catalog/category-list.ts:154</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:148</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:268</note>
@@ -941,7 +965,7 @@
     </unit>
     <unit id="admin.audit.actor.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:112</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:113</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -949,7 +973,7 @@
     </unit>
     <unit id="admin.audit.entityType">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:120,122</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:121,123</note>
       </notes>
       <segment>
         <source> Tipo de entidad </source>
@@ -957,7 +981,7 @@
     </unit>
     <unit id="admin.audit.entityType.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:135</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:136</note>
       </notes>
       <segment>
         <source>Todos</source>
@@ -965,7 +989,7 @@
     </unit>
     <unit id="admin.audit.entityId">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:142,144</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:143,145</note>
       </notes>
       <segment>
         <source>Id de la entidad</source>
@@ -973,7 +997,7 @@
     </unit>
     <unit id="admin.audit.entityId.invalid">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:155,158</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:156,158</note>
       </notes>
       <segment>
         <source> Escribe un id válido (formato UUID). </source>
@@ -981,7 +1005,7 @@
     </unit>
     <unit id="admin.audit.action">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:160,162</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:161,163</note>
       </notes>
       <segment>
         <source>Acción</source>
@@ -989,7 +1013,7 @@
     </unit>
     <unit id="admin.audit.action.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:174</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:175</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -997,7 +1021,7 @@
     </unit>
     <unit id="admin.audit.search.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:185,186</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:186,187</note>
       </notes>
       <segment>
         <source>Buscar con estos filtros</source>
@@ -1005,7 +1029,7 @@
     </unit>
     <unit id="admin.audit.search">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:190,192</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:191,193</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -1013,7 +1037,7 @@
     </unit>
     <unit id="admin.audit.clear.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:199,200</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:200,201</note>
       </notes>
       <segment>
         <source>Quitar todos los filtros y buscar de nuevo</source>
@@ -1021,7 +1045,7 @@
     </unit>
     <unit id="admin.audit.clear">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:204,206</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:205,207</note>
       </notes>
       <segment>
         <source>Limpiar</source>
@@ -1029,7 +1053,7 @@
     </unit>
     <unit id="admin.audit.count">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:212,215</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:213,216</note>
       </notes>
       <segment>
         <source> <ph id="0" equiv="ICU" disp="{current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}" subFlows="1260611991748454381"/> </source>
@@ -1037,7 +1061,7 @@
     </unit>
     <unit id="1813585563108443776">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:212</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:213</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =0 {Sin registros} =1 {1 registro} other {<ph id="0" equiv="INTERPOLATION"/> registros}}</source>
@@ -1045,7 +1069,7 @@
     </unit>
     <unit id="admin.audit.loading">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:219,221</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:220,222</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -1053,7 +1077,7 @@
     </unit>
     <unit id="admin.audit.error">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:223,225</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:224,226</note>
       </notes>
       <segment>
         <source>No se pudo cargar el registro de auditoría.</source>
@@ -1061,7 +1085,7 @@
     </unit>
     <unit id="admin.audit.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:230,231</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:231,232</note>
       </notes>
       <segment>
         <source>Volver a intentar la búsqueda</source>
@@ -1069,7 +1093,7 @@
     </unit>
     <unit id="admin.audit.retry">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:235,237</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:236,238</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -1077,7 +1101,7 @@
     </unit>
     <unit id="admin.audit.empty">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:242,244</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:243,245</note>
       </notes>
       <segment>
         <source>No hay registros con estos filtros.</source>
@@ -1085,7 +1109,7 @@
     </unit>
     <unit id="admin.audit.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:244</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:245</note>
       </notes>
       <segment>
         <source>Registro de auditoría</source>
@@ -1093,7 +1117,7 @@
     </unit>
     <unit id="admin.audit.caption">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:247,248</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:248,249</note>
       </notes>
       <segment>
         <source> Cambios registrados, del más reciente al más antiguo </source>
@@ -1101,7 +1125,7 @@
     </unit>
     <unit id="admin.audit.col.when">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:251,252</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:252,253</note>
       </notes>
       <segment>
         <source>Cuándo</source>
@@ -1109,7 +1133,7 @@
     </unit>
     <unit id="admin.audit.col.actor">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:252,253</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:253,254</note>
       </notes>
       <segment>
         <source>Quién</source>
@@ -1117,7 +1141,7 @@
     </unit>
     <unit id="admin.audit.col.action">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:253,254</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:254,255</note>
       </notes>
       <segment>
         <source>Acción</source>
@@ -1125,7 +1149,7 @@
     </unit>
     <unit id="admin.audit.col.entity">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:254,255</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:255,256</note>
       </notes>
       <segment>
         <source>Entidad</source>
@@ -1133,7 +1157,7 @@
     </unit>
     <unit id="admin.audit.col.reason">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:255,256</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:256,257</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -1141,7 +1165,7 @@
     </unit>
     <unit id="admin.audit.col.detail">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:256,258</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:257,258</note>
       </notes>
       <segment>
         <source>Detalle</source>
@@ -1149,7 +1173,7 @@
     </unit>
     <unit id="admin.audit.detail.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:301,302</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:302,303</note>
       </notes>
       <segment>
         <source>Ver los valores antes y después del cambio</source>
@@ -1157,7 +1181,7 @@
     </unit>
     <unit id="admin.audit.detail">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:306,307</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:307,308</note>
       </notes>
       <segment>
         <source>Detalle</source>
@@ -1165,7 +1189,7 @@
     </unit>
     <unit id="admin.audit.detail.title">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:327,328</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:328,329</note>
       </notes>
       <segment>
         <source>Detalle del cambio</source>
@@ -1173,7 +1197,7 @@
     </unit>
     <unit id="admin.audit.detail.close.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:346,347</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:347,348</note>
       </notes>
       <segment>
         <source>Cerrar el detalle</source>
@@ -1181,7 +1205,7 @@
     </unit>
     <unit id="admin.audit.detail.close">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:351,353</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:352,354</note>
       </notes>
       <segment>
         <source>Cerrar</source>
@@ -1189,7 +1213,7 @@
     </unit>
     <unit id="admin.audit.detail.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:448</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:450</note>
       </notes>
       <segment>
         <source>Detalle del cambio <ph id="0" equiv="action" disp="entry.action"/> del <ph id="1" equiv="when" disp="this.when(entry)"/></source>
