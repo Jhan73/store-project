@@ -10,23 +10,28 @@ public final class Jobs {
 
 	public static final int BATCH_SIZE = 100;
 
+	/** A run stops here; whatever is left waits for the next run, so a backlog cannot monopolize the scheduler. */
+	public static final int MAX_BATCHES_PER_RUN = 10;
+
 	private Jobs() {
 	}
 
 	/**
-	 * Runs {@code batch} until it claims fewer than {@link #BATCH_SIZE} rows. Each call must be its own
-	 * transaction (a call to a {@code @Transactional} bean method), so locks are held for one batch only.
+	 * Runs {@code batch} until it claims fewer than {@link #BATCH_SIZE} rows or {@link #MAX_BATCHES_PER_RUN} batches
+	 * have run. Each call must be its own transaction (a call to a {@code @Transactional} bean method), so locks are
+	 * held for one batch only.
 	 *
 	 * @return the total number of rows the batches claimed
 	 */
 	public static int drain(IntSupplier batch) {
 		var total = 0;
-		int claimed;
-		do {
-			claimed = batch.getAsInt();
+		for (var run = 0; run < MAX_BATCHES_PER_RUN; run++) {
+			var claimed = batch.getAsInt();
 			total += claimed;
+			if (claimed < BATCH_SIZE) {
+				break;
+			}
 		}
-		while (claimed >= BATCH_SIZE);
 		return total;
 	}
 

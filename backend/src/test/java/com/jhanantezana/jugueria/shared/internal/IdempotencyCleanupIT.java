@@ -80,9 +80,10 @@ class IdempotencyCleanupIT {
 	}
 
 	@Test
-	void theJobIsScheduledAtTheConfiguredInterval() {
+	void theJobRunsHourlyAndStartsAfterOneMinute() {
 		assertThat(scheduledTasks.getScheduledTasks()).anyMatch(
-				task -> task.getTask() instanceof FixedDelayTask delay && delay.getIntervalDuration().equals(Duration.ofHours(1)));
+				task -> task.getTask() instanceof FixedDelayTask delay && delay.getIntervalDuration().equals(Duration.ofHours(1))
+						&& delay.getInitialDelayDuration().equals(Duration.ofMinutes(1)));
 	}
 
 	// A second task running the same job must skip rows another task has claimed, never wait on them.

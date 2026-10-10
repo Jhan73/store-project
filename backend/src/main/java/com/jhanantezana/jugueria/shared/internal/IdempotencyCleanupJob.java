@@ -26,8 +26,8 @@ class IdempotencyCleanupJob implements SchedulingConfigurer {
 
 	@Override
 	public void configureTasks(ScheduledTaskRegistrar registrar) {
-		var interval = properties.cleanupInterval();
-		registrar.addFixedDelayTask(new IntervalTask(this::run, interval, interval));
+		// A short first delay: test and prod are often stopped, so a long one could mean the sweep never runs.
+		registrar.addFixedDelayTask(new IntervalTask(this::run, properties.cleanupInterval(), properties.initialDelay()));
 	}
 
 	void run() {

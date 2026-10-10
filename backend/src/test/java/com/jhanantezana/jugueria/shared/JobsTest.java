@@ -33,6 +33,19 @@ class JobsTest {
 	}
 
 	@Test
+	void stopsAtTheCapSoABacklogCannotMonopolizeTheScheduler() {
+		var calls = new int[1];
+
+		var total = Jobs.drain(() -> {
+			calls[0]++;
+			return Jobs.BATCH_SIZE;
+		});
+
+		assertThat(calls[0]).isEqualTo(Jobs.MAX_BATCHES_PER_RUN);
+		assertThat(total).isEqualTo(Jobs.MAX_BATCHES_PER_RUN * Jobs.BATCH_SIZE);
+	}
+
+	@Test
 	void claimsAtMostOneHundredRowsPerBatch() {
 		assertThat(Jobs.BATCH_SIZE).isEqualTo(100);
 	}
