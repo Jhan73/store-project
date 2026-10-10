@@ -33,7 +33,7 @@
     "@angular/platform-browser": "^22.2.1",
     "@angular/platform-server": "^22.2.1",
     "@angular/router": "^22.2.1",
-    "@angular/ssr": "^22.2.0",
+    "@angular/ssr": "^22.2.2",
     "@primeuix/themes": "^2.0.3",
     "@tabler/icons-angular": "^3.48.0",
     "express": "^5.1.0",
@@ -42,8 +42,8 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@angular/build": "^22.2.0",
-    "@angular/cli": "^22.2.0",
+    "@angular/build": "^22.2.2",
+    "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^22.2.1",
     "@angular/localize": "^22.2.1",
     "@eslint/js": "^10.0.1",
