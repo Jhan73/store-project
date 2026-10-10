@@ -24,10 +24,26 @@ class CatalogApiImpl implements CatalogApi {
 
 	private final ModifierGroupRepository groups;
 
-	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups) {
+	private final AvailabilityService availability;
+
+	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups,
+			AvailabilityService availability) {
 		this.products = products;
 		this.categories = categories;
 		this.groups = groups;
+		this.availability = availability;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean productExists(UUID productId) {
+		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional
+	public void setProductAvailability(UUID productId, boolean available) {
+		availability.setProductAvailability(productId, available);
 	}
 
 	@Override
