@@ -36,7 +36,7 @@
 		<jackson-bom.version>3.1.7</jackson-bom.version>
 		<!-- Same for Jackson 2, which springdoc brings in through swagger-core. -->
 		<jackson-2-bom.version>2.21.7</jackson-2-bom.version>
-		<aws-sdk.version>2.55.8</aws-sdk.version>
+		<aws-sdk.version>2.55.12</aws-sdk.version>
 		<wiremock.version>3.13.2</wiremock.version>
 		<springdoc-openapi.version>3.1.1</springdoc-openapi.version>
 	</properties>
