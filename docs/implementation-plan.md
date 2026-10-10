@@ -111,7 +111,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 
 | ID | Work package | Scope | Spec | Done when | Status |
 |----|--------------|-------|------|-----------|--------|
-| M2-B1 | **Idempotency and jobs**: `shared` idempotency API, scheduled-job pattern (`SKIP LOCKED`), expired-key cleanup | — | §5.2, §4.3 | Same key sent concurrently to two instances creates one result | todo |
+| M2-B1 | **Idempotency and jobs**: `shared` idempotency API, scheduled-job pattern (`SKIP LOCKED`), expired-key cleanup | — | §5.2, §4.3 | Same key sent concurrently to two instances creates one result | done |
 | M2-B2 | **inventory**: stock items, entries, adjustments, movement ledger, low-stock list, auto-unavailable at 0, returns; reserve/commit/release API (used by M3) | FR-STK-01..05, BR-10 | §4.3, §4.8 | Parallel sale of the last unit sells it once; every change has a ledger row | todo |
 | M2-B3 | **preparation — board**: projection, views (tickets, all-day, ready), start/ready/undo/recall/handover, markers + ack, run-out flag, timestamps, `/topic/board`; station filter (S); customer display (S) | FR-PRP-01..10, BR-08 (in-store) | §4.5, §4.3 "Board state" | Races in tech-spec §11 pass; all-day aggregation groups identical items only | todo |
 | M2-B4 | **instore — tickets**: tickets, lines, send, void rules by state, transfer, table grid status; comp (S), merge (S), repeat (S) | FR-INS-01, 02, 05, 07, 09, 10; FR-INS-08/11/13 (S) | §4.3 "In-store tickets" | Void by SERVER after Ready is rejected; transfer to an occupied table is rejected | todo |

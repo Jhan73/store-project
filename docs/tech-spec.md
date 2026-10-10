@@ -312,6 +312,8 @@ The `instore`/`ordering` command and the board update run in the **same transact
 
 Reservation expiry and scheduled-order firing (every minute) and payment reconciliation (every 5 minutes) run on every task but claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`, so concurrent tasks never process the same row. No scheduler lock library is needed.
 
+`shared` holds the pattern: `Jobs.BATCH_SIZE` (100) and `Jobs.drain(batch)`, which repeats a batch until it claims fewer than 100 rows. Each batch is a `@Transactional` method of its own bean (one transaction per batch, locks held briefly) and the job is registered with a `SchedulingConfigurer` using an interval from the module's properties. A batch that deletes claims its rows in a `WITH claimed AS MATERIALIZED (SELECT … LIMIT 100 FOR UPDATE SKIP LOCKED) DELETE … USING claimed`; the same select inlined as an `IN (…)` subquery deleted past the limit under PostgreSQL 18. The first job is the expired-key cleanup (§5.2).
+
 ### 4.4 Real-time updates (FR-CAT-03, FR-PRP-03, NFR-04)
 
 | Destination | Subscribers | Content |
@@ -586,6 +588,13 @@ Idempotency must live **inside the use-case transaction**, so it cannot be a ser
 - Only successful results are stored. A rejected command (`409`/`422`) rolls back its transaction, including the key row, so a retry is evaluated again against the current state.
 - Expired rows are deleted by the scheduled-jobs pattern (§4.3, `SKIP LOCKED`).
 - Payment webhooks do not use this mechanism; they dedupe by provider event ID (§4.3).
+
+**Backend implementation**
+
+- `shared` exposes `Idempotency` (`register(actorId, key, requestHash)` returning `Fresh` or `Replay(StoredResponse)`, and `storeResponse(...)`), `RequestHash.of(method, path, body)` (SHA-256 hex of method, path and the body as JSON with sorted keys), and `IdempotencyKeyHeader.require(...)` for the controller. Both `Idempotency` methods use `Propagation.MANDATORY`, so calling them outside the use-case transaction fails fast.
+- The table is `shared.idempotency_key (actor_id, key, request_hash, response_status, response_body, created_at, expires_at)`, primary key `(actor_id, key)`. The response columns are null between step 2 and step 3, inside one transaction, and never null once committed.
+- Settings under `jugueria.shared.idempotency`: `ttl` (default `24h`), `lock-timeout` (default `2s`, step 5) and `cleanup-interval` (default `1h`). The `lock_timeout` is set with transaction-local scope for the insert only and restored to the caller's value afterwards, so the command's own row locks keep their setting.
+- Expiry is enforced by the cleanup job, not on read: a key can still replay until the next sweep after its `expires_at`.
 
 ### 5.3 Resource and payload conventions
 

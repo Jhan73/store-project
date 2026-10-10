@@ -98,7 +98,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Lock multiple products in ascending `product_id` order to avoid deadlocks.
 - `preparation.board_order.status` arbitrates races between staff and customer commands.
 - Mutable aggregates use `@Version` optimistic locking.
-- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library.
+- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library. Use `shared`'s `Jobs.drain(batch)` with one `@Transactional` batch method per bean; when the batch deletes, claim in a `WITH … AS MATERIALIZED` CTE (see `IdempotencyCleanup`).
 - Commands that move money or stock require an `Idempotency-Key` header. See "Idempotency" below.
 
 **Money**
@@ -168,6 +168,7 @@ Full design in tech-spec §5.2.
 - Implement it **inside the use-case transaction** through `shared`'s idempotency API. Never as a servlet filter or MVC interceptor: they run outside the transaction.
 - The controller validates the `Idempotency-Key` header (UUID, required) and passes it to the service; the service's first statement registers it with actor ID + request hash.
 - Keys are scoped by `actor_id`. Replays return the stored response with `Idempotent-Replayed: true`; a different body with the same key is `422`. Rejected commands roll back their key.
+- The API: `IdempotencyKeyHeader.require(header)` in the controller; `RequestHash.of(method, path, body)` for the hash; `Idempotency.register(...)` then `storeResponse(...)` in the service (`Propagation.MANDATORY`). A `Replay` is returned with `Idempotent-Replayed: true`. `IdempotentProbeService` and `IdempotentProbeController` in the test sources show the full shape.
 - Payment webhooks dedupe by provider event ID instead.
 
 ## Persistence (JPA)
