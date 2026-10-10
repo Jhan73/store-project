@@ -14,6 +14,8 @@ FROM eclipse-temurin:25-jre@sha256:bb036ed6cfdc57e3da7c22634d15f1b840d2caf761838
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --only-upgrade libssl3t64 openssl openssl-provider-legacy \
     && rm -rf /var/lib/apt/lists/*
+# The base image ships pebble outside dpkg with HIGH Go stdlib CVEs, and nothing here runs it.
+RUN rm -f /usr/bin/pebble
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 COPY --from=build /workspace/extracted/dependencies/ ./
