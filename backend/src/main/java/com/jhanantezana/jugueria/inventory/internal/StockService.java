@@ -105,10 +105,11 @@ public class StockService {
 		if (quantity <= 0) {
 			throw new BusinessException(InventoryError.INVALID_QUANTITY, "An entry needs a positive quantity");
 		}
+		var text = blankToNull(note);
 		var before = lockTracked(productId);
-		changes.apply(productId, StockMovementType.ENTRY, quantity, 0, null, null, note);
+		changes.apply(productId, StockMovementType.ENTRY, quantity, 0, null, null, text);
 		var after = find(productId).orElseThrow();
-		publish(productId, StockChangeKind.ENTRY, before, after, null, note, Instant.now(clock));
+		publish(productId, StockChangeKind.ENTRY, before, after, null, text, Instant.now(clock));
 		return after;
 	}
 
@@ -118,12 +119,17 @@ public class StockService {
 		if (quantityDelta == 0) {
 			throw new BusinessException(InventoryError.INVALID_QUANTITY, "An adjustment must change the quantity");
 		}
-		var reason = requireReason(reasonCode, note);
+		var text = blankToNull(note);
+		var reason = requireReason(reasonCode, text);
 		var before = lockTracked(productId);
-		changes.apply(productId, StockMovementType.ADJUSTMENT, quantityDelta, 0, null, reason, note);
+		changes.apply(productId, StockMovementType.ADJUSTMENT, quantityDelta, 0, null, reason, text);
 		var after = find(productId).orElseThrow();
-		publish(productId, StockChangeKind.ADJUSTMENT, before, after, reason, note, Instant.now(clock));
+		publish(productId, StockChangeKind.ADJUSTMENT, before, after, reason, text, Instant.now(clock));
 		return after;
+	}
+
+	private static @Nullable String blankToNull(@Nullable String text) {
+		return text == null || text.isBlank() ? null : text.trim();
 	}
 
 	@Transactional(readOnly = true)

@@ -16,6 +16,7 @@ public final class InventoryTables {
 	public static void clean(JdbcClient jdbc) {
 		jdbc.sql("delete from inventory.stock_reservation").update();
 		jdbc.sql("delete from inventory.stock_item").update();
+		jdbc.sql("delete from store.reason where type = 'STOCK_ADJUSTMENT'").update();
 		CatalogTables.clean(jdbc);
 	}
 
@@ -45,6 +46,15 @@ public final class InventoryTables {
 			.param(productId)
 			.query(Boolean.class)
 			.single();
+	}
+
+	/** The stock adjustment reasons an admin picks from; {@link #clean} removes them again. */
+	public static void anAdjustmentReason(JdbcClient jdbc, String code) {
+		var now = OffsetDateTime.now(ZoneOffset.UTC);
+		jdbc.sql("""
+				insert into store.reason (id, type, code, active, created_at, updated_at)
+				values (:id, 'STOCK_ADJUSTMENT', :code, true, :now, :now) on conflict do nothing
+				""").param("id", UUID.randomUUID()).param("code", code).param("now", now).update();
 	}
 
 }
