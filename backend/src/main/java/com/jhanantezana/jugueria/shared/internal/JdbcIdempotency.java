@@ -23,6 +23,8 @@ class JdbcIdempotency implements Idempotency {
 	// Spring's PostgreSQL translator leaves lock_timeout (lock_not_available) uncategorized.
 	private static final String LOCK_NOT_AVAILABLE = "55P03";
 
+	private static final int MAX_ATTEMPTS = 3;
+
 	private final JdbcClient jdbc;
 
 	private final Clock clock;
@@ -41,6 +43,21 @@ class JdbcIdempotency implements Idempotency {
 		var now = Instant.now(clock);
 		var callerLockTimeout = jdbc.sql("SELECT current_setting('lock_timeout')").query(String.class).single();
 		setLockTimeout(properties.lockTimeout().toMillis() + "ms");
+		Registration registration = null;
+		for (var attempt = 0; attempt < MAX_ATTEMPTS && registration == null; attempt++) {
+			registration = tryRegister(actorId, key, requestHash, now);
+		}
+		// The setting would otherwise outlast this call and make the command's own row locks fail early.
+		setLockTimeout(callerLockTimeout);
+		if (registration == null) {
+			throw new BusinessException(CommonError.IDEMPOTENCY_IN_PROGRESS,
+					"A request with this Idempotency-Key is still being processed");
+		}
+		return registration;
+	}
+
+	// Null when the conflicting row was deleted by the cleanup before it could be read: the key is free again.
+	private Registration tryRegister(UUID actorId, UUID key, String requestHash, Instant now) {
 		int inserted;
 		try {
 			inserted = jdbc.sql("""
@@ -62,12 +79,10 @@ class JdbcIdempotency implements Idempotency {
 			throw new BusinessException(CommonError.IDEMPOTENCY_IN_PROGRESS,
 					"A request with this Idempotency-Key is still being processed");
 		}
-		// The setting would otherwise outlast this call and make the command's own row locks fail early.
-		setLockTimeout(callerLockTimeout);
 		if (inserted == 1) {
 			return new Registration.Fresh();
 		}
-		var previous = jdbc.sql("""
+		var found = jdbc.sql("""
 				SELECT request_hash, response_status, response_body FROM shared.idempotency_key
 				WHERE actor_id = :actor AND key = :key
 				""")
@@ -75,7 +90,11 @@ class JdbcIdempotency implements Idempotency {
 			.param("key", key)
 			.query((rs, row) -> new Previous(rs.getString("request_hash"), rs.getObject("response_status", Integer.class),
 					rs.getString("response_body")))
-			.single();
+			.optional();
+		if (found.isEmpty()) {
+			return null;
+		}
+		var previous = found.get();
 		if (!previous.requestHash().equals(requestHash)) {
 			throw new BusinessException(CommonError.IDEMPOTENCY_KEY_REUSED,
 					"This Idempotency-Key was already used for a different request");
