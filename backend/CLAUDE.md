@@ -98,7 +98,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Lock multiple products in ascending `product_id` order to avoid deadlocks.
 - `preparation.board_order.status` arbitrates races between staff and customer commands.
 - Mutable aggregates use `@Version` optimistic locking.
-- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library. Use `shared`'s `Jobs.drain(batch)` with one `@Transactional` batch method per bean; when the batch deletes, claim in a `WITH … AS MATERIALIZED` CTE (see `IdempotencyCleanup`).
+- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library. Use `shared`'s `Jobs.drain(batch)` (capped at 10 batches per run) with one `@Transactional` batch method per bean; `@Scheduled`/`SchedulingConfigurer` tasks run on the `job-*` scheduler, never on the STOMP heartbeat one (give any new scheduler bean a `@Qualifier` at its injection points); when the batch deletes, claim in a `WITH … AS MATERIALIZED` CTE (see `IdempotencyCleanup`).
 - Commands that move money or stock require an `Idempotency-Key` header. See "Idempotency" below.
 
 **Money**
