@@ -1,5 +1,5 @@
 # Build context: repository root (migrations live in db/).
-FROM eclipse-temurin:25-jdk@sha256:8c0a84ea11c8f6ed52600fc19f1040121f2a162998e9f50a5faebbbad9172dcc AS build
+FROM eclipse-temurin:25-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2 AS build
 WORKDIR /workspace/backend
 COPY backend/.mvn .mvn
 COPY backend/mvnw backend/pom.xml ./
@@ -9,7 +9,7 @@ COPY db /workspace/db
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -ntp package -DskipTests \
     && java -Djarmode=tools -jar target/backend.jar extract --layers --launcher --destination /workspace/extracted
 
-FROM eclipse-temurin:25-jre@sha256:fcd7fd7b387f94bb2ac461478a7436ad8e349924c374ea8313919624dceae636
+FROM eclipse-temurin:25-jre@sha256:bb036ed6cfdc57e3da7c22634d15f1b840d2caf76183861c80e81ca4b5104abb
 # Ahead of the base image: openssl 3.5.5-1ubuntu3.5 has a fixable HIGH CVE. Drop once the base ships ubuntu3.6.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --only-upgrade libssl3t64 openssl openssl-provider-legacy \
