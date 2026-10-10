@@ -372,6 +372,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stock-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stockList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock-items/low": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stockLowStock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock-items/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stockGet"];
+        put: operations["stockTrack"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock-items/{productId}/adjustments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stockAdjust"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock-items/{productId}/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["stockRecordEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stock-items/{productId}/movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stockMovements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/tables": {
         parameters: {
             query?: never;
@@ -680,6 +776,12 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdjustStockRequest: {
+            note?: string | null;
+            /** Format: int32 */
+            quantityDelta: number;
+            reason: string;
+        };
         AuditEntryResponse: {
             action: string;
             /** Format: uuid */
@@ -775,7 +877,7 @@ export interface components {
          * @description Every error code the API can return; codes are never renamed or reused.
          * @enum {string}
          */
-        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.table-name-already-used" | "instore.table-not-found" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
+        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.table-name-already-used" | "instore.table-not-found" | "inventory.insufficient-stock" | "inventory.invalid-quantity" | "inventory.invalid-reason" | "inventory.product-not-found" | "inventory.product-not-tracked" | "inventory.reservation-not-active" | "inventory.stock-item-not-found" | "inventory.stock-reserved" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -857,6 +959,27 @@ export interface components {
              */
             currency: string;
         };
+        MovementResponse: {
+            /** Format: uuid */
+            actorId: string | null;
+            actorRole: string | null;
+            /** Format: uuid */
+            id: string;
+            note: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+            /** Format: int32 */
+            onHandDelta: number;
+            /** Format: uuid */
+            productId: string;
+            reasonCode: string | null;
+            /** Format: uuid */
+            referenceId: string | null;
+            /** Format: int32 */
+            reservedDelta: number;
+            /** @enum {string} */
+            type: "ENTRY" | "ADJUSTMENT" | "SALE" | "RETURN" | "RESERVE" | "COMMIT" | "RELEASE" | "EXPIRE";
+        };
         OpeningHourResponse: {
             closed: boolean;
             /**
@@ -874,6 +997,17 @@ export interface components {
         };
         PageResponseAuditEntryResponse: {
             content: components["schemas"]["AuditEntryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PageResponseMovementResponse: {
+            content: components["schemas"]["MovementResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -952,6 +1086,11 @@ export interface components {
             /** @enum {string} */
             type: "VOID" | "COMP" | "CASH_OUT" | "STOCK_ADJUSTMENT";
         };
+        RecordEntryRequest: {
+            note?: string | null;
+            /** Format: int32 */
+            quantity: number;
+        };
         SaveModifierGroupRequest: {
             /** Format: int32 */
             maxChoices: number;
@@ -1004,6 +1143,20 @@ export interface components {
             id: string;
             name: string;
         };
+        StockItemResponse: {
+            /** Format: int32 */
+            available: number;
+            low: boolean;
+            /** Format: int32 */
+            lowStockThreshold: number;
+            /** Format: int32 */
+            onHand: number;
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            reserved: number;
+            tracked: boolean;
+        };
         StoreSettingsResponse: {
             /** Format: int32 */
             basePrepMinutes: number;
@@ -1050,6 +1203,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        TrackStockRequest: {
+            /** Format: int32 */
+            lowStockThreshold: number;
+            tracked: boolean;
         };
         UpdateCategoryRequest: {
             /** Format: int32 */
@@ -4470,6 +4628,589 @@ export interface operations {
             };
             /** @description Precondition Required. Error codes: common.precondition-required */
             428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"][];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockLowStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"][];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: inventory.stock-item-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockTrack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrackStockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request, common.validation-failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: inventory.product-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: inventory.stock-reserved */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockAdjust: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustStockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: inventory.stock-item-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: common.idempotency-in-progress, inventory.insufficient-stock, inventory.product-not-tracked */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Content. Error codes: common.idempotency-key-reused, inventory.invalid-quantity, inventory.invalid-reason */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockRecordEntry: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string;
+            };
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordEntryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockItemResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: inventory.stock-item-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: common.idempotency-in-progress, inventory.product-not-tracked */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Content. Error codes: common.idempotency-key-reused */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stockMovements: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseMovementResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: inventory.stock-item-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
                 headers: {
                     [name: string]: unknown;
                 };
