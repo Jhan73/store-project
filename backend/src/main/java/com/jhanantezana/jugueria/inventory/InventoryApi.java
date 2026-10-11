@@ -21,7 +21,7 @@ public interface InventoryApi {
 	/**
 	 * Holds the units for {@code referenceId} until the returned moment. Reserved units cannot be sold by any
 	 * channel, and an expired reservation is released by a scheduled job, which also publishes
-	 * {@link ReservationExpired}.
+	 * {@link ReservationExpired}. The time to live must be positive.
 	 */
 	Instant reserve(UUID referenceId, List<StockLine> lines, Duration ttl);
 
@@ -34,7 +34,11 @@ public interface InventoryApi {
 	/** Sells units that were not reserved, as an in-store ticket or quick sale does. */
 	void deduct(UUID referenceId, List<StockLine> lines);
 
-	/** Puts units of a voided or refunded sale back on the shelf; waste must not be returned. */
+	/**
+	 * Puts units of a voided or refunded sale back on the shelf; waste must not be returned. A return is applied once
+	 * per reference and product, so the reference must be unique per refund or void: a second partial return under the
+	 * same reference is silently skipped.
+	 */
 	void returnUnits(UUID referenceId, List<StockLine> lines);
 
 }

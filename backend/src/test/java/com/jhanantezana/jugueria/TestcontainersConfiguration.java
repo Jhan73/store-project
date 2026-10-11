@@ -28,6 +28,15 @@ public class TestcontainersConfiguration {
 		return registry -> registry.add("jugueria.identity.jwt.ephemeral-key-allowed", () -> true);
 	}
 
+	// Cached contexts keep their jobs alive against the shared container; a sweep must never expire a test's rows.
+	@Bean
+	DynamicPropertyRegistrar inertReservationSweep() {
+		return registry -> {
+			registry.add("jugueria.inventory.reservation-sweep-initial-delay", () -> "365d");
+			registry.add("jugueria.inventory.reservation-sweep-interval", () -> "365d");
+		};
+	}
+
 	@Bean
 	JdbcConnectionDetails jdbcConnectionDetails() {
 		return new JdbcConnectionDetails() {

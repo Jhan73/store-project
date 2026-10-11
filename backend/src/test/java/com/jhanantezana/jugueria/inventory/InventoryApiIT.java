@@ -295,6 +295,18 @@ class InventoryApiIT {
 		assertThatThrownBy(() -> new StockLine(UUID.randomUUID(), 0)).isInstanceOf(IllegalArgumentException.class);
 	}
 
+	@Test
+	void aReservationNeedsAPositiveTimeToLive() {
+		var product = trackedWithStock(5);
+		var lines = List.of(new StockLine(product, 1));
+
+		assertThatThrownBy(() -> inventory.reserve(UUID.randomUUID(), lines, Duration.ZERO))
+			.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> inventory.reserve(UUID.randomUUID(), lines, Duration.ofMinutes(-1)))
+			.isInstanceOf(IllegalArgumentException.class);
+		assertThat(stock.get(product).reserved()).isZero();
+	}
+
 	private UUID trackedWithStock(int quantity) {
 		var product = InventoryTables.aProduct(jdbc);
 		stock.track(product, true, 0);

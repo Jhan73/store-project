@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.sql.DataSource;
@@ -13,6 +14,8 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -134,6 +137,35 @@ class ReservationExpiryIT {
 	}
 
 	@Test
+	void aLapsedReservationTheSweepHasNotReachedYetCanStillBeCommitted() {
+		var product = trackedWithStock(2);
+		var order = UUID.randomUUID();
+		inventory.reserve(order, List.of(new StockLine(product, 1)), TTL);
+		lapse(order);
+
+		inventory.commit(order);
+
+		assertThat(stock.get(product).onHand()).isEqualTo(1);
+		assertThat(Jobs.drain(expiry::expireBatch)).isZero();
+	}
+
+	@Test
+	void releasesTheUnitsOfAProductThatNoLongerExistsInTheCatalog() {
+		var product = trackedWithStock(2);
+		var order = UUID.randomUUID();
+		inventory.reserve(order, List.of(new StockLine(product, 2)), TTL);
+		lapse(order);
+		jdbc.sql("delete from catalog.product where id = ?").param(product).update();
+
+		var expired = Jobs.drain(expiry::expireBatch);
+
+		assertThat(expired).isEqualTo(1);
+		assertThat(stock.get(product).reserved()).isZero();
+		assertThat(events.stream(ReservationExpired.class)).singleElement()
+			.satisfies(event -> assertThat(event.referenceId()).isEqualTo(order));
+	}
+
+	@Test
 	void anOrderCanReserveAgainAfterItsReservationExpired() {
 		var product = trackedWithStock(2);
 		var order = UUID.randomUUID();
@@ -174,10 +206,19 @@ class ReservationExpiryIT {
 	}
 
 	@Test
-	void theJobRunsEveryMinuteAndStartsAfterOneMinute() {
+	void theJobIsRegisteredWithTheConfiguredIntervalAndInitialDelay() {
 		assertThat(scheduledTasks.getScheduledTasks()).anyMatch(
-				task -> task.getTask() instanceof FixedDelayTask delay && delay.getIntervalDuration().equals(Duration.ofMinutes(1))
-						&& delay.getInitialDelayDuration().equals(Duration.ofMinutes(1)));
+				task -> task.getTask() instanceof FixedDelayTask delay && delay.getIntervalDuration().equals(Duration.ofDays(365))
+						&& delay.getInitialDelayDuration().equals(Duration.ofDays(365)));
+	}
+
+	@Test
+	void theJobRunsEveryMinuteAndStartsAfterOneMinuteByDefault() {
+		var defaults = new Binder(new MapConfigurationPropertySource(Map.of())).bindOrCreate("jugueria.inventory",
+				InventoryProperties.class);
+
+		assertThat(defaults.reservationSweepInterval()).isEqualTo(Duration.ofMinutes(1));
+		assertThat(defaults.reservationSweepInitialDelay()).isEqualTo(Duration.ofMinutes(1));
 	}
 
 	// A second task running the same job must skip rows another task has claimed, never wait on them.

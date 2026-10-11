@@ -109,14 +109,21 @@ class StockChanges {
 		var after = balance.onHand() - balance.reserved();
 		var before = after - availableDelta;
 		if (before > 0 && after <= 0) {
-			catalog.setProductAvailability(productId, false);
+			setAvailability(productId, false);
 			events.publishEvent(new StockDepleted(productId, now));
 		}
 		else if (before <= 0 && after > 0) {
-			catalog.setProductAvailability(productId, true);
+			setAvailability(productId, true);
 		}
 		if (before > balance.lowStockThreshold() && after <= balance.lowStockThreshold()) {
 			events.publishEvent(new StockLow(productId, after, balance.lowStockThreshold(), now));
+		}
+	}
+
+	// A product missing from the catalog must not keep its units from being released or sold.
+	private void setAvailability(UUID productId, boolean available) {
+		if (catalog.productExists(productId)) {
+			catalog.setProductAvailability(productId, available);
 		}
 	}
 

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.jhanantezana.jugueria.shared.Jobs;
 
-// Runs on every task; the SKIP LOCKED claim in StockReservations keeps two tasks off the same rows.
+// Runs on every task; overlapping selections are harmless because claimLapsed re-checks status under SKIP LOCKED.
 @Component
 class ReservationExpiryJob implements SchedulingConfigurer {
 
