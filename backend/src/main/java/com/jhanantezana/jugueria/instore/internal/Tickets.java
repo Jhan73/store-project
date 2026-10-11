@@ -107,12 +107,44 @@ class Tickets {
 			.update() == 1;
 	}
 
-	/** Reads the table and keeps it from being deactivated until this transaction ends. */
-	Optional<Boolean> activeTableShared(UUID tableId) {
-		return jdbc.sql("SELECT active FROM instore.dining_table WHERE id = :id FOR SHARE")
+	record TableRef(String name, boolean active) {
+	}
+
+	/** The table's name; the table cannot be deactivated until this transaction ends. */
+	String requireActiveTable(UUID tableId) {
+		var table = jdbc.sql("SELECT name, active FROM instore.dining_table WHERE id = :id FOR SHARE")
 			.param("id", tableId)
-			.query(Boolean.class)
-			.optional();
+			.query((rs, row) -> new TableRef(rs.getString("name"), rs.getBoolean("active")))
+			.optional()
+			.orElseThrow(() -> new BusinessException(InstoreError.TABLE_NOT_FOUND, "Table not found"));
+		if (!table.active()) {
+			throw new BusinessException(InstoreError.TABLE_INACTIVE, "Table " + tableId + " is deactivated");
+		}
+		return table.name();
+	}
+
+	/** Moves the ticket; the unique index on open tickets per table rejects a table that is taken. */
+	void moveToTable(UUID ticketId, UUID tableId) {
+		jdbc.sql("UPDATE instore.ticket SET table_id = :table WHERE id = :id")
+			.param("table", tableId)
+			.param("id", ticketId)
+			.update();
+	}
+
+	/** @return whether the flag changed */
+	boolean setBillRequested(UUID ticketId, boolean requested) {
+		return jdbc.sql("UPDATE instore.ticket SET bill_requested = :requested WHERE id = :id AND bill_requested <> :requested")
+			.param("requested", requested)
+			.param("id", ticketId)
+			.update() == 1;
+	}
+
+	/** Every card the ticket ever fed: one per round. */
+	List<UUID> boardSources(UUID ticketId) {
+		return jdbc.sql("""
+				SELECT board_source_id FROM instore.ticket WHERE id = :id AND board_source_id IS NOT NULL
+				UNION SELECT board_source_id FROM instore.ticket_line WHERE ticket_id = :id AND board_source_id IS NOT NULL
+				""").param("id", ticketId).query(UUID.class).list();
 	}
 
 	/** Takes the table's row so no ticket can open on it, or move onto it, until this transaction ends. */

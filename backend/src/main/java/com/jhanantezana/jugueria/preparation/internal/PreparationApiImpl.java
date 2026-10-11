@@ -203,6 +203,28 @@ class PreparationApiImpl implements PreparationApi {
 	}
 
 	@Override
+	@Transactional
+	public void relabel(BoardSource source, UUID sourceId, String label) {
+		var now = Instant.now(clock);
+		var text = label.strip();
+		if (text.isEmpty() || text.length() > BoardOrderIntake.MAX_LABEL) {
+			throw new IllegalArgumentException("A label needs 1 to " + BoardOrderIntake.MAX_LABEL + " characters");
+		}
+		var relabelled = jdbc.sql("""
+				UPDATE preparation.board_order SET label = :label, version = version + 1, updated_at = :now
+				WHERE source = :source AND source_id = :sourceId AND label IS DISTINCT FROM :label
+				RETURNING id
+				""")
+			.param("label", text)
+			.param("now", utc(now))
+			.param("source", source.name())
+			.param("sourceId", sourceId)
+			.query(UUID.class)
+			.optional();
+		relabelled.ifPresent(id -> boardEvents.changed("ORDER_RELABELLED", id, null, now));
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public Optional<BoardOrderStatus> statusOf(BoardSource source, UUID sourceId) {
 		return store.find(source, sourceId).map(BoardStore.OrderRef::status);

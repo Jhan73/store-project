@@ -53,7 +53,7 @@ public class TicketService {
 		var id = Ids.newId();
 		var type = tableId == null ? TicketType.COUNTER : TicketType.TABLE;
 		if (tableId != null) {
-			requireActiveTable(tableId);
+			tickets.requireActiveTable(tableId);
 		}
 		var inserted = tickets.insert(id, type, tableId, customer, blankToNull(note), store.currency(), requireActor(), now);
 		if (!inserted) {
@@ -83,15 +83,6 @@ public class TicketService {
 		return new TicketView(ticket.id(), ticket.number(), ticket.type(), ticket.tableId(), ticket.tableName(),
 				ticket.counterName(), ticket.note(), ticket.status(), ticket.billRequested(),
 				TicketRules.total(lines, ticket.currency()), ticket.createdAt(), lines);
-	}
-
-	// FOR SHARE: a table cannot be deactivated between this check and the commit.
-	private void requireActiveTable(UUID tableId) {
-		var active = tickets.activeTableShared(tableId)
-			.orElseThrow(() -> new BusinessException(InstoreError.TABLE_NOT_FOUND, "Table not found"));
-		if (!active) {
-			throw new BusinessException(InstoreError.TABLE_INACTIVE, "Table " + tableId + " is deactivated");
-		}
 	}
 
 	private UUID requireActor() {

@@ -116,6 +116,53 @@ class PreparationIntakeIT {
 	}
 
 	@Test
+	void relabellingChangesTheLabelOfTheCardAndSignalsTheBoard() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 9");
+
+		assertThat(jdbc.sql("select label from preparation.board_order where id = ?")
+			.param(id)
+			.query(String.class)
+			.single()).isEqualTo("Table 9");
+		assertThat(events.stream(BoardChanged.class).map(BoardChanged::type)).containsExactly("ORDER_ADDED",
+				"ORDER_RELABELLED");
+	}
+
+	@Test
+	void relabellingToTheSameLabelChangesNothing() {
+		var intake = anOrder(aLine());
+		preparation.accept(intake);
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 4");
+
+		assertThat(events.stream(BoardChanged.class)).hasSize(1);
+	}
+
+	@Test
+	void relabellingACardThatIsNotThereDoesNothing() {
+		preparation.relabel(BoardSource.TICKET, UUID.randomUUID(), "Table 9");
+
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+		assertThat(events.stream(BoardChanged.class)).isEmpty();
+	}
+
+	@Test
+	void relabellingAFinishedCardStillWorks() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 9");
+
+		assertThat(jdbc.sql("select label from preparation.board_order where id = ?")
+			.param(id)
+			.query(String.class)
+			.single()).isEqualTo("Table 9");
+	}
+
+	@Test
 	void tryAddingLinesToALiveCardAddsThemAndSaysSo() {
 		var intake = anOrder(aLine());
 		var id = preparation.accept(intake);

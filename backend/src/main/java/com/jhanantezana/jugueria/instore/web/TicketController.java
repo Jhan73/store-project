@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
+import com.jhanantezana.jugueria.instore.internal.TicketPlacement;
 import com.jhanantezana.jugueria.instore.internal.TicketSending;
 import com.jhanantezana.jugueria.instore.internal.TicketService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
@@ -50,13 +51,16 @@ class TicketController {
 
 	private final TicketSending sending;
 
+	private final TicketPlacement placement;
+
 	private final CurrentActor currentActor;
 
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
-			CurrentActor currentActor) {
+			TicketPlacement placement, CurrentActor currentActor) {
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
+		this.placement = placement;
 		this.commands = commands;
 		this.currentActor = currentActor;
 	}
@@ -164,6 +168,21 @@ class TicketController {
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
 	TicketResponse send(@PathVariable UUID id) {
 		return TicketResponse.from(sending.send(id));
+	}
+
+	@PostMapping("/{id}/transfer")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.ticket-has-no-table",
+			"instore.table-not-found", "instore.table-inactive", "instore.table-occupied" })
+	TicketResponse transfer(@PathVariable UUID id, @Valid @RequestBody TransferTicketRequest request) {
+		return TicketResponse.from(placement.transfer(id, request.tableId()));
+	}
+
+	@PutMapping("/{id}/bill-requested")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
+	TicketResponse billRequested(@PathVariable UUID id, @Valid @RequestBody BillRequestedRequest request) {
+		return TicketResponse.from(placement.setBillRequested(id, request.requested()));
 	}
 
 	private static ResponseEntity<TicketResponse> created(TicketCommands.Outcome outcome) {

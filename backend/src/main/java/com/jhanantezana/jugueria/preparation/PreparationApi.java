@@ -51,6 +51,12 @@ public interface PreparationApi {
 	 */
 	void cancel(BoardSource source, UUID sourceId);
 
+	/**
+	 * Changes the label of the card the source feeds (the table a ticket moved to), whatever its status. A source
+	 * with no card, or a card that already has the label, is left alone.
+	 */
+	void relabel(BoardSource source, UUID sourceId, String label);
+
 	/** The card's status, or empty when the source never reached the board. */
 	Optional<BoardOrderStatus> statusOf(BoardSource source, UUID sourceId);
 
