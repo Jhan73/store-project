@@ -214,6 +214,21 @@ class PreparationVoidAndCancelIT {
 	}
 
 	@Test
+	void voidingAnUnknownLineOnAClosedCardIsLineNotFound() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, order, "CANCELLED");
+
+		assertThatThrownBy(() -> preparation.voidLine(intake.source(), intake.sourceId(), UUID.randomUUID(),
+				VoidMode.PENDING_ONLY)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_NOT_FOUND));
+		PreparationTables.forceStatus(jdbc, order, "HANDED_OVER");
+		assertThatThrownBy(() -> preparation.voidLine(intake.source(), intake.sourceId(), UUID.randomUUID(),
+				VoidMode.PENDING_ONLY)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_NOT_FOUND));
+	}
+
+	@Test
 	void voidingAnUnknownLineOrOrderIsNotFound() {
 		var intake = anOrder(aLine());
 		preparation.accept(intake);

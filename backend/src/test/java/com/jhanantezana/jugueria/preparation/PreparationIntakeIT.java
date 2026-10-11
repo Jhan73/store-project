@@ -172,6 +172,17 @@ class PreparationIntakeIT {
 	}
 
 	@Test
+	void addingNoLinesIsANoOpEvenOnAClosedCard() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		preparation.addLines(intake.source(), intake.sourceId(), List.of());
+
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(1);
+	}
+
+	@Test
 	void aSendMixingKnownAndNewLinesIsStillRejectedOnAHandedOverCard() {
 		var known = aLine();
 		var intake = anOrder(known);

@@ -281,6 +281,7 @@ class PreparationRaceIT {
 		}
 	}
 
+	// Timing decides which side wins; BoardCommandsIT holds the deterministic guard for this rule.
 	@Test
 	void addingALineAndReadyingTheWholeOrderNeverReadiesTheLineAddedMeanwhile() throws Exception {
 		for (var round = 0; round < ROUNDS; round++) {
