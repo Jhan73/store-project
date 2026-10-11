@@ -19,11 +19,7 @@ import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Ids;
 
-/**
- * Sends a ticket's unsent lines to the board. The board card is the ticket's current round: lines join it while it is
- * live, and once it was handed over or cancelled the next send opens a new round with a card of its own, so each card
- * is accepted once and each line is on exactly one card.
- */
+/** Lines join the ticket's live card; once it is handed over or cancelled the next send opens a new round. */
 @Service
 public class TicketSending {
 
@@ -49,7 +45,7 @@ public class TicketSending {
 		this.clock = clock;
 	}
 
-	/** Sending with nothing unsent changes nothing, so a retry of a send that already succeeded is harmless. */
+	/** Nothing unsent is a no-op, so a retry of a send that already succeeded is harmless. */
 	@Transactional
 	public TicketView send(UUID ticketId) {
 		var now = Instant.now(clock);
@@ -63,7 +59,7 @@ public class TicketSending {
 			source = ticket.id();
 			accept(ticket, source, 1, lines, now);
 		}
-		else if (!preparation.tryAddLines(BoardSource.TICKET, source, lines)) {
+		else if (!joinsCard(source, lines)) {
 			source = Ids.newId();
 			accept(ticket, source, ticket.boardRounds() + 1, lines, now);
 		}
@@ -71,6 +67,12 @@ public class TicketSending {
 		tickets.markSent(ticketId, lineIds, source, now);
 		events.publishEvent(new TicketLinesSent(ticketId, source, lineIds, currentActor.id(), currentActor.role(), now));
 		return ticketService.view(tickets.require(ticketId));
+	}
+
+	// A card the board no longer holds counts as closed: its lines were served long ago.
+	private boolean joinsCard(UUID source, List<BoardLineIntake> lines) {
+		return preparation.statusOf(BoardSource.TICKET, source).isPresent()
+				&& preparation.tryAddLines(BoardSource.TICKET, source, lines);
 	}
 
 	private void accept(Tickets.TicketRow ticket, UUID source, int round, List<BoardLineIntake> lines, Instant now) {

@@ -45,7 +45,9 @@ public class TicketLines {
 	public TicketView change(UUID ticketId, UUID lineId, LineDraft draft) {
 		var now = Instant.now(clock);
 		var ticket = tickets.lockOpen(ticketId, now);
-		tickets.requireLine(ticketId, lineId);
+		if (tickets.requireLine(ticketId, lineId).state() != TicketLineState.UNSENT) {
+			throw alreadySent(lineId);
+		}
 		if (!tickets.replaceUnsentLine(ticketId, lineId, price(draft, ticket.currency()), draft, now)) {
 			throw alreadySent(lineId);
 		}

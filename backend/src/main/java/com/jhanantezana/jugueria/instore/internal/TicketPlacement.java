@@ -44,10 +44,7 @@ public class TicketPlacement {
 		this.clock = clock;
 	}
 
-	/**
-	 * Moves a table ticket to a free table and relabels its cards on the board in the same transaction. Moving it to
-	 * the table it already has changes nothing, so a retry is harmless.
-	 */
+	/** Moves a table ticket and relabels its cards in one transaction; moving it to its own table is a no-op. */
 	@Transactional
 	public TicketView transfer(UUID ticketId, UUID tableId) {
 		var now = Instant.now(clock);

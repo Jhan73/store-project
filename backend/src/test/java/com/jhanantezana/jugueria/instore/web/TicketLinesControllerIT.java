@@ -214,6 +214,18 @@ class TicketLinesControllerIT {
 	}
 
 	@Test
+	void aSentLineIsReportedAsSentEvenWhenItsProductCannotBeSoldAnymore() {
+		var plain = InstoreTables.aProduct(jdbc);
+		var line = lineIdOf(addLine(line(plain, 1, null, false), Role.SERVER));
+		markSent(line);
+		jdbc.sql("update catalog.product set available = false where id = ?").param(plain).update();
+
+		var result = changeLine(line, line(plain, 2, null, false), Role.SERVER);
+
+		assertProblem(result, HttpStatus.UNPROCESSABLE_CONTENT, "instore.line-already-sent");
+	}
+
+	@Test
 	void deletesAnUnsentLine() {
 		var line = lineIdOf(addLine(line(juice.productId(), 1, null, false, juice.small()), Role.SERVER));
 

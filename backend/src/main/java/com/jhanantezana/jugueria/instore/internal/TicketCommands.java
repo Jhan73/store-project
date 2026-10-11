@@ -14,10 +14,7 @@ import com.jhanantezana.jugueria.shared.StoredResponse;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * The ticket commands that a retry could repeat: each registers its Idempotency-Key before doing anything else, so a
- * retry gets the first answer back instead of a second effect.
- */
+/** Commands a retry could repeat; each registers its Idempotency-Key before doing anything else. */
 @Service
 public class TicketCommands {
 

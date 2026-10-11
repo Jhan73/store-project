@@ -18,10 +18,7 @@ import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.store.ReasonType;
 import com.jhanantezana.jugueria.store.StoreApi;
 
-/**
- * Voiding a sent line. The ticket and the board's card change in one transaction, so a line can never be voided in
- * one and kept in the other.
- */
+/** The ticket line and the board card change in one transaction, so neither keeps a line the other voided. */
 @Service
 public class TicketVoids {
 
@@ -52,10 +49,7 @@ public class TicketVoids {
 		this.clock = clock;
 	}
 
-	/**
-	 * Voiding a line that is already voided changes nothing, whoever asks and for whatever reason, so a retry
-	 * after the card was cancelled or handed over is a success rather than an error.
-	 */
+	/** A line that is already voided is a no-op, so a retry after the card closed still succeeds. */
 	@Transactional
 	public TicketView voidLine(UUID ticketId, UUID lineId, String reasonCode, @Nullable String note) {
 		var now = Instant.now(clock);

@@ -232,6 +232,23 @@ class TicketSendIT {
 	}
 
 	@Test
+	void afterTheCardIsGoneFromTheBoardTheNextSendOpensANewRound() {
+		addLine(juice.small(), 1, null, false);
+		send(Role.SERVER);
+		PreparationTables.clean(jdbc);
+		var second = addLine(juice.large(), 1, null, false);
+
+		var result = send(Role.SERVER);
+
+		assertThat(result).hasStatusOk();
+		assertThat(PreparationTables.count(jdbc, "board_order")).isEqualTo(1);
+		assertThat(jdbc.sql("select source_line_id from preparation.board_line").query(UUID.class).single())
+			.isEqualTo(second);
+		assertThat(jdbc.sql("select short_number from preparation.board_order").query(String.class).single())
+			.isEqualTo("T" + numberOf(ticket) + "-2");
+	}
+
+	@Test
 	void roundsKeepCountingAcrossHandovers() {
 		for (var round = 1; round <= 3; round++) {
 			addLine(juice.small(), 1, null, false);

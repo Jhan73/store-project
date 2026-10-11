@@ -20,7 +20,7 @@ CREATE TABLE instore.ticket (
     updated_at       timestamptz   NOT NULL,
     version          bigint        NOT NULL DEFAULT 0,
     CONSTRAINT ticket_type_check CHECK (type IN ('TABLE', 'COUNTER')),
-    CONSTRAINT ticket_status_check CHECK (status IN ('OPEN', 'CLOSED', 'MERGED')),
+    CONSTRAINT ticket_status_check CHECK (status IN ('OPEN', 'CLOSED')),
     CONSTRAINT ticket_place_check CHECK (
         (type = 'TABLE' AND table_id IS NOT NULL AND counter_name IS NULL)
         OR (type = 'COUNTER' AND table_id IS NULL AND counter_name IS NOT NULL)),
@@ -59,9 +59,9 @@ CREATE TABLE instore.ticket_line (
     updated_at           timestamptz   NOT NULL,
     version              bigint        NOT NULL DEFAULT 0,
     CONSTRAINT ticket_line_quantity_check CHECK (quantity BETWEEN 1 AND 99),
-    CONSTRAINT ticket_line_state_check CHECK (state IN ('UNSENT', 'SENT', 'VOIDED', 'COMPED')),
+    CONSTRAINT ticket_line_state_check CHECK (state IN ('UNSENT', 'SENT', 'VOIDED')),
     CONSTRAINT ticket_line_sent_check CHECK (state = 'UNSENT' OR board_source_id IS NOT NULL),
-    CONSTRAINT ticket_line_waste_check CHECK (NOT waste OR state IN ('VOIDED', 'COMPED'))
+    CONSTRAINT ticket_line_waste_check CHECK (NOT waste OR state = 'VOIDED')
 );
 
 CREATE INDEX ticket_line_ticket_idx ON instore.ticket_line (ticket_id, position);

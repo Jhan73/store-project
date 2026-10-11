@@ -71,10 +71,7 @@ class Tickets {
 		return find(id).orElseThrow(() -> new BusinessException(InstoreError.TICKET_NOT_FOUND, "Ticket not found"));
 	}
 
-	/**
-	 * Takes the ticket's row, the lock every command on a ticket starts with: later statements see everything
-	 * committed before it. A ticket that is not open is rejected.
-	 */
+	/** The lock every ticket command starts with; a ticket that is not open is rejected. */
 	TicketRow lockOpen(UUID id, Instant now) {
 		var locked = jdbc.sql("""
 				UPDATE instore.ticket SET version = version + 1, updated_at = :now WHERE id = :id AND status = 'OPEN'
@@ -110,7 +107,7 @@ class Tickets {
 	record TableRef(String name, boolean active) {
 	}
 
-	/** The table's name; the table cannot be deactivated until this transaction ends. */
+	/** The table's name; it cannot be deactivated until this transaction ends. */
 	String requireActiveTable(UUID tableId) {
 		var table = jdbc.sql("SELECT name, active FROM instore.dining_table WHERE id = :id FOR SHARE")
 			.param("id", tableId)
@@ -123,7 +120,7 @@ class Tickets {
 		return table.name();
 	}
 
-	/** Moves the ticket; the unique index on open tickets per table rejects a table that is taken. */
+	/** The unique index on open tickets per table rejects a table that is taken. */
 	void moveToTable(UUID ticketId, UUID tableId) {
 		jdbc.sql("UPDATE instore.ticket SET table_id = :table WHERE id = :id")
 			.param("table", tableId)
@@ -147,7 +144,7 @@ class Tickets {
 				""").param("id", ticketId).query(UUID.class).list();
 	}
 
-	/** Takes the table's row so no ticket can open on it, or move onto it, until this transaction ends. */
+	/** Blocks tickets opening or moving onto the table until this transaction ends. */
 	void lockTable(UUID tableId) {
 		jdbc.sql("SELECT 1 FROM instore.dining_table WHERE id = :id FOR UPDATE").param("id", tableId).query().listOfRows();
 	}
@@ -208,7 +205,7 @@ class Tickets {
 			.update();
 	}
 
-	/** The card a sent line lives on: its round's, which is not always the ticket's current one. */
+	/** The card a sent line lives on, which is not always the ticket's current one. */
 	UUID boardSourceOf(UUID lineId) {
 		return jdbc.sql("SELECT board_source_id FROM instore.ticket_line WHERE id = :id")
 			.param("id", lineId)
