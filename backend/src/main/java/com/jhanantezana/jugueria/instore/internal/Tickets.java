@@ -176,6 +176,35 @@ class Tickets {
 			.update();
 	}
 
+	/** The card a sent line lives on: its round's, which is not always the ticket's current one. */
+	UUID boardSourceOf(UUID lineId) {
+		return jdbc.sql("SELECT board_source_id FROM instore.ticket_line WHERE id = :id")
+			.param("id", lineId)
+			.query(UUID.class)
+			.single();
+	}
+
+	void markVoided(UUID ticketId, UUID lineId, boolean waste, String reasonCode, @Nullable String note, UUID actor,
+			Instant now) {
+		var voided = jdbc.sql("""
+				UPDATE instore.ticket_line
+				SET state = 'VOIDED', waste = :waste, void_reason_code = :reason, void_note = :note, voided_by = :actor,
+					voided_at = :now, version = version + 1, updated_at = :now
+				WHERE id = :id AND ticket_id = :ticket AND state = 'SENT'
+				""")
+			.param("waste", waste)
+			.param("reason", reasonCode)
+			.param("note", note)
+			.param("actor", actor)
+			.param("now", utc(now))
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.update();
+		if (voided != 1) {
+			throw new IllegalStateException("Line " + lineId + " changed state while its ticket was locked");
+		}
+	}
+
 	Optional<TicketLineView> line(UUID ticketId, UUID lineId) {
 		return jdbc.sql("SELECT " + LINE_COLUMNS + " FROM instore.ticket_line WHERE id = :id AND ticket_id = :ticket")
 			.param("id", lineId)
