@@ -425,9 +425,65 @@
         <source>Debe quedar al menos un administrador activo.</source>
       </segment>
     </unit>
-    <unit id="error.instore.table-name-already-used">
+    <unit id="error.instore.invalid-reason">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:54</note>
+      </notes>
+      <segment>
+        <source>El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.invalid-ticket">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+      </notes>
+      <segment>
+        <source>La cuenta debe ser de una mesa o del mostrador con el nombre del cliente.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.line-already-sent">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+      </notes>
+      <segment>
+        <source>La línea ya se envió a cocina. Anúlala y agrega una nueva.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.line-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+      </notes>
+      <segment>
+        <source>La línea no existe en esta cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.line-not-sent">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+      </notes>
+      <segment>
+        <source>La línea aún no se envió a cocina. Elimínala en lugar de anularla.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-has-open-ticket">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+      </notes>
+      <segment>
+        <source>La mesa tiene una cuenta abierta y no se puede desactivar.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-inactive">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+      </notes>
+      <segment>
+        <source>La mesa está desactivada.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-name-already-used">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
       </notes>
       <segment>
         <source>Ya existe una mesa con ese nombre.</source>
@@ -435,15 +491,47 @@
     </unit>
     <unit id="error.instore.table-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+        <note category="location">src/app/core/errors/error-messages.ts:62</note>
       </notes>
       <segment>
         <source>La mesa no existe.</source>
       </segment>
     </unit>
+    <unit id="error.instore.table-occupied">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:63</note>
+      </notes>
+      <segment>
+        <source>La mesa ya tiene una cuenta abierta.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.ticket-closed">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+      </notes>
+      <segment>
+        <source>La cuenta ya está cerrada.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.ticket-has-no-table">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:65</note>
+      </notes>
+      <segment>
+        <source>Solo se pueden mover las cuentas de una mesa.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.ticket-not-found">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:66</note>
+      </notes>
+      <segment>
+        <source>La cuenta no existe.</source>
+      </segment>
+    </unit>
     <unit id="error.inventory.insufficient-stock">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+        <note category="location">src/app/core/errors/error-messages.ts:67</note>
       </notes>
       <segment>
         <source>No hay suficiente stock disponible.</source>
@@ -451,7 +539,7 @@
     </unit>
     <unit id="error.inventory.invalid-quantity">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+        <note category="location">src/app/core/errors/error-messages.ts:68</note>
       </notes>
       <segment>
         <source>La cantidad no es válida.</source>
@@ -459,7 +547,7 @@
     </unit>
     <unit id="error.inventory.invalid-reason">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+        <note category="location">src/app/core/errors/error-messages.ts:69</note>
       </notes>
       <segment>
         <source>El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.</source>
@@ -467,7 +555,7 @@
     </unit>
     <unit id="error.inventory.product-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+        <note category="location">src/app/core/errors/error-messages.ts:70</note>
       </notes>
       <segment>
         <source>El producto no existe.</source>
@@ -475,7 +563,7 @@
     </unit>
     <unit id="error.inventory.product-not-tracked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -483,7 +571,7 @@
     </unit>
     <unit id="error.inventory.reservation-not-active">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
       </notes>
       <segment>
         <source>La reserva de stock ya venció o fue liberada.</source>
@@ -491,7 +579,7 @@
     </unit>
     <unit id="error.inventory.stock-item-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:62</note>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -499,7 +587,7 @@
     </unit>
     <unit id="error.inventory.stock-reserved">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:63</note>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
       </notes>
       <segment>
         <source>Hay unidades reservadas por pedidos en curso. Espera a que se confirmen o venzan para quitar el control de stock.</source>
@@ -507,7 +595,7 @@
     </unit>
     <unit id="error.preparation.line-already-flagged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
       </notes>
       <segment>
         <source>Esa línea ya está marcada como agotada.</source>
@@ -515,7 +603,7 @@
     </unit>
     <unit id="error.preparation.line-already-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:65</note>
+        <note category="location">src/app/core/errors/error-messages.ts:76</note>
       </notes>
       <segment>
         <source>La línea ya está lista. Pide a un cajero que la anule.</source>
@@ -523,7 +611,7 @@
     </unit>
     <unit id="error.preparation.line-flagged-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:66</note>
+        <note category="location">src/app/core/errors/error-messages.ts:77</note>
       </notes>
       <segment>
         <source>Hay una línea agotada sin resolver. Anúlala o sustitúyela antes de continuar.</source>
@@ -531,7 +619,7 @@
     </unit>
     <unit id="error.preparation.line-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:67</note>
+        <note category="location">src/app/core/errors/error-messages.ts:78</note>
       </notes>
       <segment>
         <source>La línea no existe.</source>
@@ -539,7 +627,7 @@
     </unit>
     <unit id="error.preparation.line-not-pending">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:68</note>
+        <note category="location">src/app/core/errors/error-messages.ts:79</note>
       </notes>
       <segment>
         <source>La línea ya no está pendiente.</source>
@@ -547,7 +635,7 @@
     </unit>
     <unit id="error.preparation.lines-not-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:69</note>
+        <note category="location">src/app/core/errors/error-messages.ts:80</note>
       </notes>
       <segment>
         <source>Llegaron líneas nuevas que aún no confirmas. Confírmalas antes de marcar el pedido como listo.</source>
@@ -555,7 +643,7 @@
     </unit>
     <unit id="error.preparation.marker-already-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:70</note>
+        <note category="location">src/app/core/errors/error-messages.ts:81</note>
       </notes>
       <segment>
         <source>Otra persona ya confirmó este aviso.</source>
@@ -563,7 +651,7 @@
     </unit>
     <unit id="error.preparation.marker-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+        <note category="location">src/app/core/errors/error-messages.ts:82</note>
       </notes>
       <segment>
         <source>El aviso no existe.</source>
@@ -571,7 +659,7 @@
     </unit>
     <unit id="error.preparation.order-already-started">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+        <note category="location">src/app/core/errors/error-messages.ts:83</note>
       </notes>
       <segment>
         <source>La preparación del pedido ya comenzó.</source>
@@ -579,7 +667,7 @@
     </unit>
     <unit id="error.preparation.order-cancelled">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+        <note category="location">src/app/core/errors/error-messages.ts:84</note>
       </notes>
       <segment>
         <source>El pedido fue cancelado.</source>
@@ -587,7 +675,7 @@
     </unit>
     <unit id="error.preparation.order-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+        <note category="location">src/app/core/errors/error-messages.ts:85</note>
       </notes>
       <segment>
         <source>El pedido ya fue entregado y no admite cambios.</source>
@@ -595,7 +683,7 @@
     </unit>
     <unit id="error.preparation.order-not-completed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+        <note category="location">src/app/core/errors/error-messages.ts:86</note>
       </notes>
       <segment>
         <source>El pedido aún no está terminado.</source>
@@ -603,7 +691,7 @@
     </unit>
     <unit id="error.preparation.order-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:76</note>
+        <note category="location">src/app/core/errors/error-messages.ts:87</note>
       </notes>
       <segment>
         <source>El pedido no existe en el tablero.</source>
@@ -611,7 +699,7 @@
     </unit>
     <unit id="error.preparation.order-not-preparing">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:77</note>
+        <note category="location">src/app/core/errors/error-messages.ts:88</note>
       </notes>
       <segment>
         <source>El pedido no está en preparación.</source>
@@ -619,7 +707,7 @@
     </unit>
     <unit id="error.preparation.order-not-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:78</note>
+        <note category="location">src/app/core/errors/error-messages.ts:89</note>
       </notes>
       <segment>
         <source>El pedido no está listo para entregar.</source>
@@ -627,7 +715,7 @@
     </unit>
     <unit id="error.preparation.recall-window-expired">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:79</note>
+        <note category="location">src/app/core/errors/error-messages.ts:90</note>
       </notes>
       <segment>
         <source>Pasó demasiado tiempo para reabrir este pedido.</source>
@@ -635,7 +723,7 @@
     </unit>
     <unit id="error.store.delivery-zone-currency-mismatch">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:80</note>
+        <note category="location">src/app/core/errors/error-messages.ts:91</note>
       </notes>
       <segment>
         <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
@@ -643,7 +731,7 @@
     </unit>
     <unit id="error.store.delivery-zone-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:81</note>
+        <note category="location">src/app/core/errors/error-messages.ts:92</note>
       </notes>
       <segment>
         <source>Ya existe una zona de reparto con ese nombre.</source>
@@ -651,7 +739,7 @@
     </unit>
     <unit id="error.store.delivery-zone-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:82</note>
+        <note category="location">src/app/core/errors/error-messages.ts:93</note>
       </notes>
       <segment>
         <source>La zona de reparto no existe.</source>
@@ -659,7 +747,7 @@
     </unit>
     <unit id="error.store.invalid-board-thresholds">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:83</note>
+        <note category="location">src/app/core/errors/error-messages.ts:94</note>
       </notes>
       <segment>
         <source>Los tiempos del tablero no son válidos.</source>
@@ -667,7 +755,7 @@
     </unit>
     <unit id="error.store.invalid-delivery-zone">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:84</note>
+        <note category="location">src/app/core/errors/error-messages.ts:95</note>
       </notes>
       <segment>
         <source>Los datos de la zona de reparto no son válidos.</source>
@@ -675,7 +763,7 @@
     </unit>
     <unit id="error.store.invalid-opening-hours">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:85</note>
+        <note category="location">src/app/core/errors/error-messages.ts:96</note>
       </notes>
       <segment>
         <source>El horario de atención no es válido.</source>
@@ -683,7 +771,7 @@
     </unit>
     <unit id="error.store.invalid-settings-value">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:86</note>
+        <note category="location">src/app/core/errors/error-messages.ts:97</note>
       </notes>
       <segment>
         <source>Uno de los valores de la configuración no es válido.</source>
@@ -691,7 +779,7 @@
     </unit>
     <unit id="error.store.reason-code-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:87</note>
+        <note category="location">src/app/core/errors/error-messages.ts:98</note>
       </notes>
       <segment>
         <source>Ya existe un motivo con ese código.</source>
@@ -699,7 +787,7 @@
     </unit>
     <unit id="error.store.reason-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:88</note>
+        <note category="location">src/app/core/errors/error-messages.ts:99</note>
       </notes>
       <segment>
         <source>El motivo no existe.</source>
@@ -707,7 +795,7 @@
     </unit>
     <unit id="error.generic">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:91</note>
+        <note category="location">src/app/core/errors/error-messages.ts:102</note>
       </notes>
       <segment>
         <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
@@ -715,7 +803,7 @@
     </unit>
     <unit id="error.status.0">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:94</note>
+        <note category="location">src/app/core/errors/error-messages.ts:105</note>
       </notes>
       <segment>
         <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
@@ -723,7 +811,7 @@
     </unit>
     <unit id="error.status.400">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+        <note category="location">src/app/core/errors/error-messages.ts:106</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -731,7 +819,7 @@
     </unit>
     <unit id="error.status.401">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:96</note>
+        <note category="location">src/app/core/errors/error-messages.ts:107</note>
       </notes>
       <segment>
         <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
@@ -739,7 +827,7 @@
     </unit>
     <unit id="error.status.403">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:97</note>
+        <note category="location">src/app/core/errors/error-messages.ts:108</note>
       </notes>
       <segment>
         <source>No tienes permiso para realizar esta acción.</source>
@@ -747,7 +835,7 @@
     </unit>
     <unit id="error.status.404">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:98</note>
+        <note category="location">src/app/core/errors/error-messages.ts:109</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -755,7 +843,7 @@
     </unit>
     <unit id="error.status.409">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:99</note>
+        <note category="location">src/app/core/errors/error-messages.ts:110</note>
       </notes>
       <segment>
         <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
@@ -763,7 +851,7 @@
     </unit>
     <unit id="error.status.422">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:100</note>
+        <note category="location">src/app/core/errors/error-messages.ts:111</note>
       </notes>
       <segment>
         <source>Los datos no cumplen las reglas de la operación.</source>
@@ -771,7 +859,7 @@
     </unit>
     <unit id="error.status.429">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:101</note>
+        <note category="location">src/app/core/errors/error-messages.ts:112</note>
       </notes>
       <segment>
         <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
@@ -779,7 +867,7 @@
     </unit>
     <unit id="error.status.500">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:102</note>
+        <note category="location">src/app/core/errors/error-messages.ts:113</note>
       </notes>
       <segment>
         <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
@@ -787,7 +875,7 @@
     </unit>
     <unit id="error.supportCode">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:122</note>
+        <note category="location">src/app/core/errors/error-messages.ts:133</note>
       </notes>
       <segment>
         <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>

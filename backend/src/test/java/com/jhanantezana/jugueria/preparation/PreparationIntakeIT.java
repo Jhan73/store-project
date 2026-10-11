@@ -116,6 +116,107 @@ class PreparationIntakeIT {
 	}
 
 	@Test
+	void relabellingChangesTheLabelOfTheCardAndSignalsTheBoard() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 9");
+
+		assertThat(jdbc.sql("select label from preparation.board_order where id = ?")
+			.param(id)
+			.query(String.class)
+			.single()).isEqualTo("Table 9");
+		assertThat(events.stream(BoardChanged.class).map(BoardChanged::type)).containsExactly("ORDER_ADDED",
+				"ORDER_RELABELLED");
+	}
+
+	@Test
+	void relabellingToTheSameLabelChangesNothing() {
+		var intake = anOrder(aLine());
+		preparation.accept(intake);
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 4");
+
+		assertThat(events.stream(BoardChanged.class)).hasSize(1);
+	}
+
+	@Test
+	void relabellingACardThatIsNotThereDoesNothing() {
+		preparation.relabel(BoardSource.TICKET, UUID.randomUUID(), "Table 9");
+
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+		assertThat(events.stream(BoardChanged.class)).isEmpty();
+	}
+
+	@Test
+	void relabellingAFinishedCardStillWorks() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		preparation.relabel(intake.source(), intake.sourceId(), "Table 9");
+
+		assertThat(jdbc.sql("select label from preparation.board_order where id = ?")
+			.param(id)
+			.query(String.class)
+			.single()).isEqualTo("Table 9");
+	}
+
+	@Test
+	void tryAddingLinesToALiveCardAddsThemAndSaysSo() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "READY");
+		var added = aLine();
+
+		var accepted = preparation.tryAddLines(intake.source(), intake.sourceId(), List.of(added));
+
+		assertThat(accepted).isTrue();
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(2);
+		assertThat(PreparationTables.orderStatus(jdbc, id)).isEqualTo("PREPARING");
+		assertThat(PreparationTables.markers(jdbc, id)).containsExactly("NEW*", "MODIFIED*");
+	}
+
+	@Test
+	void tryAddingLinesToAHandedOverCardAddsNothingAndSaysSo() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		var accepted = preparation.tryAddLines(intake.source(), intake.sourceId(), List.of(aLine()));
+
+		assertThat(accepted).isFalse();
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(1);
+	}
+
+	@Test
+	void tryAddingLinesToACancelledCardAddsNothingAndSaysSo() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "CANCELLED");
+
+		assertThat(preparation.tryAddLines(intake.source(), intake.sourceId(), List.of(aLine()))).isFalse();
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(1);
+	}
+
+	@Test
+	void tryAddingLinesAlreadyOnAClosedCardIsAcceptedWithoutChangingIt() {
+		var existing = aLine();
+		var intake = anOrder(existing);
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		assertThat(preparation.tryAddLines(intake.source(), intake.sourceId(), List.of(existing))).isTrue();
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(1);
+	}
+
+	@Test
+	void tryAddingLinesToASourceThatIsNotOnTheBoardAddsNothingAndSaysSo() {
+		assertThat(preparation.tryAddLines(BoardSource.TICKET, UUID.randomUUID(), List.of(aLine()))).isFalse();
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+	}
+
+	@Test
 	void rejectsAddingLinesToAnOrderThatIsNotOnTheBoard() {
 		assertThatThrownBy(() -> preparation.addLines(BoardSource.TICKET, UUID.randomUUID(), List.of(aLine())))
 			.isInstanceOfSatisfying(BusinessException.class,

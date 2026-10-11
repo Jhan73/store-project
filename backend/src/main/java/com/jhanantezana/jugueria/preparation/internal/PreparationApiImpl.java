@@ -1,5 +1,6 @@
 package com.jhanantezana.jugueria.preparation.internal;
 
+import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.HANDED_OVER;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.PREPARING;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.READY;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.WAITING;
@@ -71,17 +72,33 @@ class PreparationApiImpl implements PreparationApi {
 	@Override
 	@Transactional
 	public void addLines(BoardSource source, UUID sourceId, List<BoardLineIntake> lines) {
+		add(source, sourceId, lines, true);
+	}
+
+	@Override
+	@Transactional
+	public boolean tryAddLines(BoardSource source, UUID sourceId, List<BoardLineIntake> lines) {
+		return add(source, sourceId, lines, false);
+	}
+
+	private boolean add(BoardSource source, UUID sourceId, List<BoardLineIntake> lines, boolean failWhenClosed) {
 		var now = Instant.now(clock);
-		var order = requireOrder(source, sourceId);
+		var order = failWhenClosed ? requireOrder(source, sourceId) : store.find(source, sourceId).orElse(null);
+		if (order == null) {
+			return false;
+		}
 		var sourceLines = lines.stream().map(BoardLineIntake::sourceLineId).collect(Collectors.toSet());
 		if (store.allPresent(order.id(), sourceLines)) {
-			return;
+			return true;
 		}
 		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY).orElse(null);
 		if (locked == null) {
 			// A redelivery that lost to a later status change still has nothing left to do.
 			if (store.allPresent(order.id(), sourceLines)) {
-				return;
+				return true;
+			}
+			if (!failWhenClosed) {
+				return false;
 			}
 			throw store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED);
 		}
@@ -96,7 +113,7 @@ class PreparationApiImpl implements PreparationApi {
 			}
 		}
 		if (added == 0) {
-			return;
+			return true;
 		}
 		if (locked.status() == READY) {
 			jdbc.sql("""
@@ -106,53 +123,61 @@ class PreparationApiImpl implements PreparationApi {
 			events.publishEvent(new OrderRecalled(order.id(), source, sourceId, now));
 		}
 		boardEvents.changed("LINES_ADDED", order.id(), null, now);
+		return true;
 	}
 
 	@Override
 	@Transactional
-	public void voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode) {
+	public boolean voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode) {
 		var now = Instant.now(clock);
 		var order = requireOrder(source, sourceId);
 		var line = jdbc.sql("""
-				SELECT id, state FROM preparation.board_line WHERE board_order_id = :order AND source_line_id = :sourceLine
+				SELECT id, state, waste FROM preparation.board_line
+				WHERE board_order_id = :order AND source_line_id = :sourceLine
 				""")
 			.param("order", order.id())
 			.param("sourceLine", sourceLineId)
-			.query((rs, row) -> new LineRef(rs.getObject("id", UUID.class), rs.getString("state")))
+			.query((rs, row) -> new LineRef(rs.getObject("id", UUID.class), rs.getString("state"), rs.getBoolean("waste")))
 			.optional()
 			.orElseThrow(() -> new BusinessException(PreparationError.LINE_NOT_FOUND, "The board line does not exist"));
 		if ("VOIDED".equals(line.state())) {
-			return;
+			return line.waste();
 		}
-		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY).orElse(null);
+		// A handed-over line can still be rejected by the customer, so only a cancelled card is closed to voids.
+		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY, HANDED_OVER).orElse(null);
 		if (locked == null) {
 			// A retry of the void that closed the card finds it closed.
-			if (isVoided(line.id())) {
-				return;
+			var finished = lineRef(line.id());
+			if ("VOIDED".equals(finished.state())) {
+				return finished.waste();
 			}
 			throw store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED);
 		}
-		var voided = jdbc.sql("""
+		var waste = jdbc.sql("""
 				UPDATE preparation.board_line
 				SET state = 'VOIDED', waste = (state = 'READY'), version = version + 1, updated_at = :now,
 					resolution = CASE WHEN flagged_unavailable THEN 'VOIDED' END
 				WHERE id = :id AND (state = 'PENDING' OR (:allowReady AND state = 'READY'))
+				RETURNING waste
 				""")
 			.param("now", utc(now))
 			.param("id", line.id())
 			.param("allowReady", mode == VoidMode.ALLOW_READY_AS_WASTE)
-			.update();
-		if (voided == 0) {
-			var current = lineState(line.id());
-			if ("VOIDED".equals(current)) {
-				return;
+			.query(Boolean.class)
+			.optional();
+		if (waste.isEmpty()) {
+			var current = lineRef(line.id());
+			if ("VOIDED".equals(current.state())) {
+				return current.waste();
 			}
-			var error = "READY".equals(current) ? PreparationError.LINE_ALREADY_READY : PreparationError.LINE_NOT_PENDING;
-			throw new BusinessException(error, "Board line " + line.id() + " is " + current);
+			var error = "READY".equals(current.state()) ? PreparationError.LINE_ALREADY_READY
+					: PreparationError.LINE_NOT_PENDING;
+			throw new BusinessException(error, "Board line " + line.id() + " is " + current.state());
 		}
 		store.insertMarker(order.id(), line.id(), MarkerKind.VOID, now);
 		boardEvents.changed("LINE_VOIDED", order.id(), line.id(), now);
 		settle(order.id(), source, sourceId, locked.status(), now);
+		return waste.get();
 	}
 
 	@Override
@@ -183,20 +208,38 @@ class PreparationApiImpl implements PreparationApi {
 	}
 
 	@Override
+	@Transactional
+	public void relabel(BoardSource source, UUID sourceId, String label) {
+		var now = Instant.now(clock);
+		var text = label.strip();
+		if (text.isEmpty() || text.length() > BoardOrderIntake.MAX_LABEL) {
+			throw new IllegalArgumentException("A label needs 1 to " + BoardOrderIntake.MAX_LABEL + " characters");
+		}
+		var relabelled = jdbc.sql("""
+				UPDATE preparation.board_order SET label = :label, version = version + 1, updated_at = :now
+				WHERE source = :source AND source_id = :sourceId AND label IS DISTINCT FROM :label
+				RETURNING id
+				""")
+			.param("label", text)
+			.param("now", utc(now))
+			.param("source", source.name())
+			.param("sourceId", sourceId)
+			.query(UUID.class)
+			.optional();
+		relabelled.ifPresent(id -> boardEvents.changed("ORDER_RELABELLED", id, null, now));
+	}
+
+	@Override
 	@Transactional(readOnly = true)
 	public Optional<BoardOrderStatus> statusOf(BoardSource source, UUID sourceId) {
 		return store.find(source, sourceId).map(BoardStore.OrderRef::status);
 	}
 
-	private String lineState(UUID lineId) {
-		return jdbc.sql("SELECT state FROM preparation.board_line WHERE id = :id")
+	private LineRef lineRef(UUID lineId) {
+		return jdbc.sql("SELECT id, state, waste FROM preparation.board_line WHERE id = :id")
 			.param("id", lineId)
-			.query(String.class)
+			.query((rs, row) -> new LineRef(rs.getObject("id", UUID.class), rs.getString("state"), rs.getBoolean("waste")))
 			.single();
-	}
-
-	private boolean isVoided(UUID lineId) {
-		return "VOIDED".equals(lineState(lineId));
 	}
 
 	// With the card's row lock held: no live line cancels the card, no pending line finishes it.
@@ -231,7 +274,7 @@ class PreparationApiImpl implements PreparationApi {
 					"The " + source + " has no card on the board"));
 	}
 
-	private record LineRef(UUID id, String state) {
+	private record LineRef(UUID id, String state, boolean waste) {
 	}
 
 }

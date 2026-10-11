@@ -9,12 +9,12 @@ import com.jhanantezana.jugueria.instore.TableStatus;
 import com.jhanantezana.jugueria.instore.internal.TableGridEntry;
 
 record TableGridResponse(UUID id, String name, @Nullable String area, int displayOrder, TableStatus status,
-		@Nullable Instant ticketOpenedAt) {
+		@Nullable Instant ticketOpenedAt, @Nullable UUID ticketId) {
 
 	static TableGridResponse from(TableGridEntry entry) {
 		var table = entry.table();
 		return new TableGridResponse(table.getId(), table.getName(), table.getArea(), table.getDisplayOrder(),
-				entry.status(), entry.ticketOpenedAt());
+				entry.status(), entry.ticketOpenedAt(), entry.ticketId());
 	}
 
 }

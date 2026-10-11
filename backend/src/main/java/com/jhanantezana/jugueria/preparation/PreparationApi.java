@@ -29,18 +29,34 @@ public interface PreparationApi {
 	void addLines(BoardSource source, UUID sourceId, List<BoardLineIntake> lines);
 
 	/**
+	 * Like {@link #addLines}, but a card that is handed over, cancelled or gone answers {@code false} instead of failing, so
+	 * the caller decides on the card's state and adds the lines in one atomic step. Answers {@code true} when the lines
+	 * are on the card afterwards, including when they already were.
+	 */
+	boolean tryAddLines(BoardSource source, UUID sourceId, List<BoardLineIntake> lines);
+
+	/**
 	 * Voids a line, labelling it VOID. A finished line is voided only with {@link VoidMode#ALLOW_READY_AS_WASTE} and
 	 * then counts as waste; otherwise the void is rejected with {@code preparation.line-already-ready}. Voiding a line
 	 * that is already voided does nothing. When no line is left to prepare the card is cancelled, and when the voided
-	 * line was the last one still pending the card becomes ready.
+	 * line was the last one still pending the card becomes ready. A handed-over card still accepts a waste void, since
+	 * the customer can reject what was handed over; only a cancelled card is closed.
+	 *
+	 * @return whether the line counts as waste, also when it was voided before
 	 */
-	void voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode);
+	boolean voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode);
 
 	/**
 	 * Cancels a card nobody has started. Cancelling a card that is already cancelled does nothing; one that staff
 	 * started is {@code preparation.order-already-started}.
 	 */
 	void cancel(BoardSource source, UUID sourceId);
+
+	/**
+	 * Changes the label of the card the source feeds (the table a ticket moved to), whatever its status. A source
+	 * with no card, or a card that already has the label, is left alone.
+	 */
+	void relabel(BoardSource source, UUID sourceId, String label);
 
 	/** The card's status, or empty when the source never reached the board. */
 	Optional<BoardOrderStatus> statusOf(BoardSource source, UUID sourceId);

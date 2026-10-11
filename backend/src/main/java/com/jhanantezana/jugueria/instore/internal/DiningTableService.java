@@ -30,9 +30,12 @@ public class DiningTableService {
 
 	private final Clock clock;
 
+	private final Tickets tickets;
+
 	DiningTableService(DiningTableRepository tables, ApplicationEventPublisher events, CurrentActor currentActor,
-			Clock clock) {
+			Clock clock, Tickets tickets) {
 		this.tables = tables;
+		this.tickets = tickets;
 		this.events = events;
 		this.currentActor = currentActor;
 		this.clock = clock;
@@ -81,6 +84,11 @@ public class DiningTableService {
 		var table = findOrThrow(id);
 		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
 		if (table.isActive()) {
+			// The lock comes first: a ticket opening on this table commits before the check below, or waits for us.
+			tickets.lockTable(id);
+			if (tickets.hasOpenTicketOn(id)) {
+				throw new BusinessException(InstoreError.TABLE_HAS_OPEN_TICKET, "Table " + id + " has an open ticket");
+			}
 			var now = Instant.now(clock);
 			table.deactivate(now);
 			publishStatus(table, now);
