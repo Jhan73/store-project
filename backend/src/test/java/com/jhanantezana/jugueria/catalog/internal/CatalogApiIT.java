@@ -68,6 +68,14 @@ class CatalogApiIT {
 	}
 
 	@Test
+	void reportsTheStationThatPreparesTheProduct() {
+		var station = jdbc.sql("select id from catalog.station where default_station").query(UUID.class).single();
+		var product = product("Water", "3.00");
+
+		assertThat(catalog.priceSelection(product, List.of()).stationId()).isEqualTo(station);
+	}
+
+	@Test
 	void anOptionalGroupMayBeSkipped() {
 		var size = requiredSizeGroup();
 		var boosters = optionalBoostersGroup();

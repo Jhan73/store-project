@@ -93,7 +93,8 @@ class CatalogApiImpl implements CatalogApi {
 		for (var group : productGroups) {
 			group.requireSelectionCount(chosenPerGroup.getOrDefault(group.getId(), 0));
 		}
-		return new PricedSelection(product.getId(), product.getName(), total, List.copyOf(priced));
+		return new PricedSelection(product.getId(), product.getName(), category.get().getStationId(), total,
+				List.copyOf(priced));
 	}
 
 	private static BusinessException invalidSelection(String detail) {

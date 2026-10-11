@@ -105,6 +105,27 @@ class PreparationVoidAndCancelIT {
 	}
 
 	@Test
+	void voidingSaysWhetherTheLineCountedAsWasteAndSaysItAgainOnRetry() {
+		var ready = aLine();
+		var pending = aLine();
+		var intake = anOrder(ready, pending, aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, ready.sourceLineId()));
+
+		var readyWaste = preparation.voidLine(intake.source(), intake.sourceId(), ready.sourceLineId(),
+				VoidMode.ALLOW_READY_AS_WASTE);
+		var readyAgain = preparation.voidLine(intake.source(), intake.sourceId(), ready.sourceLineId(),
+				VoidMode.ALLOW_READY_AS_WASTE);
+		var pendingWaste = preparation.voidLine(intake.source(), intake.sourceId(), pending.sourceLineId(),
+				VoidMode.PENDING_ONLY);
+
+		assertThat(readyWaste).isTrue();
+		assertThat(readyAgain).isTrue();
+		assertThat(pendingWaste).isFalse();
+	}
+
+	@Test
 	void aVoidedPendingLineIsNotWaste() {
 		var first = aLine();
 		var intake = anOrder(first, aLine());
