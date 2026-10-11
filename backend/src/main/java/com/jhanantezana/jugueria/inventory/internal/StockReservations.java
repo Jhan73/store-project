@@ -75,8 +75,8 @@ class StockReservations {
 	}
 
 	/**
-	 * The references with a lapsed reservation, oldest first, skipping rows another task is working on. Runs outside
-	 * a transaction, so its row locks end with the statement.
+	 * The references with a lapsed reservation, oldest first. Runs in autocommit, so it only skips rows locked at
+	 * that instant; claimLapsed does the real claiming.
 	 */
 	Set<UUID> lapsedReferences(Instant now) {
 		return new LinkedHashSet<>(jdbc.sql("""

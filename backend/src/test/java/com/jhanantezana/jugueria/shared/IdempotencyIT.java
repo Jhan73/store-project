@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -129,10 +130,10 @@ class IdempotencyIT {
 			.single()
 			.toInstant();
 
-		// PostgreSQL keeps microseconds, so the stored moment can sit just before the nanosecond-precise bound.
-		var tolerance = Duration.ofSeconds(5);
-		assertThat(expiresAt).isBetween(before.plus(Duration.ofHours(2)).minus(tolerance),
-				Instant.now().plus(Duration.ofHours(2)).plus(tolerance));
+		// PostgreSQL stores microseconds, so the bounds are truncated to match.
+		var after = Instant.now().truncatedTo(ChronoUnit.MICROS);
+		assertThat(expiresAt).isBetween(before.truncatedTo(ChronoUnit.MICROS).plus(Duration.ofHours(2)),
+				after.plus(Duration.ofHours(2)));
 	}
 
 	@Test

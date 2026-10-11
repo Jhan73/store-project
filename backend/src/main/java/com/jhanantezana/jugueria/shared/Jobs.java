@@ -18,8 +18,9 @@ public final class Jobs {
 
 	/**
 	 * Runs {@code batch} until it claims fewer than {@link #BATCH_SIZE} rows or {@link #MAX_BATCHES_PER_RUN} batches
-	 * have run. Each call must be its own transaction (a call to a {@code @Transactional} bean method), so locks are
-	 * held for one batch only.
+	 * have run. Each call must be its own transaction (a {@code @Transactional} bean method), or must run each unit
+	 * in its own {@code @Transactional} bean call. Never call it inside an outer transaction, which would hold every
+	 * lock until commit.
 	 *
 	 * @return the total number of rows the batches claimed
 	 */
