@@ -11361,7 +11361,7 @@
           },
           "state" : {
             "type" : "string",
-            "enum" : [ "UNSENT", "SENT", "VOIDED", "COMPED" ]
+            "enum" : [ "UNSENT", "SENT", "VOIDED" ]
           },
           "unitPrice" : {
             "$ref" : "#/components/schemas/Money"
@@ -11410,7 +11410,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "OPEN", "CLOSED", "MERGED" ]
+            "enum" : [ "OPEN", "CLOSED" ]
           },
           "tableId" : {
             "type" : [ "string", "null" ],

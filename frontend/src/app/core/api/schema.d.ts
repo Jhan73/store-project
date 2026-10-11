@@ -1639,7 +1639,7 @@ export interface components {
             /** Format: date-time */
             sentAt: string | null;
             /** @enum {string} */
-            state: "UNSENT" | "SENT" | "VOIDED" | "COMPED";
+            state: "UNSENT" | "SENT" | "VOIDED";
             unitPrice: components["schemas"]["Money"];
             voidNote: string | null;
             voidReasonCode: string | null;
@@ -1657,7 +1657,7 @@ export interface components {
             /** Format: date-time */
             openedAt: string;
             /** @enum {string} */
-            status: "OPEN" | "CLOSED" | "MERGED";
+            status: "OPEN" | "CLOSED";
             /** Format: uuid */
             tableId: string | null;
             tableName: string | null;
