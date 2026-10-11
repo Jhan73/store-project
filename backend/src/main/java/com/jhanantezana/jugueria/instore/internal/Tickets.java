@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.TicketType;
+import com.jhanantezana.jugueria.preparation.BoardLineIntake;
 import com.jhanantezana.jugueria.shared.BusinessException;
+import com.jhanantezana.jugueria.shared.Ids;
 import com.jhanantezana.jugueria.shared.Money;
 
 import tools.jackson.core.type.TypeReference;
@@ -134,6 +136,121 @@ class Tickets {
 				FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 				WHERE k.status = 'OPEN' ORDER BY k.created_at, k.id
 				""").query((rs, row) -> summary(rs)).list();
+	}
+
+	/** The unsent lines in the order they were added, as the board takes them. */
+	List<BoardLineIntake> unsentForBoard(UUID ticketId) {
+		return jdbc.sql("""
+				SELECT id, product_id, product_name, station_id, quantity, modifiers, note, allergy FROM instore.ticket_line
+				WHERE ticket_id = :ticket AND state = 'UNSENT' ORDER BY position
+				""").param("ticket", ticketId).query((rs, row) -> {
+			var options = json.readValue(rs.getString("modifiers"), OPTIONS);
+			return new BoardLineIntake(rs.getObject("id", UUID.class), rs.getObject("product_id", UUID.class),
+					rs.getString("product_name"), rs.getInt("quantity"), TicketRules.modifiersText(options),
+					options.stream().map(ChosenOption::optionId).toList(), rs.getString("note"), rs.getBoolean("allergy"),
+					rs.getObject("station_id", UUID.class));
+		}).list();
+	}
+
+	void markSent(UUID ticketId, List<UUID> lineIds, UUID boardSourceId, Instant now) {
+		var sent = jdbc.sql("""
+				UPDATE instore.ticket_line
+				SET state = 'SENT', board_source_id = :source, sent_at = :now, version = version + 1, updated_at = :now
+				WHERE ticket_id = :ticket AND state = 'UNSENT' AND id IN (:ids)
+				""")
+			.param("source", boardSourceId)
+			.param("now", utc(now))
+			.param("ticket", ticketId)
+			.param("ids", lineIds)
+			.update();
+		if (sent != lineIds.size()) {
+			throw new IllegalStateException("Ticket " + ticketId + " changed its unsent lines while it was locked");
+		}
+	}
+
+	void startRound(UUID ticketId, UUID boardSourceId, int rounds) {
+		jdbc.sql("UPDATE instore.ticket SET board_source_id = :source, board_rounds = :rounds WHERE id = :id")
+			.param("source", boardSourceId)
+			.param("rounds", rounds)
+			.param("id", ticketId)
+			.update();
+	}
+
+	Optional<TicketLineView> line(UUID ticketId, UUID lineId) {
+		return jdbc.sql("SELECT " + LINE_COLUMNS + " FROM instore.ticket_line WHERE id = :id AND ticket_id = :ticket")
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.query((rs, row) -> line(rs))
+			.optional();
+	}
+
+	TicketLineView requireLine(UUID ticketId, UUID lineId) {
+		return line(ticketId, lineId)
+			.orElseThrow(() -> new BusinessException(InstoreError.LINE_NOT_FOUND, "The ticket has no such line"));
+	}
+
+	int nextPosition(UUID ticketId) {
+		return jdbc.sql("SELECT coalesce(max(position) + 1, 0) FROM instore.ticket_line WHERE ticket_id = :id")
+			.param("id", ticketId)
+			.query(Integer.class)
+			.single();
+	}
+
+	UUID insertLine(UUID ticketId, int position, LinePrice price, LineDraft draft, Instant now) {
+		var id = Ids.newId();
+		jdbc.sql("""
+				INSERT INTO instore.ticket_line (id, ticket_id, position, product_id, product_name, station_id, quantity,
+					unit_price_amount, unit_price_currency, modifiers, note, allergy, state, created_at, updated_at)
+				VALUES (:id, :ticket, :position, :product, :name, :station, :quantity, :amount, :currency,
+					CAST(:modifiers AS jsonb), :note, :allergy, 'UNSENT', :now, :now)
+				""")
+			.param("id", id)
+			.param("ticket", ticketId)
+			.param("position", position)
+			.param("product", price.productId())
+			.param("name", price.productName())
+			.param("station", price.stationId())
+			.param("quantity", draft.quantity())
+			.param("amount", price.unitPrice().amount())
+			.param("currency", price.unitPrice().currency().getCurrencyCode())
+			.param("modifiers", json.writeValueAsString(price.options()))
+			.param("note", draft.note())
+			.param("allergy", draft.allergy())
+			.param("now", utc(now))
+			.update();
+		return id;
+	}
+
+	/** @return false when the line is not unsent (or not on the ticket) */
+	boolean replaceUnsentLine(UUID ticketId, UUID lineId, LinePrice price, LineDraft draft, Instant now) {
+		return jdbc.sql("""
+				UPDATE instore.ticket_line
+				SET product_id = :product, product_name = :name, station_id = :station, quantity = :quantity,
+					unit_price_amount = :amount, unit_price_currency = :currency, modifiers = CAST(:modifiers AS jsonb),
+					note = :note, allergy = :allergy, version = version + 1, updated_at = :now
+				WHERE id = :id AND ticket_id = :ticket AND state = 'UNSENT'
+				""")
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.param("product", price.productId())
+			.param("name", price.productName())
+			.param("station", price.stationId())
+			.param("quantity", draft.quantity())
+			.param("amount", price.unitPrice().amount())
+			.param("currency", price.unitPrice().currency().getCurrencyCode())
+			.param("modifiers", json.writeValueAsString(price.options()))
+			.param("note", draft.note())
+			.param("allergy", draft.allergy())
+			.param("now", utc(now))
+			.update() == 1;
+	}
+
+	/** @return false when the line is not unsent (or not on the ticket) */
+	boolean deleteUnsentLine(UUID ticketId, UUID lineId) {
+		return jdbc.sql("DELETE FROM instore.ticket_line WHERE id = :id AND ticket_id = :ticket AND state = 'UNSENT'")
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.update() == 1;
 	}
 
 	List<TicketLineView> lines(UUID ticketId) {

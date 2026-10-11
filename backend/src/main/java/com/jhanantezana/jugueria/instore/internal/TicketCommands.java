@@ -1,5 +1,6 @@
 package com.jhanantezana.jugueria.instore.internal;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -29,12 +30,15 @@ public class TicketCommands {
 
 	private final TicketService tickets;
 
+	private final TicketLines lines;
+
 	private final Idempotency idempotency;
 
 	private final JsonMapper json;
 
-	TicketCommands(TicketService tickets, Idempotency idempotency, JsonMapper json) {
+	TicketCommands(TicketService tickets, TicketLines lines, Idempotency idempotency, JsonMapper json) {
 		this.tickets = tickets;
+		this.lines = lines;
 		this.idempotency = idempotency;
 		this.json = json;
 	}
@@ -43,6 +47,16 @@ public class TicketCommands {
 	public Outcome open(UUID actorId, UUID key, String requestHash, @Nullable UUID tableId, @Nullable String counterName,
 			@Nullable String note) {
 		return once(actorId, key, requestHash, CREATED, () -> tickets.open(tableId, counterName, note));
+	}
+
+	@Transactional
+	public Outcome addLine(UUID actorId, UUID key, String requestHash, UUID ticketId, LineDraft draft) {
+		return once(actorId, key, requestHash, CREATED, () -> lines.add(ticketId, draft));
+	}
+
+	@Transactional
+	public Outcome repeat(UUID actorId, UUID key, String requestHash, UUID ticketId, List<UUID> lineIds) {
+		return once(actorId, key, requestHash, CREATED, () -> lines.repeat(ticketId, lineIds));
 	}
 
 	private Outcome once(UUID actorId, UUID key, String requestHash, int status, Supplier<TicketView> command) {
