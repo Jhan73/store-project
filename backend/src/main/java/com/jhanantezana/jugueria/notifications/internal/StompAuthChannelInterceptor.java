@@ -55,8 +55,7 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		// The accessor the protocol handler built the message with: it reads the user back from that one to authenticate
-		// the session's later frames. wrap() only copies, so it is the fallback for messages whose accessor is frozen or missing.
+		// Mutate the original accessor: the handler reads the user back from it for the session's later frames.
 		var original = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		var accessor = original != null && original.isMutable() ? original : StompHeaderAccessor.wrap(message);
 		var command = accessor.getCommand();

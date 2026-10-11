@@ -65,11 +65,7 @@ class BoardStore {
 				""").param("source", source.name()).param("sourceId", sourceId).query((rs, row) -> ref(rs)).optional();
 	}
 
-	/**
-	 * Takes the card's row lock when the card is in one of the allowed statuses. Every command that touches lines runs
-	 * this first: later statements then see everything committed before the lock, so "is any line still pending" is
-	 * answered against the final state. Lock before reading what the decision depends on.
-	 */
+	// Lock before reading what the decision depends on: later statements see everything committed before it.
 	Optional<OrderRef> lock(UUID id, Instant now, BoardOrderStatus... allowed) {
 		return jdbc.sql("""
 				UPDATE preparation.board_order SET version = version + 1, updated_at = :now
@@ -83,10 +79,7 @@ class BoardStore {
 			.optional();
 	}
 
-	/**
-	 * Why a command found its card in the wrong status. Read after the conditional update affected nothing, so it only
-	 * picks the message: the update itself already decided the race.
-	 */
+	// Read after the conditional update affected nothing: it only picks the message.
 	BusinessException rejection(UUID orderId, Function<BoardOrderStatus, PreparationError> byStatus) {
 		var current = find(orderId);
 		if (current.isEmpty()) {
@@ -154,6 +147,17 @@ class BoardStore {
 			.param("now", utc(now))
 			.query(UUID.class)
 			.optional();
+	}
+
+	boolean allPresent(UUID orderId, Collection<UUID> sourceLineIds) {
+		if (sourceLineIds.isEmpty()) {
+			return true;
+		}
+		var present = jdbc.sql("""
+				SELECT count(*) FROM preparation.board_line
+				WHERE board_order_id = :order AND source_line_id IN (:ids)
+				""").param("order", orderId).param("ids", sourceLineIds).query(Long.class).single();
+		return present == sourceLineIds.size();
 	}
 
 	int nextPosition(UUID orderId) {

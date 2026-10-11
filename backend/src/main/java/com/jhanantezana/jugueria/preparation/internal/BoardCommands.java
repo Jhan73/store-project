@@ -24,11 +24,7 @@ import com.jhanantezana.jugueria.preparation.PreparationStarted;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
-/**
- * What staff do on the board. Each command is decided by one conditional update on the card's row, so of two
- * commands racing for the same card exactly one wins and the other is rejected. Commands that touch lines take the
- * card's row lock first, which also lets the card follow its lines (all ready means ready) without a lost update.
- */
+/** What staff do on the board; each command is decided by a conditional update on the card's row. */
 @Service
 public class BoardCommands {
 
@@ -110,7 +106,15 @@ public class BoardCommands {
 		var now = Instant.now(clock);
 		var order = store.lock(orderId, now, PREPARING)
 			.orElseThrow(() -> store.rejection(orderId, status -> PreparationError.ORDER_NOT_PREPARING));
-		// With the lock held, this sees every flag that committed before it.
+		// A line added since the screen loaded still carries its unacknowledged label, so staff have not seen it.
+		var unseen = jdbc.sql("""
+				SELECT EXISTS (SELECT 1 FROM preparation.board_marker m JOIN preparation.board_line l ON l.id = m.line_id
+					WHERE l.board_order_id = :id AND l.state = 'PENDING' AND m.kind = 'MODIFIED' AND m.acknowledged_at IS NULL)
+				""").param("id", orderId).query(Boolean.class).single();
+		if (unseen) {
+			throw new BusinessException(PreparationError.LINES_NOT_ACKNOWLEDGED,
+					"Board order " + orderId + " has added lines that are not acknowledged yet");
+		}
 		var ready = jdbc.sql("""
 				UPDATE preparation.board_order SET status = 'READY', ready_at = :now, updated_at = :now
 				WHERE id = :id AND status = 'PREPARING'

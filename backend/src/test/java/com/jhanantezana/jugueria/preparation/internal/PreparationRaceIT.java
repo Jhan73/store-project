@@ -246,6 +246,131 @@ class PreparationRaceIT {
 		}
 	}
 
+	@Test
+	void parallelVoidsOfTheOnlyLineBothSucceedWhicheverCancelsTheCard() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var only = aLine();
+			var intake = anOrder(only);
+			var order = preparation.accept(intake);
+
+			var results = inParallel(2, i -> () -> preparation.voidLine(intake.source(), intake.sourceId(),
+					only.sourceLineId(), VoidMode.PENDING_ONLY));
+
+			assertThat(results).as("round %d", round).allSatisfy(result -> assertThat(result.failure()).isNull());
+			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("CANCELLED");
+			assertThat(PreparationTables.markers(jdbc, order)).containsExactly("NEW*", "VOID*");
+		}
+	}
+
+	@Test
+	void addingALineAndReadyingTheLastOneNeverLeaveAReadyOrderWithAPendingLine() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var intake = anOrder(aLine());
+			var order = preparation.accept(intake);
+			commands.start(order);
+			var lineId = PreparationTables.lineIds(jdbc, order).getFirst();
+			var extra = aLine();
+
+			var results = inParallel(2, i -> i == 0 ? () -> commands.readyLine(lineId)
+					: () -> preparation.addLines(intake.source(), intake.sourceId(), List.of(extra)));
+
+			assertThat(results).as("round %d", round).allSatisfy(result -> assertThat(result.failure()).isNull());
+			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+			assertThat(pendingLines(order)).isEqualTo(1);
+			assertThat(readyOrdersWithPendingLines()).isZero();
+		}
+	}
+
+	// Timing decides which side wins; BoardCommandsIT holds the deterministic guard for this rule.
+	@Test
+	void addingALineAndReadyingTheWholeOrderNeverReadiesTheLineAddedMeanwhile() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var intake = anOrder(aLine());
+			var order = preparation.accept(intake);
+			commands.start(order);
+			var extra = aLine();
+
+			var results = inParallel(2, i -> i == 0 ? () -> commands.readyOrder(order)
+					: () -> preparation.addLines(intake.source(), intake.sourceId(), List.of(extra)));
+
+			var extraId = PreparationTables.lineIdOf(jdbc, order, extra.sourceLineId());
+			assertThat(PreparationTables.lineState(jdbc, extraId)).as("round %d", round).isEqualTo("PENDING");
+			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+			assertThat(results.get(1).succeeded()).isTrue();
+			if (!results.get(0).succeeded()) {
+				assertThat(rejectionCodes(results)).containsExactly("preparation.lines-not-acknowledged");
+			}
+			assertThat(readyOrdersWithPendingLines()).isZero();
+		}
+	}
+
+	@Test
+	void addingALineAndHandingOverApplyExactlyOne() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var intake = anOrder(aLine());
+			var order = preparation.accept(intake);
+			commands.start(order);
+			commands.readyOrder(order);
+			var extra = aLine();
+
+			var results = inParallel(2, i -> i == 0 ? () -> commands.handover(order)
+					: () -> preparation.addLines(intake.source(), intake.sourceId(), List.of(extra)));
+
+			assertThat(successes(results)).as("round %d", round).isEqualTo(1);
+			if (results.get(0).succeeded()) {
+				assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("HANDED_OVER");
+				assertThat(rejectionCodes(results)).containsExactly("preparation.order-closed");
+				assertThat(PreparationTables.lineIds(jdbc, order)).hasSize(1);
+			}
+			else {
+				assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+				assertThat(rejectionCodes(results)).containsExactly("preparation.order-not-ready");
+				assertThat(PreparationTables.lineIds(jdbc, order)).hasSize(2);
+			}
+		}
+	}
+
+	@Test
+	void addingALineAndRecallingAReadyOrderLeaveItPreparingWithConsistentLines() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var intake = anOrder(aLine());
+			var order = preparation.accept(intake);
+			commands.start(order);
+			commands.readyOrder(order);
+			var extra = aLine();
+
+			var results = inParallel(2, i -> i == 0 ? () -> commands.recall(order)
+					: () -> preparation.addLines(intake.source(), intake.sourceId(), List.of(extra)));
+
+			assertThat(results.get(1).succeeded()).as("round %d", round).isTrue();
+			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+			if (results.get(0).succeeded()) {
+				assertThat(pendingLines(order)).isEqualTo(2);
+			}
+			else {
+				assertThat(rejectionCodes(results)).containsExactly("preparation.order-not-completed");
+				assertThat(pendingLines(order)).isEqualTo(1);
+			}
+		}
+	}
+
+	@Test
+	void startingAndFlaggingALineOfAWaitingOrderBothApply() throws Exception {
+		for (var round = 0; round < ROUNDS; round++) {
+			var order = preparation.accept(anOrder(aLine(), aLine()));
+			var flagged = PreparationTables.lineIds(jdbc, order).getFirst();
+
+			var results = inParallel(2, i -> i == 0 ? () -> commands.start(order) : () -> commands.flagLine(flagged));
+
+			assertThat(results).as("round %d", round).allSatisfy(result -> assertThat(result.failure()).isNull());
+			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+			assertThat(jdbc.sql("select flagged_unavailable from preparation.board_line where id = ?")
+				.param(flagged)
+				.query(Boolean.class)
+				.single()).isTrue();
+		}
+	}
+
 	private long version(UUID order) {
 		return jdbc.sql("select version from preparation.board_order where id = ?")
 			.param(order)

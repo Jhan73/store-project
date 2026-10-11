@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -72,8 +73,18 @@ class PreparationApiImpl implements PreparationApi {
 	public void addLines(BoardSource source, UUID sourceId, List<BoardLineIntake> lines) {
 		var now = Instant.now(clock);
 		var order = requireOrder(source, sourceId);
-		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY)
-			.orElseThrow(() -> store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED));
+		var sourceLines = lines.stream().map(BoardLineIntake::sourceLineId).collect(Collectors.toSet());
+		if (store.allPresent(order.id(), sourceLines)) {
+			return;
+		}
+		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY).orElse(null);
+		if (locked == null) {
+			// A redelivery that lost to a later status change still has nothing left to do.
+			if (store.allPresent(order.id(), sourceLines)) {
+				return;
+			}
+			throw store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED);
+		}
 		var position = store.nextPosition(order.id());
 		var added = 0;
 		for (var line : lines) {
@@ -102,8 +113,6 @@ class PreparationApiImpl implements PreparationApi {
 	public void voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode) {
 		var now = Instant.now(clock);
 		var order = requireOrder(source, sourceId);
-		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY)
-			.orElseThrow(() -> store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED));
 		var line = jdbc.sql("""
 				SELECT id, state FROM preparation.board_line WHERE board_order_id = :order AND source_line_id = :sourceLine
 				""")
@@ -114,6 +123,14 @@ class PreparationApiImpl implements PreparationApi {
 			.orElseThrow(() -> new BusinessException(PreparationError.LINE_NOT_FOUND, "The board line does not exist"));
 		if ("VOIDED".equals(line.state())) {
 			return;
+		}
+		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY).orElse(null);
+		if (locked == null) {
+			// A retry of the void that closed the card finds it closed.
+			if (isVoided(line.id())) {
+				return;
+			}
+			throw store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED);
 		}
 		var voided = jdbc.sql("""
 				UPDATE preparation.board_line
@@ -126,10 +143,10 @@ class PreparationApiImpl implements PreparationApi {
 			.param("allowReady", mode == VoidMode.ALLOW_READY_AS_WASTE)
 			.update();
 		if (voided == 0) {
-			var current = jdbc.sql("SELECT state FROM preparation.board_line WHERE id = :id")
-				.param("id", line.id())
-				.query(String.class)
-				.single();
+			var current = lineState(line.id());
+			if ("VOIDED".equals(current)) {
+				return;
+			}
 			var error = "READY".equals(current) ? PreparationError.LINE_ALREADY_READY : PreparationError.LINE_NOT_PENDING;
 			throw new BusinessException(error, "Board line " + line.id() + " is " + current);
 		}
@@ -158,6 +175,7 @@ class PreparationApiImpl implements PreparationApi {
 			return;
 		}
 		var current = requireOrder(source, sourceId);
+		// The public code is shared by every status but WAITING; renaming it would break callers.
 		if (current.status() != BoardOrderStatus.CANCELLED) {
 			throw new BusinessException(PreparationError.ORDER_ALREADY_STARTED,
 					"Board order " + current.id() + " is " + current.status() + "; cancelling requires WAITING");
@@ -170,10 +188,18 @@ class PreparationApiImpl implements PreparationApi {
 		return store.find(source, sourceId).map(BoardStore.OrderRef::status);
 	}
 
-	/**
-	 * Re-evaluates a card after a void, with its row lock held: nothing left to prepare cancels it, nothing left
-	 * pending finishes it.
-	 */
+	private String lineState(UUID lineId) {
+		return jdbc.sql("SELECT state FROM preparation.board_line WHERE id = :id")
+			.param("id", lineId)
+			.query(String.class)
+			.single();
+	}
+
+	private boolean isVoided(UUID lineId) {
+		return "VOIDED".equals(lineState(lineId));
+	}
+
+	// With the card's row lock held: no live line cancels the card, no pending line finishes it.
 	private void settle(UUID orderId, BoardSource source, UUID sourceId, BoardOrderStatus before, Instant now) {
 		var cancelled = jdbc.sql("""
 				UPDATE preparation.board_order SET status = 'CANCELLED', cancelled_at = :now, updated_at = :now

@@ -182,6 +182,53 @@ class PreparationVoidAndCancelIT {
 	}
 
 	@Test
+	void retryingTheVoidThatCancelledTheCardChangesNothing() {
+		var only = aLine();
+		var intake = anOrder(only);
+		var order = preparation.accept(intake);
+		preparation.voidLine(intake.source(), intake.sourceId(), only.sourceLineId(), VoidMode.PENDING_ONLY);
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("CANCELLED");
+
+		preparation.voidLine(intake.source(), intake.sourceId(), only.sourceLineId(), VoidMode.PENDING_ONLY);
+
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("CANCELLED");
+		assertThat(PreparationTables.markers(jdbc, order)).containsExactly("NEW*", "VOID*");
+		assertThat(events.stream(BoardChanged.class).filter(e -> e.type().equals("LINE_VOIDED"))).hasSize(1);
+	}
+
+	@Test
+	void retryingAVoidOnceTheCardIsHandedOverChangesNothing() {
+		var done = aLine();
+		var voided = aLine();
+		var intake = anOrder(done, voided);
+		var order = preparation.accept(intake);
+		commands.start(order);
+		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, done.sourceLineId()));
+		preparation.voidLine(intake.source(), intake.sourceId(), voided.sourceLineId(), VoidMode.PENDING_ONLY);
+		commands.handover(order);
+
+		preparation.voidLine(intake.source(), intake.sourceId(), voided.sourceLineId(), VoidMode.PENDING_ONLY);
+
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("HANDED_OVER");
+		assertThat(PreparationTables.markers(jdbc, order)).containsExactly("NEW*", "VOID*");
+	}
+
+	@Test
+	void voidingAnUnknownLineOnAClosedCardIsLineNotFound() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, order, "CANCELLED");
+
+		assertThatThrownBy(() -> preparation.voidLine(intake.source(), intake.sourceId(), UUID.randomUUID(),
+				VoidMode.PENDING_ONLY)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_NOT_FOUND));
+		PreparationTables.forceStatus(jdbc, order, "HANDED_OVER");
+		assertThatThrownBy(() -> preparation.voidLine(intake.source(), intake.sourceId(), UUID.randomUUID(),
+				VoidMode.PENDING_ONLY)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_NOT_FOUND));
+	}
+
+	@Test
 	void voidingAnUnknownLineOrOrderIsNotFound() {
 		var intake = anOrder(aLine());
 		preparation.accept(intake);
