@@ -2,53 +2,45 @@ package com.jhanantezana.jugueria.inventory.internal;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.UUID;
 
-import org.springframework.context.ApplicationEventPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.jhanantezana.jugueria.inventory.ReservationExpired;
-
+/**
+ * Releases lapsed reservations one reference per transaction, so a reference that cannot be released is logged and
+ * retried on the next run instead of rolling back, and repeating forever, everything claimed with it.
+ */
 @Component
 class ReservationExpiry {
 
+	private static final Logger log = LoggerFactory.getLogger(ReservationExpiry.class);
+
 	private final StockReservations reservations;
 
-	private final StockChanges changes;
-
-	private final ApplicationEventPublisher events;
+	private final ReferenceExpiry referenceExpiry;
 
 	private final Clock clock;
 
-	ReservationExpiry(StockReservations reservations, StockChanges changes, ApplicationEventPublisher events,
-			Clock clock) {
+	ReservationExpiry(StockReservations reservations, ReferenceExpiry referenceExpiry, Clock clock) {
 		this.reservations = reservations;
-		this.changes = changes;
-		this.events = events;
+		this.referenceExpiry = referenceExpiry;
 		this.clock = clock;
 	}
 
-	/** Releases up to one batch of lapsed reservations, products in ascending order like every other stock change. */
-	@Transactional
+	/** @return the number of reservations released, for at most one batch of lapsed ones */
 	int expireBatch() {
 		var now = Instant.now(clock);
-		var lapsed = reservations.claimLapsed(now)
-			.stream()
-			.sorted(Comparator.comparing((StockReservations.Held held) -> held.productId().toString())
-				.thenComparing(StockReservations.Held::referenceId))
-			.toList();
-		var references = new LinkedHashSet<UUID>();
-		for (var held : lapsed) {
-			changes.apply(held.productId(), StockMovementType.EXPIRE, 0, -held.quantity(), held.referenceId(), null,
-					null);
-			references.add(held.referenceId());
+		var expired = 0;
+		for (var referenceId : reservations.lapsedReferences(now)) {
+			try {
+				expired += referenceExpiry.expire(referenceId, now);
+			}
+			catch (RuntimeException failure) {
+				log.error("Could not expire the stock reservations of {}", referenceId, failure);
+			}
 		}
-		// A reference whose lines straddle two batches is announced twice; consumers must be idempotent anyway.
-		references.forEach(reference -> events.publishEvent(new ReservationExpired(reference, now)));
-		return lapsed.size();
+		return expired;
 	}
 
 }

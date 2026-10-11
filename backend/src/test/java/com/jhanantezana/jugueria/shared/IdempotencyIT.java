@@ -129,7 +129,10 @@ class IdempotencyIT {
 			.single()
 			.toInstant();
 
-		assertThat(expiresAt).isBetween(before.plus(Duration.ofHours(2)), Instant.now().plus(Duration.ofHours(2)));
+		// PostgreSQL keeps microseconds, so the stored moment can sit just before the nanosecond-precise bound.
+		var tolerance = Duration.ofSeconds(5);
+		assertThat(expiresAt).isBetween(before.plus(Duration.ofHours(2)).minus(tolerance),
+				Instant.now().plus(Duration.ofHours(2)).plus(tolerance));
 	}
 
 	@Test

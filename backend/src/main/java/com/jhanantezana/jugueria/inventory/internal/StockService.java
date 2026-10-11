@@ -90,8 +90,17 @@ public class StockService {
 					"Units of this product are reserved; stock tracking cannot be turned off yet");
 		}
 		var after = find(productId).orElseThrow();
-		if (tracked && after.available() <= 0) {
-			catalog.setProductAvailability(productId, false);
+		// Stock owns the flag only while a product is tracked; a manual 86 on a product with stock is left alone.
+		if (tracked) {
+			if (after.available() <= 0) {
+				catalog.setProductAvailability(productId, false);
+			}
+			else if (!before.tracked()) {
+				catalog.setProductAvailability(productId, true);
+			}
+		}
+		else if (before.tracked() && before.available() <= 0) {
+			catalog.setProductAvailability(productId, true);
 		}
 		if (!snapshot(before).equals(snapshot(after))) {
 			publish(productId, StockChangeKind.TRACKING_CHANGED, before, after, null, null, now);

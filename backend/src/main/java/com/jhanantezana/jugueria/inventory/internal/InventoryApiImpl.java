@@ -3,9 +3,12 @@ package com.jhanantezana.jugueria.inventory.internal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 
@@ -44,11 +47,25 @@ class InventoryApiImpl implements InventoryApi {
 	@Override
 	@Transactional
 	public Instant reserve(UUID referenceId, List<StockLine> lines, Duration ttl) {
+		if (ttl.isZero() || ttl.isNegative()) {
+			throw new IllegalArgumentException("A reservation needs a positive time to live");
+		}
 		var now = Instant.now(clock);
 		var expiresAt = now.plus(ttl);
-		for (var line : trackedLines(lines)) {
+		// Reservation rows first, stock rows after: the expiry sweep takes them in that order too.
+		var held = new ArrayList<StockLine>();
+		for (var line : trackedLines(lines, false)) {
 			if (reservations.hold(referenceId, line.productId(), line.quantity(), expiresAt, now)) {
+				held.add(line);
+			}
+		}
+		var stillTracked = trackedIds(held.stream().map(StockLine::productId).toList(), true);
+		for (var line : held) {
+			if (stillTracked.contains(line.productId())) {
 				changes.apply(line.productId(), StockMovementType.RESERVE, 0, line.quantity(), referenceId, null, null);
+			}
+			else {
+				reservations.drop(referenceId, line.productId());
 			}
 		}
 		return expiresAt;
@@ -85,7 +102,7 @@ class InventoryApiImpl implements InventoryApi {
 	@Override
 	@Transactional
 	public void deduct(UUID referenceId, List<StockLine> lines) {
-		for (var line : trackedLines(lines)) {
+		for (var line : trackedLines(lines, true)) {
 			changes.apply(line.productId(), StockMovementType.SALE, -line.quantity(), 0, referenceId, null, null);
 		}
 	}
@@ -93,29 +110,36 @@ class InventoryApiImpl implements InventoryApi {
 	@Override
 	@Transactional
 	public void returnUnits(UUID referenceId, List<StockLine> lines) {
-		for (var line : trackedLines(lines)) {
+		for (var line : trackedLines(lines, true)) {
 			changes.apply(line.productId(), StockMovementType.RETURN, line.quantity(), 0, referenceId, null, null);
 		}
 	}
 
 	/** The lines of stock-tracked products, one per product, in ascending product order. */
-	private List<StockLine> trackedLines(List<StockLine> lines) {
+	private List<StockLine> trackedLines(List<StockLine> lines, boolean lock) {
 		var quantities = new TreeMap<UUID, Integer>(BY_PRODUCT_ID);
 		for (var line : lines) {
 			quantities.merge(line.productId(), line.quantity(), Integer::sum);
 		}
-		if (quantities.isEmpty()) {
-			return List.of();
-		}
-		var tracked = jdbc.sql("SELECT product_id FROM inventory.stock_item WHERE tracked AND product_id IN (:ids)")
-			.param("ids", quantities.keySet())
-			.query(UUID.class)
-			.set();
+		var tracked = trackedIds(quantities.keySet(), lock);
 		return quantities.entrySet()
 			.stream()
 			.filter(entry -> tracked.contains(entry.getKey()))
 			.map((Map.Entry<UUID, Integer> entry) -> new StockLine(entry.getKey(), entry.getValue()))
 			.toList();
+	}
+
+	// Locked in ascending order, so a product being untracked is waited for and then left out, never half-applied.
+	private Set<UUID> trackedIds(Collection<UUID> ids, boolean lock) {
+		if (ids.isEmpty()) {
+			return Set.of();
+		}
+		return jdbc
+			.sql("SELECT product_id FROM inventory.stock_item WHERE tracked AND product_id IN (:ids) ORDER BY product_id"
+					+ (lock ? " FOR UPDATE" : ""))
+			.param("ids", ids)
+			.query(UUID.class)
+			.set();
 	}
 
 	private static List<Held> sorted(List<Held> held) {

@@ -134,6 +134,35 @@ class ReservationExpiryIT {
 	}
 
 	@Test
+	void aLapsedReservationTheSweepHasNotReachedYetCanStillBeCommitted() {
+		var product = trackedWithStock(2);
+		var order = UUID.randomUUID();
+		inventory.reserve(order, List.of(new StockLine(product, 1)), TTL);
+		lapse(order);
+
+		inventory.commit(order);
+
+		assertThat(stock.get(product).onHand()).isEqualTo(1);
+		assertThat(Jobs.drain(expiry::expireBatch)).isZero();
+	}
+
+	@Test
+	void releasesTheUnitsOfAProductThatNoLongerExistsInTheCatalog() {
+		var product = trackedWithStock(2);
+		var order = UUID.randomUUID();
+		inventory.reserve(order, List.of(new StockLine(product, 2)), TTL);
+		lapse(order);
+		jdbc.sql("delete from catalog.product where id = ?").param(product).update();
+
+		var expired = Jobs.drain(expiry::expireBatch);
+
+		assertThat(expired).isEqualTo(1);
+		assertThat(stock.get(product).reserved()).isZero();
+		assertThat(events.stream(ReservationExpired.class)).singleElement()
+			.satisfies(event -> assertThat(event.referenceId()).isEqualTo(order));
+	}
+
+	@Test
 	void anOrderCanReserveAgainAfterItsReservationExpired() {
 		var product = trackedWithStock(2);
 		var order = UUID.randomUUID();

@@ -5,7 +5,9 @@ import static com.jhanantezana.jugueria.inventory.internal.StockChanges.utc;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -63,19 +65,44 @@ class StockReservations {
 			.list();
 	}
 
-	/** Claims the reservations whose time ran out, skipping rows another task already holds. */
-	List<Held> claimLapsed(Instant now) {
+	/** Removes a hold taken by the caller's own transaction, before anyone else could see it. */
+	void drop(UUID referenceId, UUID productId) {
+		jdbc.sql("DELETE FROM inventory.stock_reservation WHERE reference_id = :reference AND product_id = :product "
+				+ "AND status = 'RESERVED'")
+			.param("reference", referenceId)
+			.param("product", productId)
+			.update();
+	}
+
+	/**
+	 * The references with a lapsed reservation, oldest first, skipping rows another task is working on. Runs outside
+	 * a transaction, so its row locks end with the statement.
+	 */
+	Set<UUID> lapsedReferences(Instant now) {
+		return new LinkedHashSet<>(jdbc.sql("""
+				SELECT reference_id FROM inventory.stock_reservation
+				WHERE status = 'RESERVED' AND expires_at <= :now ORDER BY expires_at, id LIMIT :limit
+				FOR UPDATE SKIP LOCKED
+				""")
+			.param("now", utc(now))
+			.param("limit", Jobs.BATCH_SIZE)
+			.query(UUID.class)
+			.list());
+	}
+
+	/** Claims the reference's lapsed reservations, skipping rows another task already holds. */
+	List<Held> claimLapsed(UUID referenceId, Instant now) {
 		return jdbc.sql("""
 				WITH claimed AS MATERIALIZED (
 					SELECT id FROM inventory.stock_reservation
-					WHERE status = 'RESERVED' AND expires_at <= :now ORDER BY expires_at, id LIMIT :limit
+					WHERE reference_id = :reference AND status = 'RESERVED' AND expires_at <= :now ORDER BY id
 					FOR UPDATE SKIP LOCKED)
 				UPDATE inventory.stock_reservation r SET status = 'EXPIRED', updated_at = :now
 				FROM claimed c WHERE r.id = c.id
 				RETURNING r.reference_id, r.product_id, r.quantity, r.created_at
 				""")
+			.param("reference", referenceId)
 			.param("now", utc(now))
-			.param("limit", Jobs.BATCH_SIZE)
 			.query((rs, row) -> held(rs))
 			.list();
 	}
