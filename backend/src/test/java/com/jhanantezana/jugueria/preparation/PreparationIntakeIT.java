@@ -145,6 +145,60 @@ class PreparationIntakeIT {
 	}
 
 	@Test
+	void redeliveringLinesAlreadyAddedIsANoOpEvenOnceTheCardIsHandedOver() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		var added = aLine();
+		preparation.addLines(intake.source(), intake.sourceId(), List.of(added));
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		preparation.addLines(intake.source(), intake.sourceId(), List.of(added));
+
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(2);
+		assertThat(PreparationTables.orderStatus(jdbc, id)).isEqualTo("HANDED_OVER");
+	}
+
+	@Test
+	void redeliveringLinesAlreadyAddedIsANoOpEvenOnceTheCardIsCancelled() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		var added = aLine();
+		preparation.addLines(intake.source(), intake.sourceId(), List.of(added));
+		PreparationTables.forceStatus(jdbc, id, "CANCELLED");
+
+		preparation.addLines(intake.source(), intake.sourceId(), List.of(added));
+
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(2);
+	}
+
+	@Test
+	void aSendMixingKnownAndNewLinesIsStillRejectedOnAHandedOverCard() {
+		var known = aLine();
+		var intake = anOrder(known);
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "HANDED_OVER");
+
+		assertThatThrownBy(() -> preparation.addLines(intake.source(), intake.sourceId(), List.of(known, aLine())))
+			.isInstanceOfSatisfying(BusinessException.class,
+					e -> assertThat(e.errorCode()).isEqualTo(PreparationError.ORDER_CLOSED));
+		assertThat(PreparationTables.lineIds(jdbc, id)).hasSize(1);
+	}
+
+	@Test
+	void acceptingASourceWhoseCardWasCancelledReturnsTheCardWithoutBringingItBack() {
+		var intake = anOrder(aLine());
+		var id = preparation.accept(intake);
+		PreparationTables.forceStatus(jdbc, id, "CANCELLED");
+
+		var again = preparation.accept(intake);
+
+		assertThat(again).isEqualTo(id);
+		assertThat(PreparationTables.orderStatus(jdbc, id)).isEqualTo("CANCELLED");
+		assertThat(PreparationTables.count(jdbc, "board_order")).isEqualTo(1);
+		assertThat(events.stream(BoardChanged.class)).hasSize(1);
+	}
+
+	@Test
 	void reportsNothingForASourceThatNeverReachedTheBoard() {
 		assertThat(preparation.statusOf(BoardSource.ONLINE, UUID.randomUUID())).isEmpty();
 	}

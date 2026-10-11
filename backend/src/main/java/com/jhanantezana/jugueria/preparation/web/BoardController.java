@@ -64,7 +64,7 @@ class BoardController {
 	@PostMapping("/orders/{id}/ready")
 	@PreAuthorize(STAFF)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-not-preparing",
-			"preparation.line-flagged-unavailable" })
+			"preparation.lines-not-acknowledged", "preparation.line-flagged-unavailable" })
 	BoardOrderResponse readyOrder(@PathVariable UUID id) {
 		return BoardOrderResponse.from(commands.readyOrder(id));
 	}

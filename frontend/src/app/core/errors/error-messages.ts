@@ -66,6 +66,7 @@ export const ERROR_MESSAGES = {
   'preparation.line-flagged-unavailable': $localize`:@@error.preparation.line-flagged-unavailable:Hay una línea agotada sin resolver. Anúlala o sustitúyela antes de continuar.`,
   'preparation.line-not-found': $localize`:@@error.preparation.line-not-found:La línea no existe.`,
   'preparation.line-not-pending': $localize`:@@error.preparation.line-not-pending:La línea ya no está pendiente.`,
+  'preparation.lines-not-acknowledged': $localize`:@@error.preparation.lines-not-acknowledged:Llegaron líneas nuevas que aún no confirmas. Confírmalas antes de marcar el pedido como listo.`,
   'preparation.marker-already-acknowledged': $localize`:@@error.preparation.marker-already-acknowledged:Otra persona ya confirmó este aviso.`,
   'preparation.marker-not-found': $localize`:@@error.preparation.marker-not-found:El aviso no existe.`,
   'preparation.order-already-started': $localize`:@@error.preparation.order-already-started:La preparación del pedido ya comenzó.`,

@@ -182,6 +182,50 @@ class BoardCommandsIT {
 	}
 
 	@Test
+	void theWholeOrderCannotBeReadyWhileALineAddedAfterItWasShownIsUnacknowledged() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		var extra = aLine();
+		preparation.addLines(intake.source(), intake.sourceId(), java.util.List.of(extra));
+
+		assertRejected(() -> commands.readyOrder(order), PreparationError.LINES_NOT_ACKNOWLEDGED);
+
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+		assertThat(PreparationTables.lineState(jdbc, PreparationTables.lineIdOf(jdbc, order, extra.sourceLineId())))
+			.isEqualTo("PENDING");
+		assertThat(events.stream(LineReady.class)).isEmpty();
+	}
+
+	@Test
+	void theWholeOrderCanBeReadyOnceTheAddedLinesAreAcknowledged() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		preparation.addLines(intake.source(), intake.sourceId(), java.util.List.of(aLine()));
+		commands.acknowledge(PreparationTables.markerId(jdbc, order, "MODIFIED"), UUID.randomUUID());
+
+		var card = commands.readyOrder(order);
+
+		assertThat(card.status()).isEqualTo(BoardOrderStatus.READY);
+		assertThat(card.lines()).allSatisfy(line -> assertThat(line.state()).isEqualTo(BoardLineState.READY));
+	}
+
+	@Test
+	void anUnacknowledgedMarkerOfALineAlreadyReadyDoesNotBlockTheWholeOrder() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		var extra = aLine();
+		preparation.addLines(intake.source(), intake.sourceId(), java.util.List.of(extra));
+		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, extra.sourceLineId()));
+
+		var card = commands.readyOrder(order);
+
+		assertThat(card.status()).isEqualTo(BoardOrderStatus.READY);
+	}
+
+	@Test
 	void theWholeOrderCannotBeReadyBeforeItIsStarted() {
 		var order = accepted(aLine());
 

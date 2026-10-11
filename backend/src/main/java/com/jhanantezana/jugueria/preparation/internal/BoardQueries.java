@@ -51,10 +51,7 @@ public class BoardQueries {
 		return store.cards("o.status = 'READY'" + stationFilter(station), params(station), "o.ready_at, o.id", station);
 	}
 
-	/**
-	 * Identical items across the cards being prepared, counted together. Identical means the same product, the same
-	 * modifiers and the same names; a line with a note or an allergy flag is never merged into a count.
-	 */
+	/** Identical pending items counted together; lines with a note or an allergy are listed one by one. */
 	@Transactional(readOnly = true)
 	public AllDayView allDay(@Nullable UUID station) {
 		var filter = """
