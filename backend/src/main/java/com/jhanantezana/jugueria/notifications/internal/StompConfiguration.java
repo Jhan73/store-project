@@ -8,9 +8,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 
 import com.jhanantezana.jugueria.shared.WebOriginsProperties;
 
@@ -29,11 +33,15 @@ class StompConfiguration implements WebSocketMessageBrokerConfigurer {
 
 	private final ThreadPoolTaskScheduler heartbeatTaskScheduler;
 
+	private final StompSessionRegistry sessions;
+
 	StompConfiguration(StompAuthChannelInterceptor authInterceptor, WebOriginsProperties webOrigins,
-			@Qualifier("heartbeatTaskScheduler") ThreadPoolTaskScheduler heartbeatTaskScheduler) {
+			@Qualifier("heartbeatTaskScheduler") ThreadPoolTaskScheduler heartbeatTaskScheduler,
+			StompSessionRegistry sessions) {
 		this.authInterceptor = authInterceptor;
 		this.webOrigins = webOrigins;
 		this.heartbeatTaskScheduler = heartbeatTaskScheduler;
+		this.sessions = sessions;
 	}
 
 	// A Spring-managed bean so the scheduler's thread pool is shut down with the context, not leaked.
@@ -60,6 +68,26 @@ class StompConfiguration implements WebSocketMessageBrokerConfigurer {
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
 		registration.interceptors(authInterceptor);
+	}
+
+	// Keeps hold of each WebSocket so a deactivated user's sessions can be closed.
+	@Override
+	public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+		registration.addDecoratorFactory(handler -> new WebSocketHandlerDecorator(handler) {
+
+			@Override
+			public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+				sessions.opened(session);
+				super.afterConnectionEstablished(session);
+			}
+
+			@Override
+			public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+				sessions.closed(session.getId());
+				super.afterConnectionClosed(session, closeStatus);
+			}
+
+		});
 	}
 
 }
