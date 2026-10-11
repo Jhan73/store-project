@@ -273,14 +273,37 @@ class TicketVoidIT {
 	}
 
 	@Test
-	void aLineOnAHandedOverCardCannotBeVoided() {
+	void aServerCannotVoidALineOnAHandedOverCardButACashierVoidsItAsWaste() {
 		var line = sentLine();
-		PreparationTables.forceStatus(jdbc, cardOf(ticket), "HANDED_OVER");
+		handOver();
 
-		var result = voidLine(line, CHANGED_MIND, Role.ADMIN);
-
-		assertProblem(result, HttpStatus.CONFLICT, "preparation.order-closed");
+		assertProblem(voidLine(line, CHANGED_MIND, Role.SERVER), HttpStatus.CONFLICT, "preparation.line-already-ready");
 		assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("SENT");
+
+		var result = voidLine(line, CHANGED_MIND, Role.CASHIER);
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson()
+			.extractingPath("$.lines[?(@.id=='" + line + "')].waste")
+			.asList()
+			.containsExactly(true);
+		assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("VOIDED");
+		assertThat(PreparationTables.orderStatus(jdbc, cardOf(ticket))).isEqualTo("HANDED_OVER");
+	}
+
+	@Test
+	void retryingAWasteVoidOfAHandedOverLineIsASuccess() {
+		var line = sentLine();
+		handOver();
+		assertThat(voidLine(line, CHANGED_MIND, Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidLine(line, CHANGED_MIND, Role.ADMIN)).hasStatusOk();
+		assertThat(events.stream(TicketLineVoided.class)).hasSize(1);
+	}
+
+	private void handOver() {
+		jdbc.sql("update preparation.board_line set state = 'READY', ready_at = now()").update();
+		PreparationTables.forceStatus(jdbc, cardOf(ticket), "HANDED_OVER");
 	}
 
 	@Test

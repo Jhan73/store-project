@@ -263,7 +263,29 @@ class PreparationVoidAndCancelIT {
 	}
 
 	@Test
-	void aHandedOverOrderIsClosedToVoids() {
+	void aHandedOverOrderStillAllowsAWasteVoidOfAReadyLine() {
+		var line = aLine();
+		var intake = anOrder(line, aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		commands.readyOrder(order);
+		commands.handover(order);
+
+		var waste = preparation.voidLine(intake.source(), intake.sourceId(), line.sourceLineId(),
+				VoidMode.ALLOW_READY_AS_WASTE);
+		var again = preparation.voidLine(intake.source(), intake.sourceId(), line.sourceLineId(),
+				VoidMode.ALLOW_READY_AS_WASTE);
+
+		assertThat(waste).isTrue();
+		assertThat(again).isTrue();
+		assertThat(PreparationTables.lineState(jdbc, PreparationTables.lineIdOf(jdbc, order, line.sourceLineId())))
+			.isEqualTo("VOIDED");
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("HANDED_OVER");
+		assertThat(PreparationTables.markers(jdbc, order)).containsExactly("NEW*", "VOID*");
+	}
+
+	@Test
+	void aPendingOnlyVoidOfAReadyLineOnAHandedOverOrderIsRejectedAsReady() {
 		var line = aLine();
 		var intake = anOrder(line);
 		var order = preparation.accept(intake);
@@ -272,8 +294,22 @@ class PreparationVoidAndCancelIT {
 		commands.handover(order);
 
 		assertThatThrownBy(() -> preparation.voidLine(intake.source(), intake.sourceId(), line.sourceLineId(),
-				VoidMode.ALLOW_READY_AS_WASTE)).isInstanceOfSatisfying(BusinessException.class,
-						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.ORDER_CLOSED));
+				VoidMode.PENDING_ONLY)).isInstanceOfSatisfying(BusinessException.class,
+						e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_ALREADY_READY));
+	}
+
+	@Test
+	void voidingTheLastLineOfAHandedOverOrderLeavesItHandedOver() {
+		var line = aLine();
+		var intake = anOrder(line);
+		var order = preparation.accept(intake);
+		commands.start(order);
+		commands.readyOrder(order);
+		commands.handover(order);
+
+		preparation.voidLine(intake.source(), intake.sourceId(), line.sourceLineId(), VoidMode.ALLOW_READY_AS_WASTE);
+
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("HANDED_OVER");
 	}
 
 	@Test

@@ -24,6 +24,9 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
+import com.jhanantezana.jugueria.preparation.BoardSource;
+import com.jhanantezana.jugueria.preparation.PreparationApi;
+import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
@@ -44,6 +47,9 @@ class TicketRaceIT {
 
 	@Autowired
 	JdbcClient jdbc;
+
+	@Autowired
+	PreparationApi preparation;
 
 	InstoreTables.SizedProduct juice;
 
@@ -213,7 +219,130 @@ class TicketRaceIT {
 		}
 	}
 
+	@Test
+	void swappingTwoTicketsBetweenTheirTablesAtOnceNeverFailsWithAServerError() throws Exception {
+		for (var round = 0; round < 10; round++) {
+			var tableA = InstoreTables.aTable(jdbc);
+			var tableB = InstoreTables.aTable(jdbc);
+			var first = UUID.fromString(idOf(open("{\"tableId\":\"%s\"}".formatted(tableA))));
+			var second = UUID.fromString(idOf(open("{\"tableId\":\"%s\"}".formatted(tableB))));
+
+			var results = race(2, i -> () -> i == 0 ? transfer(first, tableB) : transfer(second, tableA));
+
+			assertThat(results.stream().map(r -> r.getResponse().getStatus())).as("round %d", round)
+				.allMatch(status -> status == 200 || status == 409);
+			assertThat(jdbc.sql("select max(c) from (select count(*) c from instore.ticket where status = 'OPEN' "
+					+ "group by table_id) t").query(Long.class).single()).isEqualTo(1);
+		}
+	}
+
+	@Test
+	void sendingWhileTheCardIsHandedOverAlwaysLeavesTheNewLineOnALiveCard() throws Exception {
+		for (var round = 0; round < 5; round++) {
+			var ticket = UUID.fromString(idOf(open("{\"counterName\":\"Ana%d\"}".formatted(round))));
+			addLine(ticket);
+			assertThat(send(ticket)).hasStatusOk();
+			var card = jdbc.sql("select id from preparation.board_order where source_id = ?")
+				.param(ticket)
+				.query(UUID.class)
+				.single();
+			jdbc.sql("update preparation.board_line set state = 'READY' where board_order_id = ?").param(card).update();
+			PreparationTables.forceStatus(jdbc, card, "READY");
+			var second = addLine(ticket);
+
+			var results = race(2, i -> i == 0 ? () -> send(ticket) : () -> handOver(card));
+
+			assertThat(results.get(0)).as("round %d send", round).hasStatusOk();
+			assertThat(results.get(1).getResponse().getStatus()).as("round %d handover", round).isIn(200, 409);
+			var holder = jdbc.sql("select b.status from preparation.board_line l join preparation.board_order b "
+					+ "on b.id = l.board_order_id where l.source_line_id = ?").param(second).query(String.class).single();
+			assertThat(holder).as("round %d", round).isIn("WAITING", "PREPARING");
+		}
+	}
+
+	@Test
+	void sendingWhileTheCardIsCancelledNeverErrorsAndEveryLineIsOnOneCard() throws Exception {
+		var ticket = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
+		addLine(ticket);
+		assertThat(send(ticket)).hasStatusOk();
+		var second = addLine(ticket);
+
+		var results = race(2, i -> i == 0 ? () -> send(ticket) : () -> cancelCard(ticket));
+
+		assertThat(results.get(0)).hasStatusOk();
+		assertThat(InstoreTables.lineState(jdbc, second)).isEqualTo("SENT");
+		assertThat(jdbc.sql("select count(*) from preparation.board_line where source_line_id = ?")
+			.param(second)
+			.query(Long.class)
+			.single()).isEqualTo(1);
+	}
+
+	@Test
+	void sendingManyTimesAtOnceAfterAHandoverOpensExactlyOneNewRound() throws Exception {
+		var ticket = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
+		addLine(ticket);
+		assertThat(send(ticket)).hasStatusOk();
+		PreparationTables.forceStatus(jdbc, jdbc.sql("select id from preparation.board_order")
+			.query(UUID.class)
+			.single(), "HANDED_OVER");
+		addLine(ticket);
+		addLine(ticket);
+
+		var results = race(THREADS, i -> () -> send(ticket));
+
+		assertThat(results).allSatisfy(r -> assertThat(r).hasStatusOk());
+		assertThat(PreparationTables.count(jdbc, "board_order")).isEqualTo(2);
+		assertThat(PreparationTables.count(jdbc, "board_line")).isEqualTo(3);
+		assertThat(jdbc.sql("select board_rounds from instore.ticket where id = ?")
+			.param(ticket)
+			.query(Integer.class)
+			.single()).isEqualTo(2);
+	}
+
+	@Test
+	void voidingAReadyLineWhileTheCardIsHandedOverEndsVoidedWithoutErrors() throws Exception {
+		var ticket = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
+		var line = addLine(ticket);
+		addLine(ticket);
+		assertThat(send(ticket)).hasStatusOk();
+		var card = jdbc.sql("select id from preparation.board_order").query(UUID.class).single();
+		jdbc.sql("update preparation.board_line set state = 'READY'").update();
+		PreparationTables.forceStatus(jdbc, card, "READY");
+
+		var results = race(2, i -> i == 0 ? () -> voidAsCashier(ticket, line) : () -> handOver(card));
+
+		assertThat(results.get(0)).hasStatusOk();
+		assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("VOIDED");
+	}
+
 	// helpers
+
+	private MvcTestResult handOver(UUID card) {
+		return mvc.post()
+			.uri("/api/v1/board/orders/" + card + "/handover")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER))
+			.exchange();
+	}
+
+	private MvcTestResult voidAsCashier(UUID ticket, UUID line) {
+		return mvc.post()
+			.uri(TICKETS + "/" + ticket + "/lines/" + line + "/void")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"reason\":\"Changed mind\"}")
+			.exchange();
+	}
+
+	private MvcTestResult cancelCard(UUID ticket) {
+		try {
+			preparation.cancel(BoardSource.TICKET, ticket);
+		}
+		catch (BusinessException e) {
+			// Losing to staff starting the card is a legal outcome of this race.
+		}
+		return null;
+	}
 
 	private List<MvcTestResult> race(int threads, java.util.function.IntFunction<Callable<MvcTestResult>> task)
 			throws Exception {

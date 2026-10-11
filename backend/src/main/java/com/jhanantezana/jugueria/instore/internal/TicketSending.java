@@ -59,7 +59,7 @@ public class TicketSending {
 			source = ticket.id();
 			accept(ticket, source, 1, lines, now);
 		}
-		else if (!joinsCard(source, lines)) {
+		else if (!preparation.tryAddLines(BoardSource.TICKET, source, lines)) {
 			source = Ids.newId();
 			accept(ticket, source, ticket.boardRounds() + 1, lines, now);
 		}
@@ -67,12 +67,6 @@ public class TicketSending {
 		tickets.markSent(ticketId, lineIds, source, now);
 		events.publishEvent(new TicketLinesSent(ticketId, source, lineIds, currentActor.id(), currentActor.role(), now));
 		return ticketService.view(tickets.require(ticketId));
-	}
-
-	// A card the board no longer holds counts as closed: its lines were served long ago.
-	private boolean joinsCard(UUID source, List<BoardLineIntake> lines) {
-		return preparation.statusOf(BoardSource.TICKET, source).isPresent()
-				&& preparation.tryAddLines(BoardSource.TICKET, source, lines);
 	}
 
 	private void accept(Tickets.TicketRow ticket, UUID source, int round, List<BoardLineIntake> lines, Instant now) {

@@ -211,10 +211,9 @@ class PreparationIntakeIT {
 	}
 
 	@Test
-	void tryAddingLinesToASourceThatIsNotOnTheBoardIsNotFound() {
-		assertThatThrownBy(() -> preparation.tryAddLines(BoardSource.TICKET, UUID.randomUUID(), List.of(aLine())))
-			.isInstanceOfSatisfying(BusinessException.class,
-					e -> assertThat(e.errorCode()).isEqualTo(PreparationError.ORDER_NOT_FOUND));
+	void tryAddingLinesToASourceThatIsNotOnTheBoardAddsNothingAndSaysSo() {
+		assertThat(preparation.tryAddLines(BoardSource.TICKET, UUID.randomUUID(), List.of(aLine()))).isFalse();
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
 	}
 
 	@Test

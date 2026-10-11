@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +60,8 @@ public class TicketPlacement {
 		try {
 			tickets.moveToTable(ticketId, tableId);
 		}
-		catch (DuplicateKeyException e) {
+		// Two tickets swapping tables wait on each other's index entries; the deadlock loser sees an occupied table.
+		catch (DuplicateKeyException | PessimisticLockingFailureException e) {
 			throw new BusinessException(InstoreError.TABLE_OCCUPIED, "Table " + tableId + " already has an open ticket");
 		}
 		for (var source : tickets.boardSources(ticketId)) {

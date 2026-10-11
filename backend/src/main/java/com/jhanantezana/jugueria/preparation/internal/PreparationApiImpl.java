@@ -1,5 +1,6 @@
 package com.jhanantezana.jugueria.preparation.internal;
 
+import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.HANDED_OVER;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.PREPARING;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.READY;
 import static com.jhanantezana.jugueria.preparation.BoardOrderStatus.WAITING;
@@ -82,7 +83,10 @@ class PreparationApiImpl implements PreparationApi {
 
 	private boolean add(BoardSource source, UUID sourceId, List<BoardLineIntake> lines, boolean failWhenClosed) {
 		var now = Instant.now(clock);
-		var order = requireOrder(source, sourceId);
+		var order = failWhenClosed ? requireOrder(source, sourceId) : store.find(source, sourceId).orElse(null);
+		if (order == null) {
+			return false;
+		}
 		var sourceLines = lines.stream().map(BoardLineIntake::sourceLineId).collect(Collectors.toSet());
 		if (store.allPresent(order.id(), sourceLines)) {
 			return true;
@@ -139,7 +143,8 @@ class PreparationApiImpl implements PreparationApi {
 		if ("VOIDED".equals(line.state())) {
 			return line.waste();
 		}
-		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY).orElse(null);
+		// A handed-over line can still be rejected by the customer, so only a cancelled card is closed to voids.
+		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY, HANDED_OVER).orElse(null);
 		if (locked == null) {
 			// A retry of the void that closed the card finds it closed.
 			var finished = lineRef(line.id());
