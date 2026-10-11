@@ -127,9 +127,31 @@ class StompAuthChannelInterceptorTest {
 	@Test
 	void rejectsSubscribingToAnUnlistedDestination() {
 		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
-		accessor.setDestination("/topic/tables");
+		accessor.setDestination("/topic/display");
 
 		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "ROLE_SERVER", "ROLE_CASHIER", "ROLE_ADMIN" })
+	void allowsStaffToSubscribeToTheTables(String role) {
+		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+		accessor.setDestination("/topic/tables");
+		accessor.setUser(new TestingAuthenticationToken("user", null, role));
+
+		assertThat(interceptor.preSend(message(accessor), null)).isNotNull();
+	}
+
+	@Test
+	void rejectsACustomerAndAnAnonymousSubscriberToTheTables() {
+		var customer = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+		customer.setDestination("/topic/tables");
+		customer.setUser(new TestingAuthenticationToken("user", null, "ROLE_CUSTOMER"));
+		var anonymous = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+		anonymous.setDestination("/topic/tables");
+
+		assertThatThrownBy(() -> interceptor.preSend(message(customer), null)).isInstanceOf(MessagingException.class);
+		assertThatThrownBy(() -> interceptor.preSend(message(anonymous), null)).isInstanceOf(MessagingException.class);
 	}
 
 	@Test
