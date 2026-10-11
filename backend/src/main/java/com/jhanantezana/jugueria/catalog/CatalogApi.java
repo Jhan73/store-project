@@ -14,4 +14,13 @@ public interface CatalogApi {
 	 */
 	PricedSelection priceSelection(UUID productId, List<UUID> optionIds);
 
+	boolean productExists(UUID productId);
+
+	/**
+	 * Sets the product's availability and publishes {@link AvailabilityChanged} when the flag flips, in the
+	 * caller's transaction. Used by {@code inventory} so a stock-tracked product is unavailable exactly while
+	 * nothing is left to sell. Throws {@code BusinessException} with {@code catalog.product-not-found}.
+	 */
+	void setProductAvailability(UUID productId, boolean available);
+
 }

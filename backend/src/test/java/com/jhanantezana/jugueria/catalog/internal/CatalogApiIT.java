@@ -221,6 +221,32 @@ class CatalogApiIT {
 		return new Boosters(group.getId(), group.getOptions().get(0).getId(), group.getOptions().get(1).getId());
 	}
 
+	@Test
+	void reportsWhetherAProductExists() {
+		var product = product("Water", "3.00");
+
+		assertThat(catalog.productExists(product)).isTrue();
+		assertThat(catalog.productExists(UUID.randomUUID())).isFalse();
+	}
+
+	@Test
+	void setsAProductAvailabilityAndTheSaleStopsAcceptingIt() {
+		var product = product("Water", "3.00");
+
+		catalog.setProductAvailability(product, false);
+
+		assertThatThrownBy(() -> catalog.priceSelection(product, List.of())).isInstanceOfSatisfying(
+				BusinessException.class, e -> assertThat(e.errorCode()).isEqualTo(CatalogError.PRODUCT_UNAVAILABLE));
+		catalog.setProductAvailability(product, true);
+		assertThat(catalog.priceSelection(product, List.of()).productId()).isEqualTo(product);
+	}
+
+	@Test
+	void settingAvailabilityOfAnUnknownProductIsRejected() {
+		assertThatThrownBy(() -> catalog.setProductAvailability(UUID.randomUUID(), false)).isInstanceOfSatisfying(
+				BusinessException.class, e -> assertThat(e.errorCode()).isEqualTo(CatalogError.PRODUCT_NOT_FOUND));
+	}
+
 	private UUID product(String name, String price, UUID... groupIds) {
 		var categoryId = categories.create("Cat-" + UUID.randomUUID(), null, 0).getId();
 		return products.create(new ProductDefinition(name, null, categoryId, Money.of(price, PEN), 0, false, Set.of(),
