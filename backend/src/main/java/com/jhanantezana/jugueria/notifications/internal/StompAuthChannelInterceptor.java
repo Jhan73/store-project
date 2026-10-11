@@ -1,9 +1,13 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
+import java.security.Principal;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
 import org.springframework.http.HttpHeaders;
@@ -14,22 +18,25 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.stereotype.Component;
 
 import com.jhanantezana.jugueria.notifications.RealtimeTopic;
+import com.jhanantezana.jugueria.shared.Role;
 
 // Absent in a headless run such as the first-admin bootstrap, which opens no channel to intercept.
 @Component
 @ConditionalOnWebApplication(type = Type.SERVLET)
 class StompAuthChannelInterceptor implements ChannelInterceptor {
 
-	// Only these two are wired and public; every other destination is denied by default until it has its own rule.
-	private static final Set<String> PUBLIC_DESTINATIONS = Arrays.stream(RealtimeTopic.values())
-		.map(RealtimeTopic::destination)
-		.collect(Collectors.toUnmodifiableSet());
+	// Only the wired topics can be subscribed to; every other destination is denied by default until it has its own rule.
+	private static final Map<String, RealtimeTopic> TOPICS = Arrays.stream(RealtimeTopic.values())
+		.filter(RealtimeTopic::subscribable)
+		.collect(Collectors.toUnmodifiableMap(RealtimeTopic::destination, Function.identity()));
 
 	private static final String BEARER_PREFIX = "Bearer ";
 
@@ -37,14 +44,21 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 
 	private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
-	StompAuthChannelInterceptor(JwtDecoder jwtDecoder, JwtAuthenticationConverter jwtAuthenticationConverter) {
+	private final StompSessionRegistry sessions;
+
+	StompAuthChannelInterceptor(JwtDecoder jwtDecoder, JwtAuthenticationConverter jwtAuthenticationConverter,
+			StompSessionRegistry sessions) {
 		this.jwtDecoder = jwtDecoder;
 		this.jwtAuthenticationConverter = jwtAuthenticationConverter;
+		this.sessions = sessions;
 	}
 
 	@Override
 	public Message<?> preSend(Message<?> message, MessageChannel channel) {
-		var accessor = StompHeaderAccessor.wrap(message);
+		// The accessor the protocol handler built the message with: it reads the user back from that one to authenticate
+		// the session's later frames. wrap() only copies, so it is the fallback for messages whose accessor is frozen or missing.
+		var original = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+		var accessor = original != null && original.isMutable() ? original : StompHeaderAccessor.wrap(message);
 		var command = accessor.getCommand();
 		if (command == null) {
 			return message;
@@ -57,8 +71,7 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 				// UNSUBSCRIBE/DISCONNECT/ACK/etc. need no extra check here.
 			}
 		}
-		// wrap() copies headers into a detached accessor; the mutated user/headers only take effect
-		// once rebuilt into the message returned here, which is what the channel actually forwards.
+		// A wrap() copy's changes only reach the channel once rebuilt into the message returned here.
 		return MessageBuilder.createMessage(message.getPayload(), accessor.getMessageHeaders());
 	}
 
@@ -71,7 +84,11 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 		var token = header.startsWith(BEARER_PREFIX) ? header.substring(BEARER_PREFIX.length()) : header;
 		try {
 			var jwt = jwtDecoder.decode(token);
-			accessor.setUser(jwtAuthenticationConverter.convert(jwt));
+			var authentication = jwtAuthenticationConverter.convert(jwt);
+			accessor.setUser(authentication);
+			if (authentication != null && accessor.getSessionId() != null) {
+				sessions.authenticated(accessor.getSessionId(), authentication.getName());
+			}
 		}
 		catch (JwtException e) {
 			throw new MessagingException("Invalid or expired token");
@@ -80,9 +97,21 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 
 	private void authorizeSubscribe(StompHeaderAccessor accessor) {
 		var destination = accessor.getDestination();
-		if (destination == null || !PUBLIC_DESTINATIONS.contains(destination)) {
+		var topic = destination == null ? null : TOPICS.get(destination);
+		if (topic == null) {
 			throw new MessagingException("Subscription not allowed for this destination");
 		}
+		if (!topic.subscriberRoles().isEmpty() && !hasAnyRole(accessor.getUser(), topic.subscriberRoles())) {
+			throw new MessagingException("Subscription not allowed for this user");
+		}
+	}
+
+	private static boolean hasAnyRole(@Nullable Principal user, Set<Role> roles) {
+		if (!(user instanceof Authentication authentication) || !authentication.isAuthenticated()) {
+			return false;
+		}
+		var allowed = roles.stream().map(role -> "ROLE_" + role.name()).collect(Collectors.toSet());
+		return authentication.getAuthorities().stream().anyMatch(authority -> allowed.contains(authority.getAuthority()));
 	}
 
 	// No @MessageMapping destinations exist, so no client SEND has anywhere legitimate to go; deny all of them.

@@ -10,6 +10,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationsServiceTest {
@@ -29,11 +33,23 @@ class NotificationsServiceTest {
 	@Mock
 	StaffSetPasswordEmailTemplate template;
 
+	@Mock
+	AppEventsPublisher appEvents;
+
 	NotificationsService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new NotificationsService(emailSender, template, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new NotificationsService(emailSender, template, appEvents, Clock.fixed(NOW, ZoneOffset.UTC));
+	}
+
+	@Test
+	void signalsEveryTaskToCloseTheSessionsOfAUser() {
+		var user = UUID.randomUUID();
+
+		service.revokeSessions(user);
+
+		verify(appEvents).publish(RealtimeTopic.SESSIONS, "USER_SESSIONS_REVOKED", Map.of("userId", user.toString()));
 	}
 
 	@Test

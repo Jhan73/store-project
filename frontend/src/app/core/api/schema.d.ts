@@ -612,6 +612,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/board/all-day": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["boardAllDay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/lines/{id}/flag": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardFlagLine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/lines/{id}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardReadyLine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/markers/{id}/ack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardAcknowledge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/orders/{id}/handover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardHandover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/orders/{id}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardReadyOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/orders/{id}/recall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardRecall"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/orders/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["boardStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["boardReady"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/board/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["boardTickets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/menu": {
         parameters: {
             query?: never;
@@ -782,6 +942,33 @@ export interface components {
             quantityDelta: number;
             reason: string;
         };
+        AllDayGroupResponse: {
+            displayName: string;
+            modifiersText: string | null;
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        AllDayLineResponse: {
+            allergy: boolean;
+            /** Format: uuid */
+            boardOrderId: string;
+            displayName: string;
+            /** Format: uuid */
+            lineId: string;
+            modifiersText: string | null;
+            note: string | null;
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            shortNumber: string;
+        };
+        AllDayResponse: {
+            groups: components["schemas"]["AllDayGroupResponse"][];
+            individual: components["schemas"]["AllDayLineResponse"][];
+        };
         AuditEntryResponse: {
             action: string;
             /** Format: uuid */
@@ -810,6 +997,52 @@ export interface components {
             available: boolean;
             /** Format: uuid */
             id: string;
+        };
+        BoardLineResponse: {
+            allergy: boolean;
+            displayName: string;
+            flaggedUnavailable: boolean;
+            /** Format: uuid */
+            id: string;
+            modifiersText: string | null;
+            note: string | null;
+            /** Format: uuid */
+            productId: string;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: date-time */
+            readyAt: string | null;
+            /** @enum {string} */
+            state: "PENDING" | "READY" | "VOIDED" | "COMPED";
+            /** Format: uuid */
+            stationId: string | null;
+            waste: boolean;
+        };
+        BoardOrderResponse: {
+            /** @enum {string} */
+            channel: "TABLE" | "COUNTER" | "PICKUP" | "DELIVERY";
+            /** Format: date-time */
+            fireAt: string | null;
+            /** Format: date-time */
+            handedOverAt: string | null;
+            /** Format: uuid */
+            id: string;
+            label: string | null;
+            lines: components["schemas"]["BoardLineResponse"][];
+            markers: components["schemas"]["MarkerResponse"][];
+            /** Format: date-time */
+            readyAt: string | null;
+            /** Format: date-time */
+            sentAt: string;
+            shortNumber: string;
+            /** @enum {string} */
+            source: "ONLINE" | "TICKET" | "QUICK_SALE";
+            /** Format: uuid */
+            sourceId: string;
+            /** Format: date-time */
+            startedAt: string | null;
+            /** @enum {string} */
+            status: "WAITING" | "PREPARING" | "READY" | "HANDED_OVER" | "CANCELLED";
         };
         CategoryResponse: {
             active: boolean;
@@ -877,7 +1110,7 @@ export interface components {
          * @description Every error code the API can return; codes are never renamed or reused.
          * @enum {string}
          */
-        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.table-name-already-used" | "instore.table-not-found" | "inventory.insufficient-stock" | "inventory.invalid-quantity" | "inventory.invalid-reason" | "inventory.product-not-found" | "inventory.product-not-tracked" | "inventory.reservation-not-active" | "inventory.stock-item-not-found" | "inventory.stock-reserved" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
+        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.table-name-already-used" | "instore.table-not-found" | "inventory.insufficient-stock" | "inventory.invalid-quantity" | "inventory.invalid-reason" | "inventory.product-not-found" | "inventory.product-not-tracked" | "inventory.reservation-not-active" | "inventory.stock-item-not-found" | "inventory.stock-reserved" | "preparation.line-already-flagged" | "preparation.line-already-ready" | "preparation.line-flagged-unavailable" | "preparation.line-not-found" | "preparation.line-not-pending" | "preparation.marker-already-acknowledged" | "preparation.marker-not-found" | "preparation.order-already-started" | "preparation.order-cancelled" | "preparation.order-closed" | "preparation.order-not-completed" | "preparation.order-not-found" | "preparation.order-not-preparing" | "preparation.order-not-ready" | "preparation.recall-window-expired" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -890,6 +1123,20 @@ export interface components {
             tokenType: string;
             /** Format: uuid */
             userId: string;
+        };
+        MarkerResponse: {
+            /** Format: date-time */
+            acknowledgedAt: string | null;
+            /** Format: uuid */
+            boardOrderId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "NEW" | "MODIFIED" | "VOID";
+            /** Format: uuid */
+            lineId: string | null;
         };
         MenuCategory: {
             /** Format: uuid */
@@ -6004,6 +6251,802 @@ export interface operations {
             };
             /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
             415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardAllDay: {
+        parameters: {
+            query?: {
+                station?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllDayResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardFlagLine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.line-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.line-already-flagged, preparation.line-not-pending, preparation.order-cancelled */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardReadyLine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.line-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.order-cancelled, preparation.order-not-preparing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardAcknowledge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkerResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.marker-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.marker-already-acknowledged */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardHandover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.order-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.order-cancelled, preparation.order-not-ready */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardReadyOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.order-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.order-cancelled, preparation.order-not-preparing */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardRecall: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.order-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.order-cancelled, preparation.order-not-completed, preparation.recall-window-expired */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardStart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: preparation.order-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: preparation.order-already-started, preparation.order-cancelled */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardReady: {
+        parameters: {
+            query?: {
+                station?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"][];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    boardTickets: {
+        parameters: {
+            query?: {
+                station?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardOrderResponse"][];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
                 headers: {
                     [name: string]: unknown;
                 };
