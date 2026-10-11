@@ -80,6 +80,74 @@ class TableGridControllerIT {
 	}
 
 	@Test
+	void showsATableWithAnOpenTicketAsOccupiedAndWhenItsTicketWasOpened() {
+		var busy = InstoreTables.aTable(jdbc, "A-" + UUID.randomUUID());
+		var free = InstoreTables.aTable(jdbc, "B-" + UUID.randomUUID());
+		var ticket = UUID.randomUUID();
+		jdbc.sql("""
+				insert into instore.ticket (id, type, table_id, status, currency, opened_by, created_at, updated_at)
+				values (?, 'TABLE', ?, 'OPEN', 'PEN', ?, '2026-10-11T10:00:00Z', now())
+				""").param(ticket).param(busy).param(UUID.randomUUID()).update();
+
+		var result = mvc.get().uri(GRID).with(as(Role.SERVER)).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + busy + "')].status")
+			.asList()
+			.containsExactly("OCCUPIED");
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + busy + "')].ticketOpenedAt")
+			.asList()
+			.containsExactly("2026-10-11T10:00:00Z");
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + busy + "')].ticketId")
+			.asList()
+			.containsExactly(ticket.toString());
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + free + "')].status")
+			.asList()
+			.containsExactly("FREE");
+	}
+
+	@Test
+	void showsATableWhoseBillWasRequestedAsWaitingForPayment() {
+		var table = InstoreTables.aTable(jdbc);
+		jdbc.sql("""
+				insert into instore.ticket (id, type, table_id, status, bill_requested, currency, opened_by, created_at,
+					updated_at)
+				values (?, 'TABLE', ?, 'OPEN', true, 'PEN', ?, now(), now())
+				""").param(UUID.randomUUID()).param(table).param(UUID.randomUUID()).update();
+
+		var result = mvc.get().uri(GRID).with(as(Role.SERVER)).exchange();
+
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + table + "')].status")
+			.asList()
+			.containsExactly("WAITING_FOR_PAYMENT");
+	}
+
+	@Test
+	void aClosedTicketLeavesTheTableFree() {
+		var table = InstoreTables.aTable(jdbc);
+		jdbc.sql("""
+				insert into instore.ticket (id, type, table_id, status, currency, opened_by, closed_at, created_at, updated_at)
+				values (?, 'TABLE', ?, 'CLOSED', 'PEN', ?, now(), now(), now())
+				""").param(UUID.randomUUID()).param(table).param(UUID.randomUUID()).update();
+
+		var result = mvc.get().uri(GRID).with(as(Role.SERVER)).exchange();
+
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + table + "')].status")
+			.asList()
+			.containsExactly("FREE");
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='" + table + "')].ticketId")
+			.asList()
+			.containsNull();
+	}
+
+	@Test
 	void everyFloorRoleMayReadTheGrid() {
 		for (var role : new Role[] { Role.SERVER, Role.CASHIER, Role.ADMIN }) {
 			assertThat(mvc.get().uri(GRID).with(as(role)).exchange()).hasStatusOk();
