@@ -357,6 +357,69 @@ class InventoryApiIT {
 		assertThat(stock.get(product).onHand()).isEqualTo(8);
 	}
 
+	@Test
+	void deductingAllowingAShortfallTakesStockBelowZeroWithANormalSaleRow() {
+		var product = trackedWithStock(1);
+		var sale = UUID.randomUUID();
+
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(-2);
+		assertThat(ledger(product, "SALE")).containsExactly("-3/0");
+		assertThatThrownBy(() -> inventory.deduct(UUID.randomUUID(), List.of(new StockLine(product, 1))))
+			.isInstanceOf(BusinessException.class);
+	}
+
+	@Test
+	void aShortfallSaleIsAppliedOncePerReference() {
+		var product = trackedWithStock(1);
+		var sale = UUID.randomUUID();
+
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(-2);
+		assertThat(ledger(product, "SALE")).hasSize(1);
+	}
+
+	@Test
+	void aShortfallSaleNeverEatsReservedUnits() {
+		var product = trackedWithStock(3);
+		inventory.reserve(UUID.randomUUID(), List.of(new StockLine(product, 2)), TTL);
+
+		assertThatThrownBy(() -> inventory.deductAllowingShortfall(UUID.randomUUID(), List.of(new StockLine(product, 2))))
+			.isInstanceOf(BusinessException.class)
+			.extracting(e -> ((BusinessException) e).errorCode().code())
+			.isEqualTo("inventory.insufficient-stock");
+		inventory.deductAllowingShortfall(UUID.randomUUID(), List.of(new StockLine(product, 1)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(2);
+		assertThat(stock.get(product).reserved()).isEqualTo(2);
+	}
+
+	@Test
+	void aProductStaysUnavailableWhileItsStockIsNegativeAndComesBackWithAnEntry() {
+		var product = trackedWithStock(1);
+
+		inventory.deductAllowingShortfall(UUID.randomUUID(), List.of(new StockLine(product, 3)));
+
+		assertThat(InventoryTables.isAvailable(jdbc, product)).isFalse();
+		stock.recordEntry(product, 1, null);
+		assertThat(InventoryTables.isAvailable(jdbc, product)).isFalse();
+		stock.recordEntry(product, 5, null);
+		assertThat(stock.get(product).onHand()).isEqualTo(4);
+		assertThat(InventoryTables.isAvailable(jdbc, product)).isTrue();
+	}
+
+	@Test
+	void aShortfallSaleIgnoresProductsThatAreNotTracked() {
+		var product = InventoryTables.aProduct(jdbc);
+
+		inventory.deductAllowingShortfall(UUID.randomUUID(), List.of(new StockLine(product, 3)));
+
+		assertThat(ledger(product, "SALE")).isEmpty();
+	}
+
 
 	private UUID trackedWithStock(int quantity) {
 		var product = InventoryTables.aProduct(jdbc);

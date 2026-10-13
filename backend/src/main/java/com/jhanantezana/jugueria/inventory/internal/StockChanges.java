@@ -33,6 +33,25 @@ class StockChanges {
 	private record Balance(int onHand, int reserved, int lowStockThreshold) {
 	}
 
+	private static final String UPDATE_BALANCE = """
+			UPDATE inventory.stock_item
+			SET on_hand = on_hand + :onHand, reserved = reserved + :reserved, version = version + 1,
+				updated_at = :now
+			WHERE product_id = :product AND tracked
+			""";
+
+	// The rule every movement keeps: reserved units are never sold.
+	private static final String STRICT_CONDITION = """
+			AND on_hand + :onHand >= reserved + :reserved AND reserved + :reserved >= 0
+			""";
+
+	// A sale the shelf cannot cover: on hand may go below zero, but never below units that are reserved.
+	private static final String SHORTFALL_CONDITION = """
+			AND reserved + :reserved >= 0 AND (reserved = 0 OR on_hand + :onHand >= reserved)
+			""";
+
+	private static final String RETURNING_BALANCE = " RETURNING on_hand, reserved, low_stock_threshold";
+
 	private final JdbcClient jdbc;
 
 	private final Clock clock;
@@ -61,6 +80,18 @@ class StockChanges {
 	@Transactional(propagation = Propagation.MANDATORY)
 	boolean apply(UUID productId, StockMovementType type, int onHandDelta, int reservedDelta,
 			@Nullable UUID referenceId, @Nullable String reasonCode, @Nullable String note) {
+		// Units coming in never eat reserved ones, and they must be able to lift a shelf that sold below zero.
+		var addsUnits = onHandDelta > 0 && reservedDelta == 0;
+		return apply(productId, type, onHandDelta, reservedDelta, referenceId, reasonCode, note, addsUnits);
+	}
+
+	/**
+	 * As {@link #apply}, but with {@code allowShortfall} on hand may fall below zero. Reserved units are still never
+	 * sold: while any are held, on hand cannot drop below them.
+	 */
+	@Transactional(propagation = Propagation.MANDATORY)
+	boolean apply(UUID productId, StockMovementType type, int onHandDelta, int reservedDelta,
+			@Nullable UUID referenceId, @Nullable String reasonCode, @Nullable String note, boolean allowShortfall) {
 		var now = Instant.now(clock);
 		// The ledger row goes first: its unique index is what makes a redelivered sale or return a no-op.
 		var recorded = jdbc.sql("""
@@ -84,14 +115,7 @@ class StockChanges {
 		if (recorded == 0) {
 			return false;
 		}
-		var balance = jdbc.sql("""
-				UPDATE inventory.stock_item
-				SET on_hand = on_hand + :onHand, reserved = reserved + :reserved, version = version + 1,
-					updated_at = :now
-				WHERE product_id = :product AND tracked
-					AND on_hand + :onHand >= reserved + :reserved AND reserved + :reserved >= 0
-				RETURNING on_hand, reserved, low_stock_threshold
-				""")
+		var balance = jdbc.sql(UPDATE_BALANCE + (allowShortfall ? SHORTFALL_CONDITION : STRICT_CONDITION) + RETURNING_BALANCE)
 			.param("onHand", onHandDelta)
 			.param("reserved", reservedDelta)
 			.param("now", utc(now))
