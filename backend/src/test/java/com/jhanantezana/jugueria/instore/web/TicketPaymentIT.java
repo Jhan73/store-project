@@ -452,20 +452,89 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void aCashierNeedsAnOpenShiftToVoidAPaymentButAnAdminDoesNot() {
+	void aCashierNeedsAnOpenShiftToVoidAPayment() {
 		sentLine(juice.small());
 		sentLine(juice.small());
 		sentLine(juice.small());
 		var first = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
-		pay(ticket, "CARD", "5.00", null);
 
 		assertProblem(voidPayment(first, CHANGED_MIND, UUID.randomUUID(), Role.CASHIER), HttpStatus.CONFLICT,
 				"instore.no-open-shift");
-		assertThat(voidPayment(first, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN)).hasStatusOk();
-		assertThat(jdbc.sql("select count(*) from instore.payment_void where payment_id = ? and shift_id is null")
-			.param(UUID.fromString(first))
-			.query(Long.class)
-			.single()).isEqualTo(1);
+	}
+
+	@Test
+	void aCashierCannotVoidAPaymentTakenInAnotherCashiersShift() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		var other = UUID.randomUUID();
+		var otherShift = openShift(other, "50.00");
+
+		var result = voidPayment(payment, CHANGED_MIND, other, Role.CASHIER);
+
+		assertProblem(result, HttpStatus.FORBIDDEN, "instore.sale-void-not-permitted");
+		assertThat(voidCount(payment)).isZero();
+		assertThat(otherShift).isNotEqualTo(shift);
+		assertThat(events.stream(PaymentVoided.class)).isEmpty();
+	}
+
+	@Test
+	void anAdminVoidsIntoTheShiftThePaymentWasTakenInWhileItIsOpen() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		var admin = UUID.randomUUID();
+		openShift(admin, "10.00");
+
+		var result = voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN);
+
+		assertThat(result).hasStatusOk();
+		assertThat(voidShift(payment)).isEqualTo(UUID.fromString(shift));
+		var closed = mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"100.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+		assertThat(closed).bodyJson().extractingPath("$.expectedCash.amount").isEqualTo("100.00");
+		assertThat(closed).bodyJson().extractingPath("$.totals.voidedCash.amount").isEqualTo("5.00");
+	}
+
+	@Test
+	void anAdminVoidsWithNoDrawerOnceThePaymentsShiftIsClosed() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"105.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+		var admin = UUID.randomUUID();
+		openShift(admin, "10.00");
+
+		assertThat(voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidShift(payment)).isNull();
+	}
+
+	@Test
+	void aPaymentOfAShiftBeingClosedCannotBeVoided() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"20.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+
+		assertProblem(voidPayment(payment, CHANGED_MIND, cashier, Role.CASHIER), HttpStatus.CONFLICT, "instore.shift-closing");
+		assertProblem(voidPayment(payment, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN), HttpStatus.CONFLICT,
+				"instore.shift-closing");
+		assertThat(voidCount(payment)).isZero();
 	}
 
 	@Test
@@ -742,6 +811,21 @@ class TicketPaymentIT {
 
 	private String paymentId(MvcTestResult result, int index) {
 		return assertThat(result).bodyJson().extractingPath("$.payments[" + index + "].id").actual().toString();
+	}
+
+	private long voidCount(String payment) {
+		return jdbc.sql("select count(*) from instore.payment_void where payment_id = ?")
+			.param(UUID.fromString(payment))
+			.query(Long.class)
+			.single();
+	}
+
+	private UUID voidShift(String payment) {
+		return jdbc.sql("select shift_id from instore.payment_void where payment_id = ?")
+			.param(UUID.fromString(payment))
+			.query((rs, row) -> rs.getObject("shift_id", UUID.class))
+			.list()
+			.get(0);
 	}
 
 	private long paymentCount() {

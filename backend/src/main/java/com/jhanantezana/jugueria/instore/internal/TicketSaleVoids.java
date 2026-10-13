@@ -9,14 +9,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.PaymentVoided;
 import com.jhanantezana.jugueria.instore.SaleVoided;
 import com.jhanantezana.jugueria.inventory.InventoryApi;
-import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Ids;
-import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.jugueria.store.ReasonType;
 
 /**
@@ -74,17 +71,18 @@ public class TicketSaleVoids {
 		}
 		var text = TicketService.blankToNull(note);
 		var reason = voidReasons.require(ReasonType.VOID, reasonCode, text);
-		var shiftId = Voiding.shiftFor(shifts, actor, role);
 		var live = payments.live(ticketId);
-		if (role == Role.CASHIER && live.stream().anyMatch(payment -> !payment.shiftId().equals(shiftId))) {
-			throw new BusinessException(InstoreError.SALE_VOID_NOT_PERMITTED,
-					"A cashier voids only a sale paid in their own open shift");
+		var shiftIds = new java.util.ArrayList<UUID>();
+		for (var payment : live) {
+			shiftIds.add(Voiding.shiftFor(shifts, actor, role, payment));
 		}
 		var saleVoidId = Ids.newId();
 		if (!payments.insertSaleVoid(saleVoidId, ticketId, reason, text, actor, now)) {
 			return ticketService.view(ticket);
 		}
-		for (var payment : live) {
+		for (var i = 0; i < live.size(); i++) {
+			var payment = live.get(i);
+			var shiftId = shiftIds.get(i);
 			payments.insertVoid(Ids.newId(), payment.id(), ticketId, shiftId, saleVoidId, reason, text, actor, now);
 			events.publishEvent(new PaymentVoided(payment.id(), ticketId, shiftId, payment.method(), payment.paidMoney(),
 					reason, text, saleVoidId, actor, role, now));

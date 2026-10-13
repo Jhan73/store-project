@@ -129,7 +129,8 @@ class SaleVoidIT {
 		voidSale(other, WRONG_ORDER, cashier, Role.CASHIER);
 
 		assertThat(stock.get(bottle).onHand()).isEqualTo(8);
-		assertThat(kept).isNotNull();
+		assertThat(InstoreTables.lineState(jdbc, kept)).isEqualTo("SENT");
+		assertThat(InstoreTables.lineState(jdbc, dropped)).isEqualTo("VOIDED");
 	}
 
 	@Test
@@ -195,7 +196,9 @@ class SaleVoidIT {
 	}
 
 	@Test
-	void anAdminVoidsAnySaleWithoutAShiftAndTheVoidHasNoDrawer() {
+	void anAdminVoidsWithNoDrawerOnceTheShiftThatTookThePaymentsIsClosed() {
+		closeCashiersShift();
+
 		var result = voidSale(ticket, WRONG_ORDER, UUID.randomUUID(), Role.ADMIN);
 
 		assertThat(result).hasStatusOk();
@@ -206,7 +209,7 @@ class SaleVoidIT {
 	}
 
 	@Test
-	void anAdminWithAnOpenShiftVoidsIntoItsOwnDrawer() {
+	void anAdminNeverChargesTheirOwnDrawerForAnotherCashiersSale() {
 		var admin = UUID.randomUUID();
 		var adminShift = openShift(admin, Role.ADMIN);
 
@@ -214,9 +217,28 @@ class SaleVoidIT {
 
 		assertThat(jdbc.sql("select count(*) from instore.payment_void where ticket_id = ? and shift_id = ?")
 			.param(ticket)
-			.param(UUID.fromString(adminShift))
+			.param(UUID.fromString(shift))
 			.query(Long.class)
 			.single()).isEqualTo(2);
+		assertThat(jdbc.sql("select count(*) from instore.payment_void where shift_id = ?")
+			.param(UUID.fromString(adminShift))
+			.query(Long.class)
+			.single()).isZero();
+	}
+
+	@Test
+	void aSaleOfAShiftBeingClosedCannotBeVoided() {
+		mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"20.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+
+		assertProblem(voidSale(ticket, WRONG_ORDER, cashier, Role.CASHIER), HttpStatus.CONFLICT, "instore.shift-closing");
+		assertProblem(voidSale(ticket, WRONG_ORDER, UUID.randomUUID(), Role.ADMIN), HttpStatus.CONFLICT,
+				"instore.shift-closing");
+		assertThat(saleVoids()).isZero();
 	}
 
 	@Test
@@ -276,6 +298,15 @@ class SaleVoidIT {
 	}
 
 	// helpers
+
+	private void closeCashiersShift() {
+		assertThat(mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"105.00\",\"currency\":\"PEN\"}}")
+			.exchange()).hasStatusOk();
+	}
 
 	private String openShift(UUID who, Role role) {
 		var result = mvc.post()

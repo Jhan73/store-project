@@ -121,7 +121,7 @@ public class TicketPayments {
 		}
 		var text = TicketService.blankToNull(note);
 		var reason = voidReasons.require(ReasonType.VOID, reasonCode, text);
-		var shiftId = Voiding.shiftFor(shifts, actor, currentActor.role());
+		var shiftId = Voiding.shiftFor(shifts, actor, currentActor.role(), payment);
 		if (payments.insertVoid(Ids.newId(), paymentId, ticketId, shiftId, null, reason, text, actor, now)) {
 			events.publishEvent(new PaymentVoided(paymentId, ticketId, shiftId, payment.method(), payment.paidMoney(),
 					reason, text, null, actor, currentActor.role(), now));
