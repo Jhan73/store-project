@@ -31,6 +31,7 @@ const settings: StoreSettings = {
   registerDifferenceThreshold: { amount: '5.00', currency: 'PEN' },
   exceptionThreshold: 3,
   onlineCapacityLimit: 20,
+  allowNegativeStockOnSale: false,
 };
 
 const stale = {
@@ -95,6 +96,40 @@ describe('SettingsForm', () => {
     expect(numberText(host, 'settings-boardLateMinutes')).toBe('12');
     expect(value(host, '#settings-registerDifferenceThreshold')).toBe('5.00');
     expect(numberText(host, 'settings-exceptionThreshold')).toBe('3');
+  });
+
+  it('shows whether sales may close without stock as the server holds it', async () => {
+    const { host } = await render();
+
+    expect(host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.checked)
+      .toBe(false);
+  });
+
+  it('sends the allow-negative-stock choice with the rest and keeps it on the next edit', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.click();
+    await fixture.whenStable();
+    submit(host);
+    const first = http.expectOne(URL);
+    expect(first.request.body.allowNegativeStockOnSale).toBe(true);
+    first.flush({ ...settings, allowNegativeStockOnSale: true }, { headers: { ETag: '"5"' } });
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.checked)
+      .toBe(true);
+    typeNumber(host, 'settings-basePrepMinutes', '12');
+    await fixture.whenStable();
+    submit(host);
+    expect(http.expectOne(URL).request.body.allowNegativeStockOnSale).toBe(true);
+  });
+
+  it('explains what the setting does', async () => {
+    const { host } = await render();
+
+    expect(host.querySelector('#settings-allowNegativeStockOnSale-hint')?.textContent).toContain(
+      'quedará en negativo',
+    );
   });
 
   it('searches the time zones and picks one of the matches', async () => {
@@ -175,6 +210,7 @@ describe('SettingsForm', () => {
       boardLateMinutes: 9,
       registerDifferenceThreshold: { amount: '7.50', currency: 'USD' },
       exceptionThreshold: 4,
+      allowNegativeStockOnSale: false,
     });
     request.flush(
       { ...settings, basePrepMinutes: 12, registerDifferenceThreshold: { amount: '7.50', currency: 'PEN' } },

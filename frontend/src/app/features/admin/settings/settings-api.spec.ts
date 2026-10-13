@@ -27,6 +27,7 @@ const settings: StoreSettings = {
   registerDifferenceThreshold: { amount: '5.00', currency: 'PEN' },
   exceptionThreshold: 3,
   onlineCapacityLimit: 20,
+  allowNegativeStockOnSale: false,
 };
 const update: UpdateStoreSettingsRequest = {
   timeZone: 'America/Lima',
@@ -39,6 +40,7 @@ const update: UpdateStoreSettingsRequest = {
   registerDifferenceThreshold: { amount: '5.00', currency: 'PEN' },
   exceptionThreshold: 3,
   onlineCapacityLimit: 20,
+  allowNegativeStockOnSale: false,
 };
 const monday: OpeningHour = {
   dayOfWeek: 'MONDAY',
