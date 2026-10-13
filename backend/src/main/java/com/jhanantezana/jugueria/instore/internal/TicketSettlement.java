@@ -13,6 +13,7 @@ import com.jhanantezana.jugueria.inventory.InventoryApi;
 import com.jhanantezana.jugueria.inventory.StockLine;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Money;
+import com.jhanantezana.jugueria.store.StoreApi;
 
 /**
  * Closes a ticket once its payments cover the total. Stock is deducted here and nowhere earlier, in the closing
@@ -27,15 +28,18 @@ class TicketSettlement {
 
 	private final InventoryApi inventory;
 
+	private final StoreApi store;
+
 	private final ApplicationEventPublisher events;
 
 	private final CurrentActor currentActor;
 
-	TicketSettlement(Tickets tickets, Payments payments, InventoryApi inventory, ApplicationEventPublisher events,
+	TicketSettlement(Tickets tickets, Payments payments, InventoryApi inventory, StoreApi store, ApplicationEventPublisher events,
 			CurrentActor currentActor) {
 		this.tickets = tickets;
 		this.payments = payments;
 		this.inventory = inventory;
+		this.store = store;
 		this.events = events;
 		this.currentActor = currentActor;
 	}
@@ -51,7 +55,12 @@ class TicketSettlement {
 		if (total.isZero() || paid.compareTo(total) != 0) {
 			return false;
 		}
-		inventory.deduct(ticket.id(), stockLines(lines));
+		if (store.allowsNegativeStockOnSale()) {
+			inventory.deductAllowingShortfall(ticket.id(), stockLines(lines));
+		}
+		else {
+			inventory.deduct(ticket.id(), stockLines(lines));
+		}
 		tickets.close(ticket.id(), now);
 		events.publishEvent(new SaleRecorded(ticket.id(), ticket.number(), ticket.type(), ticket.quickSale(), total,
 				soldLines(lines), currentActor.id(), currentActor.role(), now));
