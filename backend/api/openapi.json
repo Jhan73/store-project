@@ -7630,6 +7630,1264 @@
         "tags" : [ "availability-controller" ]
       }
     },
+    "/api/v1/quick-sales" : {
+      "post" : {
+        "operationId" : "quickSaleSell",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/QuickSaleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "Created",
+            "headers" : {
+              "Location" : {
+                "description" : "URI of the created resource.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.idempotency-key-required", "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: catalog.product-not-found",
+            "x-error-codes" : [ "catalog.product-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: catalog.modifier-option-unavailable, catalog.price-currency-mismatch, catalog.product-unavailable, common.idempotency-in-progress, instore.no-open-shift, instore.shift-closing, inventory.insufficient-stock",
+            "x-error-codes" : [ "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-unavailable", "common.idempotency-in-progress", "instore.no-open-shift", "instore.shift-closing", "inventory.insufficient-stock" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment",
+            "x-error-codes" : [ "catalog.invalid-modifier-selection", "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "quick-sale-controller" ]
+      }
+    },
+    "/api/v1/quick-sales/items" : {
+      "get" : {
+        "operationId" : "quickSaleItems",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/QuickSaleItemResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "quick-sale-controller" ]
+      }
+    },
+    "/api/v1/shifts" : {
+      "get" : {
+        "operationId" : "shiftList",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "OPEN", "CLOSED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseShiftResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      },
+      "post" : {
+        "operationId" : "shiftOpen",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenShiftRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShiftResponse"
+                }
+              }
+            },
+            "description" : "Created",
+            "headers" : {
+              "Location" : {
+                "description" : "URI of the created resource.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.idempotency-key-required", "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.idempotency-in-progress, instore.shift-already-open",
+            "x-error-codes" : [ "common.idempotency-in-progress", "instore.shift-already-open" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount",
+            "x-error-codes" : [ "common.idempotency-key-reused", "instore.invalid-amount" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/current" : {
+      "get" : {
+        "operationId" : "shiftCurrent",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShiftResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/{id}" : {
+      "get" : {
+        "operationId" : "shiftGet",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShiftResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/{id}/cash-movements" : {
+      "get" : {
+        "operationId" : "shiftListMovements",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CashMovementResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      },
+      "post" : {
+        "operationId" : "shiftRecordMovement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CashMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashMovementResponse"
+                }
+              }
+            },
+            "description" : "Created",
+            "headers" : {
+              "Location" : {
+                "description" : "URI of the created resource.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.idempotency-key-required", "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.idempotency-in-progress, instore.shift-closed, instore.shift-closing",
+            "x-error-codes" : [ "common.idempotency-in-progress", "instore.shift-closed", "instore.shift-closing" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount, instore.invalid-cash-movement, instore.invalid-reason",
+            "x-error-codes" : [ "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-cash-movement", "instore.invalid-reason" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/{id}/cash-movements/{movementId}" : {
+      "get" : {
+        "operationId" : "shiftGetMovement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "movementId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashMovementResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.cash-movement-not-found, instore.shift-not-found",
+            "x-error-codes" : [ "instore.cash-movement-not-found", "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/{id}/close" : {
+      "post" : {
+        "operationId" : "shiftClose",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CloseShiftRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShiftResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.difference-note-required, instore.shift-closed",
+            "x-error-codes" : [ "instore.difference-note-required", "instore.shift-closed" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: instore.counted-cash-locked, instore.invalid-amount",
+            "x-error-codes" : [ "instore.counted-cash-locked", "instore.invalid-amount" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
+    "/api/v1/shifts/{id}/force-close" : {
+      "post" : {
+        "operationId" : "shiftForceClose",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ForceCloseShiftRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ShiftResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.shift-not-found",
+            "x-error-codes" : [ "instore.shift-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.shift-closed",
+            "x-error-codes" : [ "instore.shift-closed" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: instore.invalid-reason",
+            "x-error-codes" : [ "instore.invalid-reason" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "shift-controller" ]
+      }
+    },
     "/api/v1/staff" : {
       "get" : {
         "operationId" : "staffList",
@@ -9456,6 +10714,308 @@
         "tags" : [ "ticket-controller" ]
       }
     },
+    "/api/v1/tickets/{id}/payments" : {
+      "post" : {
+        "operationId" : "ticketPaymentRecord",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RecordPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "Created",
+            "headers" : {
+              "Location" : {
+                "description" : "URI of the created resource.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.idempotency-key-required, common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.idempotency-key-required", "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.line-not-found, instore.ticket-not-found",
+            "x-error-codes" : [ "instore.line-not-found", "instore.ticket-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.idempotency-in-progress, instore.line-already-paid, instore.no-open-shift, instore.shift-closing, instore.ticket-closed, inventory.insufficient-stock",
+            "x-error-codes" : [ "common.idempotency-in-progress", "instore.line-already-paid", "instore.no-open-shift", "instore.shift-closing", "instore.ticket-closed", "inventory.insufficient-stock" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.payment-exceeds-balance, instore.ticket-has-unsent-lines",
+            "x-error-codes" : [ "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment", "instore.payment-exceeds-balance", "instore.ticket-has-unsent-lines" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "ticket-payment-controller" ]
+      }
+    },
+    "/api/v1/tickets/{id}/payments/{paymentId}/void" : {
+      "post" : {
+        "operationId" : "ticketPaymentVoidPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "paymentId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VoidPaymentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.payment-not-found, instore.ticket-not-found",
+            "x-error-codes" : [ "instore.payment-not-found", "instore.ticket-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.no-open-shift, instore.shift-closing, instore.ticket-closed",
+            "x-error-codes" : [ "instore.no-open-shift", "instore.shift-closing", "instore.ticket-closed" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: instore.invalid-reason",
+            "x-error-codes" : [ "instore.invalid-reason" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "ticket-payment-controller" ]
+      }
+    },
     "/api/v1/tickets/{id}/repeat" : {
       "post" : {
         "operationId" : "ticketRepeat",
@@ -9718,6 +11278,132 @@
         "tags" : [ "ticket-controller" ]
       }
     },
+    "/api/v1/tickets/{id}/split" : {
+      "get" : {
+        "operationId" : "ticketPaymentSplit",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "query",
+          "name" : "parts",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SplitResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.ticket-not-found",
+            "x-error-codes" : [ "instore.ticket-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.ticket-closed",
+            "x-error-codes" : [ "instore.ticket-closed" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: instore.invalid-payment",
+            "x-error-codes" : [ "instore.invalid-payment" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "ticket-payment-controller" ]
+      }
+    },
     "/api/v1/tickets/{id}/transfer" : {
       "post" : {
         "operationId" : "ticketTransfer",
@@ -9855,6 +11541,145 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "ticket-controller" ]
+      }
+    },
+    "/api/v1/tickets/{id}/void" : {
+      "post" : {
+        "operationId" : "ticketPaymentVoidSale",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VoidSaleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden, instore.sale-void-not-permitted",
+            "x-error-codes" : [ "auth.forbidden", "instore.sale-void-not-permitted" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.ticket-not-found",
+            "x-error-codes" : [ "instore.ticket-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.no-open-shift, instore.shift-closing, instore.ticket-not-closed",
+            "x-error-codes" : [ "instore.no-open-shift", "instore.shift-closing", "instore.ticket-not-closed" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "422" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unprocessable Content. Error codes: instore.invalid-reason",
+            "x-error-codes" : [ "instore.invalid-reason" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "ticket-payment-controller" ]
       }
     }
   },
@@ -10145,6 +11970,72 @@
         },
         "required" : [ "channel", "fireAt", "handedOverAt", "id", "label", "lines", "markers", "readyAt", "sentAt", "shortNumber", "source", "sourceId", "startedAt", "status" ]
       },
+      "CashMovementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "note" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 280,
+            "minLength" : 0
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "reference" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          }
+        },
+        "required" : [ "amount", "type" ]
+      },
+      "CashMovementResponse" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "note" : {
+            "type" : [ "string", "null" ]
+          },
+          "reasonCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "recordedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "reference" : {
+            "type" : [ "string", "null" ]
+          },
+          "shiftId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          }
+        },
+        "required" : [ "amount", "id", "note", "reasonCode", "recordedAt", "recordedBy", "reference", "shiftId", "type" ]
+      },
       "CategoryResponse" : {
         "type" : "object",
         "properties" : {
@@ -10181,6 +12072,20 @@
           }
         },
         "required" : [ "role" ]
+      },
+      "CloseShiftRequest" : {
+        "type" : "object",
+        "properties" : {
+          "countedCash" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "note" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 280,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "countedCash" ]
       },
       "CreateCategoryRequest" : {
         "type" : "object",
@@ -10328,7 +12233,18 @@
       "ErrorCode" : {
         "type" : "string",
         "description" : "Every error code the API can return; codes are never renamed or reused.",
-        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.idempotency-in-progress", "common.idempotency-key-required", "common.idempotency-key-reused", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "instore.invalid-reason", "instore.invalid-ticket", "instore.line-already-sent", "instore.line-not-found", "instore.line-not-sent", "instore.table-has-open-ticket", "instore.table-inactive", "instore.table-name-already-used", "instore.table-not-found", "instore.table-occupied", "instore.ticket-closed", "instore.ticket-has-no-table", "instore.ticket-not-found", "inventory.insufficient-stock", "inventory.invalid-quantity", "inventory.invalid-reason", "inventory.product-not-found", "inventory.product-not-tracked", "inventory.reservation-not-active", "inventory.stock-item-not-found", "inventory.stock-reserved", "preparation.line-already-flagged", "preparation.line-already-ready", "preparation.line-flagged-unavailable", "preparation.line-not-found", "preparation.line-not-pending", "preparation.lines-not-acknowledged", "preparation.marker-already-acknowledged", "preparation.marker-not-found", "preparation.order-already-started", "preparation.order-cancelled", "preparation.order-closed", "preparation.order-not-completed", "preparation.order-not-found", "preparation.order-not-preparing", "preparation.order-not-ready", "preparation.recall-window-expired", "store.delivery-zone-currency-mismatch", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
+        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.idempotency-in-progress", "common.idempotency-key-required", "common.idempotency-key-reused", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "instore.cash-movement-not-found", "instore.counted-cash-locked", "instore.difference-note-required", "instore.invalid-amount", "instore.invalid-cash-movement", "instore.invalid-payment", "instore.invalid-reason", "instore.invalid-ticket", "instore.line-already-paid", "instore.line-already-sent", "instore.line-covered-by-payment", "instore.line-not-found", "instore.line-not-sent", "instore.no-open-shift", "instore.payment-exceeds-balance", "instore.payment-not-found", "instore.sale-void-not-permitted", "instore.shift-already-open", "instore.shift-closed", "instore.shift-closing", "instore.shift-not-found", "instore.table-has-open-ticket", "instore.table-inactive", "instore.table-name-already-used", "instore.table-not-found", "instore.table-occupied", "instore.ticket-closed", "instore.ticket-has-no-table", "instore.ticket-has-unsent-lines", "instore.ticket-not-closed", "instore.ticket-not-found", "inventory.insufficient-stock", "inventory.invalid-quantity", "inventory.invalid-reason", "inventory.product-not-found", "inventory.product-not-tracked", "inventory.reservation-not-active", "inventory.stock-item-not-found", "inventory.stock-reserved", "preparation.line-already-flagged", "preparation.line-already-ready", "preparation.line-flagged-unavailable", "preparation.line-not-found", "preparation.line-not-pending", "preparation.lines-not-acknowledged", "preparation.marker-already-acknowledged", "preparation.marker-not-found", "preparation.order-already-started", "preparation.order-cancelled", "preparation.order-closed", "preparation.order-not-completed", "preparation.order-not-found", "preparation.order-not-preparing", "preparation.order-not-ready", "preparation.recall-window-expired", "store.delivery-zone-currency-mismatch", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
+      },
+      "ForceCloseShiftRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 280,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
       },
       "LineRequest" : {
         "type" : "object",
@@ -10553,6 +12469,25 @@
         },
         "required" : [ "categories" ]
       },
+      "MethodTotalResponse" : {
+        "type" : "object",
+        "properties" : {
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "WALLET", "TRANSFER" ]
+          },
+          "net" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "recorded" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "voided" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        },
+        "required" : [ "method", "net", "recorded", "voided" ]
+      },
       "ModifierGroupResponse" : {
         "type" : "object",
         "properties" : {
@@ -10692,6 +12627,15 @@
         },
         "required" : [ "actorId", "actorRole", "id", "note", "occurredAt", "onHandDelta", "productId", "reasonCode", "referenceId", "reservedDelta", "type" ]
       },
+      "OpenShiftRequest" : {
+        "type" : "object",
+        "properties" : {
+          "openingFloat" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        },
+        "required" : [ "openingFloat" ]
+      },
       "OpenTicketRequest" : {
         "type" : "object",
         "properties" : {
@@ -10820,6 +12764,34 @@
         },
         "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
       },
+      "PageResponseShiftResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ShiftResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
+      },
       "PageResponseStaffResponse" : {
         "type" : "object",
         "properties" : {
@@ -10847,6 +12819,61 @@
           }
         },
         "required" : [ "content", "page", "size", "totalElements", "totalPages" ]
+      },
+      "PaymentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "change" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "lineIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "WALLET", "TRANSFER" ]
+          },
+          "paid" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "received" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "recordedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "voidNote" : {
+            "type" : [ "string", "null" ]
+          },
+          "voidReasonCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "voided" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "change", "id", "lineIds", "method", "paid", "received", "recordedAt", "recordedBy", "voidNote", "voidReasonCode", "voided" ]
       },
       "Problem" : {
         "type" : "object",
@@ -10953,6 +12980,61 @@
         },
         "required" : [ "active", "allergens", "available", "categoryId", "description", "displayOrder", "etag", "id", "imageUrl", "modifierGroupIds", "name", "price", "quickSalePinned" ]
       },
+      "QuickSaleItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "productId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "name", "price", "productId" ]
+      },
+      "QuickSalePayment" : {
+        "type" : "object",
+        "properties" : {
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "WALLET", "TRANSFER" ]
+          },
+          "receivedAmount" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "method", "receivedAmount" ]
+      },
+      "QuickSaleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "customerName" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "lines" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LineRequest"
+            },
+            "maxItems" : 50,
+            "minItems" : 0
+          },
+          "payment" : {
+            "$ref" : "#/components/schemas/QuickSalePayment"
+          }
+        },
+        "required" : [ "lines", "payment" ]
+      },
       "ReasonResponse" : {
         "type" : "object",
         "properties" : {
@@ -10993,6 +13075,35 @@
         },
         "required" : [ "quantity" ]
       },
+      "RecordPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "lineIds" : {
+            "type" : [ "array", "null" ],
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "maxItems" : 50,
+            "minItems" : 1
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "WALLET", "TRANSFER" ]
+          },
+          "receivedAmount" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "amount", "method" ]
+      },
       "RepeatLinesRequest" : {
         "type" : "object",
         "properties" : {
@@ -11007,6 +13118,26 @@
           }
         },
         "required" : [ "lineIds" ]
+      },
+      "SaleVoidResponse" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : [ "string", "null" ]
+          },
+          "reasonCode" : {
+            "type" : "string"
+          },
+          "voidedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "voidedBy" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "note", "reasonCode", "voidedAt", "voidedBy" ]
       },
       "SaveModifierGroupRequest" : {
         "type" : "object",
@@ -11139,6 +13270,116 @@
         },
         "required" : [ "newPassword", "token" ]
       },
+      "ShiftResponse" : {
+        "type" : "object",
+        "properties" : {
+          "cashierId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "closeKind" : {
+            "type" : [ "string", "null" ],
+            "enum" : [ "COUNTED", "FORCED" ]
+          },
+          "closedAt" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "closedBy" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "countedCash" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "difference" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "differenceNote" : {
+            "type" : [ "string", "null" ]
+          },
+          "expectedCash" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Money"
+            }, {
+              "type" : "null"
+            } ]
+          },
+          "forceReason" : {
+            "type" : [ "string", "null" ]
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "openingFloat" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "OPEN", "CLOSED" ]
+          },
+          "totals" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ShiftTotalsResponse"
+            }, {
+              "type" : "null"
+            } ]
+          }
+        },
+        "required" : [ "cashierId", "closeKind", "closedAt", "closedBy", "countedCash", "difference", "differenceNote", "expectedCash", "forceReason", "id", "openedAt", "openingFloat", "status", "totals" ]
+      },
+      "ShiftTotalsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "byMethod" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MethodTotalResponse"
+            }
+          },
+          "cashIn" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "cashOut" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "cashReceived" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "changeGiven" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "voidedCash" : {
+            "$ref" : "#/components/schemas/Money"
+          }
+        },
+        "required" : [ "byMethod", "cashIn", "cashOut", "cashReceived", "changeGiven", "voidedCash" ]
+      },
+      "SplitResponse" : {
+        "type" : "object",
+        "properties" : {
+          "parts" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Money"
+            }
+          }
+        },
+        "required" : [ "parts" ]
+      },
       "StaffResponse" : {
         "type" : "object",
         "properties" : {
@@ -11217,6 +13458,9 @@
       "StoreSettingsResponse" : {
         "type" : "object",
         "properties" : {
+          "allowNegativeStockOnSale" : {
+            "type" : "boolean"
+          },
           "basePrepMinutes" : {
             "type" : "integer",
             "format" : "int32"
@@ -11262,7 +13506,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "id", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
+        "required" : [ "allowNegativeStockOnSale", "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "id", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "TableGridResponse" : {
         "type" : "object",
@@ -11381,6 +13625,9 @@
       "TicketResponse" : {
         "type" : "object",
         "properties" : {
+          "balance" : {
+            "$ref" : "#/components/schemas/Money"
+          },
           "billRequested" : {
             "type" : "boolean"
           },
@@ -11408,6 +13655,25 @@
             "type" : "string",
             "format" : "date-time"
           },
+          "paid" : {
+            "$ref" : "#/components/schemas/Money"
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentResponse"
+            }
+          },
+          "quickSale" : {
+            "type" : "boolean"
+          },
+          "saleVoid" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SaleVoidResponse"
+            }, {
+              "type" : "null"
+            } ]
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "OPEN", "CLOSED" ]
@@ -11427,7 +13693,7 @@
             "enum" : [ "TABLE", "COUNTER" ]
           }
         },
-        "required" : [ "billRequested", "counterName", "id", "lines", "note", "number", "openedAt", "status", "tableId", "tableName", "total", "type" ]
+        "required" : [ "balance", "billRequested", "counterName", "id", "lines", "note", "number", "openedAt", "paid", "payments", "quickSale", "saleVoid", "status", "tableId", "tableName", "total", "type" ]
       },
       "TicketSummaryResponse" : {
         "type" : "object",
@@ -11572,6 +13838,9 @@
       "UpdateStoreSettingsRequest" : {
         "type" : "object",
         "properties" : {
+          "allowNegativeStockOnSale" : {
+            "type" : "boolean"
+          },
           "basePrepMinutes" : {
             "type" : "integer",
             "format" : "int32",
@@ -11621,7 +13890,7 @@
             "minLength" : 1
           }
         },
-        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
+        "required" : [ "allowNegativeStockOnSale", "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "UpdateTableRequest" : {
         "type" : "object",
@@ -11645,6 +13914,38 @@
         "required" : [ "displayOrder", "name" ]
       },
       "VoidLineRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 280,
+            "minLength" : 0
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "VoidPaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "note" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 280,
+            "minLength" : 0
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "reason" ]
+      },
+      "VoidSaleRequest" : {
         "type" : "object",
         "properties" : {
           "note" : {

@@ -16,6 +16,9 @@ public interface CatalogApi {
 
 	boolean productExists(UUID productId);
 
+	/** The products pinned for quick sales that can be sold right now, in the order the admin set. */
+	List<QuickSaleItem> quickSaleItems();
+
 	/**
 	 * Sets the product's availability and publishes {@link AvailabilityChanged} when the flag flips, in the
 	 * caller's transaction. Used by {@code inventory} so a stock-tracked product is unavailable exactly while

@@ -13,6 +13,7 @@ import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.catalog.CatalogError;
 import com.jhanantezana.jugueria.catalog.PricedOption;
 import com.jhanantezana.jugueria.catalog.PricedSelection;
+import com.jhanantezana.jugueria.catalog.QuickSaleItem;
 import com.jhanantezana.jugueria.shared.BusinessException;
 
 @Service
@@ -38,6 +39,15 @@ class CatalogApiImpl implements CatalogApi {
 	@Transactional(readOnly = true)
 	public boolean productExists(UUID productId) {
 		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<QuickSaleItem> quickSaleItems() {
+		return products.findQuickSaleItems()
+			.stream()
+			.map(product -> new QuickSaleItem(product.getId(), product.getName(), product.getPrice()))
+			.toList();
 	}
 
 	@Override

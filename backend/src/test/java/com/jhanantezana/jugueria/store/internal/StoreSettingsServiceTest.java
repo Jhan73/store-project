@@ -49,7 +49,7 @@ class StoreSettingsServiceTest {
 
 	@Test
 	void publishesAnEventAfterUpdatingSettings() {
-		service.update("America/Lima", PEN, 12, 3, 20, 6, 12, Money.of("30.00", PEN), 4, 25, 0);
+		service.update("America/Lima", PEN, 12, 3, 20, 6, 12, Money.of("30.00", PEN), 4, 25, false, 0);
 
 		verify(events).publishEvent(any(Object.class));
 	}

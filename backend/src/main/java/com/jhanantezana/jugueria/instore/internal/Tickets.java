@@ -30,12 +30,12 @@ class Tickets {
 
 	record TicketRow(UUID id, long number, TicketType type, @Nullable UUID tableId, @Nullable String tableName,
 			@Nullable String counterName, @Nullable String note, TicketStatus status, boolean billRequested,
-			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt) {
+			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt, boolean quickSale) {
 	}
 
 	private static final String TICKET_COLUMNS = """
 			k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.note, k.status, k.bill_requested,
-			k.board_source_id, k.board_rounds, k.currency, k.created_at
+			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale
 			FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 			""";
 
@@ -84,15 +84,50 @@ class Tickets {
 		return require(id);
 	}
 
+	/**
+	 * The lock a command on a closed sale starts with (voiding it).
+	 *
+	 * @throws BusinessException when the ticket is unknown or still open
+	 */
+	TicketRow lockClosed(UUID id, Instant now) {
+		var locked = jdbc.sql("""
+				UPDATE instore.ticket SET version = version + 1, updated_at = :now WHERE id = :id AND status = 'CLOSED'
+				""").param("now", utc(now)).param("id", id).update();
+		if (locked == 0) {
+			var exists = find(id).isPresent();
+			throw exists ? new BusinessException(InstoreError.TICKET_NOT_CLOSED, "Ticket " + id + " is not closed")
+					: new BusinessException(InstoreError.TICKET_NOT_FOUND, "Ticket not found");
+		}
+		return require(id);
+	}
+
+	/** Closes a ticket this transaction holds the lock of; the table is free again from here on. */
+	void close(UUID id, Instant now) {
+		var closed = jdbc.sql("UPDATE instore.ticket SET status = 'CLOSED', closed_at = :now WHERE id = :id AND status = 'OPEN'")
+			.param("now", utc(now))
+			.param("id", id)
+			.update();
+		if (closed != 1) {
+			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
+		}
+	}
+
 	/** @return false when the table already has an open ticket */
 	boolean insert(UUID id, TicketType type, @Nullable UUID tableId, @Nullable String counterName, @Nullable String note,
 			Currency currency, UUID openedBy, Instant now) {
+		return insert(id, type, tableId, counterName, note, currency, openedBy, false, now);
+	}
+
+	/** @return false when the table already has an open ticket */
+	boolean insert(UUID id, TicketType type, @Nullable UUID tableId, @Nullable String counterName, @Nullable String note,
+			Currency currency, UUID openedBy, boolean quickSale, Instant now) {
 		return jdbc.sql("""
-				INSERT INTO instore.ticket (id, type, table_id, counter_name, note, status, currency, opened_by, created_at,
-					updated_at)
-				VALUES (:id, :type, :table, :counter, :note, 'OPEN', :currency, :openedBy, :now, :now)
+				INSERT INTO instore.ticket (id, type, table_id, counter_name, note, status, currency, opened_by, quick_sale,
+					created_at, updated_at)
+				VALUES (:id, :type, :table, :counter, :note, 'OPEN', :currency, :openedBy, :quickSale, :now, :now)
 				ON CONFLICT (table_id) WHERE status = 'OPEN' DO NOTHING
 				""")
+			.param("quickSale", quickSale)
 			.param("id", id)
 			.param("type", type.name())
 			.param("table", tableId)
@@ -324,7 +359,7 @@ class Tickets {
 				rs.getString("counter_name"), rs.getString("note"), TicketStatus.valueOf(rs.getString("status")),
 				rs.getBoolean("bill_requested"), rs.getObject("board_source_id", UUID.class), rs.getInt("board_rounds"),
 				Currency.getInstance(rs.getString("currency").trim()),
-				rs.getObject("created_at", OffsetDateTime.class).toInstant());
+				rs.getObject("created_at", OffsetDateTime.class).toInstant(), rs.getBoolean("quick_sale"));
 	}
 
 	private TicketSummary summary(ResultSet rs) throws SQLException {

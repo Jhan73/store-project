@@ -30,9 +30,16 @@ class TicketRulesTest {
 
 	@Test
 	void theFirstRoundKeepsTheTicketNumberAndLaterRoundsAreNumbered() {
-		assertThat(TicketRules.boardNumber(12, 1)).isEqualTo("T12");
-		assertThat(TicketRules.boardNumber(12, 2)).isEqualTo("T12-2");
-		assertThat(TicketRules.boardNumber(12, 3)).isEqualTo("T12-3");
+		assertThat(TicketRules.boardNumber(12, 1, false)).isEqualTo("T12");
+		assertThat(TicketRules.boardNumber(12, 2, false)).isEqualTo("T12-2");
+		assertThat(TicketRules.boardNumber(12, 3, false)).isEqualTo("T12-3");
+	}
+
+	@Test
+	void aQuickSaleIsNumberedWithItsOwnPrefix() {
+		assertThat(TicketRules.boardNumber(12, 1, true)).isEqualTo("Q12");
+		assertThat(TicketRules.boardNumber(12, 1, false)).isEqualTo("T12");
+		assertThat(TicketRules.boardNumber(12, 2, true)).isEqualTo("Q12-2");
 	}
 
 	@Test

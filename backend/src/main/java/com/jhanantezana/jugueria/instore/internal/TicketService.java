@@ -17,6 +17,7 @@ import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Ids;
+import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.store.StoreApi;
 
 /** Opening and reading tickets; the commands on their lines live in their own services. */
@@ -24,6 +25,8 @@ import com.jhanantezana.jugueria.store.StoreApi;
 public class TicketService {
 
 	private final Tickets tickets;
+
+	private final Payments payments;
 
 	private final StoreApi store;
 
@@ -33,9 +36,10 @@ public class TicketService {
 
 	private final Clock clock;
 
-	TicketService(Tickets tickets, StoreApi store, ApplicationEventPublisher events, CurrentActor currentActor,
+	TicketService(Tickets tickets, Payments payments, StoreApi store, ApplicationEventPublisher events, CurrentActor currentActor,
 			Clock clock) {
 		this.tickets = tickets;
+		this.payments = payments;
 		this.store = store;
 		this.events = events;
 		this.currentActor = currentActor;
@@ -68,6 +72,19 @@ public class TicketService {
 		return view(ticket);
 	}
 
+	/** A counter ticket for a sale paid upfront; the customer's name is optional. */
+	@Transactional
+	public TicketView openQuickSale(@Nullable String customerName) {
+		var customer = blankToNull(customerName);
+		var now = Instant.now(clock);
+		var id = Ids.newId();
+		tickets.insert(id, TicketType.COUNTER, null, customer, null, store.currency(), requireActor(), true, now);
+		var ticket = tickets.require(id);
+		events.publishEvent(new TicketOpened(id, ticket.number(), TicketType.COUNTER, null, customer, currentActor.id(),
+				currentActor.role(), now));
+		return view(ticket);
+	}
+
 	@Transactional(readOnly = true)
 	public TicketView get(UUID id) {
 		return view(tickets.require(id));
@@ -80,9 +97,13 @@ public class TicketService {
 
 	TicketView view(Tickets.TicketRow ticket) {
 		var lines = tickets.lines(ticket.id());
+		var total = TicketRules.total(lines, ticket.currency());
+		var recorded = payments.ofTicket(ticket.id());
+		var paid = recorded.stream().filter(payment -> !payment.voided()).map(PaymentView::paid).reduce(Money.zero(ticket.currency()), Money::plus);
+		var balance = ticket.status() == TicketStatus.OPEN ? total.minus(paid) : Money.zero(ticket.currency());
 		return new TicketView(ticket.id(), ticket.number(), ticket.type(), ticket.tableId(), ticket.tableName(),
-				ticket.counterName(), ticket.note(), ticket.status(), ticket.billRequested(),
-				TicketRules.total(lines, ticket.currency()), ticket.createdAt(), lines);
+				ticket.counterName(), ticket.note(), ticket.status(), ticket.billRequested(), total, ticket.createdAt(),
+				lines, ticket.quickSale(), paid, balance, recorded, payments.saleVoidOf(ticket.id()).orElse(null));
 	}
 
 	private UUID requireActor() {

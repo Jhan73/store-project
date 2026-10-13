@@ -37,8 +37,16 @@ public interface InventoryApi {
 	/**
 	 * Puts units of a voided or refunded sale back on the shelf; waste must not be returned. A return is applied once
 	 * per reference and product, so the reference must be unique per refund or void: a second partial return under the
-	 * same reference is silently skipped.
+	 * same reference is silently skipped. Only units the same reference sold (a SALE row for the reference and product)
+	 * come back, capped at the sold quantity; a product that is no longer tracked is ignored, as in every other call.
 	 */
 	void returnUnits(UUID referenceId, List<StockLine> lines);
+
+	/**
+	 * Like {@link #deduct}, for a store that sells what the shelf cannot cover: on hand may go below zero, with a normal
+	 * SALE ledger row, once per reference and product. Reserved units are still never sold, so a shortage that would eat
+	 * them is {@code inventory.insufficient-stock}. The product stays unavailable while nothing is left to sell.
+	 */
+	void deductAllowingShortfall(UUID referenceId, List<StockLine> lines);
 
 }

@@ -59,7 +59,7 @@ public class TicketSending {
 			source = ticket.id();
 			accept(ticket, source, 1, lines, now);
 		}
-		else if (!preparation.tryAddLines(BoardSource.TICKET, source, lines)) {
+		else if (!preparation.tryAddLines(boardSource(ticket), source, lines)) {
 			source = Ids.newId();
 			accept(ticket, source, ticket.boardRounds() + 1, lines, now);
 		}
@@ -69,10 +69,15 @@ public class TicketSending {
 		return ticketService.view(tickets.require(ticketId));
 	}
 
+	private static BoardSource boardSource(Tickets.TicketRow ticket) {
+		return ticket.quickSale() ? BoardSource.QUICK_SALE : BoardSource.TICKET;
+	}
+
 	private void accept(Tickets.TicketRow ticket, UUID source, int round, List<BoardLineIntake> lines, Instant now) {
 		var atTable = ticket.type() == TicketType.TABLE;
 		var label = atTable ? ticket.tableName() : ticket.counterName();
-		preparation.accept(new BoardOrderIntake(BoardSource.TICKET, source, TicketRules.boardNumber(ticket.number(), round),
+		preparation.accept(new BoardOrderIntake(boardSource(ticket), source,
+				TicketRules.boardNumber(ticket.number(), round, ticket.quickSale()),
 				atTable ? BoardChannel.TABLE : BoardChannel.COUNTER, label, now, null, lines));
 		tickets.startRound(ticket.id(), source, round);
 	}
