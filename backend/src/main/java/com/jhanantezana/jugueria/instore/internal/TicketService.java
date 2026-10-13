@@ -72,6 +72,19 @@ public class TicketService {
 		return view(ticket);
 	}
 
+	/** A counter ticket for a sale paid upfront; the customer's name is optional. */
+	@Transactional
+	public TicketView openQuickSale(@Nullable String customerName) {
+		var customer = blankToNull(customerName);
+		var now = Instant.now(clock);
+		var id = Ids.newId();
+		tickets.insert(id, TicketType.COUNTER, null, customer, null, store.currency(), requireActor(), true, now);
+		var ticket = tickets.require(id);
+		events.publishEvent(new TicketOpened(id, ticket.number(), TicketType.COUNTER, null, customer, currentActor.id(),
+				currentActor.role(), now));
+		return view(ticket);
+	}
+
 	@Transactional(readOnly = true)
 	public TicketView get(UUID id) {
 		return view(tickets.require(id));

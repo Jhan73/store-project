@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.instore.internal.PaymentCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketPayments;
+import com.jhanantezana.jugueria.instore.internal.TicketSaleVoids;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.IdempotencyKeyHeader;
@@ -38,11 +39,15 @@ class TicketPaymentController {
 
 	private final TicketPayments payments;
 
+	private final TicketSaleVoids saleVoids;
+
 	private final CurrentActor currentActor;
 
-	TicketPaymentController(PaymentCommands commands, TicketPayments payments, CurrentActor currentActor) {
+	TicketPaymentController(PaymentCommands commands, TicketPayments payments, TicketSaleVoids saleVoids,
+			CurrentActor currentActor) {
 		this.commands = commands;
 		this.payments = payments;
+		this.saleVoids = saleVoids;
 		this.currentActor = currentActor;
 	}
 
@@ -77,6 +82,14 @@ class TicketPaymentController {
 	TicketResponse voidPayment(@PathVariable UUID id, @PathVariable UUID paymentId,
 			@Valid @RequestBody VoidPaymentRequest request) {
 		return TicketResponse.from(payments.voidPayment(id, paymentId, request.reason(), request.note()));
+	}
+
+	@PostMapping("/{id}/void")
+	@PreAuthorize(REGISTER_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-not-closed", "instore.invalid-reason",
+			"instore.no-open-shift", "instore.shift-closing", "instore.sale-void-not-permitted" })
+	TicketResponse voidSale(@PathVariable UUID id, @Valid @RequestBody VoidSaleRequest request) {
+		return TicketResponse.from(saleVoids.voidSale(id, request.reason(), request.note()));
 	}
 
 	@GetMapping("/{id}/split")

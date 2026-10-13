@@ -28,9 +28,13 @@ final class TicketRules {
 		};
 	}
 
-	/** The number a card shows on the board: the ticket's own for the first round, then suffixed with the round. */
-	static String boardNumber(long ticketNumber, int round) {
-		return round <= 1 ? "T" + ticketNumber : "T" + ticketNumber + "-" + round;
+	/**
+	 * The number a card shows on the board: the ticket's own for the first round, then suffixed with the round. A quick
+	 * sale carries a {@code Q} instead of the {@code T}, so staff tell a counter sale from a table at a glance.
+	 */
+	static String boardNumber(long ticketNumber, int round, boolean quickSale) {
+		var prefix = quickSale ? "Q" : "T";
+		return round <= 1 ? prefix + ticketNumber : prefix + ticketNumber + "-" + round;
 	}
 
 	/** What the ticket costs now: voided lines are not charged. */

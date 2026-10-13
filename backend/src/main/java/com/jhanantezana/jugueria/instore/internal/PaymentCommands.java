@@ -20,9 +20,19 @@ public class PaymentCommands {
 
 	private final IdempotentRun idempotent;
 
-	PaymentCommands(TicketPayments payments, IdempotentRun idempotent) {
+	private final QuickSales quickSales;
+
+	PaymentCommands(TicketPayments payments, QuickSales quickSales, IdempotentRun idempotent) {
 		this.payments = payments;
+		this.quickSales = quickSales;
 		this.idempotent = idempotent;
+	}
+
+	@Transactional
+	public Outcome<TicketView> quickSale(UUID actorId, UUID key, String requestHash, @Nullable String customerName,
+			List<LineDraft> lines, PaymentMethod method, @Nullable Money received) {
+		return idempotent.once(actorId, key, requestHash, CREATED, TicketView.class,
+				() -> quickSales.sell(customerName, lines, method, received));
 	}
 
 	@Transactional
