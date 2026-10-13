@@ -17,6 +17,7 @@ public final class InstoreTables {
 	}
 
 	public static void clean(JdbcClient jdbc) {
+		jdbc.sql("delete from instore.register_shift").update();
 		jdbc.sql("delete from instore.ticket_line").update();
 		jdbc.sql("delete from instore.ticket").update();
 		jdbc.sql("delete from instore.dining_table").update();
@@ -26,7 +27,7 @@ public final class InstoreTables {
 	public static void cleanAll(JdbcClient jdbc) {
 		clean(jdbc);
 		PreparationTables.clean(jdbc);
-		jdbc.sql("delete from store.reason where type in ('VOID', 'COMP')").update();
+		jdbc.sql("delete from store.reason where type in ('VOID', 'COMP', 'CASH_OUT')").update();
 		CatalogTables.clean(jdbc);
 	}
 
@@ -91,6 +92,14 @@ public final class InstoreTables {
 		jdbc.sql("""
 				insert into store.reason (id, type, code, active, created_at, updated_at)
 				values (:id, 'VOID', :code, true, :now, :now) on conflict do nothing
+				""").param("id", UUID.randomUUID()).param("code", code).param("now", now).update();
+	}
+
+	public static void aCashOutReason(JdbcClient jdbc, String code) {
+		var now = OffsetDateTime.now(ZoneOffset.UTC);
+		jdbc.sql("""
+				insert into store.reason (id, type, code, active, created_at, updated_at)
+				values (:id, 'CASH_OUT', :code, true, :now, :now) on conflict do nothing
 				""").param("id", UUID.randomUUID()).param("code", code).param("now", now).update();
 	}
 
