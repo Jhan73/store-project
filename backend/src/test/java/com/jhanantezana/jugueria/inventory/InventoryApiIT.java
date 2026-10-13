@@ -306,6 +306,57 @@ class InventoryApiIT {
 			.isInstanceOf(IllegalArgumentException.class);
 		assertThat(stock.get(product).reserved()).isZero();
 	}
+	@Test
+	void returningUnitsOnlyPutsBackWhatTheReferenceSold() {
+		var product = trackedWithStock(10);
+		var sale = UUID.randomUUID();
+		inventory.deduct(sale, List.of(new StockLine(product, 2)));
+
+		inventory.returnUnits(UUID.randomUUID(), List.of(new StockLine(product, 2)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(8);
+		assertThat(ledger(product, "RETURN")).isEmpty();
+	}
+
+	@Test
+	void aReturnNeverExceedsTheUnitsTheSaleTook() {
+		var product = trackedWithStock(10);
+		var sale = UUID.randomUUID();
+		inventory.deduct(sale, List.of(new StockLine(product, 2)));
+
+		inventory.returnUnits(sale, List.of(new StockLine(product, 5)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(10);
+		assertThat(ledger(product, "RETURN")).containsExactly("2/0");
+	}
+
+	@Test
+	void aProductThatWasNotTrackedWhenSoldIsNotReturnedOnceItIsTracked() {
+		var product = InventoryTables.aProduct(jdbc);
+		var sale = UUID.randomUUID();
+		inventory.deduct(sale, List.of(new StockLine(product, 3)));
+		stock.track(product, true, 0);
+		stock.recordEntry(product, 10, null);
+
+		inventory.returnUnits(sale, List.of(new StockLine(product, 3)));
+
+		assertThat(stock.get(product).onHand()).isEqualTo(10);
+		assertThat(ledger(product, "RETURN")).isEmpty();
+	}
+
+	@Test
+	void aProductUntrackedAfterTheSaleIsIgnoredLikeEveryOtherCallOnAnUntrackedProduct() {
+		var product = trackedWithStock(10);
+		var sale = UUID.randomUUID();
+		inventory.deduct(sale, List.of(new StockLine(product, 2)));
+		stock.track(product, false, 0);
+
+		inventory.returnUnits(sale, List.of(new StockLine(product, 2)));
+
+		assertThat(ledger(product, "RETURN")).isEmpty();
+		assertThat(stock.get(product).onHand()).isEqualTo(8);
+	}
+
 
 	private UUID trackedWithStock(int quantity) {
 		var product = InventoryTables.aProduct(jdbc);

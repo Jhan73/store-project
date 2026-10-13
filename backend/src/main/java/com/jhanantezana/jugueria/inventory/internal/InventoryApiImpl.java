@@ -110,9 +110,25 @@ class InventoryApiImpl implements InventoryApi {
 	@Override
 	@Transactional
 	public void returnUnits(UUID referenceId, List<StockLine> lines) {
+		var sold = soldUnits(referenceId);
 		for (var line : trackedLines(lines, true)) {
-			changes.apply(line.productId(), StockMovementType.RETURN, line.quantity(), 0, referenceId, null, null);
+			var units = Math.min(line.quantity(), sold.getOrDefault(line.productId(), 0));
+			if (units > 0) {
+				changes.apply(line.productId(), StockMovementType.RETURN, units, 0, referenceId, null, null);
+			}
 		}
+	}
+
+	// A return puts back only what the reference's own sale took, so a reference that sold nothing returns nothing.
+	private Map<UUID, Integer> soldUnits(UUID referenceId) {
+		var sold = new java.util.HashMap<UUID, Integer>();
+		jdbc.sql("SELECT product_id, -on_hand_delta AS units FROM inventory.stock_movement "
+				+ "WHERE type = 'SALE' AND reference_id = :reference")
+			.param("reference", referenceId)
+			.query((rs, row) -> Map.entry(rs.getObject("product_id", UUID.class), rs.getInt("units")))
+			.list()
+			.forEach(entry -> sold.put(entry.getKey(), entry.getValue()));
+		return sold;
 	}
 
 	/** The lines of stock-tracked products, one per product, in ascending product order. */

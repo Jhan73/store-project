@@ -37,7 +37,8 @@ public interface InventoryApi {
 	/**
 	 * Puts units of a voided or refunded sale back on the shelf; waste must not be returned. A return is applied once
 	 * per reference and product, so the reference must be unique per refund or void: a second partial return under the
-	 * same reference is silently skipped.
+	 * same reference is silently skipped. Only units the same reference sold (a SALE row for the reference and product)
+	 * come back, capped at the sold quantity; a product that is no longer tracked is ignored, as in every other call.
 	 */
 	void returnUnits(UUID referenceId, List<StockLine> lines);
 
