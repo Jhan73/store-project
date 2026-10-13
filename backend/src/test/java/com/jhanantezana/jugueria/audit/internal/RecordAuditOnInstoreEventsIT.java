@@ -25,6 +25,7 @@ import com.jhanantezana.jugueria.instore.PaymentRecorded;
 import com.jhanantezana.jugueria.instore.PaymentVoided;
 import com.jhanantezana.jugueria.instore.SaleVoided;
 import com.jhanantezana.jugueria.instore.ShiftClosed;
+import com.jhanantezana.jugueria.instore.ShiftCountRevealed;
 import com.jhanantezana.jugueria.instore.ShiftOpened;
 import com.jhanantezana.jugueria.instore.ShiftTotals;
 import com.jhanantezana.jugueria.instore.TableCreated;
@@ -225,6 +226,20 @@ class RecordAuditOnInstoreEventsIT {
 			.containsEntry("countedCash", "60.00")
 			.containsEntry("expectedCash", "100.00")
 			.containsEntry("difference", "-40.00");
+	}
+
+	@Test
+	void recordsTheRevealOfACountOverTheThreshold() {
+		var shiftId = UUID.randomUUID();
+		var cashier = UUID.randomUUID();
+
+		publish(new ShiftCountRevealed(shiftId, cashier, Money.of("60.00", PEN), Money.of("-40.00", PEN), cashier,
+				Role.CASHIER, NOW));
+
+		var entry = findByEntityId(shiftId);
+		assertThat(entry.getAction()).isEqualTo("SHIFT_COUNT_REVEALED");
+		assertThat(entry.getEntityType()).isEqualTo("SHIFT");
+		assertThat(entry.getAfter()).containsEntry("countedCash", "60.00").containsEntry("difference", "-40.00");
 	}
 
 	@Test

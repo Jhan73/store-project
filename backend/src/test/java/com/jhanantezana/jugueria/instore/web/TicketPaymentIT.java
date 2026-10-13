@@ -637,6 +637,22 @@ class TicketPaymentIT {
 	}
 
 	@Test
+	void aLineVoidThatWouldCloseTheTicketIsRejectedWhenTheShelfCannotCoverTheSale() {
+		var bottle = trackedProduct(2);
+		var bottles = sentLine(bottle, 2);
+		var small = sentLine(juice.small());
+		payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBody("CARD", "10.00", null, List.of(bottles)));
+		jdbc.sql("update inventory.stock_item set on_hand = 1 where product_id = ?").param(bottle).update();
+
+		var result = voidLine(small);
+
+		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
+		assertThat(InstoreTables.lineState(jdbc, small)).isEqualTo("SENT");
+		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("OPEN");
+		assertThat(events.stream(SaleRecorded.class)).isEmpty();
+	}
+
+	@Test
 	void splittingTheBalanceEvenlyGivesTheLastPartTheRemainder() {
 		for (var i = 0; i < 2; i++) {
 			sentLine(juice.small());

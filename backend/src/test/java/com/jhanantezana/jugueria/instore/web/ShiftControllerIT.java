@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.instore.ShiftClosed;
+import com.jhanantezana.jugueria.instore.ShiftCountRevealed;
 import com.jhanantezana.jugueria.instore.ShiftOpened;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
@@ -264,6 +265,40 @@ class ShiftControllerIT {
 
 		assertProblem(result, HttpStatus.CONFLICT, "instore.shift-closing");
 		assertThat(jdbc.sql("select count(*) from instore.cash_movement where shift_id = ?").param(UUID.fromString(id)).query(Long.class).single()).isZero();
+	}
+
+	@Test
+	void forceClosingKeepsTheCountTheCashierAlreadySaw() {
+		var id = idOf(open(cashier, Role.CASHIER, "100.00", UUID.randomUUID()));
+		close(id, cashier, "{\"countedCash\":{\"amount\":\"60.00\",\"currency\":\"PEN\"}}");
+
+		var result = forceClose(id, UUID.randomUUID(), Role.ADMIN, "{\"reason\":\"Forgotten overnight\"}");
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.countedCash.amount").isEqualTo("60.00");
+		assertThat(jdbc.sql("select counted_amount from instore.register_shift where id = ?")
+			.param(UUID.fromString(id))
+			.query(java.math.BigDecimal.class)
+			.single()).isEqualByComparingTo("60.00");
+	}
+
+	@Test
+	void revealingTheCountIsPublishedAndAuditedOnceHoweverOftenTheCloseIsRepeated() {
+		var id = idOf(open(cashier, Role.CASHIER, "100.00", UUID.randomUUID()));
+		var body = "{\"countedCash\":{\"amount\":\"60.00\",\"currency\":\"PEN\"}}";
+
+		close(id, cashier, body);
+		close(id, cashier, body);
+
+		assertThat(events.stream(ShiftCountRevealed.class)).singleElement().satisfies(revealed -> {
+			assertThat(revealed.shiftId()).isEqualTo(UUID.fromString(id));
+			assertThat(revealed.countedCash().amount()).isEqualByComparingTo("60.00");
+			assertThat(revealed.difference().amount()).isEqualByComparingTo("-40.00");
+		});
+		assertThat(jdbc.sql("select count(*) from audit.audit_log where action = 'SHIFT_COUNT_REVEALED' and entity_id = ?")
+			.param(UUID.fromString(id))
+			.query(Long.class)
+			.single()).isEqualTo(1);
 	}
 
 	@Test

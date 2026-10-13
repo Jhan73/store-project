@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.ShiftClosed;
+import com.jhanantezana.jugueria.instore.ShiftCountRevealed;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Money;
@@ -67,7 +68,10 @@ public class ShiftClosing {
 		var difference = ShiftReconciliation.difference(counted, expected);
 		var text = TicketService.blankToNull(note);
 		if (text == null && ShiftReconciliation.needsNote(difference, store.thresholds().registerDifferenceThreshold())) {
-			shifts.storeRevealedCount(shiftId, counted.amount(), now);
+			if (shifts.storeRevealedCount(shiftId, counted.amount(), now)) {
+				events.publishEvent(new ShiftCountRevealed(shiftId, shift.cashierId(), counted, difference, cashier,
+						currentActor.role(), now));
+			}
 			throw new BusinessException(InstoreError.DIFFERENCE_NOTE_REQUIRED,
 					"The difference is over the threshold; close again with a note", Map.of("difference", difference));
 		}

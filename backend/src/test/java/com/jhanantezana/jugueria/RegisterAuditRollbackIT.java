@@ -110,6 +110,25 @@ class RegisterAuditRollbackIT {
 	}
 
 	@Test
+	void anAuditWriteFailureRollsBackTheRevealOfACount() {
+		var shift = idOf(openShift(cashier));
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(SHIFTS + "/" + shift + "/close")
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"20.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(jdbc.sql("select counted_amount is null from instore.register_shift where id = ?")
+			.param(UUID.fromString(shift))
+			.query(Boolean.class)
+			.single()).isTrue();
+	}
+
+	@Test
 	void anAuditWriteFailureRollsBackAForcedShiftClose() {
 		var shift = idOf(openShift(cashier));
 		auditWritesNowFail();

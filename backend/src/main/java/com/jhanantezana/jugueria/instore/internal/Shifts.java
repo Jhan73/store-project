@@ -129,11 +129,12 @@ class Shifts {
 				""").param("now", Tickets.utc(now)).param("id", id).param("cashier", onlyCashier).update() == 1;
 	}
 
-	void storeRevealedCount(UUID id, BigDecimal counted, Instant now) {
-		jdbc.sql("""
+	/** @return whether this call stored the count, false when an earlier close already did */
+	boolean storeRevealedCount(UUID id, BigDecimal counted, Instant now) {
+		return jdbc.sql("""
 				UPDATE instore.register_shift SET counted_amount = :counted, counted_at = :now, updated_at = :now
 				WHERE id = :id AND status = 'OPEN' AND counted_amount IS NULL
-				""").param("counted", counted).param("now", Tickets.utc(now)).param("id", id).update();
+				""").param("counted", counted).param("now", Tickets.utc(now)).param("id", id).update() == 1;
 	}
 
 	void close(UUID id, ShiftCloseKind kind, @Nullable BigDecimal counted, BigDecimal expected,
@@ -141,7 +142,8 @@ class Shifts {
 			ShiftTotals totals, Instant now) {
 		var closed = jdbc.sql("""
 				UPDATE instore.register_shift
-				SET status = 'CLOSED', close_kind = :kind, counted_amount = :counted, counted_at = coalesce(counted_at, :now),
+				SET status = 'CLOSED', close_kind = :kind, counted_amount = coalesce(:counted, counted_amount),
+					counted_at = coalesce(counted_at, :now),
 					expected_amount = :expected, difference_amount = :difference, difference_note = :note,
 					force_reason = :reason, closed_by = :closedBy, closed_at = :now, totals = CAST(:totals AS jsonb),
 					updated_at = :now
