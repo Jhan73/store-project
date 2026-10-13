@@ -81,6 +81,54 @@ class StoreSettingsControllerIT {
 	}
 
 	@Test
+	void aSaleTheShelfCannotCoverIsRejectedUnlessTheAdminAllowsIt() {
+		var result = mvc.get().uri(SETTINGS).with(admin()).exchange();
+
+		assertThat(result).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(false);
+	}
+
+	@Test
+	void anAdminAllowsNegativeStockOnSaleAndAnUpdateWithoutTheFlagTurnsItOff() {
+		var on = mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20).replace("\"onlineCapacityLimit\": 20",
+					"\"onlineCapacityLimit\": 20, \"allowNegativeStockOnSale\": true"))
+			.exchange();
+
+		assertThat(on).hasStatusOk();
+		assertThat(on).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(true);
+		assertThat(mvc.get().uri(SETTINGS).with(admin()).exchange()).bodyJson()
+			.extractingPath("$.allowNegativeStockOnSale")
+			.isEqualTo(true);
+
+		var off = mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20))
+			.exchange();
+
+		assertThat(off).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(false);
+	}
+
+	@Test
+	void changingTheFlagNeedsIfMatchLikeAnyOtherSetting() {
+		var result = mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20).replace("\"onlineCapacityLimit\": 20",
+					"\"onlineCapacityLimit\": 20, \"allowNegativeStockOnSale\": true"))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
+	@Test
 	void rejectsAnUpdateWithoutIfMatch() {
 		var result = mvc.put()
 			.uri(SETTINGS)

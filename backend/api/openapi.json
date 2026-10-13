@@ -13458,6 +13458,9 @@
       "StoreSettingsResponse" : {
         "type" : "object",
         "properties" : {
+          "allowNegativeStockOnSale" : {
+            "type" : "boolean"
+          },
           "basePrepMinutes" : {
             "type" : "integer",
             "format" : "int32"
@@ -13503,7 +13506,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "id", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
+        "required" : [ "allowNegativeStockOnSale", "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "id", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "TableGridResponse" : {
         "type" : "object",
@@ -13835,6 +13838,10 @@
       "UpdateStoreSettingsRequest" : {
         "type" : "object",
         "properties" : {
+          "allowNegativeStockOnSale" : {
+            "type" : [ "boolean", "null" ],
+            "default" : false
+          },
           "basePrepMinutes" : {
             "type" : "integer",
             "format" : "int32",

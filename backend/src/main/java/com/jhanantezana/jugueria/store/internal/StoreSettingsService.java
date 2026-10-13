@@ -45,7 +45,7 @@ public class StoreSettingsService {
 	@Transactional
 	public StoreSettings update(String timeZone, Currency currency, int basePrepMinutes, int queueMinutesPerOrder,
 			int busyModeMinutes, int boardWarningMinutes, int boardLateMinutes, Money registerDifferenceThreshold,
-			int exceptionThreshold, int onlineCapacityLimit, long expectedVersion) {
+			int exceptionThreshold, int onlineCapacityLimit, boolean allowNegativeStockOnSale, long expectedVersion) {
 		var current = singleton();
 		if (current.getVersion() != expectedVersion) {
 			throw preconditionFailed(current.getVersion());
@@ -54,6 +54,7 @@ public class StoreSettingsService {
 		var now = Instant.now(clock);
 		current.update(timeZone, currency, basePrepMinutes, queueMinutesPerOrder, busyModeMinutes, boardWarningMinutes,
 				boardLateMinutes, registerDifferenceThreshold, exceptionThreshold, onlineCapacityLimit, now);
+		current.allowNegativeStockOnSale(allowNegativeStockOnSale);
 		var after = current.snapshot();
 		events.publishEvent(
 				new StoreSettingsChanged(current.getId(), before, after, currentActor.id(), currentActor.role(), now));

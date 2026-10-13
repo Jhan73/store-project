@@ -8,14 +8,15 @@ import com.jhanantezana.jugueria.store.internal.StoreSettings;
 
 record StoreSettingsResponse(UUID id, String timeZone, Currency currency, int basePrepMinutes,
 		int queueMinutesPerOrder, int busyModeMinutes, int boardWarningMinutes, int boardLateMinutes,
-		Money registerDifferenceThreshold, int exceptionThreshold, int onlineCapacityLimit) {
+		Money registerDifferenceThreshold, int exceptionThreshold, int onlineCapacityLimit,
+		boolean allowNegativeStockOnSale) {
 
 	static StoreSettingsResponse from(StoreSettings settings) {
 		return new StoreSettingsResponse(settings.getId(), settings.getTimeZone(), settings.getCurrency(),
 				settings.getBasePrepMinutes(), settings.getQueueMinutesPerOrder(), settings.getBusyModeMinutes(),
 				settings.getBoardWarningMinutes(), settings.getBoardLateMinutes(),
 				settings.getRegisterDifferenceThreshold(), settings.getExceptionThreshold(),
-				settings.getOnlineCapacityLimit());
+				settings.getOnlineCapacityLimit(), settings.isAllowNegativeStockOnSale());
 	}
 
 }
