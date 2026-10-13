@@ -17,8 +17,10 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
+import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.PaymentMethod;
 import com.jhanantezana.jugueria.instore.ShiftTotals;
+import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Money;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -93,6 +95,23 @@ class Shifts {
 				SELECT id, cashier_id, status, counted_amount IS NOT NULL AS revealed FROM instore.register_shift
 				WHERE cashier_id = :cashier AND status = 'OPEN' FOR SHARE
 				""").param("cashier", cashierId).query((rs, row) -> locked(rs)).optional();
+	}
+
+	/**
+	 * The cashier's open shift, shared until the transaction ends; empty without one. A shift whose count was already
+	 * shown to the cashier takes no more money in or out.
+	 */
+	Optional<LockedShift> writableOf(UUID cashierId) {
+		var shift = shareOpenOf(cashierId);
+		if (shift.isPresent() && shift.get().countRevealed()) {
+			throw new BusinessException(InstoreError.SHIFT_CLOSING, "The cashier's shift is being closed");
+		}
+		return shift;
+	}
+
+	LockedShift requireWritableOf(UUID cashierId) {
+		return writableOf(cashierId)
+			.orElseThrow(() -> new BusinessException(InstoreError.NO_OPEN_SHIFT, "The cashier has no open shift"));
 	}
 
 	Optional<LockedShift> share(UUID id) {

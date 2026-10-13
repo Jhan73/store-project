@@ -28,7 +28,15 @@ public enum InstoreError implements ErrorCode {
 	DIFFERENCE_NOTE_REQUIRED("instore.difference-note-required", HttpStatus.CONFLICT),
 	COUNTED_CASH_LOCKED("instore.counted-cash-locked", HttpStatus.UNPROCESSABLE_CONTENT),
 	INVALID_CASH_MOVEMENT("instore.invalid-cash-movement", HttpStatus.UNPROCESSABLE_CONTENT),
-	CASH_MOVEMENT_NOT_FOUND("instore.cash-movement-not-found", HttpStatus.NOT_FOUND);
+	CASH_MOVEMENT_NOT_FOUND("instore.cash-movement-not-found", HttpStatus.NOT_FOUND),
+	INVALID_PAYMENT("instore.invalid-payment", HttpStatus.UNPROCESSABLE_CONTENT),
+	PAYMENT_EXCEEDS_BALANCE("instore.payment-exceeds-balance", HttpStatus.UNPROCESSABLE_CONTENT),
+	TICKET_HAS_UNSENT_LINES("instore.ticket-has-unsent-lines", HttpStatus.UNPROCESSABLE_CONTENT),
+	LINE_ALREADY_PAID("instore.line-already-paid", HttpStatus.CONFLICT),
+	LINE_COVERED_BY_PAYMENT("instore.line-covered-by-payment", HttpStatus.CONFLICT),
+	PAYMENT_NOT_FOUND("instore.payment-not-found", HttpStatus.NOT_FOUND),
+	TICKET_NOT_CLOSED("instore.ticket-not-closed", HttpStatus.CONFLICT),
+	SALE_VOID_NOT_PERMITTED("instore.sale-void-not-permitted", HttpStatus.FORBIDDEN);
 
 	private final String code;
 
