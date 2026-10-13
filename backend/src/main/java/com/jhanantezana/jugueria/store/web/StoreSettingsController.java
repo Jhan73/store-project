@@ -47,7 +47,7 @@ class StoreSettingsController {
 		var settings = settingsService.update(request.timeZone(), request.currency(), request.basePrepMinutes(),
 				request.queueMinutesPerOrder(), request.busyModeMinutes(), request.boardWarningMinutes(),
 				request.boardLateMinutes(), request.registerDifferenceThreshold(), request.exceptionThreshold(),
-				request.onlineCapacityLimit(), request.negativeStockAllowed(), expectedVersion);
+				request.onlineCapacityLimit(), request.allowNegativeStockOnSale(), expectedVersion);
 		return ResponseEntity.ok().eTag(ETags.format(settings.getVersion())).body(StoreSettingsResponse.from(settings));
 	}
 

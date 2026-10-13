@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.instore.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -72,7 +73,7 @@ public class TicketSaleVoids {
 		var text = TicketService.blankToNull(note);
 		var reason = voidReasons.require(ReasonType.VOID, reasonCode, text);
 		var live = payments.live(ticketId);
-		var shiftIds = new java.util.ArrayList<UUID>();
+		var shiftIds = new ArrayList<UUID>();
 		for (var payment : live) {
 			shiftIds.add(Voiding.shiftFor(shifts, actor, role, payment));
 		}

@@ -74,7 +74,8 @@ class RealtimeTwoInstanceIT {
 			  "boardLateMinutes": 10,
 			  "registerDifferenceThreshold": { "amount": "20.00", "currency": "PEN" },
 			  "exceptionThreshold": 3,
-			  "onlineCapacityLimit": 20
+			  "onlineCapacityLimit": 20,
+			  "allowNegativeStockOnSale": false
 			}
 			""";
 

@@ -13839,8 +13839,7 @@
         "type" : "object",
         "properties" : {
           "allowNegativeStockOnSale" : {
-            "type" : [ "boolean", "null" ],
-            "default" : false
+            "type" : "boolean"
           },
           "basePrepMinutes" : {
             "type" : "integer",
@@ -13891,7 +13890,7 @@
             "minLength" : 1
           }
         },
-        "required" : [ "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
+        "required" : [ "allowNegativeStockOnSale", "basePrepMinutes", "boardLateMinutes", "boardWarningMinutes", "busyModeMinutes", "currency", "exceptionThreshold", "onlineCapacityLimit", "queueMinutesPerOrder", "registerDifferenceThreshold", "timeZone" ]
       },
       "UpdateTableRequest" : {
         "type" : "object",
