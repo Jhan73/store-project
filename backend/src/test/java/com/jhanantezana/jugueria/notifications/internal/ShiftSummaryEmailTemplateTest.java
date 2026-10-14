@@ -44,6 +44,16 @@ class ShiftSummaryEmailTemplateTest {
 		assertThat(rendered.body()).contains("Cashier left").doesNotContain("contado");
 	}
 
+	@Test
+	void rendersANoteWithMarkupAndTemplateSyntaxLiterally() {
+		var note = "<b>bold</b> & [( 1 + 1 )] [[${summary}]] ${closedAt} th:text";
+		var summary = summary(false, Money.of("95.00", PEN), Money.of("-5.00", PEN), note);
+
+		var rendered = template.render(summary);
+
+		assertThat(rendered.body()).contains("Nota: " + note);
+	}
+
 	static ShiftSummaryEmail summary(boolean forced, Money counted, Money difference, String note) {
 		return new ShiftSummaryEmail("cajero@jugueria.pe", CLOSED_AT, ZoneId.of("America/Lima"), forced,
 				Money.of("100.00", PEN), counted, Money.of("1239.50", PEN), difference, note, Money.of("900.00", PEN),
