@@ -124,7 +124,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 
 | ID | Work package | Scope | Spec | Done when | Status |
 |----|--------------|-------|------|-----------|--------|
-| M2-F1 | **Table grid and ticket editor** (10" tablet), shared **product configurator** | FR-INS-01, 02, 07, 09, 10; (S) 08, 11, 13 | §6.2, §6.3 | Journey 2 up to "lines Ready" works on a tablet viewport | todo |
+| M2-F1 | **Table grid and ticket editor** (10" tablet), shared **product configurator** | FR-INS-01, 02, 07, 09, 10; (S) 08, 11, 13 | §6.2, §6.3 | Journey 2 up to "lines Ready" works on a tablet viewport. Built: table grid, ticket editor (add lines through the shared configurator, change the quantity of or remove unsent lines, send, repeat the last round, bill request, transfer) and the product configurator. "Ready" is read from `GET /board/tickets`. **Not built:** line void, because staff cannot read the `VOID` reason list (`GET /admin/reasons` is `ADMIN` only), so a `SERVER` or `CASHIER` cannot pick the reason code the void command requires; comp and merge, which have no backend (M2-B4 carry-over) | done |
 | M2-F2 | **Board**: views, sound, wake lock, disconnected state, undo, age colors, markers, run-out flag; customer display (S) | FR-PRP-01..09 | §6.3, §6.5 | Disconnect blocks actions until state is re-fetched; readable at 2 m on 1080p | todo |
 | M2-F3 | **Register**: shifts, blind close, cash movements, payments, quick sale; split (S) | FR-INS-03, 04, 06; FR-REG-01..05 | §6.2 | Journeys 4 and 7 work end to end | todo |
 | M2-F4 | **Admin stock**: entries, adjustments, low-stock list | FR-STK-01, 05 | §6.2 | Low-stock list reflects thresholds | todo |
