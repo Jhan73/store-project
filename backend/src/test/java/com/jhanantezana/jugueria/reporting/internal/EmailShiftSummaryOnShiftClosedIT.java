@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.modulith.events.IncompleteEventPublications;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -66,6 +67,9 @@ class EmailShiftSummaryOnShiftClosedIT {
 
 	@Autowired
 	JdbcClient jdbc;
+
+	@Autowired
+	IncompleteEventPublications incompletePublications;
 
 	UUID cashier = UUID.randomUUID();
 
@@ -124,22 +128,57 @@ class EmailShiftSummaryOnShiftClosedIT {
 	}
 
 	@Test
-	void aFailedSendReleasesTheClaimSoTheNextDeliveryTriesAgain() {
+	void aFailedRecipientIsRetriedAloneWithoutRepublishingTheEvent() {
 		doThrow(new IllegalStateException("transport down")).doNothing()
 			.when(notifications)
 			.sendShiftSummaryEmail(eq("owner@jugueria.pe"), any());
-		var close = closed();
 
-		publish(close);
-		verify(notifications, timeout(20_000)).sendShiftSummaryEmail(eq("owner@jugueria.pe"), any());
-		await().atMost(Duration.ofSeconds(10)).untilAsserted(
-				() -> assertThat(jdbc.sql("select count(*) from reporting.shift_summary_email where shift_id = ?")
-					.param(shift)
-					.query(Long.class)
-					.single()).isZero());
-		publish(close);
+		publish(closed());
+
+		verify(notifications, timeout(20_000)).sendShiftSummaryEmail(eq("manager@jugueria.pe"), any());
+		await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(deliveries("owner@jugueria.pe")).isEmpty());
+		// Only this shift's: other tests leave their own failed deliveries behind.
+		incompletePublications.resubmitIncompletePublications(
+				publication -> publication.getEvent() instanceof ShiftClosed closed && closed.shiftId().equals(shift));
 
 		verify(notifications, timeout(20_000).times(2)).sendShiftSummaryEmail(eq("owner@jugueria.pe"), any());
+		await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(10)).untilAsserted(
+				() -> verify(notifications, times(1)).sendShiftSummaryEmail(eq("manager@jugueria.pe"), any()));
+	}
+
+	@Test
+	void aSentRecipientRecordsItsRealSendTime() {
+		publish(closed());
+
+		verify(notifications, timeout(20_000)).sendShiftSummaryEmail(eq("owner@jugueria.pe"), any());
+		await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> {
+			var rows = deliveries("owner@jugueria.pe");
+			assertThat(rows).singleElement().satisfies(row -> {
+				assertThat(row).containsEntry("status", "SENT");
+				assertThat(row.get("sent_at")).isNotNull();
+			});
+		});
+	}
+
+	@Test
+	void aStaleClaimFromACrashedDeliveryIsTakenOver() {
+		claimed("owner@jugueria.pe", Instant.now().minus(Duration.ofHours(1)));
+
+		publish(closed());
+
+		verify(notifications, timeout(20_000)).sendShiftSummaryEmail(eq("owner@jugueria.pe"), any());
+	}
+
+	@Test
+	void aFreshClaimOfAnotherDeliveryIsRespectedAndTheEventStaysForRetry() {
+		claimed("owner@jugueria.pe", Instant.now());
+
+		publish(closed());
+
+		verify(notifications, timeout(20_000)).sendShiftSummaryEmail(eq("manager@jugueria.pe"), any());
+		await().during(Duration.ofSeconds(2)).atMost(Duration.ofSeconds(10)).untilAsserted(
+				() -> verify(notifications, never()).sendShiftSummaryEmail(eq("owner@jugueria.pe"), any()));
+		assertThat(deliveries("owner@jugueria.pe")).singleElement().satisfies(row -> assertThat(row).containsEntry("status", "CLAIMED"));
 	}
 
 	@Test
@@ -150,6 +189,21 @@ class EmailShiftSummaryOnShiftClosedIT {
 
 		await().during(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(10)).untilAsserted(
 				() -> verify(notifications, never()).sendShiftSummaryEmail(any(), any()));
+	}
+
+	List<java.util.Map<String, Object>> deliveries(String recipient) {
+		return jdbc.sql("select * from reporting.shift_summary_delivery where shift_id = ? and recipient = ?")
+			.param(shift)
+			.param(recipient)
+			.query()
+			.listOfRows();
+	}
+
+	void claimed(String recipient, Instant claimedAt) {
+		jdbc.sql("insert into reporting.shift_summary_delivery (shift_id, recipient, status, claimed_at) "
+				+ "values (?, ?, 'CLAIMED', ?)")
+			.params(shift, recipient, java.time.OffsetDateTime.ofInstant(claimedAt, java.time.ZoneOffset.UTC))
+			.update();
 	}
 
 	ShiftClosed closed() {

@@ -2,6 +2,8 @@ package com.jhanantezana.jugueria.reporting.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
 
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -27,34 +29,68 @@ class EmailShiftSummaryOnShiftClosed {
 
 	private final Clock clock;
 
+	private final ReportingProperties properties;
+
 	EmailShiftSummaryOnShiftClosed(IdentityApi identity, NotificationsApi notifications, StoreApi store,
-			ShiftSummaryEmailClaims claims, Clock clock) {
+			ShiftSummaryEmailClaims claims, Clock clock, ReportingProperties properties) {
 		this.identity = identity;
 		this.notifications = notifications;
 		this.store = store;
 		this.claims = claims;
 		this.clock = clock;
+		this.properties = properties;
 	}
 
 	// No transaction: the mail goes through an external system, so nothing may hold a connection meanwhile.
-	// The claim makes a second delivery a no-op; a failed send gives it back so the next delivery tries again.
+	// Every admin is tried, and a failure makes the delivery fail so the resubmission job retries the rest only.
 	@ApplicationModuleListener
 	@Transactional(propagation = Propagation.NOT_SUPPORTED)
 	void on(ShiftClosed event) {
 		var admins = identity.activeAdminEmails();
-		if (admins.isEmpty() || !claims.claim(event.shiftId(), Instant.now(clock))) {
+		if (admins.isEmpty()) {
 			return;
 		}
-		try {
-			var summary = summary(event);
-			for (var admin : admins) {
-				notifications.sendShiftSummaryEmail(admin, summary);
+		var summary = summary(event);
+		RuntimeException failure = null;
+		for (var admin : admins) {
+			try {
+				sendOnce(event.shiftId(), admin, summary);
+			}
+			catch (RuntimeException e) {
+				if (failure == null) {
+					failure = e;
+				}
+				else {
+					failure.addSuppressed(e);
+				}
 			}
 		}
+		if (failure != null) {
+			throw failure;
+		}
+	}
+
+	private void sendOnce(UUID shiftId, String admin, ShiftSummaryEmail summary) {
+		var claim = claims.claim(shiftId, admin, Instant.now(clock), properties.shiftSummaryEmailLease());
+		if (claim == ShiftSummaryEmailClaims.Claim.ALREADY_SENT) {
+			return;
+		}
+		if (claim == ShiftSummaryEmailClaims.Claim.BUSY) {
+			throw new IllegalStateException("The shift summary for " + shiftId + " is being sent by another delivery");
+		}
+		try {
+			notifications.sendShiftSummaryEmail(admin, summary);
+		}
 		catch (RuntimeException e) {
-			claims.release(event.shiftId());
+			try {
+				claims.release(shiftId, admin);
+			}
+			catch (RuntimeException releaseFailure) {
+				e.addSuppressed(releaseFailure);
+			}
 			throw e;
 		}
+		claims.markSent(shiftId, admin, Instant.now(clock));
 	}
 
 	private ShiftSummaryEmail summary(ShiftClosed event) {
