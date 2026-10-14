@@ -88,7 +88,7 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/staff');
 
-    expect(navLinks()).toEqual(['/staff', '/staff/availability']);
+    expect(navLinks()).toEqual(['/staff', '/staff/tables', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
   });
 
@@ -122,6 +122,22 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/availability']);
   });
 
+  it('lets floor staff open the table grid', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/tables');
+    http.expectOne('http://api.test/api/v1/tables').flush([]);
+    http.expectOne('http://api.test/api/v1/tickets').flush([]);
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/tables');
+    expect(page().body.textContent).toContain('Salón');
+    expect(active).toEqual(['/staff/tables']);
+  });
+
   it('sends a visitor without a session away from the availability screen', async () => {
     const navigation = harness.navigateByUrl('/staff/availability');
     (await vi.waitFor(() => http.expectOne(REFRESH))).flush(null, {
@@ -149,6 +165,7 @@ describe('staff and admin area', () => {
 
     expect(navLinks()).toEqual([
       '/staff',
+      '/staff/tables',
       '/staff/availability',
       '/admin',
       '/admin/catalog',

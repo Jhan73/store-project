@@ -4713,17 +4713,177 @@
         <source>Aquí aparecerán las herramientas del local.</source>
       </segment>
     </unit>
+    <unit id="staff.tables.title">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:18,20</note>
+      </notes>
+      <segment>
+        <source>Salón</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.failed">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:23,25</note>
+      </notes>
+      <segment>
+        <source>No se pudieron cargar las mesas. Las acciones están deshabilitadas.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:31,32</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar las mesas</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.retry">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:36,38</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.offline">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:42,44</note>
+      </notes>
+      <segment>
+        <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.updating">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:48,50</note>
+      </notes>
+      <segment>
+        <source>Actualizando las mesas. Las acciones se habilitan en unos segundos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.tables">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:54,56</note>
+      </notes>
+      <segment>
+        <source>Mesas</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.open.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:66,67</note>
+      </notes>
+      <segment>
+        <source>Abrir una cuenta en esta mesa</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.status.free">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:77,79</note>
+      </notes>
+      <segment>
+        <source>Libre</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.view.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:87,88</note>
+      </notes>
+      <segment>
+        <source>Abrir la cuenta de esta mesa</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.status.waiting">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:99,101</note>
+      </notes>
+      <segment>
+        <source>Esperando el pago</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.status.occupied">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:102,104</note>
+      </notes>
+      <segment>
+        <source>Ocupada</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.elapsed">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:105,106</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="INTERPOLATION" disp="{{ tile.minutes }}"/> min</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.empty">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:113,116</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay mesas configuradas.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.counter">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:120,121</note>
+      </notes>
+      <segment>
+        <source>Mostrador</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.counter.name">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:122,124</note>
+      </notes>
+      <segment>
+        <source>Nombre del cliente</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.counter.open.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:136,137</note>
+      </notes>
+      <segment>
+        <source>Abrir una cuenta de mostrador para este cliente</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.counter.open">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:141,144</note>
+      </notes>
+      <segment>
+        <source>Abrir cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tables.counter.view.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:152,153</note>
+      </notes>
+      <segment>
+        <source>Abrir la cuenta de este cliente</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.staff">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:22</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:23</note>
       </notes>
       <segment>
         <source>Operación</source>
       </segment>
     </unit>
+    <unit id="workspace.nav.floor">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:30</note>
+      </notes>
+      <segment>
+        <source>Salón</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.availability">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:29</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:36</note>
       </notes>
       <segment>
         <source>Disponibilidad</source>
@@ -4731,7 +4891,7 @@
     </unit>
     <unit id="workspace.nav.admin">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:35</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:42</note>
       </notes>
       <segment>
         <source>Administración</source>
@@ -4739,7 +4899,7 @@
     </unit>
     <unit id="workspace.nav.catalog">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:42</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:49</note>
       </notes>
       <segment>
         <source>Catálogo</source>
@@ -4747,7 +4907,7 @@
     </unit>
     <unit id="workspace.nav.settings">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:48</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:55</note>
       </notes>
       <segment>
         <source>Configuración</source>
@@ -4755,7 +4915,7 @@
     </unit>
     <unit id="workspace.nav.tables">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:54</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:61</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -4763,7 +4923,7 @@
     </unit>
     <unit id="workspace.nav.users">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:60</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:67</note>
       </notes>
       <segment>
         <source>Personal</source>
@@ -4771,7 +4931,7 @@
     </unit>
     <unit id="workspace.nav.audit">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:66</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:73</note>
       </notes>
       <segment>
         <source>Auditoría</source>
