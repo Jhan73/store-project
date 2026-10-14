@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Role;
+import com.jhanantezana.jugueria.store.ReasonType;
 import com.jhanantezana.jugueria.store.internal.ReasonRepository;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 
@@ -85,6 +86,41 @@ class ActiveReasonControllerIT {
 
 		assertThat(result).bodyJson().extractingPath("$[?(@.code=='" + code + "')].id").asList().isEmpty();
 		assertThat(result).bodyJson().extractingPath("$[?(@.code=='" + code + "')].etag").asList().isEmpty();
+	}
+
+	@ParameterizedTest
+	@EnumSource(value = ReasonType.class, names = { "COMP", "CASH_OUT", "STOCK_ADJUSTMENT" })
+	void aServerMayOnlyReadTheVoidReasons(ReasonType type) {
+		var result = mvc.get()
+			.uri(REASONS + "?type=" + type)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.forbidden");
+	}
+
+	@ParameterizedTest
+	@EnumSource(ReasonType.class)
+	void aCashierMayReadEveryType(ReasonType type) {
+		var result = mvc.get()
+			.uri(REASONS + "?type=" + type)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+	}
+
+	@ParameterizedTest
+	@EnumSource(ReasonType.class)
+	void aCustomerMayNotReadAnyType(ReasonType type) {
+		var result = mvc.get()
+			.uri(REASONS + "?type=" + type)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CUSTOMER))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.forbidden");
 	}
 
 	@Test
