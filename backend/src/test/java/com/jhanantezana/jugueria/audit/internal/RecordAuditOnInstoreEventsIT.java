@@ -322,7 +322,7 @@ class RecordAuditOnInstoreEventsIT {
 		var ticketId = UUID.randomUUID();
 		var saleVoid = UUID.randomUUID();
 
-		publish(new SaleVoided(ticketId, saleVoid, Money.of("10.00", PEN), List.of(), "Changed mind", null,
+		publish(new SaleVoided(ticketId, saleVoid, TicketType.COUNTER, true, Money.of("10.00", PEN), List.of(), "Changed mind", null,
 				UUID.randomUUID(), Role.ADMIN, NOW));
 
 		var entry = findByEntityId(ticketId);

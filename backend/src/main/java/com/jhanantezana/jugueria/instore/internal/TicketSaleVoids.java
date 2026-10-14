@@ -90,8 +90,8 @@ public class TicketSaleVoids {
 		}
 		var lines = tickets.lines(ticketId);
 		inventory.returnUnits(ticketId, TicketSettlement.stockLines(lines));
-		events.publishEvent(new SaleVoided(ticketId, saleVoidId, TicketRules.total(lines, ticket.currency()),
-				TicketSettlement.soldLines(lines), reason, text, actor, role, now));
+		events.publishEvent(new SaleVoided(ticketId, saleVoidId, ticket.type(), ticket.quickSale(),
+				TicketRules.total(lines, ticket.currency()), TicketSettlement.soldLines(lines), reason, text, actor, role, now));
 		return ticketService.view(tickets.require(ticketId));
 	}
 
