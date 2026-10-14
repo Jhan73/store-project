@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (Thymeleaf landed at M2-B6, for the email templates; the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 

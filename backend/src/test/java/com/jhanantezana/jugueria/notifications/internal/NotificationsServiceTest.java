@@ -34,13 +34,16 @@ class NotificationsServiceTest {
 	StaffSetPasswordEmailTemplate template;
 
 	@Mock
+	ShiftSummaryEmailTemplate shiftSummaryTemplate;
+
+	@Mock
 	AppEventsPublisher appEvents;
 
 	NotificationsService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new NotificationsService(emailSender, template, appEvents, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new NotificationsService(emailSender, template, shiftSummaryTemplate, appEvents, Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test
@@ -65,6 +68,16 @@ class NotificationsServiceTest {
 		assertThat(captor.getValue().to()).isEqualTo("new-staff@jugueria.pe");
 		assertThat(captor.getValue().subject()).isEqualTo("Set your password");
 		assertThat(captor.getValue().body()).isEqualTo("body");
+	}
+
+	@Test
+	void rendersAndSendsTheShiftSummaryEmail() {
+		var summary = ShiftSummaryEmailTemplateTest.summary(false, null, null, null);
+		when(shiftSummaryTemplate.render(summary)).thenReturn(new RenderedEmail("Shift summary", "totals"));
+
+		service.sendShiftSummaryEmail("admin@jugueria.pe", summary);
+
+		verify(emailSender).send(new EmailMessage("admin@jugueria.pe", "Shift summary", "totals"));
 	}
 
 	@Test

@@ -105,7 +105,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 
 ## M2 — In-store
 
-**Before starting:** Q5 answered (stations). **Before M2-B6:** email template engine decided (tech-spec §6.6).
+**Before starting:** Q5 answered (stations). **Before M2-B6:** email template engine decided (Thymeleaf, tech-spec §6.6).
 
 ### Backend
 
@@ -116,7 +116,7 @@ Infra in M1: `test`/`prod` S3 media buckets + CloudFront (the local-development 
 | M2-B3 | **preparation — board**: projection, views (tickets, all-day, ready), start/ready/undo/recall/handover, markers + ack, run-out flag, timestamps, `/topic/board`; station filter (S); customer display (S) | FR-PRP-01..10, BR-08 (in-store) | §4.5, §4.3 "Board state" | Races in tech-spec §11 pass; all-day aggregation groups identical items only. Customer display (FR-PRP-09) not built: the spec gives it no endpoint and no source for the first name; undo stays client-side (§4.5) | done |
 | M2-B4 | **instore — tickets**: tickets, lines, send, void rules by state, transfer, table grid status; comp (S), merge (S), repeat (S) | FR-INS-01, 02, 05, 07, 09, 10; FR-INS-08/11/13 (S) | §4.3 "In-store tickets" | Void by SERVER after Ready is rejected; transfer to an occupied table is rejected. Comp (FR-INS-08) and merge (FR-INS-11) not built: comp is specified but `PreparationApi` and `board_line` have no comp command or state and its paid-line rule needs M2-B5, and merge needs a board command that moves lines between cards plus the payments of M2-B5; repeat (FR-INS-13) built | done |
 | M2-B5 | **instore — payments and register**: shifts (open, blind close, force close), cash movements, payments + void, quick sale, sale void, stock deduction at close; split bill (S) | FR-INS-03, 04, 06; FR-REG-01..05; FR-INS-12 (S) | §4.3 "Register shift" | Expected cash is never returned before counted cash; split rounding per spec. Built with the even and by-items split (FR-INS-12); comp and merge, carried over from M2-B4, are still not built | done |
-| M2-B6 | **reporting — data capture**: listeners filling `sales_line`, `exception_event`, `shift_summary`; shift summary email to ADMIN (S) — first email: email port, SMTP adapter (Mailpit), SES adapter (task role), `test` recipient allowlist | FR-REG-06 (S); data for FR-RPT | §4.9, D16 | Every in-store sale, void, comp, and shift produces read-model rows | todo |
+| M2-B6 | **reporting — data capture**: listeners filling `sales_line`, `exception_event`, `shift_summary`; shift summary email to ADMIN (S) — first email: email port, SMTP adapter (Mailpit), SES adapter (task role), `test` recipient allowlist | FR-REG-06 (S); data for FR-RPT | §4.9, D16 | Every in-store sale, void, comp, and shift produces read-model rows. Built for sale, void and shift; no comp rows because comp does not exist yet (M2-B4 carry-over). The email port, both adapters and the allowlist already existed from M1-B2; this WP added the Thymeleaf renderer, the shift summary email and the `reporting` module | done |
 
 > **Why reporting capture is here and not in M4:** the store uses the system from M2 on. Listeners only receive events published while they exist, so sales made before `reporting` exists would never reach the reports. Capture data now; build the report screens in M4.
 

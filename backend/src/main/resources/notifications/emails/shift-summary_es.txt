@@ -1,0 +1,25 @@
+Subject: Resumen de turno de caja de [(${summary.cashier()})]
+
+Se cerró el turno de caja de [(${summary.cashier()})] el [(${#temporals.format(closedAt, 'dd/MM/yyyy HH:mm')})].
+[# th:if="${summary.forced()}"]
+Cierre forzado por un administrador. Motivo: [(${summary.note()})]
+[/]
+Fondo inicial: [(${summary.openingFloat().currency()})] [(${#numbers.formatDecimal(summary.openingFloat().amount(), 1, 'COMMA', 2, 'POINT')})]
+Efectivo recibido: [(${summary.cashReceived().currency()})] [(${#numbers.formatDecimal(summary.cashReceived().amount(), 1, 'COMMA', 2, 'POINT')})]
+Vuelto entregado: [(${summary.changeGiven().currency()})] [(${#numbers.formatDecimal(summary.changeGiven().amount(), 1, 'COMMA', 2, 'POINT')})]
+Efectivo devuelto por anulaciones: [(${summary.voidedCash().currency()})] [(${#numbers.formatDecimal(summary.voidedCash().amount(), 1, 'COMMA', 2, 'POINT')})]
+Ingresos de efectivo: [(${summary.cashIn().currency()})] [(${#numbers.formatDecimal(summary.cashIn().amount(), 1, 'COMMA', 2, 'POINT')})]
+Egresos de efectivo: [(${summary.cashOut().currency()})] [(${#numbers.formatDecimal(summary.cashOut().amount(), 1, 'COMMA', 2, 'POINT')})]
+Efectivo esperado: [(${summary.expectedCash().currency()})] [(${#numbers.formatDecimal(summary.expectedCash().amount(), 1, 'COMMA', 2, 'POINT')})]
+[# th:if="${summary.countedCash() != null}"]
+Efectivo contado: [(${summary.countedCash().currency()})] [(${#numbers.formatDecimal(summary.countedCash().amount(), 1, 'COMMA', 2, 'POINT')})]
+Diferencia: [(${summary.difference().currency()})] [(${#numbers.formatDecimal(summary.difference().amount(), 1, 'COMMA', 2, 'POINT')})]
+[# th:if="${summary.note() != null}"]
+Nota: [(${summary.note()})]
+[/]
+[/]
+
+Ventas por método de pago:
+[# th:each="total : ${summary.byMethod()}"]
+- [# th:switch="${total.method()}"][# th:case="'CASH'"]Efectivo[/][# th:case="'CARD'"]Tarjeta[/][# th:case="'WALLET'"]Billetera digital[/][# th:case="'TRANSFER'"]Transferencia[/][# th:case="*"][(${total.method()})][/][/]: cobrado [(${total.recorded().currency()})] [(${#numbers.formatDecimal(total.recorded().amount(), 1, 'COMMA', 2, 'POINT')})], anulado [(${#numbers.formatDecimal(total.voided().amount(), 1, 'COMMA', 2, 'POINT')})], neto [(${#numbers.formatDecimal(total.net().amount(), 1, 'COMMA', 2, 'POINT')})]
+[/]

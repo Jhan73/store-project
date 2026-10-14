@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,6 +23,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
 	Page<UserAccount> findByRoleNot(Role role, Pageable pageable);
 
 	long countByRoleAndActiveTrue(Role role);
+
+	List<UserAccount> findByRoleAndActiveTrueOrderByEmail(Role role);
 
 	// Atomic so concurrent failures all count; an expired lock restarts the count instead of relocking.
 	@Modifying(clearAutomatically = true, flushAutomatically = true)

@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.instore.PaymentVoided;
 import com.jhanantezana.jugueria.instore.SaleVoided;
+import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.inventory.internal.StockService;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
@@ -96,6 +97,8 @@ class SaleVoidIT {
 		assertThat(result).bodyJson().extractingPath("$.balance.amount").isEqualTo("0.00");
 		assertThat(events.stream(SaleVoided.class)).singleElement().satisfies(voided -> {
 			assertThat(voided.ticketId()).isEqualTo(ticket);
+			assertThat(voided.ticketType()).isEqualTo(TicketType.COUNTER);
+			assertThat(voided.quickSale()).isFalse();
 			assertThat(voided.total().amount()).isEqualByComparingTo("10.00");
 			assertThat(voided.lines()).hasSize(1);
 			assertThat(voided.reasonCode()).isEqualTo("Changed mind");

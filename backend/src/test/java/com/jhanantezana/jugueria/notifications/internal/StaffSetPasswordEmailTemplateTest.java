@@ -12,7 +12,7 @@ class StaffSetPasswordEmailTemplateTest {
 
 	static final Instant NOW = Instant.parse("2026-09-26T09:00:00Z");
 
-	final StaffSetPasswordEmailTemplate template = new StaffSetPasswordEmailTemplate();
+	final StaffSetPasswordEmailTemplate template = new StaffSetPasswordEmailTemplate(new EmailRenderer());
 
 	@Test
 	void rendersTheLinkAndTheExpiryIntoTheBodyWithNoTextInJava() {
