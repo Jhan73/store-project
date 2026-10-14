@@ -52,7 +52,7 @@ export class TicketEditorStore {
   private readonly currentMenu = signal<Menu | null>(null);
   private readonly readyLineIds = signal<ReadonlySet<string>>(new Set());
   private readonly tableList = signal<readonly TableGridEntry[]>([]);
-  private readonly voidReasons = signal<readonly ActiveReason[] | null>(null);
+  private readonly voidReasons = signal<ActiveReason[] | null>(null);
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
   private ticketId = '';

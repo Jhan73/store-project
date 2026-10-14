@@ -1382,7 +1382,8 @@
         <note category="location">src/app/features/admin/settings/settings-form.ts:163</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:359</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:384</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:451</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -4868,7 +4869,7 @@
     </unit>
     <unit id="staff.tickets.back.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:49,50</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:54,55</note>
       </notes>
       <segment>
         <source>Volver al salón</source>
@@ -4876,7 +4877,7 @@
     </unit>
     <unit id="staff.tickets.back">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:54,56</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:59,61</note>
       </notes>
       <segment>
         <source>Salón</source>
@@ -4884,7 +4885,7 @@
     </unit>
     <unit id="staff.tickets.counterTitle">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:61,62</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:66,67</note>
       </notes>
       <segment>
         <source>Mostrador: <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.counterName }}"/></source>
@@ -4892,7 +4893,7 @@
     </unit>
     <unit id="staff.tickets.number">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:64,66</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:69,71</note>
       </notes>
       <segment>
         <source>Cuenta <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.number }}"/></source>
@@ -4900,7 +4901,7 @@
     </unit>
     <unit id="staff.tickets.failed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:71,73</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:76,78</note>
       </notes>
       <segment>
         <source>No se pudo cargar la cuenta. Los cambios están deshabilitados.</source>
@@ -4908,7 +4909,7 @@
     </unit>
     <unit id="staff.tickets.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:79,80</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:84,85</note>
       </notes>
       <segment>
         <source>Volver a cargar la cuenta</source>
@@ -4916,7 +4917,7 @@
     </unit>
     <unit id="staff.tickets.retry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:84,86</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:89,91</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4924,7 +4925,7 @@
     </unit>
     <unit id="staff.tickets.offline">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:90,92</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:95,97</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
@@ -4932,7 +4933,7 @@
     </unit>
     <unit id="staff.tickets.updating">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:96,98</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:101,103</note>
       </notes>
       <segment>
         <source>Actualizando la cuenta. Los cambios se habilitan en unos segundos.</source>
@@ -4940,7 +4941,7 @@
     </unit>
     <unit id="staff.tickets.missing">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:102,103</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:107,108</note>
       </notes>
       <segment>
         <source>La cuenta no existe.</source>
@@ -4948,7 +4949,7 @@
     </unit>
     <unit id="staff.tickets.closed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:106,109</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:111,114</note>
       </notes>
       <segment>
         <source> La cuenta está cerrada y ya no se puede modificar. </source>
@@ -4956,7 +4957,7 @@
     </unit>
     <unit id="staff.tickets.menu">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:113,114</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:118,119</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -4964,7 +4965,7 @@
     </unit>
     <unit id="staff.tickets.product.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:126,127</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:131,132</note>
       </notes>
       <segment>
         <source>Elegir las opciones de este producto</source>
@@ -4972,7 +4973,7 @@
     </unit>
     <unit id="staff.tickets.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:137,139</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:142,144</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -4980,7 +4981,7 @@
     </unit>
     <unit id="staff.tickets.lines">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:149,150</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:154,155</note>
       </notes>
       <segment>
         <source>Cuenta</source>
@@ -4988,7 +4989,7 @@
     </unit>
     <unit id="staff.tickets.allergy">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:165,167</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:170,172</note>
       </notes>
       <segment>
         <source>Alergia</source>
@@ -4996,7 +4997,7 @@
     </unit>
     <unit id="staff.tickets.state.unsent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:171,172</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:176,177</note>
       </notes>
       <segment>
         <source>Sin enviar</source>
@@ -5004,7 +5005,7 @@
     </unit>
     <unit id="staff.tickets.state.sent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:174,175</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:179,180</note>
       </notes>
       <segment>
         <source>Enviada</source>
@@ -5012,7 +5013,7 @@
     </unit>
     <unit id="staff.tickets.state.ready">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:177,178</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:182,183</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -5020,15 +5021,39 @@
     </unit>
     <unit id="staff.tickets.state.voided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:180,181</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:185,186</note>
       </notes>
       <segment>
         <source>Anulada</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.void.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:199,200</note>
+      </notes>
+      <segment>
+        <source>Anular esta línea con un motivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:205,206</note>
+      </notes>
+      <segment>
+        <source>Anular</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.blocked">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:209,211</note>
+      </notes>
+      <segment>
+        <source>Ya está lista: pide a un cajero que la anule.</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.quantity.downLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:195,196</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:220,221</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -5036,7 +5061,7 @@
     </unit>
     <unit id="staff.tickets.quantity.down">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:197,198</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:222,223</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -5044,7 +5069,7 @@
     </unit>
     <unit id="staff.tickets.quantity.upLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:210,211</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:235,236</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -5052,7 +5077,7 @@
     </unit>
     <unit id="staff.tickets.quantity.up">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:212,213</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:237,238</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -5060,7 +5085,7 @@
     </unit>
     <unit id="staff.tickets.remove.label">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:225,226</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:250,251</note>
       </notes>
       <segment>
         <source>Quitar la línea</source>
@@ -5068,7 +5093,7 @@
     </unit>
     <unit id="staff.tickets.remove.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:227,228</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:252,253</note>
       </notes>
       <segment>
         <source>Quitar la línea de la cuenta</source>
@@ -5076,7 +5101,7 @@
     </unit>
     <unit id="staff.tickets.empty">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:239,241</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:264,266</note>
       </notes>
       <segment>
         <source>La cuenta todavía no tiene líneas.</source>
@@ -5084,7 +5109,7 @@
     </unit>
     <unit id="staff.tickets.total">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:244,245</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:269,270</note>
       </notes>
       <segment>
         <source>Total</source>
@@ -5092,7 +5117,7 @@
     </unit>
     <unit id="staff.tickets.send.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:255,256</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:280,281</note>
       </notes>
       <segment>
         <source>Enviar las líneas nuevas a cocina</source>
@@ -5100,7 +5125,7 @@
     </unit>
     <unit id="staff.tickets.send">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:261,262</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:286,287</note>
       </notes>
       <segment>
         <source>Enviar a cocina</source>
@@ -5108,7 +5133,7 @@
     </unit>
     <unit id="staff.tickets.repeat.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:269,270</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:294,295</note>
       </notes>
       <segment>
         <source>Agregar de nuevo las líneas de la última ronda enviada</source>
@@ -5116,7 +5141,7 @@
     </unit>
     <unit id="staff.tickets.repeat">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:275,277</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:300,302</note>
       </notes>
       <segment>
         <source>Repetir última ronda</source>
@@ -5124,7 +5149,7 @@
     </unit>
     <unit id="staff.tickets.billOff">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:290,291</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:315,316</note>
       </notes>
       <segment>
         <source>Quitar el pedido de cuenta</source>
@@ -5132,7 +5157,7 @@
     </unit>
     <unit id="staff.tickets.billOn">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:292,294</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:317,319</note>
       </notes>
       <segment>
         <source>Pedir la cuenta</source>
@@ -5140,7 +5165,7 @@
     </unit>
     <unit id="staff.tickets.transfer.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:301,302</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:326,327</note>
       </notes>
       <segment>
         <source>Mover la cuenta a una mesa libre</source>
@@ -5148,7 +5173,7 @@
     </unit>
     <unit id="staff.tickets.transfer">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:307,309</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:332,334</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
@@ -5156,7 +5181,7 @@
     </unit>
     <unit id="staff.tickets.add.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:317,318</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:342,343</note>
       </notes>
       <segment>
         <source>Agregar producto</source>
@@ -5164,7 +5189,7 @@
     </unit>
     <unit id="staff.tickets.transfer.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:336,337</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:361,362</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
@@ -5172,7 +5197,7 @@
     </unit>
     <unit id="staff.tickets.transfer.table">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:346,349</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:371,374</note>
       </notes>
       <segment>
         <source>Mesa de destino</source>
@@ -5180,7 +5205,7 @@
     </unit>
     <unit id="staff.tickets.transfer.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:360,361</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:385,386</note>
       </notes>
       <segment>
         <source>Elige una mesa libre</source>
@@ -5188,7 +5213,7 @@
     </unit>
     <unit id="staff.tickets.transfer.cancel.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:372,373</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:397,398</note>
       </notes>
       <segment>
         <source>Cerrar sin mover la cuenta</source>
@@ -5196,7 +5221,7 @@
     </unit>
     <unit id="staff.tickets.transfer.cancel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:378,380</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:403,405</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -5204,7 +5229,7 @@
     </unit>
     <unit id="staff.tickets.transfer.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:385,386</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:410,411</note>
       </notes>
       <segment>
         <source>Mover la cuenta a la mesa elegida</source>
@@ -5212,15 +5237,103 @@
     </unit>
     <unit id="staff.tickets.transfer.confirm">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:391,393</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:416,418</note>
       </notes>
       <segment>
         <source>Mover</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.void.title">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:422,423</note>
+      </notes>
+      <segment>
+        <source>Anular línea</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.noReasons">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:435,437</note>
+      </notes>
+      <segment>
+        <source> No hay motivos de anulación configurados. Pide a un administrador que los agregue. </source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.reason">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:439,441</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.reason.placeholder">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:452,453</note>
+      </notes>
+      <segment>
+        <source>Elige un motivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.note">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:459,461</note>
+      </notes>
+      <segment>
+        <source>Nota</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.noteRequired">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:470,473</note>
+      </notes>
+      <segment>
+        <source>Para el motivo «Otro» la nota es obligatoria.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.loading">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:474,477</note>
+      </notes>
+      <segment>
+        <source>Cargando los motivos…</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:483,484</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin anular la línea</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.cancel">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:489,491</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:497,498</note>
+      </notes>
+      <segment>
+        <source>Anular la línea con este motivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:503,505</note>
+      </notes>
+      <segment>
+        <source>Anular línea</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.billOn.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:414</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:527</note>
       </notes>
       <segment>
         <source>Avisar que la mesa pidió la cuenta</source>
@@ -5228,7 +5341,7 @@
     </unit>
     <unit id="staff.tickets.billOff.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:415</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:528</note>
       </notes>
       <segment>
         <source>Quitar el aviso de que la mesa pidió la cuenta</source>
