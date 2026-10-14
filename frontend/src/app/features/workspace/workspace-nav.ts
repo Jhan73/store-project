@@ -3,6 +3,7 @@ import {
   IconBook2,
   IconHistory,
   IconHome,
+  IconLayoutGrid,
   IconSettings,
   IconTable,
   IconToggleRight,
@@ -22,6 +23,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     label: $localize`:@@workspace.nav.staff:Operación`,
     icon: IconHome,
     exact: true,
+    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/tables',
+    label: $localize`:@@workspace.nav.floor:Salón`,
+    icon: IconLayoutGrid,
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
   },
   {

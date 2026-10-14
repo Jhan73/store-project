@@ -852,6 +852,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["activeReasonActive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/shifts": {
         parameters: {
             query?: never;
@@ -1288,6 +1304,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ActiveReasonResponse: {
+            code: string;
+            /** @enum {string} */
+            type: "VOID" | "COMP" | "CASH_OUT" | "STOCK_ADJUSTMENT";
+        };
         AdjustStockRequest: {
             note?: string | null;
             /** Format: int32 */
@@ -1367,6 +1388,8 @@ export interface components {
             quantity: number;
             /** Format: date-time */
             readyAt: string | null;
+            /** Format: uuid */
+            sourceLineId: string;
             /** @enum {string} */
             state: "PENDING" | "READY" | "VOIDED" | "COMPED";
             /** Format: uuid */
@@ -8013,6 +8036,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["QuickSaleItemResponse"][];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    activeReasonActive: {
+        parameters: {
+            query: {
+                type: "VOID" | "COMP" | "CASH_OUT" | "STOCK_ADJUSTMENT";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActiveReasonResponse"][];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Unauthorized. Error codes: auth.unauthenticated */

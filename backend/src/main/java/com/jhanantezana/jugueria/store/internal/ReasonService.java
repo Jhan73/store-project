@@ -44,6 +44,11 @@ public class ReasonService {
 		return reasons.findByType(type);
 	}
 
+	@Transactional(readOnly = true)
+	public List<Reason> activeByType(ReasonType type) {
+		return reasons.findByTypeAndActiveTrue(type);
+	}
+
 	@Transactional
 	public Reason create(ReasonType type, String code) {
 		var now = Instant.now(clock);

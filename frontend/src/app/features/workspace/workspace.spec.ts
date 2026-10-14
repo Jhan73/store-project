@@ -88,7 +88,7 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/staff');
 
-    expect(navLinks()).toEqual(['/staff', '/staff/availability']);
+    expect(navLinks()).toEqual(['/staff', '/staff/tables', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
   });
 
@@ -122,6 +122,42 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/availability']);
   });
 
+  it('lets floor staff open the table grid', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/tables');
+    http.expectOne('http://api.test/api/v1/tables').flush([]);
+    http.expectOne('http://api.test/api/v1/tickets').flush([]);
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/tables');
+    expect(page().body.textContent).toContain('Salón');
+    expect(active).toEqual(['/staff/tables']);
+  });
+
+  it('lets floor staff open a ticket editor', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/tickets/k1');
+    http.expectOne('http://api.test/api/v1/tickets/k1').flush({
+      id: 'k1',
+      type: 'TABLE',
+      status: 'OPEN',
+      lines: [],
+      tableName: 'Mesa 1',
+      total: { amount: '0.00', currency: 'PEN' },
+    });
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/staff/tickets/k1');
+  });
+
   it('sends a visitor without a session away from the availability screen', async () => {
     const navigation = harness.navigateByUrl('/staff/availability');
     (await vi.waitFor(() => http.expectOne(REFRESH))).flush(null, {
@@ -149,6 +185,7 @@ describe('staff and admin area', () => {
 
     expect(navLinks()).toEqual([
       '/staff',
+      '/staff/tables',
       '/staff/availability',
       '/admin',
       '/admin/catalog',
