@@ -1,6 +1,8 @@
 package com.jhanantezana.jugueria.catalog;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface CatalogApi {
@@ -18,6 +20,9 @@ public interface CatalogApi {
 
 	/** The products pinned for quick sales that can be sold right now, in the order the admin set. */
 	List<QuickSaleItem> quickSaleItems();
+
+	/** The current category of each product that exists; unknown IDs are left out of the result. */
+	Map<UUID, ProductCategory> categoriesOf(Collection<UUID> productIds);
 
 	/**
 	 * Sets the product's availability and publishes {@link AvailabilityChanged} when the flag flips, in the

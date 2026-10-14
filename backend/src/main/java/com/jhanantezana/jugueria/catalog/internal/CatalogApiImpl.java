@@ -1,10 +1,13 @@
 package com.jhanantezana.jugueria.catalog.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +16,7 @@ import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.catalog.CatalogError;
 import com.jhanantezana.jugueria.catalog.PricedOption;
 import com.jhanantezana.jugueria.catalog.PricedSelection;
+import com.jhanantezana.jugueria.catalog.ProductCategory;
 import com.jhanantezana.jugueria.catalog.QuickSaleItem;
 import com.jhanantezana.jugueria.shared.BusinessException;
 
@@ -48,6 +52,23 @@ class CatalogApiImpl implements CatalogApi {
 			.stream()
 			.map(product -> new QuickSaleItem(product.getId(), product.getName(), product.getPrice()))
 			.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Map<UUID, ProductCategory> categoriesOf(Collection<UUID> productIds) {
+		var found = products.findAllById(productIds);
+		var categoryById = new HashMap<UUID, Category>();
+		categories.findAllById(found.stream().map(Product::getCategoryId).collect(Collectors.toSet()))
+			.forEach(category -> categoryById.put(category.getId(), category));
+		var result = new HashMap<UUID, ProductCategory>();
+		for (var product : found) {
+			var category = categoryById.get(product.getCategoryId());
+			if (category != null) {
+				result.put(product.getId(), new ProductCategory(category.getId(), category.getName()));
+			}
+		}
+		return result;
 	}
 
 	@Override

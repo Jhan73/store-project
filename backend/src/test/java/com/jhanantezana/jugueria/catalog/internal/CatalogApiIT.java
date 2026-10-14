@@ -238,6 +238,19 @@ class CatalogApiIT {
 	}
 
 	@Test
+	void resolvesTheCategoryOfEachKnownProduct() {
+		var category = categories.create("Juices-" + UUID.randomUUID(), null, 0);
+		var mango = products.create(new ProductDefinition("Mango", null, category.getId(), Money.of("12.50", PEN), 0,
+				false, Set.of(), List.of())).id();
+
+		var found = catalog.categoriesOf(List.of(mango, UUID.randomUUID()));
+
+		assertThat(found).containsOnlyKeys(mango);
+		assertThat(found.get(mango).categoryId()).isEqualTo(category.getId());
+		assertThat(found.get(mango).categoryName()).isEqualTo(category.getName());
+	}
+
+	@Test
 	void setsAProductAvailabilityAndTheSaleStopsAcceptingIt() {
 		var product = product("Water", "3.00");
 
