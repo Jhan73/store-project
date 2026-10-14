@@ -1,0 +1,145 @@
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  @include bp.tablet-up {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
+}
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+
+  @include bp.desktop-up {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.product {
+  width: 100%;
+  min-height: 4.5rem;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.lines li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.lines li.voided .line-main,
+.lines li.voided .detail {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.line-main,
+.line-foot,
+.total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.line-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.detail {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.detail.warn {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.state {
+  font-weight: 600;
+}
+
+.total {
+  font-size: 1.25rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.offline,
+.closed {
+  padding: var(--space-3) var(--space-4);
+  color: var(--warning-foreground);
+  background: var(--warning);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted-foreground);
+}

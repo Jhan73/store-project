@@ -16,6 +16,10 @@ export const STAFF_ROUTES: Routes = [
             path: 'tables',
             loadComponent: () => import('./tables/table-grid').then((m) => m.TableGrid),
           },
+          {
+            path: 'tickets/:id',
+            loadComponent: () => import('./tickets/ticket-editor').then((m) => m.TicketEditor),
+          },
         ],
       },
       {

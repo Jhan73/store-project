@@ -1382,6 +1382,7 @@
         <note category="location">src/app/features/admin/settings/settings-form.ts:163</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:359</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -4865,6 +4866,374 @@
         <source>Abrir la cuenta de este cliente</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.back.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:49,50</note>
+      </notes>
+      <segment>
+        <source>Volver al salón</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.back">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:54,56</note>
+      </notes>
+      <segment>
+        <source>Salón</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.counterTitle">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:61,62</note>
+      </notes>
+      <segment>
+        <source>Mostrador: <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.counterName }}"/></source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.number">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:64,66</note>
+      </notes>
+      <segment>
+        <source>Cuenta <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.number }}"/></source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.failed">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:71,73</note>
+      </notes>
+      <segment>
+        <source>No se pudo cargar la cuenta. Los cambios están deshabilitados.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:79,80</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.retry">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:84,86</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.offline">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:90,92</note>
+      </notes>
+      <segment>
+        <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.updating">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:96,98</note>
+      </notes>
+      <segment>
+        <source>Actualizando la cuenta. Los cambios se habilitan en unos segundos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.missing">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:102,103</note>
+      </notes>
+      <segment>
+        <source>La cuenta no existe.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.closed">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:106,109</note>
+      </notes>
+      <segment>
+        <source> La cuenta está cerrada y ya no se puede modificar. </source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.menu">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:113,114</note>
+      </notes>
+      <segment>
+        <source>Productos</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.product.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:126,127</note>
+      </notes>
+      <segment>
+        <source>Elegir las opciones de este producto</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.soldOut">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:137,139</note>
+      </notes>
+      <segment>
+        <source>Agotado</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.lines">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:149,150</note>
+      </notes>
+      <segment>
+        <source>Cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.allergy">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:165,167</note>
+      </notes>
+      <segment>
+        <source>Alergia</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.state.unsent">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:171,172</note>
+      </notes>
+      <segment>
+        <source>Sin enviar</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.state.sent">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:174,175</note>
+      </notes>
+      <segment>
+        <source>Enviada</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.state.ready">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:177,178</note>
+      </notes>
+      <segment>
+        <source>Lista</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.state.voided">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:180,181</note>
+      </notes>
+      <segment>
+        <source>Anulada</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.quantity.downLabel">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:195,196</note>
+      </notes>
+      <segment>
+        <source>Una unidad menos</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.quantity.down">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:197,198</note>
+      </notes>
+      <segment>
+        <source>Una unidad menos</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.quantity.upLabel">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:210,211</note>
+      </notes>
+      <segment>
+        <source>Una unidad más</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.quantity.up">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:212,213</note>
+      </notes>
+      <segment>
+        <source>Una unidad más</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.remove.label">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:225,226</note>
+      </notes>
+      <segment>
+        <source>Quitar la línea</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.remove.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:227,228</note>
+      </notes>
+      <segment>
+        <source>Quitar la línea de la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.empty">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:239,241</note>
+      </notes>
+      <segment>
+        <source>La cuenta todavía no tiene líneas.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.total">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:244,245</note>
+      </notes>
+      <segment>
+        <source>Total</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.send.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:255,256</note>
+      </notes>
+      <segment>
+        <source>Enviar las líneas nuevas a cocina</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.send">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:261,262</note>
+      </notes>
+      <segment>
+        <source>Enviar a cocina</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.repeat.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:269,270</note>
+      </notes>
+      <segment>
+        <source>Agregar de nuevo las líneas de la última ronda enviada</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.repeat">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:275,277</note>
+      </notes>
+      <segment>
+        <source>Repetir última ronda</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.billOff">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:290,291</note>
+      </notes>
+      <segment>
+        <source>Quitar el pedido de cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.billOn">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:292,294</note>
+      </notes>
+      <segment>
+        <source>Pedir la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:301,302</note>
+      </notes>
+      <segment>
+        <source>Mover la cuenta a una mesa libre</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:307,309</note>
+      </notes>
+      <segment>
+        <source>Cambiar de mesa</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.add.title">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:317,318</note>
+      </notes>
+      <segment>
+        <source>Agregar producto</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.title">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:336,337</note>
+      </notes>
+      <segment>
+        <source>Cambiar de mesa</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.table">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:346,349</note>
+      </notes>
+      <segment>
+        <source>Mesa de destino</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.placeholder">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:360,361</note>
+      </notes>
+      <segment>
+        <source>Elige una mesa libre</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:372,373</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin mover la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.cancel">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:378,380</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:385,386</note>
+      </notes>
+      <segment>
+        <source>Mover la cuenta a la mesa elegida</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:391,393</note>
+      </notes>
+      <segment>
+        <source>Mover</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.billOn.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:414</note>
+      </notes>
+      <segment>
+        <source>Avisar que la mesa pidió la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.billOff.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:415</note>
+      </notes>
+      <segment>
+        <source>Quitar el aviso de que la mesa pidió la cuenta</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.staff">
       <notes>
         <note category="location">src/app/features/workspace/workspace-nav.ts:23</note>
@@ -5098,6 +5467,158 @@
       </notes>
       <segment>
         <source>Sistema</source>
+      </segment>
+    </unit>
+    <unit id="configurator.noChoice">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:65,67</note>
+      </notes>
+      <segment>
+        <source>Ninguna</source>
+      </segment>
+    </unit>
+    <unit id="configurator.note">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:105,107</note>
+      </notes>
+      <segment>
+        <source>Nota (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="configurator.allergy">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:123,126</note>
+      </notes>
+      <segment>
+        <source>Alergia: avisar a cocina</source>
+      </segment>
+    </unit>
+    <unit id="configurator.quantity">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:127,129</note>
+      </notes>
+      <segment>
+        <source>Cantidad</source>
+      </segment>
+    </unit>
+    <unit id="configurator.quantity.downLabel">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:134,135</note>
+      </notes>
+      <segment>
+        <source>Una unidad menos</source>
+      </segment>
+    </unit>
+    <unit id="configurator.quantity.down">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:136,137</note>
+      </notes>
+      <segment>
+        <source>Una unidad menos</source>
+      </segment>
+    </unit>
+    <unit id="configurator.quantity.upLabel">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:150,151</note>
+      </notes>
+      <segment>
+        <source>Una unidad más</source>
+      </segment>
+    </unit>
+    <unit id="configurator.quantity.up">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:152,153</note>
+      </notes>
+      <segment>
+        <source>Una unidad más</source>
+      </segment>
+    </unit>
+    <unit id="configurator.unitPrice">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:162,163</note>
+      </notes>
+      <segment>
+        <source>Precio por unidad</source>
+      </segment>
+    </unit>
+    <unit id="configurator.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:172,173</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin agregar el producto</source>
+      </segment>
+    </unit>
+    <unit id="configurator.cancel">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:178,180</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="configurator.soldOut">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:199,200</note>
+      </notes>
+      <segment>
+        <source>Agotado</source>
+      </segment>
+    </unit>
+    <unit id="configurator.submit">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:209</note>
+      </notes>
+      <segment>
+        <source>Agregar</source>
+      </segment>
+    </unit>
+    <unit id="configurator.submit.tooltip">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:210</note>
+      </notes>
+      <segment>
+        <source>Agregar el producto con estas opciones</source>
+      </segment>
+    </unit>
+    <unit id="configurator.rule.one">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:261</note>
+      </notes>
+      <segment>
+        <source>Elige una opción</source>
+      </segment>
+    </unit>
+    <unit id="configurator.rule.optionalOne">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:262</note>
+      </notes>
+      <segment>
+        <source>Opcional: elige una opción</source>
+      </segment>
+    </unit>
+    <unit id="configurator.rule.upTo">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:265</note>
+      </notes>
+      <segment>
+        <source>Opcional: hasta <ph id="0" equiv="max" disp="max"/> opciones</source>
+      </segment>
+    </unit>
+    <unit id="configurator.rule.exactly">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:268</note>
+      </notes>
+      <segment>
+        <source>Elige <ph id="0" equiv="max" disp="max"/> opciones</source>
+      </segment>
+    </unit>
+    <unit id="configurator.rule.between">
+      <notes>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:269</note>
+      </notes>
+      <segment>
+        <source>Elige entre <ph id="0" equiv="min" disp="min"/> y <ph id="1" equiv="max" disp="max"/> opciones</source>
       </segment>
     </unit>
   </file>

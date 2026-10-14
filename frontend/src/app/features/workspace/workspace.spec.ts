@@ -138,6 +138,25 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/tables']);
   });
 
+  it('lets floor staff open a ticket editor', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/tickets/k1');
+    http.expectOne('http://api.test/api/v1/tickets/k1').flush({
+      id: 'k1',
+      type: 'TABLE',
+      status: 'OPEN',
+      lines: [],
+      tableName: 'Mesa 1',
+      total: { amount: '0.00', currency: 'PEN' },
+    });
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/staff/tickets/k1');
+  });
+
   it('sends a visitor without a session away from the availability screen', async () => {
     const navigation = harness.navigateByUrl('/staff/availability');
     (await vi.waitFor(() => http.expectOne(REFRESH))).flush(null, {
