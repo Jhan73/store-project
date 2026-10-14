@@ -3,15 +3,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import type {
+  ActiveReason,
   LineRequest,
   Menu,
   TableGridEntry,
   Ticket,
   TicketLine,
+  VoidLineRequest,
 } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { ApiError } from '../../../core/errors/api-error';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { LiveSync } from '../../../core/realtime/live-sync';
+import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
@@ -37,6 +41,8 @@ export class TicketEditorStore {
   private readonly api = inject(TicketsApi);
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly reasonsApi = inject(ReasonsApi);
+  private readonly auth = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
@@ -46,6 +52,7 @@ export class TicketEditorStore {
   private readonly currentMenu = signal<Menu | null>(null);
   private readonly readyLineIds = signal<ReadonlySet<string>>(new Set());
   private readonly tableList = signal<readonly TableGridEntry[]>([]);
+  private readonly voidReasons = signal<readonly ActiveReason[] | null>(null);
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
   private ticketId = '';
@@ -53,6 +60,7 @@ export class TicketEditorStore {
   private lastBoardRequest = 0;
   private lastMenuRequest = 0;
   private lastTablesRequest = 0;
+  private lastReasonsRequest = 0;
 
   readonly ticket = this.current.asReadonly();
   readonly menu = this.currentMenu.asReadonly();
@@ -61,6 +69,7 @@ export class TicketEditorStore {
   readonly connected = this.realtime.isConnected;
   readonly enabled = this.sync.enabled;
   readonly pending = new PendingIds();
+  readonly reasons = this.voidReasons.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
   readonly isOpen = computed(() => this.current()?.status === 'OPEN');
   readonly isTable = computed(() => this.current()?.type === 'TABLE');
@@ -109,6 +118,47 @@ export class TicketEditorStore {
       return 'READY';
     }
     return line.state;
+  }
+
+  // A server may not void a line once it is ready: that is for a cashier or an admin, and it counts as waste.
+  mayVoid(line: TicketLine): boolean {
+    return line.state === 'SENT' && (this.auth.role() !== 'SERVER' || this.stateOf(line) !== 'READY');
+  }
+
+  mustAskCashier(line: TicketLine): boolean {
+    return line.state === 'SENT' && !this.mayVoid(line);
+  }
+
+  loadVoidReasons(): void {
+    const request = ++this.lastReasonsRequest;
+    this.voidReasons.set(null);
+    this.reasonsApi
+      .active('VOID')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (reasons) => {
+          if (request === this.lastReasonsRequest) {
+            this.voidReasons.set(reasons);
+          }
+        },
+        error: (error: unknown) => {
+          if (request === this.lastReasonsRequest) {
+            this.notifier.show(error);
+          }
+        },
+      });
+  }
+
+  voidLine(line: TicketLine, request: VoidLineRequest, voided: () => void): void {
+    const intent = `void:${line.id}:${JSON.stringify(request)}`;
+    this.command(
+      `void:${line.id}`,
+      this.api.voidLine(this.ticketId, line.id, request, this.keys.keyFor(intent)),
+      () => {
+        this.keys.release(intent);
+        voided();
+      },
+    );
   }
 
   addLine(line: LineRequest, added: () => void): void {

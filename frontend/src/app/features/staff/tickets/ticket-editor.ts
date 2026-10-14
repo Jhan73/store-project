@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { computed } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   IconArrowLeft,
   IconArrowsExchange,
+  IconBan,
   IconCheck,
   IconMinus,
   IconPlus,
@@ -19,9 +21,11 @@ import {
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
+import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, TicketLine } from '../../../core/api/api-types';
 import { formatMoney } from '../../../core/money/money';
+import { requiresNote } from '../../../core/reasons/reason-rules';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
 
@@ -33,6 +37,7 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
     ButtonDirective,
     Dialog,
     Select,
+    Textarea,
     Tooltip,
     TablerIconComponent,
     ProductConfigurator,
@@ -184,6 +189,26 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
                       }
                     }
                   </span>
+                  @if (store.isOpen() && store.mayVoid(line)) {
+                    <button
+                      pButton
+                      type="button"
+                      severity="danger"
+                      [attr.data-testid]="'void-' + line.id"
+                      [disabled]="!store.enabled() || store.pending.has('void:' + line.id)"
+                      pTooltip="Anular esta línea con un motivo"
+                      i18n-pTooltip="@@staff.tickets.void.tooltip"
+                      tooltipPosition="top"
+                      (click)="startVoid(line)"
+                    >
+                      <tabler-icon [icon]="icons.void" aria-hidden="true" />
+                      <span i18n="@@staff.tickets.void">Anular</span>
+                    </button>
+                  } @else if (store.isOpen() && store.mustAskCashier(line)) {
+                    <span class="detail warn" [attr.data-testid]="'void-blocked-' + line.id" i18n="@@staff.tickets.void.blocked"
+                      >Ya está lista: pide a un cajero que la anule.</span
+                    >
+                  }
                   @if (store.isOpen() && line.state === 'UNSENT') {
                     <span class="line-actions">
                       <button
@@ -392,6 +417,93 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
         </button>
       </ng-template>
     </p-dialog>
+
+    <p-dialog
+      header="Anular línea"
+      i18n-header="@@staff.tickets.void.title"
+      [modal]="true"
+      [draggable]="false"
+      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [visible]="voiding() !== null"
+      (visibleChange)="closeVoid($event)"
+    >
+      @if (voiding(); as line) {
+        <p class="detail">{{ line.quantity }} × {{ line.productName }}</p>
+        @if (store.reasons(); as reasons) {
+          @if (reasons.length === 0) {
+            <p data-testid="void-no-reasons" i18n="@@staff.tickets.void.noReasons">
+              No hay motivos de anulación configurados. Pide a un administrador que los agregue.
+            </p>
+          }
+          <div class="field">
+            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason">Motivo</label>
+            <p-select
+              inputId="void-reason"
+              [ariaLabelledBy]="'void-reason-label'"
+              [formControl]="voidReason"
+              optionLabel="code"
+              optionValue="code"
+              [options]="reasons"
+              [filter]="true"
+              filterBy="code"
+              [resetFilterOnHide]="true"
+              filterPlaceholder="Buscar"
+              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+              placeholder="Elige un motivo"
+              i18n-placeholder="@@staff.tickets.void.reason.placeholder"
+              [appendTo]="'body'"
+              fluid
+            />
+          </div>
+          <div class="field">
+            <label for="void-note" i18n="@@staff.tickets.void.note">Nota</label>
+            <textarea
+              pTextarea
+              id="void-note"
+              data-testid="void-note"
+              [formControl]="voidNote"
+              maxlength="280"
+              rows="3"
+              fluid
+            ></textarea>
+            @if (noteRequired()) {
+              <small i18n="@@staff.tickets.void.noteRequired">Para el motivo «Otro» la nota es obligatoria.</small>
+            }
+          </div>
+        } @else {
+          <p class="muted" i18n="@@staff.tickets.void.loading">Cargando los motivos…</p>
+        }
+      }
+      <ng-template #footer>
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="void-cancel"
+          pTooltip="Cerrar sin anular la línea"
+          i18n-pTooltip="@@staff.tickets.void.cancel.tooltip"
+          tooltipPosition="top"
+          (click)="closeVoid(false)"
+        >
+          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+          <span i18n="@@staff.tickets.void.cancel">Cancelar</span>
+        </button>
+        <button
+          pButton
+          type="button"
+          severity="danger"
+          data-testid="void-confirm"
+          [disabled]="!canConfirmVoid()"
+          pTooltip="Anular la línea con este motivo"
+          i18n-pTooltip="@@staff.tickets.void.confirm.tooltip"
+          tooltipPosition="top"
+          (click)="confirmVoid()"
+        >
+          <tabler-icon [icon]="icons.void" aria-hidden="true" />
+          <span i18n="@@staff.tickets.void.confirm">Anular línea</span>
+        </button>
+      </ng-template>
+    </p-dialog>
   `,
 })
 export class TicketEditor {
@@ -406,6 +518,7 @@ export class TicketEditor {
     repeat: IconRepeat,
     bill: IconReceipt,
     transfer: IconArrowsExchange,
+    void: IconBan,
     retry: IconRefresh,
     cancel: IconX,
     confirm: IconCheck,
@@ -419,6 +532,18 @@ export class TicketEditor {
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
+  protected readonly voiding = signal<TicketLine | null>(null);
+  protected readonly voidReason = new FormControl<string | null>(null);
+  protected readonly voidNote = new FormControl('', { nonNullable: true });
+  private readonly chosenReason = toSignal(this.voidReason.valueChanges, { initialValue: null });
+  private readonly typedNote = toSignal(this.voidNote.valueChanges, { initialValue: '' });
+  protected readonly noteRequired = computed(() => requiresNote(this.chosenReason()));
+  protected readonly canConfirmVoid = computed(
+    () =>
+      this.chosenReason() !== null &&
+      (!this.noteRequired() || this.typedNote().trim() !== '') &&
+      !this.store.pending.has(`void:${this.voiding()?.id}`),
+  );
   protected readonly chosenTable = toSignal(this.target.valueChanges, { initialValue: null });
 
   protected modifiersOf(line: TicketLine): string {
@@ -432,6 +557,28 @@ export class TicketEditor {
   protected closeAdd(visible: boolean): void {
     if (!visible) {
       this.configuring.set(null);
+    }
+  }
+
+  protected startVoid(line: TicketLine): void {
+    this.voidReason.reset();
+    this.voidNote.reset();
+    this.store.loadVoidReasons();
+    this.voiding.set(line);
+  }
+
+  protected closeVoid(visible: boolean): void {
+    if (!visible) {
+      this.voiding.set(null);
+    }
+  }
+
+  protected confirmVoid(): void {
+    const line = this.voiding();
+    const reason = this.voidReason.value;
+    if (line && reason !== null && this.canConfirmVoid()) {
+      const note = this.voidNote.value.trim();
+      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () => this.voiding.set(null));
     }
   }
 

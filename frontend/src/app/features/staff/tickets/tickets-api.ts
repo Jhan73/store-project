@@ -10,6 +10,7 @@ import type {
   TableGridEntry,
   Ticket,
   TicketSummary,
+  VoidLineRequest,
 } from '../../../core/api/api-types';
 
 export interface TableGridRead {
@@ -73,6 +74,14 @@ export class TicketsApi {
 
   repeat(id: string, lineIds: string[], key: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.base}/tickets/${id}/repeat`, { lineIds }, idempotencyKey(key));
+  }
+
+  voidLine(id: string, lineId: string, request: VoidLineRequest, key: string): Observable<Ticket> {
+    return this.http.post<Ticket>(
+      `${this.base}/tickets/${id}/lines/${lineId}/void`,
+      request,
+      idempotencyKey(key),
+    );
   }
 
   setBillRequested(id: string, requested: boolean): Observable<Ticket> {

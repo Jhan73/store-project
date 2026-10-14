@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
+import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
@@ -8,14 +8,16 @@ import { Observable, of, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type {
   BoardOrder,
+  Role,
   Menu,
   TableGridEntry,
   Ticket,
   TicketLine,
 } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
-import { chooseOption } from '../../../testing/primeng-controls';
+import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
 import { TicketEditor } from './ticket-editor';
 import { TicketsApi } from './tickets-api';
 
@@ -24,6 +26,8 @@ const TICKET = `${BASE}/tickets/k1`;
 const MENU = `${BASE}/catalog/menu`;
 const BOARD = `${BASE}/board/tickets`;
 const TABLES = `${BASE}/tables`;
+const REASONS = `${BASE}/reasons?type=VOID`;
+const SENT_AT = '2026-10-13T10:05:00Z';
 
 const pen = (amount: string) => ({ amount, currency: 'PEN' });
 
@@ -164,9 +168,11 @@ describe('TicketEditor', () => {
   let realtime: FakeRealtime;
   let http: HttpTestingController;
   let messages: MessageService;
+  let role: WritableSignal<Role | null>;
 
   beforeEach(() => {
     realtime = new FakeRealtime();
+    role = signal<Role | null>('CASHIER');
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
@@ -175,6 +181,7 @@ describe('TicketEditor', () => {
         MessageService,
         TicketsApi,
         { provide: RealtimeClient, useValue: realtime },
+        { provide: AuthStore, useValue: { role } },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
       ],
@@ -486,6 +493,133 @@ describe('TicketEditor', () => {
 
     expect(text(fixture, 'ticket-title')).toContain('Mesa 4');
     expect(inDialog('[data-testid="transfer-confirm"]')).toBeNull();
+  });
+
+  describe('voiding a sent line', () => {
+    const sent = () => ticket([line('l1', { state: 'SENT', sentAt: SENT_AT })]);
+
+    async function openVoid(onBoard: BoardOrder[] = []) {
+      const fixture = await ready(sent(), onBoard);
+      await press(fixture, 'void-l1');
+      http.expectOne(REASONS).flush([
+        { type: 'VOID', code: 'Error' },
+        { type: 'VOID', code: 'Other' },
+      ]);
+      await fixture.whenStable();
+      return fixture;
+    }
+
+    const confirm = () => inDialog<HTMLButtonElement>('[data-testid="void-confirm"]')!;
+
+    it('offers the void on a sent line only, not on an unsent or a voided one', async () => {
+      const fixture = await ready(
+        ticket([line('l1', { state: 'SENT', sentAt: SENT_AT }), line('l2'), line('l3', { state: 'VOIDED' })]),
+      );
+
+      expect(find(fixture, 'void-l1')).not.toBeNull();
+      expect(find(fixture, 'void-l2')).toBeNull();
+      expect(find(fixture, 'void-l3')).toBeNull();
+    });
+
+    it('lets a cashier void a line that is already ready', async () => {
+      const fixture = await ready(sent(), board('l1'));
+
+      expect(find<HTMLButtonElement>(fixture, 'void-l1')!.disabled).toBe(false);
+    });
+
+    it('tells a server to ask a cashier once the line is ready', async () => {
+      role.set('SERVER');
+      const fixture = await ready(sent(), board('l1'));
+
+      expect(find(fixture, 'void-l1')).toBeNull();
+      expect(text(fixture, 'void-blocked-l1')).toContain('pide a un cajero');
+    });
+
+    it('lets a server void a line that is not ready yet', async () => {
+      role.set('SERVER');
+      const fixture = await ready(sent());
+
+      expect(find(fixture, 'void-l1')).not.toBeNull();
+      expect(find(fixture, 'void-blocked-l1')).toBeNull();
+    });
+
+    it('asks for a reason from the active list and voids the line with it', async () => {
+      const fixture = await openVoid();
+      expect(confirm().disabled).toBe(true);
+      const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+
+      await chooseOption(fixture, dialog, 'void-reason', 'Error');
+      expect(confirm().disabled).toBe(false);
+      confirm().click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/lines/l1/void`);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({ reason: 'Error', note: null });
+      expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+      request.flush(ticket([line('l1', { state: 'VOIDED', sentAt: SENT_AT, voidReasonCode: 'Error' })]));
+      await fixture.whenStable();
+
+      expect(text(fixture, 'line-status-l1')).toContain('Anulada');
+      expect(inDialog('[data-testid="void-confirm"]')).toBeNull();
+    });
+
+    it('needs a note for the reason "Other" and sends it', async () => {
+      const fixture = await openVoid();
+      const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+
+      await chooseOption(fixture, dialog, 'void-reason', 'Other');
+      expect(confirm().disabled).toBe(true);
+      const note = inDialog<HTMLTextAreaElement>('[data-testid="void-note"]')!;
+      expect(note.getAttribute('maxlength')).toBe('280');
+      note.value = '  Cliente se fue ';
+      note.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      expect(confirm().disabled).toBe(false);
+      confirm().click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/lines/l1/void`);
+      expect(request.request.body).toEqual({ reason: 'Other', note: 'Cliente se fue' });
+      request.flush(sent());
+    });
+
+    it('keeps the dialog and the idempotency key after a refusal', async () => {
+      const fixture = await openVoid();
+      const added = vi.spyOn(messages, 'add');
+      const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
+      await chooseOption(fixture, dialog, 'void-reason', 'Error');
+
+      confirm().click();
+      await fixture.whenStable();
+      const first = http.expectOne(`${TICKET}/lines/l1/void`);
+      const key = first.request.headers.get('Idempotency-Key');
+      first.flush(
+        { type: 'about:blank', status: 409, code: 'preparation.line-already-ready', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(sent());
+      http.expectOne(BOARD).flush([]);
+      await fixture.whenStable();
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      expect(selectedLabel(dialog, 'void-reason')).toBe('Error');
+      confirm().click();
+      await fixture.whenStable();
+      const second = http.expectOne(`${TICKET}/lines/l1/void`);
+      expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+      second.flush(sent());
+    });
+
+    it('closes the dialog on cancel without calling the API', async () => {
+      const fixture = await openVoid();
+
+      inDialog<HTMLButtonElement>('[data-testid="void-cancel"]')!.click();
+      await fixture.whenStable();
+
+      expect(inDialog('[data-testid="void-confirm"]')).toBeNull();
+    });
   });
 
   it('reads the ticket and the board again on a board signal', async () => {

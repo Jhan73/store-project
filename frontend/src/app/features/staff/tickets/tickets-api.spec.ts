@@ -115,6 +115,16 @@ describe('TicketsApi', () => {
     request.flush({});
   });
 
+  it('voids a sent line with a reason and an idempotency key', () => {
+    api.voidLine('k1', 'l1', { reason: 'Error', note: null }, 'key-4').subscribe();
+
+    const request = http.expectOne(`${BASE}/tickets/k1/lines/l1/void`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('key-4');
+    expect(request.request.body).toEqual({ reason: 'Error', note: null });
+    request.flush({});
+  });
+
   it('sets the bill request flag', () => {
     api.setBillRequested('k1', true).subscribe();
 

@@ -59,3 +59,5 @@ export type TransferTicketRequest = Schemas['TransferTicketRequest'];
 export type RepeatLinesRequest = Schemas['RepeatLinesRequest'];
 export type BillRequestedRequest = Schemas['BillRequestedRequest'];
 export type BoardOrder = Schemas['BoardOrderResponse'];
+export type ActiveReason = Schemas['ActiveReasonResponse'];
+export type VoidLineRequest = Schemas['VoidLineRequest'];
