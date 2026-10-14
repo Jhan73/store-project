@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.configurator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+h2,
+p {
+  margin: 0;
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+legend {
+  font-weight: 600;
+}
+
+.rule {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.rule.pending {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-target);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.delta,
+.sold-out {
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.count {
+  min-width: 2rem;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.price {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.muted {
+  color: var(--muted-foreground);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

@@ -3484,7 +3484,7 @@
     </unit>
     <unit id="admin.settings.general.allowNegativeStockOnSaleHint">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:250,255</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:250,254</note>
       </notes>
       <segment>
         <source>La venta se cierra aunque no haya stock y el stock del producto quedará en negativo.</source>
