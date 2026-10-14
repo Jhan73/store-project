@@ -11993,6 +11993,10 @@
             "type" : [ "string", "null" ],
             "format" : "date-time"
           },
+          "sourceLineId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "state" : {
             "type" : "string",
             "enum" : [ "PENDING", "READY", "VOIDED", "COMPED" ]
@@ -12005,7 +12009,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "allergy", "displayName", "flaggedUnavailable", "id", "modifiersText", "note", "productId", "quantity", "readyAt", "state", "stationId", "waste" ]
+        "required" : [ "allergy", "displayName", "flaggedUnavailable", "id", "modifiersText", "note", "productId", "quantity", "readyAt", "sourceLineId", "state", "stationId", "waste" ]
       },
       "BoardOrderResponse" : {
         "type" : "object",

@@ -225,7 +225,7 @@ class BoardStore {
 
 	private Map<UUID, List<BoardLineView>> lines(Collection<UUID> orderIds, @Nullable UUID station) {
 		var sql = """
-				SELECT id, board_order_id, product_id, display_name, quantity, modifiers_text, note, allergy, station_id,
+				SELECT id, board_order_id, source_line_id, product_id, display_name, quantity, modifiers_text, note, allergy, station_id,
 					state, waste, flagged_unavailable, ready_at
 				FROM preparation.board_line WHERE board_order_id IN (:ids)
 				""" + (station == null ? "" : " AND station_id = :station") + " ORDER BY board_order_id, position";
@@ -272,7 +272,8 @@ class BoardStore {
 	}
 
 	private static BoardLineView line(ResultSet rs) throws SQLException {
-		return new BoardLineView(rs.getObject("id", UUID.class), rs.getObject("product_id", UUID.class),
+		return new BoardLineView(rs.getObject("id", UUID.class), rs.getObject("source_line_id", UUID.class),
+				rs.getObject("product_id", UUID.class),
 				rs.getString("display_name"), rs.getInt("quantity"), rs.getString("modifiers_text"),
 				rs.getString("note"), rs.getBoolean("allergy"), rs.getObject("station_id", UUID.class),
 				BoardLineState.valueOf(rs.getString("state")), rs.getBoolean("waste"),
