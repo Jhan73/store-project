@@ -7845,6 +7845,94 @@
         "tags" : [ "quick-sale-controller" ]
       }
     },
+    "/api/v1/reasons" : {
+      "get" : {
+        "operationId" : "activeReasonActive",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "VOID", "COMP", "CASH_OUT", "STOCK_ADJUSTMENT" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ActiveReasonResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "active-reason-controller" ]
+      }
+    },
     "/api/v1/shifts" : {
       "get" : {
         "operationId" : "shiftList",
@@ -11685,6 +11773,19 @@
   },
   "components" : {
     "schemas" : {
+      "ActiveReasonResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "VOID", "COMP", "CASH_OUT", "STOCK_ADJUSTMENT" ]
+          }
+        },
+        "required" : [ "code", "type" ]
+      },
       "AdjustStockRequest" : {
         "type" : "object",
         "properties" : {
