@@ -37,6 +37,15 @@ public class TestcontainersConfiguration {
 		};
 	}
 
+	// Cached contexts share the container; a resubmission must never replay a failed delivery of another test.
+	@Bean
+	DynamicPropertyRegistrar inertEventResubmission() {
+		return registry -> {
+			registry.add("jugueria.shared.event-resubmission.initial-delay", () -> "365d");
+			registry.add("jugueria.shared.event-resubmission.interval", () -> "365d");
+		};
+	}
+
 	@Bean
 	JdbcConnectionDetails jdbcConnectionDetails() {
 		return new JdbcConnectionDetails() {
