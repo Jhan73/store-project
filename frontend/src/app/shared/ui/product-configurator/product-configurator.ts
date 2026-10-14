@@ -15,7 +15,7 @@ import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuModifierGroup, MenuProduct } from '../../../core/api/api-types';
 import { formatMoney } from '../../../core/money/money';
-import { minimumOf, toggleOption, unitPriceOf } from './configurator-rules';
+import { groupIssue, isValidSelection, minimumOf, toggleOption, unitPriceOf } from './configurator-rules';
 
 const MAX_QUANTITY = 99;
 const NO_CHOICE = '';
@@ -226,9 +226,7 @@ export class ProductConfigurator {
   private readonly selection = signal<readonly string[]>([]);
 
   protected readonly unitPrice = computed(() => formatMoney(unitPriceOf(this.product(), this.selection())));
-  protected readonly valid = computed(() =>
-    this.product().modifierGroups.every((group) => this.satisfied(group)),
-  );
+  protected readonly valid = computed(() => isValidSelection(this.product(), this.selection()));
 
   protected money = formatMoney;
 
@@ -249,8 +247,7 @@ export class ProductConfigurator {
   }
 
   protected satisfied(group: MenuModifierGroup): boolean {
-    const count = group.options.filter((option) => this.isChosen(option.id)).length;
-    return count >= minimumOf(group) && count <= group.maxChoices;
+    return groupIssue(group, this.selection()) === null;
   }
 
   protected ruleOf(group: MenuModifierGroup): string {

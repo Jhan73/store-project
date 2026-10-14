@@ -25,6 +25,7 @@ const BASE = 'http://api.test/api/v1';
 const TICKET = `${BASE}/tickets/k1`;
 const MENU = `${BASE}/catalog/menu`;
 const BOARD = `${BASE}/board/tickets`;
+const BOARD_READY = `${BASE}/board/ready`;
 const TABLES = `${BASE}/tables`;
 const REASONS = `${BASE}/reasons?type=VOID`;
 const SENT_AT = '2026-10-13T10:05:00Z';
@@ -113,11 +114,12 @@ function menu(): Menu {
   };
 }
 
-function board(readyLineId?: string): BoardOrder[] {
+// A board line has its own id; `sourceLineId` is the ticket line it came from.
+function board(readyTicketLineId?: string, state: 'READY' | 'PENDING' = 'READY'): BoardOrder[] {
   return [
     {
       id: 'b1',
-      lines: [{ id: readyLineId ?? 'none', state: 'READY' }],
+      lines: [{ id: `board-${readyTicketLineId ?? 'none'}`, sourceLineId: readyTicketLineId ?? 'none', state }],
     } as unknown as BoardOrder,
   ];
 }
@@ -192,23 +194,37 @@ describe('TicketEditor', () => {
 
   afterEach(() => http.verify());
 
-  async function open(current: Ticket = ticket([line('l1')]), onBoard: BoardOrder[] = []) {
+  // The editor reads both views: a card that is fully ready leaves `tickets` and shows in `ready`.
+  function flushBoard(tickets: BoardOrder[] = [], readyView: BoardOrder[] = []) {
+    http.expectOne(BOARD).flush(tickets);
+    http.expectOne(BOARD_READY).flush(readyView);
+  }
+
+  async function open(
+    current: Ticket = ticket([line('l1')]),
+    onBoard: BoardOrder[] = [],
+    onReady: BoardOrder[] = [],
+  ) {
     const fixture = TestBed.createComponent(TicketEditor);
     await fixture.whenStable();
     http.expectOne(TICKET).flush(current);
     http.expectOne(MENU).flush(menu());
-    http.expectOne(BOARD).flush(onBoard);
+    flushBoard(onBoard, onReady);
     await fixture.whenStable();
     return fixture;
   }
 
   // Connecting emits the re-fetch signal; answering that read is what enables the actions.
-  async function ready(current: Ticket = ticket([line('l1')]), onBoard: BoardOrder[] = []) {
-    const fixture = await open(current, onBoard);
+  async function ready(
+    current: Ticket = ticket([line('l1')]),
+    onBoard: BoardOrder[] = [],
+    onReady: BoardOrder[] = [],
+  ) {
+    const fixture = await open(current, onBoard, onReady);
     realtime.connected.set(true);
     realtime.fire('/topic/board');
     http.expectOne(TICKET).flush(current);
-    http.expectOne(BOARD).flush(onBoard);
+    flushBoard(onBoard, onReady);
     await fixture.whenStable();
     return fixture;
   }
@@ -248,6 +264,30 @@ describe('TicketEditor', () => {
     expect(text(fixture, 'line-l3')).toContain('Alergia');
   });
 
+  it('marks a line Ready from the ready view when its whole card is ready', async () => {
+    const sentLine = line('l1', { state: 'SENT', sentAt: SENT_AT });
+    const fixture = await open(ticket([sentLine]), [], board('l1'));
+
+    expect(text(fixture, 'line-status-l1')).toContain('Lista');
+  });
+
+  it('does not take a board line for a ticket line just because the ids are equal', async () => {
+    const sentLine = line('l1', { state: 'SENT', sentAt: SENT_AT });
+    const lookalike = [
+      { id: 'l1', sourceLineId: 'other', state: 'READY' },
+    ] as unknown as BoardOrder['lines'];
+    const fixture = await open(ticket([sentLine]), [{ id: 'b1', lines: lookalike } as BoardOrder]);
+
+    expect(text(fixture, 'line-status-l1')).toContain('Enviada');
+  });
+
+  it('does not mark a line Ready while its board line is still pending', async () => {
+    const sentLine = line('l1', { state: 'SENT', sentAt: SENT_AT });
+    const fixture = await open(ticket([sentLine]), board('l1', 'PENDING'));
+
+    expect(text(fixture, 'line-status-l1')).toContain('Enviada');
+  });
+
   it('titles a counter ticket with the customer name', async () => {
     const fixture = await open(
       ticket([], { type: 'COUNTER', tableId: null, tableName: null, counterName: 'Ana' }),
@@ -266,7 +306,7 @@ describe('TicketEditor', () => {
     realtime.connected.set(true);
     realtime.fire('/topic/board');
     http.expectOne(TICKET).flush(ticket([line('l1')]));
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(false);
@@ -326,7 +366,7 @@ describe('TicketEditor', () => {
     first.flush(failure, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     http.expectOne(TICKET).flush(ticket([line('l1')]));
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
@@ -357,7 +397,7 @@ describe('TicketEditor', () => {
     expect(request.request.method).toBe('POST');
     request.flush(ticket([line('l1', { state: 'SENT', sentAt: '2026-10-13T10:05:00Z' })]));
     await fixture.whenStable();
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(text(fixture, 'line-status-l1')).toContain('Enviada');
@@ -568,7 +608,7 @@ describe('TicketEditor', () => {
       const fixture = await openVoid();
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
 
-      await chooseOption(fixture, dialog, 'void-reason', 'Other');
+      await chooseOption(fixture, dialog, 'void-reason', 'Otro');
       expect(confirm().disabled).toBe(true);
       const note = inDialog<HTMLTextAreaElement>('[data-testid="void-note"]')!;
       expect(note.getAttribute('maxlength')).toBe('280');
@@ -600,7 +640,7 @@ describe('TicketEditor', () => {
       );
       await fixture.whenStable();
       http.expectOne(TICKET).flush(sent());
-      http.expectOne(BOARD).flush([]);
+      flushBoard([]);
       await fixture.whenStable();
 
       expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
@@ -610,6 +650,38 @@ describe('TicketEditor', () => {
       const second = http.expectOne(`${TICKET}/lines/l1/void`);
       expect(second.request.headers.get('Idempotency-Key')).toBe(key);
       second.flush(sent());
+    });
+
+    it('shows the reason "Other" as Otro, in the list and on the voided line', async () => {
+      const fixture = await ready(
+        ticket([line('l1', { state: 'VOIDED', sentAt: SENT_AT, voidReasonCode: 'Other' })]),
+      );
+
+      expect(text(fixture, 'line-status-l1')).toContain('Otro');
+      expect(text(fixture, 'line-status-l1')).not.toContain('Other');
+    });
+
+    it('says the reasons could not be loaded and offers a retry', async () => {
+      const fixture = await ready(sent());
+      await press(fixture, 'void-l1');
+      http.expectOne(REASONS).flush(
+        { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
+        { status: 500, statusText: 'Server Error' },
+      );
+      await fixture.whenStable();
+
+      expect(inDialog('[data-testid="void-reasons-failed"]')?.textContent).toContain(
+        'No se pudieron cargar los motivos',
+      );
+      expect(inDialog('[data-testid="void-reason-box"]')).toBeNull();
+
+      inDialog<HTMLButtonElement>('[data-testid="void-retry"]')!.click();
+      await fixture.whenStable();
+      http.expectOne(REASONS).flush([{ type: 'VOID', code: 'Error' }]);
+      await fixture.whenStable();
+
+      expect(inDialog('[data-testid="void-reasons-failed"]')).toBeNull();
+      expect(inDialog('[data-testid="void-reason-box"]')).not.toBeNull();
     });
 
     it('closes the dialog on cancel without calling the API', async () => {
@@ -622,12 +694,34 @@ describe('TicketEditor', () => {
     });
   });
 
+  it('enables the actions again when a command ends while the reconnect read is in flight', async () => {
+    const fixture = await ready();
+    await press(fixture, 'send');
+    const send = http.expectOne(`${TICKET}/send`);
+
+    realtime.connected.set(false);
+    await fixture.whenStable();
+    realtime.connected.set(true);
+    realtime.fire('/topic/board');
+    await fixture.whenStable();
+    const sentTicket = ticket([line('l1', { state: 'SENT', sentAt: SENT_AT })]);
+    send.flush(sentTicket);
+    await fixture.whenStable();
+    http.match(TICKET).forEach((request) => request.flush(sentTicket));
+    http.match(BOARD).forEach((request) => request.flush([]));
+    http.match(BOARD_READY).forEach((request) => request.flush([]));
+    await fixture.whenStable();
+
+    expect(find(fixture, 'offline-banner')).toBeNull();
+    expect(find<HTMLButtonElement>(fixture, 'product-p1')!.disabled).toBe(false);
+  });
+
   it('reads the ticket and the board again on a board signal', async () => {
     const fixture = await ready();
 
     realtime.fire('/topic/board');
     http.expectOne(TICKET).flush(ticket([line('l1', { state: 'SENT', sentAt: '2026-10-13T10:05:00Z' })]));
-    http.expectOne(BOARD).flush(board('l1'));
+    flushBoard(board('l1'));
     await fixture.whenStable();
 
     expect(text(fixture, 'line-status-l1')).toContain('Lista');
@@ -665,7 +759,7 @@ describe('TicketEditor', () => {
         { status: 404, statusText: 'Not Found' },
       );
     http.expectOne(MENU).flush(menu());
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(text(fixture, 'missing-notice')).toContain('La cuenta no existe');
@@ -679,14 +773,14 @@ describe('TicketEditor', () => {
       { status: 500, statusText: 'Server Error' },
     );
     http.expectOne(MENU).flush(menu());
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(text(fixture, 'offline-banner')).toContain('No se pudo cargar la cuenta');
 
     await press(fixture, 'retry');
     http.expectOne(TICKET).flush(ticket([line('l1')]));
-    http.expectOne(BOARD).flush([]);
+    flushBoard([]);
     await fixture.whenStable();
 
     expect(text(fixture, 'ticket-title')).toContain('Mesa 1');

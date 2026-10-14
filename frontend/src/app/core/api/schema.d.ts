@@ -1388,6 +1388,8 @@ export interface components {
             quantity: number;
             /** Format: date-time */
             readyAt: string | null;
+            /** Format: uuid */
+            sourceLineId: string;
             /** @enum {string} */
             state: "PENDING" | "READY" | "VOIDED" | "COMPED";
             /** Format: uuid */

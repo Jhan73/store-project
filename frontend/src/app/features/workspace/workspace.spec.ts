@@ -152,6 +152,7 @@ describe('staff and admin area', () => {
     });
     http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
     http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
     await harness.fixture.whenStable();
 
     expect(url()).toBe('/staff/tickets/k1');

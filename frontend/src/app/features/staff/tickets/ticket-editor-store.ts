@@ -1,7 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import type {
   ActiveReason,
   LineRequest,
@@ -53,6 +53,7 @@ export class TicketEditorStore {
   private readonly readyLineIds = signal<ReadonlySet<string>>(new Set());
   private readonly tableList = signal<readonly TableGridEntry[]>([]);
   private readonly voidReasons = signal<ActiveReason[] | null>(null);
+  private readonly reasonsFailed = signal(false);
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
   private ticketId = '';
@@ -70,6 +71,7 @@ export class TicketEditorStore {
   readonly enabled = this.sync.enabled;
   readonly pending = new PendingIds();
   readonly reasons = this.voidReasons.asReadonly();
+  readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
   readonly isOpen = computed(() => this.current()?.status === 'OPEN');
   readonly isTable = computed(() => this.current()?.type === 'TABLE');
@@ -132,6 +134,7 @@ export class TicketEditorStore {
   loadVoidReasons(): void {
     const request = ++this.lastReasonsRequest;
     this.voidReasons.set(null);
+    this.reasonsFailed.set(false);
     this.reasonsApi
       .active('VOID')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -143,6 +146,7 @@ export class TicketEditorStore {
         },
         error: (error: unknown) => {
           if (request === this.lastReasonsRequest) {
+            this.reasonsFailed.set(true);
             this.notifier.show(error);
           }
         },
@@ -263,14 +267,17 @@ export class TicketEditorStore {
 
   private loadBoard(): void {
     const request = ++this.lastBoardRequest;
-    this.api
-      .board()
+    // A card leaves `tickets` once all of it is ready, so the ready view is read too.
+    forkJoin([this.api.board(), this.api.boardReady()])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (orders) => {
+        next: (views) => {
           if (request === this.lastBoardRequest) {
-            const ready = orders.flatMap((order) => order.lines).filter((line) => line.state === 'READY');
-            this.readyLineIds.set(new Set(ready.map((line) => line.id)));
+            const ready = views
+              .flat()
+              .flatMap((order) => order.lines)
+              .filter((line) => line.state === 'READY');
+            this.readyLineIds.set(new Set(ready.map((line) => line.sourceLineId)));
           }
         },
         // The board only decorates the lines; without it they show as sent.
@@ -305,6 +312,10 @@ export class TicketEditorStore {
         // A read that began before the command would bring back the old ticket.
         this.lastTicketRequest++;
         this.current.set(ticket);
+        // The read that would have synced the editor after a reconnect was just discarded.
+        if (this.connected() && !this.enabled()) {
+          this.loadTicket();
+        }
         done?.();
       },
       error: (error: unknown) => this.commandFailed(pendingId, error),

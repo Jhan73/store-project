@@ -1025,6 +1025,14 @@
         <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
       </segment>
     </unit>
+    <unit id="reason.other">
+      <notes>
+        <note category="location">src/app/core/reasons/reason-rules.ts:4</note>
+      </notes>
+      <segment>
+        <source>Otro</source>
+      </segment>
+    </unit>
     <unit id="primeng.accept">
       <notes>
         <note category="location">src/app/core/theme/prime-translation.ts:18</note>
@@ -1383,7 +1391,7 @@
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
         <note category="location">src/app/features/staff/tickets/ticket-editor.ts:384</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:451</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:468</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -5251,9 +5259,33 @@
         <source>Anular línea</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.void.failed">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:434,436</note>
+      </notes>
+      <segment>
+        <source>No se pudieron cargar los motivos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:440,441</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar los motivos de anulación</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.retry">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:446,448</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.void.noReasons">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:435,437</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:452,454</note>
       </notes>
       <segment>
         <source> No hay motivos de anulación configurados. Pide a un administrador que los agregue. </source>
@@ -5261,7 +5293,7 @@
     </unit>
     <unit id="staff.tickets.void.reason">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:439,441</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:456,458</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -5269,7 +5301,7 @@
     </unit>
     <unit id="staff.tickets.void.reason.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:452,453</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:469,470</note>
       </notes>
       <segment>
         <source>Elige un motivo</source>
@@ -5277,7 +5309,7 @@
     </unit>
     <unit id="staff.tickets.void.note">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:459,461</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:476,478</note>
       </notes>
       <segment>
         <source>Nota</source>
@@ -5285,7 +5317,7 @@
     </unit>
     <unit id="staff.tickets.void.noteRequired">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:470,473</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:487,490</note>
       </notes>
       <segment>
         <source>Para el motivo «Otro» la nota es obligatoria.</source>
@@ -5293,7 +5325,7 @@
     </unit>
     <unit id="staff.tickets.void.loading">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:474,477</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:491,494</note>
       </notes>
       <segment>
         <source>Cargando los motivos…</source>
@@ -5301,7 +5333,7 @@
     </unit>
     <unit id="staff.tickets.void.cancel.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:483,484</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:500,501</note>
       </notes>
       <segment>
         <source>Cerrar sin anular la línea</source>
@@ -5309,7 +5341,7 @@
     </unit>
     <unit id="staff.tickets.void.cancel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:489,491</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:506,508</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -5317,7 +5349,7 @@
     </unit>
     <unit id="staff.tickets.void.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:497,498</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:514,515</note>
       </notes>
       <segment>
         <source>Anular la línea con este motivo</source>
@@ -5325,7 +5357,7 @@
     </unit>
     <unit id="staff.tickets.void.confirm">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:503,505</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:520,522</note>
       </notes>
       <segment>
         <source>Anular línea</source>
@@ -5333,7 +5365,7 @@
     </unit>
     <unit id="staff.tickets.billOn.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:527</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:544</note>
       </notes>
       <segment>
         <source>Avisar que la mesa pidió la cuenta</source>
@@ -5341,7 +5373,7 @@
     </unit>
     <unit id="staff.tickets.billOff.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:528</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:545</note>
       </notes>
       <segment>
         <source>Quitar el aviso de que la mesa pidió la cuenta</source>
@@ -5696,7 +5728,7 @@
     </unit>
     <unit id="configurator.rule.one">
       <notes>
-        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:261</note>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:258</note>
       </notes>
       <segment>
         <source>Elige una opción</source>
@@ -5704,7 +5736,7 @@
     </unit>
     <unit id="configurator.rule.optionalOne">
       <notes>
-        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:262</note>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:259</note>
       </notes>
       <segment>
         <source>Opcional: elige una opción</source>
@@ -5712,7 +5744,7 @@
     </unit>
     <unit id="configurator.rule.upTo">
       <notes>
-        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:265</note>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:262</note>
       </notes>
       <segment>
         <source>Opcional: hasta <ph id="0" equiv="max" disp="max"/> opciones</source>
@@ -5720,7 +5752,7 @@
     </unit>
     <unit id="configurator.rule.exactly">
       <notes>
-        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:268</note>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:265</note>
       </notes>
       <segment>
         <source>Elige <ph id="0" equiv="max" disp="max"/> opciones</source>
@@ -5728,7 +5760,7 @@
     </unit>
     <unit id="configurator.rule.between">
       <notes>
-        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:269</note>
+        <note category="location">src/app/shared/ui/product-configurator/product-configurator.ts:266</note>
       </notes>
       <segment>
         <source>Elige entre <ph id="0" equiv="min" disp="min"/> y <ph id="1" equiv="max" disp="max"/> opciones</source>

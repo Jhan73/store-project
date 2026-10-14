@@ -48,6 +48,10 @@ export class TicketsApi {
     return this.http.get<BoardOrder[]>(`${this.base}/board/tickets`);
   }
 
+  boardReady(): Observable<BoardOrder[]> {
+    return this.http.get<BoardOrder[]>(`${this.base}/board/ready`);
+  }
+
   open(request: OpenTicketRequest, key: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.base}/tickets`, request, idempotencyKey(key));
   }

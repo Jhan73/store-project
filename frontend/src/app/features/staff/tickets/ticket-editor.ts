@@ -25,7 +25,7 @@ import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, TicketLine } from '../../../core/api/api-types';
 import { formatMoney } from '../../../core/money/money';
-import { requiresNote } from '../../../core/reasons/reason-rules';
+import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
 
@@ -184,7 +184,7 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
                       @case ('VOIDED') {
                         <ng-container i18n="@@staff.tickets.state.voided">Anulada</ng-container>
                         @if (line.voidReasonCode) {
-                          <span class="reason">({{ line.voidReasonCode }})</span>
+                          <span class="reason">({{ label(line.voidReasonCode) }})</span>
                         }
                       }
                     }
@@ -429,23 +429,40 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
     >
       @if (voiding(); as line) {
         <p class="detail">{{ line.quantity }} × {{ line.productName }}</p>
-        @if (store.reasons(); as reasons) {
+        @if (store.reasonsLoadFailed()) {
+          <div data-testid="void-reasons-failed" role="status">
+            <p i18n="@@staff.tickets.void.failed">No se pudieron cargar los motivos.</p>
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              data-testid="void-retry"
+              pTooltip="Volver a cargar los motivos de anulación"
+              i18n-pTooltip="@@staff.tickets.void.retry.tooltip"
+              tooltipPosition="top"
+              (click)="store.loadVoidReasons()"
+            >
+              <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+              <span i18n="@@staff.tickets.void.retry">Reintentar</span>
+            </button>
+          </div>
+        } @else if (store.reasons(); as reasons) {
           @if (reasons.length === 0) {
             <p data-testid="void-no-reasons" i18n="@@staff.tickets.void.noReasons">
               No hay motivos de anulación configurados. Pide a un administrador que los agregue.
             </p>
           }
-          <div class="field">
+          <div class="field" data-testid="void-reason-box">
             <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason">Motivo</label>
             <p-select
               inputId="void-reason"
               [ariaLabelledBy]="'void-reason-label'"
               [formControl]="voidReason"
-              optionLabel="code"
+              optionLabel="label"
               optionValue="code"
-              [options]="reasons"
+              [options]="reasonOptions()"
               [filter]="true"
-              filterBy="code"
+              filterBy="label"
               [resetFilterOnHide]="true"
               filterPlaceholder="Buscar"
               i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
@@ -532,6 +549,10 @@ export class TicketEditor {
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
+  protected readonly label = reasonLabel;
+  protected readonly reasonOptions = computed(() =>
+    (this.store.reasons() ?? []).map((reason) => ({ code: reason.code, label: reasonLabel(reason.code) })),
+  );
   protected readonly voiding = signal<TicketLine | null>(null);
   protected readonly voidReason = new FormControl<string | null>(null);
   protected readonly voidNote = new FormControl('', { nonNullable: true });

@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { API_ORIGIN } from '../api/api-config';
 import { ReasonsApi } from './reasons-api';
-import { requiresNote } from './reason-rules';
+import { reasonLabel, requiresNote } from './reason-rules';
 
 describe('ReasonsApi', () => {
   it('reads the active reasons of a type', () => {
@@ -36,5 +36,13 @@ describe('requiresNote', () => {
     expect(requiresNote(' other ')).toBe(true);
     expect(requiresNote('Wrong order')).toBe(false);
     expect(requiresNote(null)).toBe(false);
+  });
+});
+
+describe('reasonLabel', () => {
+  it('words the reason "Other" in Spanish and keeps any other code as the admin wrote it', () => {
+    expect(reasonLabel('Other')).toBe('Otro');
+    expect(reasonLabel('other')).toBe('Otro');
+    expect(reasonLabel('Pedido equivocado')).toBe('Pedido equivocado');
   });
 });
