@@ -120,6 +120,20 @@ ul {
   font-size: 1.25rem;
 }
 
+.payments li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.payments li.voided {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;

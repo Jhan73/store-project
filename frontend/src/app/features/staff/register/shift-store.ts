@@ -58,7 +58,8 @@ export class ShiftStore {
   readonly timeZone = this.zone.asReadonly();
   readonly pending = new PendingIds();
 
-  load(): void {
+  // `shift` reads only the current shift, for screens that need to know whether one is open and nothing else.
+  load(scope: 'full' | 'shift' = 'full'): void {
     const request = ++this.lastShiftRequest;
     this.api
       .currentShift()
@@ -73,7 +74,7 @@ export class ShiftStore {
           this.loadFailed.set(false);
           if (shift) {
             this.storeCurrency.set(shift.openingFloat.currency);
-          } else if (this.storeCurrency() === null) {
+          } else if (scope === 'full' && this.storeCurrency() === null) {
             this.loadCurrency();
           }
         },
@@ -84,10 +85,12 @@ export class ShiftStore {
           }
         },
       });
-    this.api
-      .timeZone()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (zone) => this.zone.set(zone), error: () => undefined });
+    if (scope === 'full') {
+      this.api
+        .timeZone()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({ next: (zone) => this.zone.set(zone), error: () => undefined });
+    }
   }
 
   open(amount: string, opened?: () => void): void {

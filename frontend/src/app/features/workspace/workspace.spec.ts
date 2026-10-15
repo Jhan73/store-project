@@ -245,6 +245,7 @@ describe('staff and admin area', () => {
       type: 'TABLE',
       status: 'OPEN',
       lines: [],
+      payments: [],
       tableName: 'Mesa 1',
       total: { amount: '0.00', currency: 'PEN' },
     });

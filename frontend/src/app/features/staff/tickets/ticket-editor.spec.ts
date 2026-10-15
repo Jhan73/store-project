@@ -10,6 +10,7 @@ import type {
   BoardOrder,
   Role,
   Menu,
+  Payment,
   TableGridEntry,
   Ticket,
   TicketLine,
@@ -18,6 +19,8 @@ import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
+import { shift } from '../../../testing/register-fixtures';
+import { RegisterApi } from '../register/register-api';
 import { TicketEditor } from './ticket-editor';
 import { TicketsApi } from './tickets-api';
 
@@ -72,6 +75,23 @@ function ticket(lines: TicketLine[], overrides: Partial<Ticket> = {}): Ticket {
     payments: [],
     ...overrides,
   } as Ticket;
+}
+
+function payment(id: string, overrides: Partial<Payment> = {}): Payment {
+  return {
+    id,
+    method: 'CASH',
+    paid: pen('30.00'),
+    received: pen('50.00'),
+    change: pen('20.00'),
+    lineIds: [],
+    recordedBy: 'u1',
+    recordedAt: '2026-10-13T10:20:00Z',
+    voided: false,
+    voidReasonCode: null,
+    voidNote: null,
+    ...overrides,
+  };
 }
 
 function menu(): Menu {
@@ -182,6 +202,7 @@ describe('TicketEditor', () => {
         provideRouter([]),
         MessageService,
         TicketsApi,
+        RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
         { provide: AuthStore, useValue: { role } },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
@@ -691,6 +712,257 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
 
       expect(inDialog('[data-testid="void-confirm"]')).toBeNull();
+    });
+  });
+
+  describe('taking payment', () => {
+    const SHIFT = `${BASE}/shifts/current`;
+    const PAYMENTS = `${TICKET}/payments`;
+    const sentLine = (id: string, total = '10.00') =>
+      line(id, { state: 'SENT', sentAt: SENT_AT, lineTotal: pen(total) });
+    const sent = (overrides: Partial<Ticket> = {}) =>
+      ticket([sentLine('l1', '30.00')], overrides);
+
+    async function openPanel(current: Ticket = sent(), openShift = true) {
+      const fixture = await ready(current);
+      await press(fixture, 'pay-open');
+      const read = http.expectOne(SHIFT);
+      if (openShift) {
+        read.flush(shift());
+      } else {
+        read.flush(
+          { type: 'about:blank', status: 404, code: 'instore.shift-not-found', correlationId: 'c' },
+          { status: 404, statusText: 'Not Found' },
+        );
+      }
+      await fixture.whenStable();
+      return fixture;
+    }
+
+    const type = (fixture: ComponentFixture<TicketEditor>, testId: string, value: string) => {
+      const input = find<HTMLInputElement>(fixture, testId)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+    };
+
+    it('offers the pay action to a cashier and an administrator, not to a server', async () => {
+      const cashier = await ready(sent());
+      expect(find(cashier, 'pay-open')).not.toBeNull();
+      cashier.destroy();
+
+      role.set('ADMIN');
+      const admin = await ready(sent());
+      expect(find(admin, 'pay-open')).not.toBeNull();
+      admin.destroy();
+
+      role.set('SERVER');
+      const server = await ready(sent());
+      expect(find(server, 'pay-open')).toBeNull();
+    });
+
+    it('offers no payment on a closed ticket', async () => {
+      const fixture = await ready(sent({ status: 'CLOSED' }));
+
+      expect(find(fixture, 'pay-open')).toBeNull();
+    });
+
+    it('shows what was paid and what is left, as the API states them', async () => {
+      const fixture = await ready(
+        sent({ paid: pen('10.00'), balance: pen('20.00'), payments: [payment('p1', { paid: pen('10.00') })] }),
+      );
+
+      expect(text(fixture, 'ticket-paid')).toContain('10.00');
+      expect(text(fixture, 'ticket-balance')).toContain('20.00');
+      expect(text(fixture, 'payment-p1')).toContain('Efectivo');
+    });
+
+    it('reads the shift when the panel opens and prefills the balance', async () => {
+      const fixture = await openPanel();
+
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('30.00');
+      expect(find(fixture, 'no-shift')).toBeNull();
+    });
+
+    it('points to the register when no shift is open and blocks the payment', async () => {
+      const fixture = await openPanel(sent(), false);
+
+      expect(find(fixture, 'no-shift')).not.toBeNull();
+      expect(host(fixture).querySelector('a[href="/staff/register"]')).not.toBeNull();
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+    });
+
+    it('blocks the payment while the ticket has unsent lines', async () => {
+      const fixture = await openPanel(ticket([line('l1'), sentLine('l2')]));
+
+      expect(find(fixture, 'unsent-lines')).not.toBeNull();
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+    });
+
+    it('takes the whole balance in cash and shows the change the API returns', async () => {
+      const fixture = await openPanel();
+      type(fixture, 'pay-received', '50');
+      await fixture.whenStable();
+
+      await press(fixture, 'pay-submit');
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({
+        method: 'CASH',
+        amount: pen('30.00'),
+        receivedAmount: pen('50.00'),
+      });
+      expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+      request.flush(
+        sent({
+          status: 'CLOSED',
+          paid: pen('30.00'),
+          balance: pen('0.00'),
+          payments: [payment('p1')],
+        }),
+        { status: 201, statusText: 'Created' },
+      );
+      await fixture.whenStable();
+
+      expect(text(fixture, 'closed-notice')).toContain('La cuenta está cerrada');
+      expect(text(fixture, 'payment-p1')).toContain('20.00');
+      expect(find(fixture, 'pay-submit')).toBeNull();
+    });
+
+    it('does not let the cash received be less than the amount', async () => {
+      const fixture = await openPanel();
+      type(fixture, 'pay-received', '10');
+      await fixture.whenStable();
+
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+    });
+
+    it('pays by card without an amount received', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      expect(find(fixture, 'pay-received')).toBeNull();
+      await press(fixture, 'pay-submit');
+
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.body).toEqual({ method: 'CARD', amount: pen('30.00') });
+      request.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
+    it('takes a partial payment and offers the new balance for the next one', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+      type(fixture, 'pay-amount', '10');
+      await fixture.whenStable();
+
+      await press(fixture, 'pay-submit');
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.body).toEqual({ method: 'WALLET', amount: pen('10.00') });
+      request.flush(
+        sent({
+          paid: pen('10.00'),
+          balance: pen('20.00'),
+          payments: [payment('p1', { method: 'WALLET', paid: pen('10.00'), received: null, change: null })],
+        }),
+        { status: 201, statusText: 'Created' },
+      );
+      await fixture.whenStable();
+
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('20.00');
+      expect(text(fixture, 'ticket-balance')).toContain('20.00');
+      expect(text(fixture, 'payment-p1')).toContain('Billetera');
+    });
+
+    it('retries a refused payment with the same idempotency key', async () => {
+      const fixture = await openPanel();
+      const added = vi.spyOn(messages, 'add');
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      await press(fixture, 'pay-submit');
+      const first = http.expectOne(PAYMENTS);
+      const key = first.request.headers.get('Idempotency-Key');
+      first.flush(
+        { type: 'about:blank', status: 409, code: 'instore.no-open-shift', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(sent());
+      flushBoard([]);
+      await fixture.whenStable();
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      await press(fixture, 'pay-submit');
+      const second = http.expectOne(PAYMENTS);
+      expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+      second.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
+    it('pays the chosen lines by items with their total', async () => {
+      const fixture = await openPanel(
+        ticket([sentLine('l1', '12.50'), sentLine('l2', '7.50'), sentLine('l3', '10.00')]),
+      );
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      host(fixture).querySelector<HTMLInputElement>('[data-testid="pay-line-l1"] input')!.click();
+      host(fixture).querySelector<HTMLInputElement>('[data-testid="pay-line-l2"] input')!.click();
+      await fixture.whenStable();
+
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('20.00');
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.disabled).toBe(true);
+      await press(fixture, 'pay-submit');
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.body).toEqual({
+        method: 'CARD',
+        amount: pen('20.00'),
+        lineIds: ['l1', 'l2'],
+      });
+      request.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
+    it('does not offer a line that a payment already covers', async () => {
+      const fixture = await openPanel(
+        ticket([sentLine('l1'), sentLine('l2')], {
+          payments: [payment('p1', { lineIds: ['l1'] })],
+        }),
+      );
+
+      expect(find(fixture, 'pay-line-l1')).toBeNull();
+      expect(find(fixture, 'pay-line-l2')).not.toBeNull();
+    });
+
+    it('splits the balance in parts from the API and fills the amount with the chosen one', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-parts', '3');
+      await press(fixture, 'split-load');
+
+      const request = http.expectOne(`${TICKET}/split?parts=3`);
+      expect(request.request.method).toBe('GET');
+      request.flush({ parts: [pen('10.00'), pen('10.00'), pen('10.00')] });
+      await fixture.whenStable();
+
+      expect(host(fixture).querySelectorAll('[data-testid^="split-part-"]')).toHaveLength(3);
+      await press(fixture, 'split-part-1');
+
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('10.00');
+    });
+
+    it('marks a split part as paid after its payment', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-parts', '2');
+      await press(fixture, 'split-load');
+      http.expectOne(`${TICKET}/split?parts=2`).flush({ parts: [pen('15.00'), pen('15.00')] });
+      await fixture.whenStable();
+      await press(fixture, 'split-part-0');
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      await press(fixture, 'pay-submit');
+      http.expectOne(PAYMENTS).flush(
+        sent({ paid: pen('15.00'), balance: pen('15.00'), payments: [payment('p1', { paid: pen('15.00') })] }),
+        { status: 201, statusText: 'Created' },
+      );
+      await fixture.whenStable();
+
+      expect(find<HTMLButtonElement>(fixture, 'split-part-0')!.disabled).toBe(true);
+      expect(find<HTMLButtonElement>(fixture, 'split-part-1')!.disabled).toBe(false);
     });
   });
 

@@ -7,6 +7,7 @@ import {
   IconArrowLeft,
   IconArrowsExchange,
   IconBan,
+  IconCash,
   IconCheck,
   IconMinus,
   IconPlus,
@@ -24,9 +25,13 @@ import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, TicketLine } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { formatMoney } from '../../../core/money/money';
 import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
+import { methodLabel } from '../register/payment-methods';
+import { ShiftStore } from '../register/shift-store';
+import { PaymentPanel } from './payment-panel';
 import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
 
 @Component({
@@ -41,8 +46,9 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
     Tooltip,
     TablerIconComponent,
     ProductConfigurator,
+    PaymentPanel,
   ],
-  providers: [TicketEditorStore],
+  providers: [TicketEditorStore, ShiftStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './ticket-editor.scss',
   template: `
@@ -270,6 +276,36 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
             <strong data-testid="ticket-total">{{ money(ticket.total) }}</strong>
           </p>
 
+          @if (ticket.payments.length > 0) {
+            <p class="total">
+              <span i18n="@@staff.tickets.paid">Pagado</span>
+              <strong data-testid="ticket-paid">{{ money(ticket.paid) }}</strong>
+            </p>
+            <p class="total">
+              <span i18n="@@staff.tickets.balance">Falta cobrar</span>
+              <strong data-testid="ticket-balance">{{ money(ticket.balance) }}</strong>
+            </p>
+            <ul class="payments">
+              @for (payment of ticket.payments; track payment.id) {
+                <li [attr.data-testid]="'payment-' + payment.id" [class.voided]="payment.voided">
+                  <span class="name">{{ method(payment.method) }}</span>
+                  <span>{{ money(payment.paid) }}</span>
+                  @if (payment.received && payment.change) {
+                    <span class="detail">
+                      <ng-container i18n="@@staff.tickets.payment.received">Recibido</ng-container>
+                      {{ money(payment.received) }} ·
+                      <ng-container i18n="@@staff.tickets.payment.change">Vuelto</ng-container>
+                      {{ money(payment.change) }}
+                    </span>
+                  }
+                  @if (payment.voided) {
+                    <span class="detail" i18n="@@staff.tickets.payment.voided">Anulado</span>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
           @if (store.isOpen()) {
             <div class="actions">
               <button
@@ -332,7 +368,25 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
                   <span i18n="@@staff.tickets.transfer">Cambiar de mesa</span>
                 </button>
               }
+              @if (canPay()) {
+                <button
+                  pButton
+                  type="button"
+                  data-testid="pay-open"
+                  [attr.aria-expanded]="paying()"
+                  pTooltip="Mostrar u ocultar el cobro de esta cuenta"
+                  i18n-pTooltip="@@staff.tickets.pay.open.tooltip"
+                  tooltipPosition="top"
+                  (click)="paying.set(!paying())"
+                >
+                  <tabler-icon [icon]="icons.pay" aria-hidden="true" />
+                  <span i18n="@@staff.tickets.pay.open">Cobrar</span>
+                </button>
+              }
             </div>
+            @if (paying() && canPay()) {
+              <app-payment-panel [ticket]="ticket" />
+            }
           }
         </section>
       </div>
@@ -539,6 +593,7 @@ export class TicketEditor {
     retry: IconRefresh,
     cancel: IconX,
     confirm: IconCheck,
+    pay: IconCash,
   };
   protected readonly tips = {
     billOn: $localize`:@@staff.tickets.billOn.tooltip:Avisar que la mesa pidió la cuenta`,
@@ -546,6 +601,10 @@ export class TicketEditor {
   };
   protected readonly maxQuantity = MAX_LINE_QUANTITY;
   protected readonly money = formatMoney;
+  protected readonly method = methodLabel;
+  private readonly auth = inject(AuthStore);
+  protected readonly paying = signal(false);
+  protected readonly canPay = computed(() => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN');
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);

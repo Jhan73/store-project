@@ -6,10 +6,14 @@ import type {
   ActiveReason,
   LineRequest,
   Menu,
+  Money,
+  RecordPaymentRequest,
   TableGridEntry,
   Ticket,
   TicketLine,
   VoidLineRequest,
+  VoidPaymentRequest,
+  VoidSaleRequest,
 } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { ApiError } from '../../../core/errors/api-error';
@@ -19,6 +23,7 @@ import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { RegisterApi } from '../register/register-api';
 import { TicketsApi } from './tickets-api';
 
 export type LineState = 'UNSENT' | 'SENT' | 'READY' | 'VOIDED';
@@ -39,6 +44,7 @@ export function lineRequestOf(line: TicketLine, quantity: number): LineRequest {
 @Injectable()
 export class TicketEditorStore {
   private readonly api = inject(TicketsApi);
+  private readonly register = inject(RegisterApi);
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
   private readonly reasonsApi = inject(ReasonsApi);
@@ -56,6 +62,7 @@ export class TicketEditorStore {
   private readonly reasonsFailed = signal(false);
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
+  private readonly splitList = signal<readonly Money[] | null>(null);
   private ticketId = '';
   private lastTicketRequest = 0;
   private lastBoardRequest = 0;
@@ -70,6 +77,8 @@ export class TicketEditorStore {
   readonly connected = this.realtime.isConnected;
   readonly enabled = this.sync.enabled;
   readonly pending = new PendingIds();
+  // The even split of what is still owed, exactly as the API computed it.
+  readonly splitParts = this.splitList.asReadonly();
   readonly reasons = this.voidReasons.asReadonly();
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
@@ -213,6 +222,50 @@ export class TicketEditorStore {
 
   transfer(tableId: string, moved: () => void): void {
     this.command('transfer', this.api.transfer(this.ticketId, tableId), moved);
+  }
+
+  pay(request: RecordPaymentRequest, paid: () => void): void {
+    const intent = `pay:${JSON.stringify(request)}`;
+    this.command('pay', this.register.pay(this.ticketId, request, this.keys.keyFor(intent)), () => {
+      this.keys.release(intent);
+      paid();
+    });
+  }
+
+  voidPayment(paymentId: string, request: VoidPaymentRequest, voided: () => void): void {
+    this.command(
+      `void-payment:${paymentId}`,
+      this.register.voidPayment(this.ticketId, paymentId, request),
+      () => {
+        this.splitList.set(null);
+        voided();
+      },
+    );
+  }
+
+  voidSale(request: VoidSaleRequest, voided: () => void): void {
+    this.command('void-sale', this.register.voidSale(this.ticketId, request), voided);
+  }
+
+  loadSplit(parts: number): void {
+    this.pending.add('split');
+    this.register
+      .split(this.ticketId, parts)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (amounts) => {
+          this.pending.delete('split');
+          this.splitList.set(amounts);
+        },
+        error: (error: unknown) => {
+          this.pending.delete('split');
+          this.notifier.show(error);
+        },
+      });
+  }
+
+  clearSplit(): void {
+    this.splitList.set(null);
   }
 
   loadTables(): void {
