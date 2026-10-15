@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { computed } from '@angular/core';
+import { computed, effect, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -659,6 +659,17 @@ export class TicketEditor {
   protected readonly money = formatMoney;
   protected readonly method = methodLabel;
   private readonly auth = inject(AuthStore);
+  private readonly shifts = inject(ShiftStore);
+  // Only once the shift was read (the pay panel was opened): then a shift refusal means that read is stale.
+  private readonly rereadShift = effect(() => {
+    if (this.store.shiftStateErrors() > 0) {
+      untracked(() => {
+        if (this.shifts.loaded()) {
+          this.shifts.load('shift');
+        }
+      });
+    }
+  });
   protected readonly paying = signal(false);
   protected readonly registerVoid = signal<RegisterVoid | null>(null);
   protected readonly registerVoidTitle = computed(() =>

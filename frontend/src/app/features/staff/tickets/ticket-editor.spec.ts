@@ -887,6 +887,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       http.expectOne(TICKET).flush(sent());
       flushBoard([]);
+      http.expectOne(SHIFT).flush(shift());
       await fixture.whenStable();
 
       expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
@@ -894,6 +895,45 @@ describe('TicketEditor', () => {
       const second = http.expectOne(PAYMENTS);
       expect(second.request.headers.get('Idempotency-Key')).toBe(key);
       second.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
+    it('reads the shift again after a payment refused for the shift, and blocks the payment', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      await press(fixture, 'pay-submit');
+      http.expectOne(PAYMENTS).flush(
+        { type: 'about:blank', status: 409, code: 'instore.shift-closing', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(sent());
+      flushBoard([]);
+      http.expectOne(SHIFT).flush(
+        { type: 'about:blank', status: 404, code: 'instore.shift-not-found', correlationId: 'c' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      await fixture.whenStable();
+
+      expect(find(fixture, 'no-shift')).not.toBeNull();
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+    });
+
+    it('does not read the shift again after a refusal that has nothing to do with it', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+
+      await press(fixture, 'pay-submit');
+      http.expectOne(PAYMENTS).flush(
+        { type: 'about:blank', status: 409, code: 'instore.ticket-closed', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(sent());
+      flushBoard([]);
+      await fixture.whenStable();
+
+      expect(find(fixture, 'no-shift')).toBeNull();
     });
 
     it('pays the chosen lines by items with their total', async () => {
@@ -1066,6 +1106,53 @@ describe('TicketEditor', () => {
         closedSale({ saleVoid: { reasonCode: 'Error', note: null, voidedAt: SENT_AT, voidedBy: 'u1' } }),
       );
       expect(find(voided, 'void-sale')).toBeNull();
+    });
+
+    it('reads the shift again when a payment void is refused for the shift and the panel is open', async () => {
+      const fixture = await ready(open());
+      await press(fixture, 'pay-open');
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      await fixture.whenStable();
+      await press(fixture, 'void-payment-p1');
+      http.expectOne(REASONS).flush(reasons);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
+
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+      http.expectOne(`${TICKET}/payments/p1/void`).flush(
+        { type: 'about:blank', status: 409, code: 'instore.no-open-shift', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(open());
+      flushBoard([]);
+      http.expectOne(`${BASE}/shifts/current`).flush(
+        { type: 'about:blank', status: 404, code: 'instore.shift-not-found', correlationId: 'c' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      await fixture.whenStable();
+
+      expect(find(fixture, 'no-shift')).not.toBeNull();
+    });
+
+    it('does not read the shift for a sale void refused for the shift when the panel was never opened', async () => {
+      const fixture = await ready(closedSale());
+      await press(fixture, 'void-sale');
+      http.expectOne(REASONS).flush(reasons);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
+
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+      http.expectOne(`${TICKET}/void`).flush(
+        { type: 'about:blank', status: 409, code: 'instore.no-open-shift', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(closedSale());
+      flushBoard([]);
+      await fixture.whenStable();
     });
 
     it('keeps the dialog and shows the refusal when the sale void is not permitted', async () => {

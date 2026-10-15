@@ -24,6 +24,7 @@ import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { RegisterApi } from '../register/register-api';
+import { isShiftStateError } from '../register/shift-store';
 import { TicketsApi } from './tickets-api';
 
 export type LineState = 'UNSENT' | 'SENT' | 'READY' | 'VOIDED';
@@ -63,6 +64,7 @@ export class TicketEditorStore {
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
   private readonly splitList = signal<readonly Money[] | null>(null);
+  private readonly shiftErrors = signal(0);
   private ticketId = '';
   private lastTicketRequest = 0;
   private lastBoardRequest = 0;
@@ -79,6 +81,8 @@ export class TicketEditorStore {
   readonly pending = new PendingIds();
   // The even split of what is still owed, exactly as the API computed it.
   readonly splitParts = this.splitList.asReadonly();
+  // Counts the commands refused because of the cashier's shift, so the owner of the shift can read it again.
+  readonly shiftStateErrors = this.shiftErrors.asReadonly();
   readonly reasons = this.voidReasons.asReadonly();
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
@@ -377,6 +381,9 @@ export class TicketEditorStore {
 
   private commandFailed(pendingId: string, error: unknown): void {
     this.pending.delete(pendingId);
+    if (isShiftStateError(error)) {
+      this.shiftErrors.update((count) => count + 1);
+    }
     this.notifier.show(error);
     this.load();
   }
