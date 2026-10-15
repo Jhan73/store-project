@@ -958,6 +958,31 @@ describe('TicketEditor', () => {
       request.flush(sent(), { status: 201, statusText: 'Created' });
     });
 
+    it('drops a picked line that a re-read shows as already paid and pays the balance instead', async () => {
+      const fixture = await openPanel(ticket([sentLine('l1', '12.50'), sentLine('l2', '7.50')]));
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+      host(fixture).querySelector<HTMLInputElement>('[data-testid="pay-line-l1"] input')!.click();
+      await fixture.whenStable();
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.disabled).toBe(true);
+
+      realtime.fire('/topic/tables');
+      http.expectOne(TICKET).flush(
+        ticket([sentLine('l1', '12.50'), sentLine('l2', '7.50')], {
+          paid: pen('12.50'),
+          balance: pen('7.50'),
+          payments: [payment('p1', { paid: pen('12.50'), lineIds: ['l1'] })],
+        }),
+      );
+      await fixture.whenStable();
+
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.disabled).toBe(false);
+      expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('7.50');
+      await press(fixture, 'pay-submit');
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.body).toEqual({ method: 'CARD', amount: pen('7.50') });
+      request.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
     it('does not offer a line that a payment already covers', async () => {
       const fixture = await openPanel(
         ticket([sentLine('l1'), sentLine('l2')], {

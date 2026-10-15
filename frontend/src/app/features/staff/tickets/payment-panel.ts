@@ -258,9 +258,13 @@ export class PaymentPanel {
     const covered = new Set(ticket.payments.filter((payment) => !payment.voided).flatMap((p) => p.lineIds));
     return ticket.lines.filter((line) => line.state === 'SENT' && !covered.has(line.id));
   });
+  // Only picked lines that can still be paid count: a re-read may have covered one since.
+  private readonly chosenLines = computed(() =>
+    this.payableLines().filter((line) => this.selected().has(line.id)),
+  );
   // A payment by items must equal the sum of its lines, which the API checks.
   private readonly itemsAmount = computed<string | null>(() => {
-    const chosen = this.payableLines().filter((line) => this.selected().has(line.id));
+    const chosen = this.chosenLines();
     if (chosen.length === 0) {
       return null;
     }
@@ -291,6 +295,15 @@ export class PaymentPanel {
   constructor() {
     this.shifts.load('shift');
     inject(DestroyRef).onDestroy(() => this.store.clearSplit());
+    effect(() => {
+      const payable = new Set(this.payableLines().map((line) => line.id));
+      untracked(() => {
+        const current = this.selected();
+        if ([...current].some((id) => !payable.has(id))) {
+          this.selected.set(new Set([...current].filter((id) => payable.has(id))));
+        }
+      });
+    });
     effect(() => {
       const items = this.itemsAmount();
       const balance = this.balance();
@@ -347,10 +360,9 @@ export class PaymentPanel {
     if (this.method.value === 'CASH') {
       request.receivedAmount = { amount: parseAmount(this.received.value) ?? amount, currency };
     }
-    if (this.selected().size > 0) {
-      request.lineIds = this.payableLines()
-        .filter((line) => this.selected().has(line.id))
-        .map((line) => line.id);
+    const chosen = this.chosenLines();
+    if (chosen.length > 0) {
+      request.lineIds = chosen.map((line) => line.id);
     }
     const part = this.partIndex();
     this.store.pay(request, () => {
