@@ -161,6 +161,112 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/board']);
   });
 
+  it('shows a cashier the register entry', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff');
+
+    expect(navLinks()).toEqual([
+      '/staff',
+      '/staff/tables',
+      '/staff/board',
+      '/staff/register',
+      '/staff/quick-sale',
+      '/staff/availability',
+    ]);
+  });
+
+  it('lets a cashier open the quick sale', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+    http.expectOne('http://api.test/api/v1/quick-sales/items').flush([]);
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/shifts/current').flush({
+      id: 's1',
+      status: 'OPEN',
+      openedAt: '2026-10-13T14:00:00Z',
+      openingFloat: { amount: '50.00', currency: 'PEN' },
+    });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/quick-sale');
+    expect(page().body.textContent).toContain('Venta rápida');
+    expect(active).toEqual(['/staff/quick-sale']);
+  });
+
+  it('keeps a server out of the quick sale', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('lets a cashier open the register', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/register');
+    http.expectOne('http://api.test/api/v1/shifts/current').flush({
+      id: 's1',
+      status: 'OPEN',
+      openedAt: '2026-10-13T14:00:00Z',
+      openingFloat: { amount: '50.00', currency: 'PEN' },
+    });
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
+    await harness.fixture.whenStable();
+    http.expectOne('http://api.test/api/v1/shifts/s1/cash-movements').flush([]);
+    http.expectOne('http://api.test/api/v1/reasons?type=CASH_OUT').flush([]);
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/register');
+    expect(page().body.textContent).toContain('Turno abierto');
+    expect(active).toEqual(['/staff/register']);
+  });
+
+  it('keeps a cashier out of the open shifts', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the open shifts', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+    http
+      .expectOne('http://api.test/api/v1/shifts?status=OPEN&page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/register/shifts');
+    expect(page().body.textContent).toContain('No hay turnos abiertos');
+    expect(active).toEqual(['/staff/register/shifts']);
+  });
+
+  it('keeps a server out of the register', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/register');
+
+    expect(url()).toBe('/forbidden');
+  });
+
   it('lets floor staff open a ticket editor', async () => {
     await signInAs('CASHIER');
 
@@ -170,6 +276,7 @@ describe('staff and admin area', () => {
       type: 'TABLE',
       status: 'OPEN',
       lines: [],
+      payments: [],
       tableName: 'Mesa 1',
       total: { amount: '0.00', currency: 'PEN' },
     });
@@ -210,6 +317,9 @@ describe('staff and admin area', () => {
       '/staff',
       '/staff/tables',
       '/staff/board',
+      '/staff/register',
+      '/staff/quick-sale',
+      '/staff/register/shifts',
       '/staff/availability',
       '/admin',
       '/admin/catalog',

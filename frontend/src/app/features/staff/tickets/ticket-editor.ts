@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { computed } from '@angular/core';
+import { computed, effect, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,6 +7,7 @@ import {
   IconArrowLeft,
   IconArrowsExchange,
   IconBan,
+  IconCash,
   IconCheck,
   IconMinus,
   IconPlus,
@@ -24,10 +25,17 @@ import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, TicketLine } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { formatMoney } from '../../../core/money/money';
 import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
+import { VoidDialog, type VoidChoice } from '../../../shared/ui/void-dialog/void-dialog';
+import { methodLabel } from '../register/payment-methods';
+import { ShiftStore } from '../register/shift-store';
+import { PaymentPanel } from './payment-panel';
 import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
+
+type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readonly kind: 'sale' };
 
 @Component({
   selector: 'app-ticket-editor',
@@ -41,8 +49,10 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
     Tooltip,
     TablerIconComponent,
     ProductConfigurator,
+    PaymentPanel,
+    VoidDialog,
   ],
-  providers: [TicketEditorStore],
+  providers: [TicketEditorStore, ShiftStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './ticket-editor.scss',
   template: `
@@ -270,6 +280,51 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
             <strong data-testid="ticket-total">{{ money(ticket.total) }}</strong>
           </p>
 
+          @if (ticket.payments.length > 0) {
+            <p class="total">
+              <span i18n="@@staff.tickets.paid">Pagado</span>
+              <strong data-testid="ticket-paid">{{ money(ticket.paid) }}</strong>
+            </p>
+            <p class="total">
+              <span i18n="@@staff.tickets.balance">Falta cobrar</span>
+              <strong data-testid="ticket-balance">{{ money(ticket.balance) }}</strong>
+            </p>
+            <ul class="payments">
+              @for (payment of ticket.payments; track payment.id) {
+                <li [attr.data-testid]="'payment-' + payment.id" [class.voided]="payment.voided">
+                  <span class="name">{{ method(payment.method) }}</span>
+                  <span>{{ money(payment.paid) }}</span>
+                  @if (payment.received && payment.change) {
+                    <span class="detail">
+                      <ng-container i18n="@@staff.tickets.payment.received">Recibido</ng-container>
+                      {{ money(payment.received) }} ·
+                      <ng-container i18n="@@staff.tickets.payment.change">Vuelto</ng-container>
+                      {{ money(payment.change) }}
+                    </span>
+                  }
+                  @if (payment.voided) {
+                    <span class="detail" i18n="@@staff.tickets.payment.voided">Anulado</span>
+                  } @else if (store.isOpen() && canPay()) {
+                    <button
+                      pButton
+                      type="button"
+                      severity="danger"
+                      [attr.data-testid]="'void-payment-' + payment.id"
+                      [disabled]="!store.enabled() || store.pending.has('void-payment:' + payment.id)"
+                      pTooltip="Anular este pago con un motivo"
+                      i18n-pTooltip="@@staff.tickets.voidPayment.tooltip"
+                      tooltipPosition="top"
+                      (click)="startRegisterVoid({ kind: 'payment', id: payment.id })"
+                    >
+                      <tabler-icon [icon]="icons.void" aria-hidden="true" />
+                      <span i18n="@@staff.tickets.voidPayment">Anular pago</span>
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
           @if (store.isOpen()) {
             <div class="actions">
               <button
@@ -332,7 +387,49 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
                   <span i18n="@@staff.tickets.transfer">Cambiar de mesa</span>
                 </button>
               }
+              @if (canPay()) {
+                <button
+                  pButton
+                  type="button"
+                  data-testid="pay-open"
+                  [attr.aria-expanded]="paying()"
+                  pTooltip="Mostrar u ocultar el cobro de esta cuenta"
+                  i18n-pTooltip="@@staff.tickets.pay.open.tooltip"
+                  tooltipPosition="top"
+                  (click)="paying.set(!paying())"
+                >
+                  <tabler-icon [icon]="icons.pay" aria-hidden="true" />
+                  <span i18n="@@staff.tickets.pay.open">Cobrar</span>
+                </button>
+              }
             </div>
+            @if (paying() && canPay()) {
+              <app-payment-panel [ticket]="ticket" />
+            }
+          } @else {
+            @if (ticket.saleVoid; as saleVoid) {
+              <p class="closed" data-testid="sale-voided">
+                <ng-container i18n="@@staff.tickets.saleVoided">Venta anulada:</ng-container>
+                {{ label(saleVoid.reasonCode) }}
+              </p>
+            } @else if (canPay()) {
+              <div class="actions">
+                <button
+                  pButton
+                  type="button"
+                  severity="danger"
+                  data-testid="void-sale"
+                  [disabled]="!store.enabled() || store.pending.has('void-sale')"
+                  pTooltip="Anular toda la venta con un motivo"
+                  i18n-pTooltip="@@staff.tickets.voidSale.tooltip"
+                  tooltipPosition="top"
+                  (click)="startRegisterVoid({ kind: 'sale' })"
+                >
+                  <tabler-icon [icon]="icons.void" aria-hidden="true" />
+                  <span i18n="@@staff.tickets.voidSale">Anular venta</span>
+                </button>
+              </div>
+            }
           }
         </section>
       </div>
@@ -417,6 +514,19 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
         </button>
       </ng-template>
     </p-dialog>
+
+    <app-void-dialog
+      [header]="registerVoidTitle()"
+      [confirmLabel]="registerVoidTitle()"
+      [confirmTooltip]="registerVoidTooltip()"
+      [visible]="registerVoid() !== null"
+      [reasons]="store.reasons()"
+      [failed]="store.reasonsLoadFailed()"
+      [busy]="registerVoidBusy()"
+      (confirmed)="confirmRegisterVoid($event)"
+      (dismissed)="registerVoid.set(null)"
+      (retried)="store.loadVoidReasons()"
+    />
 
     <p-dialog
       header="Anular línea"
@@ -539,6 +649,7 @@ export class TicketEditor {
     retry: IconRefresh,
     cancel: IconX,
     confirm: IconCheck,
+    pay: IconCash,
   };
   protected readonly tips = {
     billOn: $localize`:@@staff.tickets.billOn.tooltip:Avisar que la mesa pidió la cuenta`,
@@ -546,6 +657,39 @@ export class TicketEditor {
   };
   protected readonly maxQuantity = MAX_LINE_QUANTITY;
   protected readonly money = formatMoney;
+  protected readonly method = methodLabel;
+  private readonly auth = inject(AuthStore);
+  private readonly shifts = inject(ShiftStore);
+  // Only once the shift was read (the pay panel was opened): then a shift refusal means that read is stale.
+  private readonly rereadShift = effect(() => {
+    if (this.store.shiftStateErrors() > 0) {
+      untracked(() => {
+        if (this.shifts.loaded()) {
+          this.shifts.load('shift');
+        }
+      });
+    }
+  });
+  protected readonly paying = signal(false);
+  protected readonly registerVoid = signal<RegisterVoid | null>(null);
+  protected readonly registerVoidTitle = computed(() =>
+    this.registerVoid()?.kind === 'sale'
+      ? $localize`:@@staff.tickets.voidSale.title:Anular venta`
+      : $localize`:@@staff.tickets.voidPayment.title:Anular pago`,
+  );
+  protected readonly registerVoidTooltip = computed(() =>
+    this.registerVoid()?.kind === 'sale'
+      ? $localize`:@@staff.tickets.voidSale.confirm.tooltip:Anular toda la venta con el motivo elegido`
+      : $localize`:@@staff.tickets.voidPayment.confirm.tooltip:Anular este pago con el motivo elegido`,
+  );
+  protected readonly registerVoidBusy = computed(() => {
+    const target = this.registerVoid();
+    if (target === null) {
+      return false;
+    }
+    return this.store.pending.has(target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`);
+  });
+  protected readonly canPay = computed(() => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN');
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
@@ -578,6 +722,21 @@ export class TicketEditor {
   protected closeAdd(visible: boolean): void {
     if (!visible) {
       this.configuring.set(null);
+    }
+  }
+
+  protected startRegisterVoid(target: RegisterVoid): void {
+    this.store.loadVoidReasons();
+    this.registerVoid.set(target);
+  }
+
+  protected confirmRegisterVoid(choice: VoidChoice): void {
+    const target = this.registerVoid();
+    const close = () => this.registerVoid.set(null);
+    if (target?.kind === 'payment') {
+      this.store.voidPayment(target.id, choice, close);
+    } else if (target?.kind === 'sale') {
+      this.store.voidSale(choice, close);
     }
   }
 

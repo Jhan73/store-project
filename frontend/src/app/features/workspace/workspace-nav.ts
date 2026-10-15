@@ -1,6 +1,9 @@
 import {
   IconAdjustments,
+  IconBolt,
   IconBook2,
+  IconCashRegister,
+  IconClockStop,
   IconHistory,
   IconHome,
   IconLayoutGrid,
@@ -37,6 +40,25 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     label: $localize`:@@workspace.nav.board:Tablero`,
     icon: IconToolsKitchen2,
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register',
+    label: $localize`:@@workspace.nav.register:Caja`,
+    icon: IconCashRegister,
+    exact: true,
+    roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/quick-sale',
+    label: $localize`:@@workspace.nav.quickSale:Venta rápida`,
+    icon: IconBolt,
+    roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register/shifts',
+    label: $localize`:@@workspace.nav.shifts:Turnos abiertos`,
+    icon: IconClockStop,
+    roles: ['ADMIN'],
   },
   {
     path: '/staff/availability',
