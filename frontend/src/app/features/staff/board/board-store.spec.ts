@@ -9,7 +9,7 @@ import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
-import { emptyAllDay, minutesAgo, order } from './board-fixtures';
+import { emptyAllDay, minutesAgo, order } from '../../../testing/board-fixtures';
 import { BoardStore } from './board-store';
 
 const BASE = 'http://api.test/api/v1';
@@ -331,14 +331,15 @@ describe('BoardStore', () => {
       ready();
 
       store.readyOrder('o1');
-      expect(store.isQueued('order:o1:ready')).toBe(true);
+      expect(store.isQueued('o1')).toBe(true);
+      expect(store.queuedIds()).toEqual(new Set(['o1']));
       vi.advanceTimersByTime(4_999);
       http.expectNone(`${BASE}/board/orders/o1/ready`);
 
       vi.advanceTimersByTime(1);
       const request = http.expectOne(`${BASE}/board/orders/o1/ready`);
       expect(request.request.method).toBe('POST');
-      expect(store.isQueued('order:o1:ready')).toBe(false);
+      expect(store.isQueued('o1')).toBe(false);
       request.flush(order({ id: 'o1', status: 'READY' }));
       reload();
     });
@@ -359,7 +360,7 @@ describe('BoardStore', () => {
       ready();
 
       store.readyOrder('o1');
-      store.undo('order:o1:ready');
+      store.undo('o1');
       vi.advanceTimersByTime(10_000);
 
       http.expectNone(`${BASE}/board/orders/o1/ready`);
@@ -454,8 +455,7 @@ describe('BoardStore', () => {
         store[action]('x');
 
         http.expectNone((request) => request.method === 'POST');
-        expect(store.isQueued('order:x:ready')).toBe(false);
-        expect(store.isQueued('line:x:ready')).toBe(false);
+        expect(store.isQueued('x')).toBe(false);
       },
     );
 

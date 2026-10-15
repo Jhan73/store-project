@@ -4,6 +4,8 @@ import { signal } from '@angular/core';
 export class PendingIds {
   private readonly ids = signal<ReadonlySet<string>>(new Set());
 
+  readonly values = this.ids.asReadonly();
+
   has(id: string): boolean {
     return this.ids().has(id);
   }

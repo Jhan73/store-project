@@ -1,4 +1,4 @@
-import type { BoardAllDay, BoardLine, BoardMarker, BoardOrder } from '../../../core/api/api-types';
+import type { BoardAllDay, BoardLine, BoardMarker, BoardOrder } from '../core/api/api-types';
 
 export const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 

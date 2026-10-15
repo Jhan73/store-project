@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AvailabilityApi } from './availability/availability-api';
+import { BoardApi } from './board/board-api';
 import { TicketsApi } from './tickets/tickets-api';
 
 export const STAFF_ROUTES: Routes = [
@@ -21,6 +22,11 @@ export const STAFF_ROUTES: Routes = [
             loadComponent: () => import('./tickets/ticket-editor').then((m) => m.TicketEditor),
           },
         ],
+      },
+      {
+        path: 'board',
+        providers: [BoardApi],
+        loadComponent: () => import('./board/board').then((m) => m.Board),
       },
       {
         path: 'availability',

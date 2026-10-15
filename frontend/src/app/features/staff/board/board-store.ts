@@ -20,9 +20,6 @@ export interface BoardCard {
   readonly level: AgeLevel;
 }
 
-export const orderReadyKey = (orderId: string) => `order:${orderId}:ready`;
-export const lineReadyKey = (lineId: string) => `line:${lineId}:ready`;
-
 const CLOCK_TICK_MS = 30_000;
 // A scheduled card is hidden by the API until it fires and nothing signals that moment, so the board asks again.
 const REFRESH_MS = 60_000;
@@ -54,6 +51,8 @@ export class BoardStore {
   readonly connected = this.realtime.isConnected;
   readonly enabled = this.sync.enabled;
   readonly pending = new PendingIds();
+  // Ids of the orders and lines whose Ready is still inside the undo window.
+  readonly queuedIds = this.queue.keys;
   readonly loaded = signal(false);
   readonly cards = computed<BoardCard[]>(() =>
     this.tickets()
@@ -103,8 +102,8 @@ export class BoardStore {
     this.load();
   }
 
-  isQueued(key: string): boolean {
-    return this.queue.has(key);
+  isQueued(id: string): boolean {
+    return this.queue.has(id);
   }
 
   start(orderId: string): void {
@@ -129,15 +128,15 @@ export class BoardStore {
 
   // Ready is the only command with an undo window: it waits before it is sent.
   readyOrder(orderId: string): void {
-    this.schedule(orderId, orderReadyKey(orderId), () => this.api.readyOrder(orderId, true));
+    this.schedule(orderId, () => this.api.readyOrder(orderId, true));
   }
 
   readyLine(lineId: string): void {
-    this.schedule(lineId, lineReadyKey(lineId), () => this.api.readyLine(lineId, true));
+    this.schedule(lineId, () => this.api.readyLine(lineId, true));
   }
 
-  undo(key: string): void {
-    this.queue.cancel(key);
+  undo(id: string): void {
+    this.queue.cancel(id);
   }
 
   setView(view: BoardView): void {
@@ -173,11 +172,11 @@ export class BoardStore {
       });
   }
 
-  private schedule(pendingId: string, key: string, request: () => Observable<unknown>): void {
-    if (!this.enabled() || this.pending.has(pendingId)) {
+  private schedule(id: string, request: () => Observable<unknown>): void {
+    if (!this.enabled() || this.pending.has(id)) {
       return;
     }
-    this.queue.schedule(key, () => this.send(pendingId, request()));
+    this.queue.schedule(id, () => this.send(id, request()));
   }
 
   private run(pendingId: string, request: () => Observable<unknown>): void {
