@@ -199,6 +199,35 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/register']);
   });
 
+  it('keeps a cashier out of the open shifts', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the open shifts', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+    http
+      .expectOne('http://api.test/api/v1/shifts?status=OPEN&page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/register/shifts');
+    expect(page().body.textContent).toContain('No hay turnos abiertos');
+    expect(active).toEqual(['/staff/register/shifts']);
+  });
+
   it('keeps a server out of the register', async () => {
     await signInAs('SERVER');
 
@@ -257,6 +286,7 @@ describe('staff and admin area', () => {
       '/staff/tables',
       '/staff/board',
       '/staff/register',
+      '/staff/register/shifts',
       '/staff/availability',
       '/admin',
       '/admin/catalog',

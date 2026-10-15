@@ -2,6 +2,7 @@ import {
   IconAdjustments,
   IconBook2,
   IconCashRegister,
+  IconClockStop,
   IconHistory,
   IconHome,
   IconLayoutGrid,
@@ -45,6 +46,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     icon: IconCashRegister,
     exact: true,
     roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register/shifts',
+    label: $localize`:@@workspace.nav.shifts:Turnos abiertos`,
+    icon: IconClockStop,
+    roles: ['ADMIN'],
   },
   {
     path: '/staff/availability',
