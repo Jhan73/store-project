@@ -18,7 +18,7 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, PaymentMethod, QuickSaleItem } from '../../../core/api/api-types';
-import { formatMoney, parseAmount, toMinorUnits } from '../../../core/money/money';
+import { formatMoney, parseAmount } from '../../../core/money/money';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { methodLabel, PAYMENT_METHODS } from '../register/payment-methods';
 import { QuickSaleStore } from './quick-sale-store';
@@ -142,8 +142,10 @@ interface Configuring {
                     <span class="name">{{ item.name }}</span>
                     @if (store.isAvailable(item)) {
                       <span class="price">{{ money(item.price) }}</span>
-                    } @else {
+                    } @else if (store.isOnMenu(item)) {
                       <span class="price" i18n="@@staff.quickSale.soldOut">Agotado</span>
+                    } @else {
+                      <span class="price" i18n="@@staff.quickSale.notOnMenu">No disponible</span>
                     }
                   </span>
                 </button>
@@ -335,15 +337,11 @@ export class QuickSale {
   private readonly typedReceived = toSignal(this.received.valueChanges, { initialValue: '' });
   protected readonly selling = computed(() => this.store.pending.has('sell'));
   protected readonly canSell = computed(() => {
-    const total = this.store.estimatedTotal();
-    if (total === null || !this.store.hasShift()) {
+    if (this.store.estimatedTotal() === null || !this.store.hasShift()) {
       return false;
     }
-    if (this.chosenMethod() !== 'CASH') {
-      return true;
-    }
-    const received = parseAmount(this.typedReceived());
-    return received !== null && toMinorUnits({ amount: received, currency: total.currency }) >= toMinorUnits(total);
+    // Whether the cash covers the sale is the API's call; the estimate is only a preview.
+    return this.chosenMethod() !== 'CASH' || parseAmount(this.typedReceived()) !== null;
   });
 
   constructor() {

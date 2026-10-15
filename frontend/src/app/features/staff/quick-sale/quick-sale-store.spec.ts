@@ -126,6 +126,14 @@ describe('QuickSaleStore', () => {
     expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
   });
 
+  it('treats a pinned item missing from the menu as unavailable', () => {
+    load();
+
+    expect(store.isAvailable(items[0])).toBe(true);
+    expect(store.isAvailable({ productId: 'p9', name: 'Kiwi', price: pen('7.00') })).toBe(false);
+    expect(store.isOnMenu({ productId: 'p9', name: 'Kiwi', price: pen('7.00') })).toBe(false);
+  });
+
   it('needs the configurator only for an item with a required modifier group', () => {
     load();
 

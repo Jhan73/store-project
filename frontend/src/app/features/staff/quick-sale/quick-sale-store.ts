@@ -99,8 +99,13 @@ export class QuickSaleStore {
     return this.products().get(item.productId);
   }
 
+  isOnMenu(item: QuickSaleItem): boolean {
+    return this.productOf(item) !== undefined;
+  }
+
+  // A pinned product the menu does not list cannot be sold, whatever the pin says.
   isAvailable(item: QuickSaleItem): boolean {
-    return this.productOf(item)?.available ?? true;
+    return this.productOf(item)?.available ?? false;
   }
 
   needsOptions(item: QuickSaleItem): boolean {

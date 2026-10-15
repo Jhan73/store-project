@@ -212,13 +212,37 @@ describe('QuickSale', () => {
     expect(find(fixture, 'cart-line-0')).toBeNull();
   });
 
-  it('does not accept less cash than the estimated total', async () => {
+  it('needs a valid amount received, and leaves judging it against the total to the API', async () => {
     const fixture = await open();
     await press(fixture, 'item-p1');
+    type(fixture, 'qs-received', 'abc');
+    await fixture.whenStable();
+    expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(true);
+
     type(fixture, 'qs-received', '5');
     await fixture.whenStable();
+    expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(false);
 
-    expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(true);
+    await press(fixture, 'qs-submit');
+    const request = http.expectOne(`${BASE}/quick-sales`);
+    expect(request.request.body.payment).toEqual({ method: 'CASH', receivedAmount: pen('5.00') });
+    request.flush(problem(422, 'instore.invalid-payment'), { status: 422, statusText: 'Unprocessable' });
+    await fixture.whenStable();
+
+    expect(find(fixture, 'cart-line-0')).not.toBeNull();
+  });
+
+  it('disables a pinned item that is not on the menu', async () => {
+    const fixture = TestBed.createComponent(QuickSale);
+    await fixture.whenStable();
+    http.expectOne(`${BASE}/quick-sales/items`).flush([...items, { productId: 'p9', name: 'Kiwi', price: pen('7.00') }]);
+    http.expectOne(`${BASE}/catalog/menu`).flush(menu);
+    http.expectOne(`${BASE}/shifts/current`).flush(shift());
+    await fixture.whenStable();
+
+    expect(find<HTMLButtonElement>(fixture, 'item-p9')!.disabled).toBe(true);
+    expect(text(fixture, 'item-p9')).toContain('No disponible');
+    expect(find<HTMLButtonElement>(fixture, 'item-p1')!.disabled).toBe(false);
   });
 
   it('sells by card without an amount received', async () => {
