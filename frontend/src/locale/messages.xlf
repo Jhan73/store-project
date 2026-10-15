@@ -1399,7 +1399,7 @@
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
         <note category="location">src/app/features/staff/board/board.ts:157</note>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:254</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:269</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:95</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:114</note>
         <note category="location">src/app/features/staff/tickets/payment-panel.ts:97</note>
@@ -4933,7 +4933,7 @@
     </unit>
     <unit id="staff.quickSale.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:48,51</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:49,52</note>
       </notes>
       <segment>
         <source>Venta rápida</source>
@@ -4941,7 +4941,7 @@
     </unit>
     <unit id="staff.quickSale.failed">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:52,54</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:53,55</note>
       </notes>
       <segment>
         <source>No se pudo cargar la venta rápida.</source>
@@ -4949,7 +4949,7 @@
     </unit>
     <unit id="staff.quickSale.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:58,59</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:59,60</note>
       </notes>
       <segment>
         <source>Volver a cargar los productos y el turno</source>
@@ -4957,7 +4957,7 @@
     </unit>
     <unit id="staff.quickSale.retry">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:64,66</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:65,67</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4965,7 +4965,7 @@
     </unit>
     <unit id="staff.quickSale.noShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:71,73</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:72,74</note>
       </notes>
       <segment>
         <source>Necesitas un turno de caja abierto para vender.</source>
@@ -4973,7 +4973,7 @@
     </unit>
     <unit id="staff.quickSale.openShift.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:76,77</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:77,78</note>
       </notes>
       <segment>
         <source>Ir a Caja para abrir un turno</source>
@@ -4981,7 +4981,7 @@
     </unit>
     <unit id="staff.quickSale.openShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:81,85</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:82,86</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -4989,7 +4989,7 @@
     </unit>
     <unit id="staff.quickSale.done">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:88,89</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:89,90</note>
       </notes>
       <segment>
         <source>Venta registrada</source>
@@ -4997,7 +4997,7 @@
     </unit>
     <unit id="staff.quickSale.number">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:90,91</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:91,92</note>
       </notes>
       <segment>
         <source>Número</source>
@@ -5005,7 +5005,7 @@
     </unit>
     <unit id="staff.quickSale.total">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:94,95</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:95,96</note>
       </notes>
       <segment>
         <source>Total</source>
@@ -5013,15 +5013,31 @@
     </unit>
     <unit id="staff.quickSale.change">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:99,100</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:100,101</note>
       </notes>
       <segment>
         <source>Vuelto</source>
       </segment>
     </unit>
+    <unit id="staff.quickSale.ticket.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:109,110</note>
+      </notes>
+      <segment>
+        <source>Abrir la cuenta de esta venta, por ejemplo para anularla</source>
+      </segment>
+    </unit>
+    <unit id="staff.quickSale.ticket">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:114,117</note>
+      </notes>
+      <segment>
+        <source>Ver la cuenta</source>
+      </segment>
+    </unit>
     <unit id="staff.quickSale.new.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:107,108</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:120,121</note>
       </notes>
       <segment>
         <source>Empezar otra venta rápida</source>
@@ -5029,7 +5045,7 @@
     </unit>
     <unit id="staff.quickSale.new">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:113,115</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:126,128</note>
       </notes>
       <segment>
         <source>Nueva venta</source>
@@ -5037,7 +5053,7 @@
     </unit>
     <unit id="staff.quickSale.items">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:119,120</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:132,133</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -5045,7 +5061,7 @@
     </unit>
     <unit id="staff.quickSale.noItems">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:122,124</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:135,137</note>
       </notes>
       <segment>
         <source> No hay productos fijados para la venta rápida. </source>
@@ -5053,7 +5069,7 @@
     </unit>
     <unit id="staff.quickSale.item.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:135,136</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:148,149</note>
       </notes>
       <segment>
         <source>Agregar este producto a la venta</source>
@@ -5061,15 +5077,23 @@
     </unit>
     <unit id="staff.quickSale.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:146,148</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:159,161</note>
       </notes>
       <segment>
         <source>Agotado</source>
       </segment>
     </unit>
+    <unit id="staff.quickSale.notOnMenu">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:161,163</note>
+      </notes>
+      <segment>
+        <source>No disponible</source>
+      </segment>
+    </unit>
     <unit id="staff.quickSale.cart">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:156,158</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:171,173</note>
       </notes>
       <segment>
         <source>Venta</source>
@@ -5077,7 +5101,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.downLabel">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:177,178</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:192,193</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -5085,7 +5109,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.down">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:179,180</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:194,195</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -5093,7 +5117,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.upLabel">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:192,193</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:207,208</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -5101,7 +5125,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.up">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:194,195</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:209,210</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -5109,7 +5133,7 @@
     </unit>
     <unit id="staff.quickSale.remove.label">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:206,207</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:221,222</note>
       </notes>
       <segment>
         <source>Quitar el producto</source>
@@ -5117,7 +5141,7 @@
     </unit>
     <unit id="staff.quickSale.remove.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:208,209</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:223,224</note>
       </notes>
       <segment>
         <source>Quitar el producto de la venta</source>
@@ -5125,7 +5149,7 @@
     </unit>
     <unit id="staff.quickSale.cart.empty">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:218,221</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:233,236</note>
       </notes>
       <segment>
         <source>Elige productos para empezar la venta.</source>
@@ -5133,7 +5157,7 @@
     </unit>
     <unit id="staff.quickSale.estimated">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:223,224</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:238,239</note>
       </notes>
       <segment>
         <source>Total estimado</source>
@@ -5141,7 +5165,7 @@
     </unit>
     <unit id="staff.quickSale.name">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:230,232</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:245,247</note>
       </notes>
       <segment>
         <source>Nombre del cliente (opcional)</source>
@@ -5149,7 +5173,7 @@
     </unit>
     <unit id="staff.quickSale.method">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:242,244</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:257,259</note>
       </notes>
       <segment>
         <source>Método de pago</source>
@@ -5157,7 +5181,7 @@
     </unit>
     <unit id="staff.quickSale.received">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:261,263</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:276,278</note>
       </notes>
       <segment>
         <source>Efectivo recibido</source>
@@ -5165,7 +5189,7 @@
     </unit>
     <unit id="staff.quickSale.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:279,280</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:294,295</note>
       </notes>
       <segment>
         <source>Cobrar y registrar la venta</source>
@@ -5173,7 +5197,7 @@
     </unit>
     <unit id="staff.quickSale.submit">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:286,288</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:301,303</note>
       </notes>
       <segment>
         <source>Cobrar</source>
@@ -5181,7 +5205,7 @@
     </unit>
     <unit id="staff.quickSale.loading">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:292,296</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:307,311</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -5189,7 +5213,7 @@
     </unit>
     <unit id="staff.quickSale.configure.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:296,297</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:311,312</note>
       </notes>
       <segment>
         <source>Elegir las opciones</source>
@@ -6973,7 +6997,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:666</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:677</note>
       </notes>
       <segment>
         <source>Anular venta</source>
@@ -6981,7 +7005,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:667</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:678</note>
       </notes>
       <segment>
         <source>Anular pago</source>
@@ -6989,7 +7013,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:671</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:682</note>
       </notes>
       <segment>
         <source>Anular toda la venta con el motivo elegido</source>
@@ -6997,7 +7021,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:672</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:683</note>
       </notes>
       <segment>
         <source>Anular este pago con el motivo elegido</source>
