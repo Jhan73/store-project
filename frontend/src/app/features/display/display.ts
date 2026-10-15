@@ -11,8 +11,8 @@ import { DisplayStore } from './display-store';
   styleUrl: './display.scss',
   template: `
     <div class="columns" [style.--display-scale]="density().scale" [style.--display-columns]="density().columns">
-      <section class="column" [attr.aria-labelledby]="'display-preparing'" data-testid="column-preparing">
-        <h2 id="display-preparing" i18n="@@display.preparing">Preparando</h2>
+      <section class="column" data-testid="column-preparing">
+        <h2 i18n="@@display.preparing">Preparando</h2>
         <ol>
           @for (entry of store.preparing(); track $index) {
             <li>
@@ -27,8 +27,8 @@ import { DisplayStore } from './display-store';
           <p class="empty" i18n="@@display.empty">Sin pedidos</p>
         }
       </section>
-      <section class="column ready" [attr.aria-labelledby]="'display-ready'" data-testid="column-ready">
-        <h2 id="display-ready" i18n="@@display.ready">Listos para recoger</h2>
+      <section class="column ready" data-testid="column-ready">
+        <h2 i18n="@@display.ready">Listos para recoger</h2>
         <ol>
           @for (entry of store.ready(); track $index) {
             <li>
