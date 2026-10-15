@@ -4,6 +4,7 @@ import type {
   ActiveReason,
   CashMovement,
   CashMovementRequest,
+  Money,
   Shift,
 } from '../../../core/api/api-types';
 import { ApiError } from '../../../core/errors/api-error';
@@ -37,9 +38,16 @@ export class ShiftStore {
   private readonly movementList = signal<readonly CashMovement[]>([]);
   private readonly reasonList = signal<ActiveReason[] | null>(null);
   private readonly reasonsFailed = signal(false);
+  private readonly closed = signal<Shift | null>(null);
+  private readonly noteRequired = signal<{ count: string; difference: Money } | null>(null);
+  private readonly locked = signal(false);
   private lastShiftRequest = 0;
   private lastMovementsRequest = 0;
 
+  // The shift as the close returned it: the only place expected cash and the totals are ever shown.
+  readonly closedShift = this.closed.asReadonly();
+  readonly noteNeeded = this.noteRequired.asReadonly();
+  readonly countLocked = this.locked.asReadonly();
   readonly movements = this.movementList.asReadonly();
   readonly reasons = this.reasonList.asReadonly();
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
@@ -174,6 +182,46 @@ export class ShiftStore {
           }
         },
       });
+  }
+
+  // The count is locked once the difference was shown, so a retry sends the same count with the note.
+  close(count: string, note: string | null): void {
+    const shift = this.current();
+    const currency = this.storeCurrency();
+    if (shift === null || currency === null) {
+      return;
+    }
+    this.pending.add('close');
+    this.api
+      .closeShift(shift.id, { countedCash: { amount: count, currency }, note })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (outcome) => {
+          this.pending.delete('close');
+          if (outcome.kind === 'closed') {
+            this.lastShiftRequest++;
+            this.current.set(null);
+            this.closed.set(outcome.shift);
+            this.noteRequired.set(null);
+            this.locked.set(false);
+            this.movementList.set([]);
+          } else if (outcome.kind === 'note-required') {
+            this.locked.set(false);
+            this.noteRequired.set({ count, difference: outcome.difference });
+          } else {
+            this.locked.set(true);
+          }
+        },
+        error: (error: unknown) => {
+          this.pending.delete('close');
+          this.notifier.show(error);
+          this.load();
+        },
+      });
+  }
+
+  dismissClosed(): void {
+    this.closed.set(null);
   }
 
   private loadCurrency(): void {

@@ -138,6 +138,42 @@ describe('Register', () => {
     expect(host(open).querySelector('app-cash-movements')).not.toBeNull();
   });
 
+  it('closes the shift from a dialog and keeps the closed shift read-only on the screen', async () => {
+    const fixture = await openScreen(shift());
+
+    find<HTMLButtonElement>(fixture, 'close-open')!.click();
+    await fixture.whenStable();
+    const count = document.body.querySelector<HTMLInputElement>('[data-testid="close-count"]')!;
+    count.value = '100';
+    count.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    document.body.querySelector<HTMLButtonElement>('[data-testid="close-confirm"]')!.click();
+    await fixture.whenStable();
+    http.expectOne(`${BASE}/shifts/s1/close`).flush(
+      shift({
+        status: 'CLOSED',
+        closeKind: 'COUNTED',
+        closedAt: '2026-10-13T22:00:00Z',
+        countedCash: pen('100.00'),
+        expectedCash: pen('100.00'),
+        difference: pen('0.00'),
+      }),
+    );
+    await fixture.whenStable();
+    document.body.querySelector<HTMLButtonElement>('[data-testid="close-done"]')!.click();
+    await fixture.whenStable();
+
+    expect(find(fixture, 'shift-summary')).toBeNull();
+    expect(text(fixture, 'closed-summary')).toContain('100.00');
+    expect(find(fixture, 'close-open')).toBeNull();
+    expect(host(fixture).querySelector('app-cash-movements')).toBeNull();
+
+    find<HTMLButtonElement>(fixture, 'new-shift')!.click();
+    await fixture.whenStable();
+
+    expect(find(fixture, 'open-form')).not.toBeNull();
+  });
+
   it('shows no cash movements panel without a shift', async () => {
     const none = await openScreen(null);
     expect(host(none).querySelector('app-cash-movements')).toBeNull();

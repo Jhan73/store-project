@@ -161,6 +161,95 @@ describe('ShiftStore', () => {
     });
   });
 
+  describe('closing a shift', () => {
+    const closedShift = shift({
+      status: 'CLOSED',
+      closeKind: 'COUNTED',
+      closedAt: '2026-10-13T22:00:00Z',
+      countedCash: pen('100.00'),
+      expectedCash: pen('100.00'),
+      difference: pen('0.00'),
+    });
+
+    function withShift() {
+      store.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+    }
+
+    it('closes with the count, shows the closed shift and no longer holds an open one', () => {
+      withShift();
+
+      store.close('100.00', null);
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+      expect(request.request.body).toEqual({ countedCash: pen('100.00'), note: null });
+      request.flush(closedShift);
+
+      expect(store.shift()).toBeNull();
+      expect(store.closedShift()?.expectedCash).toEqual(pen('100.00'));
+    });
+
+    it('asks for a note and keeps the same count when the difference is too large', () => {
+      withShift();
+
+      store.close('90.00', null);
+      http
+        .expectOne(`${BASE}/shifts/s1/close`)
+        .flush(problem(409, 'instore.difference-note-required', { difference: pen('-10.00') }), {
+          status: 409,
+          statusText: 'Conflict',
+        });
+
+      expect(store.shift()?.id).toBe('s1');
+      expect(store.noteNeeded()).toEqual({ count: '90.00', difference: pen('-10.00') });
+
+      store.close('90.00', 'Faltó sencillo');
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+      expect(request.request.body).toEqual({ countedCash: pen('90.00'), note: 'Faltó sencillo' });
+      request.flush({ ...closedShift, difference: pen('-10.00') });
+
+      expect(store.noteNeeded()).toBeNull();
+      expect(store.closedShift()?.difference).toEqual(pen('-10.00'));
+    });
+
+    it('reports a count that no longer matches the one already shown', () => {
+      withShift();
+
+      store.close('91.00', 'x');
+      http
+        .expectOne(`${BASE}/shifts/s1/close`)
+        .flush(problem(422, 'instore.counted-cash-locked'), { status: 422, statusText: 'Unprocessable' });
+
+      expect(store.countLocked()).toBe(true);
+      expect(store.shift()?.id).toBe('s1');
+    });
+
+    it('reads the shift again when the close is refused', () => {
+      withShift();
+      const added = vi.spyOn(messages, 'add');
+
+      store.close('100.00', null);
+      http
+        .expectOne(`${BASE}/shifts/s1/close`)
+        .flush(problem(409, 'instore.shift-closed'), { status: 409, statusText: 'Conflict' });
+      http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+      zone();
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      expect(store.shift()).toBeNull();
+    });
+
+    it('forgets the closed shift to open another', () => {
+      withShift();
+      store.close('100.00', null);
+      http.expectOne(`${BASE}/shifts/s1/close`).flush(closedShift);
+
+      store.dismissClosed();
+
+      expect(store.closedShift()).toBeNull();
+    });
+  });
+
   describe('opening a shift', () => {
     function loadedWithoutShift() {
       store.load();
