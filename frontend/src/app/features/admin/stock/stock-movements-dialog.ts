@@ -41,7 +41,7 @@ const SIGNED = new Intl.NumberFormat('es-PE', { signDisplay: 'exceptZero' });
   selector: 'app-stock-movements-dialog',
   imports: [ButtonDirective, Dialog, Paginator, TableScroll, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: '../admin-section.scss',
+  styleUrls: ['../admin-section.scss', './stock-movements-dialog.scss'],
   template: `
     <p-dialog
       header="Movimientos de stock"
@@ -94,6 +94,7 @@ const SIGNED = new Intl.NumberFormat('es-PE', { signDisplay: 'exceptZero' });
                       <th i18n="@@admin.stock.movements.col.type">Tipo</th>
                       <th i18n="@@admin.stock.movements.col.onHand">En existencia</th>
                       <th i18n="@@admin.stock.movements.col.reserved">Reservado</th>
+                      <th i18n="@@admin.stock.movements.col.reference">Referencia</th>
                       <th i18n="@@admin.stock.movements.col.reason">Motivo</th>
                       <th i18n="@@admin.stock.movements.col.note">Nota</th>
                       <th i18n="@@admin.stock.movements.col.actor">Quién</th>
@@ -108,6 +109,13 @@ const SIGNED = new Intl.NumberFormat('es-PE', { signDisplay: 'exceptZero' });
                         <td>{{ typeName(entry) }}</td>
                         <td>{{ signed(entry.onHandDelta) }}</td>
                         <td>{{ signed(entry.reservedDelta) }}</td>
+                        <td>
+                          @if (entry.referenceId; as reference) {
+                            <code class="ref" [attr.title]="reference">{{ reference }}</code>
+                          } @else {
+                            —
+                          }
+                        </td>
                         <td>{{ reason(entry) }}</td>
                         <td>{{ entry.note ?? '—' }}</td>
                         <td>{{ actor(entry) }}</td>

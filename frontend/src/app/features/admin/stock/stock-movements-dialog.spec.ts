@@ -179,6 +179,19 @@ describe('StockMovementsDialog', () => {
     expect(system).toContain('Sistema');
   });
 
+  it('shows the reference of a reservation, sale or commit in a selectable, truncated form', async () => {
+    const reference = '0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c';
+    await rendered(
+      page([movement({ type: 'SALE', referenceId: reference }), movement({ id: 'm2', referenceId: null })]),
+    );
+
+    const code = dialog().querySelector<HTMLElement>('tbody tr code.ref')!;
+    expect(code.textContent).toBe(reference);
+    expect(code.getAttribute('title')).toBe(reference);
+    expect(dialog().querySelectorAll('tbody code.ref')).toHaveLength(1);
+    expect(rows()[1]).toContain('—');
+  });
+
   it('says so when the product has no movements yet', async () => {
     await rendered(page([]));
 
