@@ -7,6 +7,7 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Product, StockItem } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { primeTranslation } from '../../../core/theme/prime-translation';
+import { chooseOption, typeNumber } from '../../../testing/primeng-controls';
 import { StockApi } from './stock-api';
 import { StockList } from './stock-list';
 
@@ -173,6 +174,88 @@ describe('StockList', () => {
     expect(host.querySelector('[data-testid="empty"]')!.textContent).toContain(
       'Ningún producto tiene el stock bajo',
     );
+  });
+
+  describe('tracking', () => {
+    const trackedSwitch = (host: HTMLElement, productId: string) =>
+      host.querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="tracked-${productId}"] input`)!;
+    const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement | null;
+
+    it('opens the picker from the toolbar and reloads the list after a product is tracked', async () => {
+      const { fixture, host, http } = await render([stock(PAPAYA, 40)]);
+
+      click(host, 'track-new');
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 40)]);
+      await fixture.whenStable();
+      expect(dialog()!.textContent).toContain('Controlar un producto');
+      await chooseOption(fixture, dialog()!, 'stock-track-product', 'Mango');
+      typeNumber(dialog()!, 'stock-threshold', '4');
+      await fixture.whenStable();
+      dialog()!.querySelector<HTMLButtonElement>('[data-testid="track-save"]')!.click();
+      http.expectOne(`${STOCK}/${MANGO}`).flush(stock(MANGO, 0, { lowStockThreshold: 4 }));
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 40), stock(MANGO, 0, { lowStockThreshold: 4 })]);
+      await fixture.whenStable();
+
+      expect(dialog()).toBeNull();
+      expect(rows(host)).toHaveLength(2);
+    });
+
+    it('edits the threshold of an item from its row', async () => {
+      const { fixture, host, http } = await render([stock(PAPAYA, 40, { lowStockThreshold: 5 })]);
+
+      click(host, `threshold-${PAPAYA}`);
+      await fixture.whenStable();
+      expect(dialog()!.textContent).toContain('Papaya');
+      typeNumber(dialog()!, 'stock-threshold', '30');
+      await fixture.whenStable();
+      dialog()!.querySelector<HTMLButtonElement>('[data-testid="track-save"]')!.click();
+      const request = http.expectOne(`${STOCK}/${PAPAYA}`);
+      expect(request.request.body).toEqual({ tracked: true, lowStockThreshold: 30 });
+      request.flush(stock(PAPAYA, 40, { lowStockThreshold: 30, low: false }));
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 40, { lowStockThreshold: 30, low: false })]);
+      await fixture.whenStable();
+
+      expect(rows(host)[0]).toContain('30');
+    });
+
+    it('stops tracking an item, keeping its threshold, and drops its row', async () => {
+      const { fixture, host, http } = await render([
+        stock(PAPAYA, 40, { lowStockThreshold: 7 }),
+        stock(MANGO, 3),
+      ]);
+
+      trackedSwitch(host, PAPAYA).click();
+      await fixture.whenStable();
+      expect(trackedSwitch(host, PAPAYA).disabled).toBe(true);
+      const request = http.expectOne(`${STOCK}/${PAPAYA}`);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({ tracked: false, lowStockThreshold: 7 });
+      request.flush(stock(PAPAYA, 40, { tracked: false, lowStockThreshold: 7 }));
+      await fixture.whenStable();
+
+      expect(rows(host)).toHaveLength(1);
+      expect(rows(host)[0]).toContain('Mango');
+    });
+
+    it('puts the switch back and tells the user when units are still reserved', async () => {
+      const { fixture, host, http, toast } = await render([stock(PAPAYA, 40, { reserved: 2 })]);
+
+      trackedSwitch(host, PAPAYA).click();
+      await fixture.whenStable();
+      http.expectOne(`${STOCK}/${PAPAYA}`).flush(
+        { type: 'about:blank', status: 409, code: 'inventory.stock-reserved', correlationId: 'c' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      expect(trackedSwitch(host, PAPAYA).checked).toBe(true);
+      expect(trackedSwitch(host, PAPAYA).disabled).toBe(false);
+      expect(rows(host)).toHaveLength(1);
+    });
   });
 
   it('shows an error with a retry when the stock cannot be read', async () => {

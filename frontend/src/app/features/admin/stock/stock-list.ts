@@ -1,15 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { IconAlertTriangle, IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
+import { FormsModule, NgModel } from '@angular/forms';
+import {
+  IconAlertTriangle,
+  IconPencil,
+  IconPlus,
+  IconRefresh,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import type { Product, StockItem } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 import { shortId } from '../audit/audit-labels';
 import { StockApi } from './stock-api';
+import { StockTrackDialog } from './stock-track-dialog';
 
 type Status = 'loading' | 'ready' | 'error';
 
@@ -22,7 +30,15 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
 
 @Component({
   selector: 'app-stock-list',
-  imports: [FormsModule, ButtonDirective, TableScroll, TablerIconComponent, ToggleSwitch, Tooltip],
+  imports: [
+    FormsModule,
+    ButtonDirective,
+    StockTrackDialog,
+    TableScroll,
+    TablerIconComponent,
+    ToggleSwitch,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../admin-section.scss', './stock-list.scss'],
   template: `
@@ -38,6 +54,18 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
         />
         <label for="stock-low-only" i18n="@@admin.stock.lowOnly">Solo stock bajo</label>
       </div>
+      <button
+        pButton
+        type="button"
+        data-testid="track-new"
+        (click)="openTrack(null)"
+        pTooltip="Empezar a controlar el stock de un producto"
+        i18n-pTooltip="@@admin.stock.track.new.tooltip"
+        tooltipPosition="top"
+      >
+        <tabler-icon [icon]="icons.create" aria-hidden="true" />
+        <span i18n="@@admin.stock.track.new">Controlar un producto</span>
+      </button>
     </div>
 
     @switch (status()) {
@@ -84,6 +112,8 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                   <th i18n="@@admin.stock.col.reserved">Reservado</th>
                   <th i18n="@@admin.stock.col.threshold">Umbral de stock bajo</th>
                   <th i18n="@@admin.stock.col.state">Estado</th>
+                  <th i18n="@@admin.stock.col.tracked">Controlado</th>
+                  <th><span class="sr-only" i18n="@@admin.stock.col.actions">Acciones</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -104,6 +134,33 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                         <span class="muted" i18n="@@admin.stock.normal">Normal</span>
                       }
                     </td>
+                    <td>
+                      <p-toggleswitch
+                        #tracked="ngModel"
+                        [ngModel]="row.item.tracked"
+                        [disabled]="pending.has(row.item.productId)"
+                        [attr.data-testid]="'tracked-' + row.item.productId"
+                        [ariaLabel]="row.name"
+                        (onChange)="setTracked(row.item, $event.checked, tracked)"
+                      />
+                    </td>
+                    <td class="actions">
+                      <button
+                        pButton
+                        type="button"
+                        severity="secondary"
+                        [outlined]="true"
+                        [size]="'small'"
+                        [attr.data-testid]="'threshold-' + row.item.productId"
+                        (click)="openTrack(row.item)"
+                        pTooltip="Cambiar el umbral de stock bajo de este producto"
+                        i18n-pTooltip="@@admin.stock.threshold.tooltip"
+                        tooltipPosition="top"
+                      >
+                        <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                        <span i18n="@@admin.stock.threshold">Umbral</span>
+                      </button>
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -112,6 +169,14 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
         }
       }
     }
+
+    <app-stock-track-dialog
+      [visible]="trackOpen()"
+      [target]="trackTarget()"
+      [products]="products()"
+      (saved)="trackSaved()"
+      (dismissed)="closeTrack()"
+    />
   `,
 })
 export class StockList {
@@ -119,11 +184,19 @@ export class StockList {
   private readonly notifier = inject(ErrorNotifier);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly icons = { retry: IconRefresh, low: IconAlertTriangle };
+  protected readonly icons = {
+    retry: IconRefresh,
+    low: IconAlertTriangle,
+    create: IconPlus,
+    edit: IconPencil,
+  };
   protected readonly status = signal<Status>('loading');
   protected readonly lowOnly = signal(false);
+  protected readonly trackOpen = signal(false);
+  protected readonly trackTarget = signal<StockItem | null>(null);
+  protected readonly products = signal<readonly Product[]>([]);
+  protected readonly pending = new PendingIds();
   private readonly items = signal<readonly StockItem[]>([]);
-  private readonly products = signal<readonly Product[]>([]);
   private lastRequest = 0;
 
   private readonly names = computed(
@@ -152,14 +225,53 @@ export class StockList {
     this.load();
   }
 
+  protected openTrack(target: StockItem | null): void {
+    this.trackTarget.set(target);
+    this.trackOpen.set(true);
+  }
+
+  protected closeTrack(): void {
+    this.trackOpen.set(false);
+  }
+
+  protected trackSaved(): void {
+    this.closeTrack();
+    this.load(true);
+  }
+
+  // The list only holds tracked items, so turning the switch off drops the row.
+  protected setTracked(item: StockItem, tracked: boolean, control: NgModel): void {
+    if (tracked) {
+      return;
+    }
+    const id = item.productId;
+    this.pending.add(id);
+    this.api
+      .track(id, { tracked: false, lowStockThreshold: item.lowStockThreshold })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.pending.delete(id);
+          this.items.update((items) => items.filter((entry) => entry.productId !== id));
+        },
+        error: (error: unknown) => {
+          this.pending.delete(id);
+          control.control.setValue(true);
+          this.notifier.show(error);
+        },
+      });
+  }
+
   protected retry(): void {
     this.load();
     this.loadProducts();
   }
 
-  private load(): void {
+  private load(quiet = false): void {
     const request = ++this.lastRequest;
-    this.status.set('loading');
+    if (!quiet) {
+      this.status.set('loading');
+    }
     (this.lowOnly() ? this.api.low() : this.api.list())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
