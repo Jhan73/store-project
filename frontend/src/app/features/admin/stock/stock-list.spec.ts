@@ -354,6 +354,40 @@ describe('StockList', () => {
     expect(dialog.textContent).toContain('Papaya');
   });
 
+  it('offers a retry for the product names when the catalog cannot be read', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        MessageService,
+        providePrimeNG({ translation: primeTranslation }),
+        StockApi,
+        { provide: API_ORIGIN, useValue: 'http://api.test' },
+      ],
+    });
+    const fixture = TestBed.createComponent(StockList);
+    const http = TestBed.inject(HttpTestingController);
+    const host = fixture.nativeElement as HTMLElement;
+    await fixture.whenStable();
+    http.expectOne(STOCK).flush([stock(PAPAYA, 40)]);
+    http.expectOne(PRODUCTS).flush(
+      { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
+      { status: 500, statusText: 'Error' },
+    );
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('0199f3a2…');
+    expect(host.querySelector('[data-testid="catalog-failed"]')).not.toBeNull();
+
+    click(host, 'catalog-retry');
+    await fixture.whenStable();
+    http.expectOne(PRODUCTS).flush(productPage([papaya]));
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('Papaya');
+    expect(host.querySelector('[data-testid="catalog-failed"]')).toBeNull();
+  });
+
   it('shows an error with a retry when the stock cannot be read', async () => {
     TestBed.configureTestingModule({
       providers: [

@@ -26,6 +26,7 @@ import { StockMovementsDialog } from './stock-movements-dialog';
 import { StockTrackDialog } from './stock-track-dialog';
 
 type Status = 'loading' | 'ready' | 'error';
+type CatalogStatus = 'loading' | 'ready' | 'failed';
 
 interface StockRow {
   readonly item: StockItem;
@@ -76,6 +77,25 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
         <span i18n="@@admin.stock.track.new">Controlar un producto</span>
       </button>
     </div>
+
+    @if (productsStatus() === 'failed') {
+      <div class="state" role="alert" data-testid="catalog-failed">
+        <p i18n="@@admin.stock.catalogFailed">No se pudieron cargar los nombres de los productos.</p>
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="catalog-retry"
+          (click)="loadProducts()"
+          pTooltip="Volver a cargar los nombres de los productos"
+          i18n-pTooltip="@@admin.stock.catalogRetry.tooltip"
+          tooltipPosition="top"
+        >
+          <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+          <span i18n="@@admin.stock.catalogRetry">Reintentar</span>
+        </button>
+      </div>
+    }
 
     @switch (status()) {
       @case ('loading') {
@@ -249,6 +269,8 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
       [visible]="trackOpen()"
       [target]="trackTarget()"
       [products]="products()"
+      [catalogStatus]="productsStatus()"
+      (catalogRetried)="loadProducts()"
       (saved)="trackSaved()"
       (dismissed)="closeTrack()"
     />
@@ -279,6 +301,7 @@ export class StockList {
   protected readonly trackOpen = signal(false);
   protected readonly trackTarget = signal<StockItem | null>(null);
   protected readonly products = signal<readonly Product[]>([]);
+  protected readonly productsStatus = signal<CatalogStatus>('loading');
   protected readonly pending = new PendingIds();
   private readonly items = signal<readonly StockItem[]>([]);
   private lastRequest = 0;
@@ -428,13 +451,20 @@ export class StockList {
       });
   }
 
-  private loadProducts(): void {
+  protected loadProducts(): void {
+    this.productsStatus.set('loading');
     this.api
       .catalogProducts()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (products) => this.products.set(products),
-        error: (error: unknown) => this.notifier.show(error),
+        next: (products) => {
+          this.products.set(products);
+          this.productsStatus.set('ready');
+        },
+        error: (error: unknown) => {
+          this.productsStatus.set('failed');
+          this.notifier.show(error);
+        },
       });
   }
 }

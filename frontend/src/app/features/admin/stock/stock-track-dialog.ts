@@ -89,6 +89,31 @@ const MAX_THRESHOLD = 1_000_000;
               <span i18n="@@admin.stock.track.retry">Reintentar</span>
             </button>
           </div>
+        } @else if (catalogStatus() === 'failed') {
+          <div class="field" role="alert" data-testid="track-catalog-failed">
+            <p i18n="@@admin.stock.track.catalogFailed">No se pudo cargar el catálogo de productos.</p>
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              data-testid="track-catalog-retry"
+              (click)="catalogRetried.emit()"
+              pTooltip="Volver a cargar el catálogo de productos"
+              i18n-pTooltip="@@admin.stock.track.catalogRetry.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+              <span i18n="@@admin.stock.track.catalogRetry">Reintentar</span>
+            </button>
+          </div>
+        } @else if (catalogStatus() === 'loading') {
+          <p class="muted" data-testid="track-catalog-loading" i18n="@@admin.stock.track.catalogLoading">
+            Cargando el catálogo…
+          </p>
+        } @else if (products().length === 0) {
+          <p data-testid="track-empty-catalog" i18n="@@admin.stock.track.emptyCatalog">
+            El catálogo todavía no tiene productos.
+          </p>
         } @else if (trackedIds() !== null && options().length === 0) {
           <p data-testid="track-none" i18n="@@admin.stock.track.none">
             Todos los productos del catálogo ya tienen control de stock.
@@ -178,9 +203,11 @@ export class StockTrackDialog {
   readonly visible = input.required<boolean>();
   readonly target = input<StockItem | null>(null);
   readonly products = input<readonly Product[]>([]);
+  readonly catalogStatus = input<'loading' | 'ready' | 'failed'>('ready');
 
   readonly saved = output<StockItem>();
   readonly dismissed = output<void>();
+  readonly catalogRetried = output<void>();
 
   private readonly api = inject(StockApi);
   private readonly notifier = inject(ErrorNotifier);

@@ -48,7 +48,9 @@ function stock(productId: string, overrides: Partial<StockItem> = {}): StockItem
     <app-stock-track-dialog
       [visible]="visible()"
       [target]="target()"
-      [products]="products"
+      [products]="products()"
+      [catalogStatus]="catalogStatus()"
+      (catalogRetried)="catalogRetries = catalogRetries + 1"
       (saved)="saved.push($event)"
       (dismissed)="visible.set(false)"
     />
@@ -57,7 +59,9 @@ function stock(productId: string, overrides: Partial<StockItem> = {}): StockItem
 class Host {
   readonly visible = signal(true);
   readonly target = signal<StockItem | null>(null);
-  readonly products = products;
+  readonly products = signal<Product[]>(products);
+  readonly catalogStatus = signal<'loading' | 'ready' | 'failed'>('ready');
+  catalogRetries = 0;
   readonly saved: StockItem[] = [];
 }
 
@@ -69,7 +73,11 @@ describe('StockTrackDialog', () => {
   const inDialog = <T extends HTMLElement>(testId: string) =>
     document.body.querySelector<T>(`[role="dialog"] [data-testid="${testId}"]`);
 
-  async function open(target: StockItem | null = null, tracked: StockItem[] = []) {
+  async function open(
+    target: StockItem | null = null,
+    tracked: StockItem[] = [],
+    setup: (host: Host) => void = () => undefined,
+  ) {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
@@ -84,6 +92,7 @@ describe('StockTrackDialog', () => {
     toast = vi.spyOn(TestBed.inject(MessageService), 'add');
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.target.set(target);
+    setup(fixture.componentInstance);
     await fixture.whenStable();
     if (!target) {
       http.expectOne(STOCK).flush(tracked);
@@ -107,6 +116,35 @@ describe('StockTrackDialog', () => {
     await open(null, [stock(PAPAYA), stock(MANGO), stock(KIWI)]);
 
     expect(inDialog('track-none')).not.toBeNull();
+  });
+
+  it('does not claim everything is tracked while the catalog is loading', async () => {
+    await open(null, [], (host) => {
+      host.products.set([]);
+      host.catalogStatus.set('loading');
+    });
+
+    expect(inDialog('track-none')).toBeNull();
+    expect(inDialog('track-catalog-loading')).not.toBeNull();
+  });
+
+  it('offers a retry instead of claiming everything is tracked when the catalog failed', async () => {
+    const fixture = await open(null, [], (host) => {
+      host.products.set([]);
+      host.catalogStatus.set('failed');
+    });
+
+    expect(inDialog('track-none')).toBeNull();
+    inDialog<HTMLButtonElement>('track-catalog-retry')!.click();
+
+    expect(fixture.componentInstance.catalogRetries).toBe(1);
+  });
+
+  it('says the catalog is empty, not that everything is tracked, when it has no products', async () => {
+    await open(null, [], (host) => host.products.set([]));
+
+    expect(inDialog('track-none')).toBeNull();
+    expect(inDialog('track-empty-catalog')).not.toBeNull();
   });
 
   it('starts tracking the chosen product with its threshold', async () => {
