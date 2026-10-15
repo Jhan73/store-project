@@ -250,7 +250,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
 
     <app-stock-adjustment-dialog
       [visible]="adjustOpen()"
-      [item]="adjustTarget()"
+      [item]="adjustItem()"
       [productName]="adjustName()"
       (saved)="adjustSaved($event)"
       (stale)="load(true)"
@@ -321,6 +321,11 @@ export class StockList {
   protected readonly movementsName = computed(() => {
     const target = this.movementsTarget();
     return target ? this.nameOf(target.productId) : '';
+  });
+  // The open dialog follows the re-read row, so its units available are never older than the list.
+  protected readonly adjustItem = computed(() => {
+    const target = this.adjustTarget();
+    return target ? (this.items().find((item) => item.productId === target.productId) ?? target) : null;
   });
   protected readonly adjustName = computed(() => {
     const target = this.adjustTarget();

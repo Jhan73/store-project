@@ -116,6 +116,34 @@ describe('StockAdjustmentDialog', () => {
     expect(await optionLabels(fixture, dialog(), 'adjust-reason')).toEqual(['Damaged', 'Otro']);
   });
 
+  it('shows the units available now from the row', async () => {
+    await open();
+
+    expect(inDialog('adjust-available').textContent).toContain('Disponible ahora: 10');
+  });
+
+  it.each([
+    ['-3', 'Se descontarán 3 unidades'],
+    ['-1', 'Se descontará 1 unidad'],
+    ['4', 'Se sumarán 4 unidades'],
+    ['1', 'Se sumará 1 unidad'],
+  ])('says what a change of %s does before saving', async (value, text) => {
+    const fixture = await open();
+
+    await delta(fixture, value);
+
+    expect(inDialog('adjust-effect').textContent).toContain(text);
+  });
+
+  it('says nothing about the effect for an empty or zero change', async () => {
+    const fixture = await open();
+    expect(document.body.querySelector('[data-testid="adjust-effect"]')).toBeNull();
+
+    await delta(fixture, '0');
+
+    expect(document.body.querySelector('[data-testid="adjust-effect"]')).toBeNull();
+  });
+
   it('subtracts units with a reason and an idempotency key', async () => {
     const fixture = await open();
     await delta(fixture, '-3');

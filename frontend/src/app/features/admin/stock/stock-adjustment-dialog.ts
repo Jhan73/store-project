@@ -178,11 +178,24 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               </small>
             }
           </div>
-          @if (available() !== null) {
-            <small class="error" role="status" data-testid="adjust-available">
+          @if (shownAvailable() !== null) {
+            <small [class.error]="available() !== null" role="status" data-testid="adjust-available">
               <ng-container i18n="@@admin.stock.adjust.available">
-                Disponible ahora: {{ available() }}
+                Disponible ahora: {{ shownAvailable() }}
               </ng-container>
+            </small>
+          }
+          @if (change(); as current) {
+            <small class="muted" role="status" data-testid="adjust-effect">
+              @if (current.adds) {
+                <ng-container i18n="@@admin.stock.adjust.effect.add">
+                  {current.units, plural, =1 {Se sumará 1 unidad} other {Se sumarán {{ current.units }} unidades}}
+                </ng-container>
+              } @else {
+                <ng-container i18n="@@admin.stock.adjust.effect.remove">
+                  {current.units, plural, =1 {Se descontará 1 unidad} other {Se descontarán {{ current.units }} unidades}}
+                </ng-container>
+              }
             </small>
           }
         </form>
@@ -257,6 +270,16 @@ export class StockAdjustmentDialog {
     }),
   });
   private readonly chosen = toSignal(this.reason.valueChanges, { initialValue: null });
+  private readonly typedDelta = toSignal(this.form.controls.quantityDelta.valueChanges, {
+    initialValue: null,
+  });
+  // Display aid only: the API decides whether the change is allowed.
+  protected readonly change = computed(() => {
+    const delta = this.typedDelta();
+    const valid = delta !== null && Number.isInteger(delta) && delta !== 0 && Math.abs(delta) <= MAX_QUANTITY;
+    return valid ? { adds: delta > 0, units: Math.abs(delta) } : null;
+  });
+  protected readonly shownAvailable = computed(() => this.available() ?? this.item()?.available ?? null);
   protected readonly noteRequired = computed(() => requiresNote(this.chosen()));
   protected readonly options = computed(() =>
     (this.reasons() ?? []).map((reason) => ({ code: reason.code, label: reasonLabel(reason.code) })),

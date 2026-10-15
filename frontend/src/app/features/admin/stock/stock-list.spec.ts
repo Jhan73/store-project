@@ -9,6 +9,7 @@ import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { primeTranslation } from '../../../core/theme/prime-translation';
 import { chooseOption, typeNumber } from '../../../testing/primeng-controls';
 import { By } from '@angular/platform-browser';
+import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { StockApi } from './stock-api';
 import { StockEntryDialog } from './stock-entry-dialog';
 import { StockList } from './stock-list';
@@ -317,6 +318,19 @@ describe('StockList', () => {
       expect(document.body.querySelector('[role="dialog"]')).toBeNull();
       expect(rows(host)[0]).toContain('4');
       expect(rows(host)[0]).toContain('Stock bajo');
+    });
+
+    it('shows the refreshed units available in the open dialog after a re-read', async () => {
+      const { fixture, http } = await openAdjustment([stock(PAPAYA, 6)]);
+
+      fixture.debugElement
+        .query(By.directive(StockAdjustmentDialog))
+        .componentInstance.stale.emit();
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 2)]);
+      await fixture.whenStable();
+
+      expect(dialog().textContent).toContain('Disponible ahora: 2');
     });
 
     it('re-reads the stock and keeps the dialog open when there is not enough', async () => {
