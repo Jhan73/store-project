@@ -12150,9 +12150,12 @@
           "boardWarningMinutes" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "timeZone" : {
+            "type" : "string"
           }
         },
-        "required" : [ "boardLateMinutes", "boardWarningMinutes" ]
+        "required" : [ "boardLateMinutes", "boardWarningMinutes", "timeZone" ]
       },
       "CashMovementRequest" : {
         "type" : "object",

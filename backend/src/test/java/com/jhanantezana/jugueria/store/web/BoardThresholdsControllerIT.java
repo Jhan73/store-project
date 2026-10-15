@@ -36,20 +36,22 @@ class BoardThresholdsControllerIT {
 		var settings = mvc.get().uri(SETTINGS).with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN)).exchange();
 		var warning = assertThat(settings).bodyJson().extractingPath("$.boardWarningMinutes").actual();
 		var late = assertThat(settings).bodyJson().extractingPath("$.boardLateMinutes").actual();
+		var timeZone = assertThat(settings).bodyJson().extractingPath("$.timeZone").actual();
 
 		var result = mvc.get().uri(THRESHOLDS).with(AuthenticatedAs.user(UUID.randomUUID(), role)).exchange();
 
 		assertThat(result).hasStatusOk();
 		assertThat(result).bodyJson().extractingPath("$.boardWarningMinutes").isEqualTo(warning);
 		assertThat(result).bodyJson().extractingPath("$.boardLateMinutes").isEqualTo(late);
+		assertThat(result).bodyJson().extractingPath("$.timeZone").isEqualTo(timeZone);
 	}
 
 	@Test
-	void exposesOnlyTheTwoThresholds() {
+	void exposesOnlyTheThresholdsAndTheStoreTimeZone() {
 		var result = mvc.get().uri(THRESHOLDS).with(AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER)).exchange();
 
 		assertThat(result).bodyJson().extractingPath("$").asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.MAP)
-			.containsOnlyKeys("boardWarningMinutes", "boardLateMinutes");
+			.containsOnlyKeys("boardWarningMinutes", "boardLateMinutes", "timeZone");
 	}
 
 	@Test
