@@ -9735,6 +9735,71 @@
         "tags" : [ "staff-controller" ]
       }
     },
+    "/api/v1/store/board-thresholds" : {
+      "get" : {
+        "operationId" : "boardThresholdsGet",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BoardThresholdsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "board-thresholds-controller" ]
+      }
+    },
     "/api/v1/tables" : {
       "get" : {
         "operationId" : "tableGridGrid",
@@ -12074,6 +12139,20 @@
           }
         },
         "required" : [ "channel", "fireAt", "handedOverAt", "id", "label", "lines", "markers", "readyAt", "sentAt", "shortNumber", "source", "sourceId", "startedAt", "status" ]
+      },
+      "BoardThresholdsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "boardLateMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "boardWarningMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "boardLateMinutes", "boardWarningMinutes" ]
       },
       "CashMovementRequest" : {
         "type" : "object",
