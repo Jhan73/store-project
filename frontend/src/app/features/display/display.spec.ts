@@ -1,0 +1,136 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Observable, Subject } from 'rxjs';
+import { API_ORIGIN } from '../../core/api/api-config';
+import type { CustomerDisplay } from '../../core/api/api-types';
+import { RealtimeClient } from '../../core/realtime/realtime-client';
+import { ScreenWakeLock } from '../../core/screen/screen-wake-lock';
+import { Display } from './display';
+import { DisplayApi } from './display-api';
+import { DisplayStore } from './display-store';
+
+const DISPLAY = 'http://api.test/api/v1/board/display';
+
+class FakeRealtime {
+  readonly connected = signal(true);
+  readonly isConnected = this.connected.asReadonly();
+  readonly signals = new Subject<void>();
+
+  refetch(): Observable<void> {
+    return this.signals.asObservable();
+  }
+}
+
+describe('Display', () => {
+  let realtime: FakeRealtime;
+  let wakeLock: { start: ReturnType<typeof vi.fn> };
+  let http: HttpTestingController;
+
+  beforeEach(() => {
+    realtime = new FakeRealtime();
+    wakeLock = { start: vi.fn() };
+    TestBed.overrideComponent(Display, {
+      set: { providers: [DisplayStore, { provide: ScreenWakeLock, useValue: wakeLock }] },
+    });
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        DisplayApi,
+        { provide: RealtimeClient, useValue: realtime },
+        { provide: API_ORIGIN, useValue: 'http://api.test' },
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  async function open(answer: CustomerDisplay | 'failure') {
+    const fixture = TestBed.createComponent(Display);
+    await fixture.whenStable();
+    const request = http.expectOne(DISPLAY);
+    if (answer === 'failure') {
+      request.flush({}, { status: 500, statusText: 'Server Error' });
+    } else {
+      request.flush(answer);
+    }
+    await fixture.whenStable();
+    return fixture;
+  }
+
+  const host = (fixture: ComponentFixture<Display>) => fixture.nativeElement as HTMLElement;
+  const column = (fixture: ComponentFixture<Display>, name: 'preparing' | 'ready') =>
+    host(fixture).querySelector(`[data-testid="column-${name}"]`) as HTMLElement;
+  const entries = (fixture: ComponentFixture<Display>, name: 'preparing' | 'ready') =>
+    Array.from(column(fixture, name).querySelectorAll('li')).map((item) =>
+      Array.from(item.children).map((child) => child.textContent?.trim()),
+    );
+
+  it('shows the orders being prepared and the ones ready in two columns', async () => {
+    const fixture = await open({
+      preparing: [{ shortNumber: 'L-001', firstName: 'Ana' }],
+      ready: [{ shortNumber: 'L-002', firstName: 'Beto' }],
+    });
+
+    expect(column(fixture, 'preparing').querySelector('h2')?.textContent).toContain('Preparando');
+    expect(column(fixture, 'ready').querySelector('h2')?.textContent).toContain('Listos');
+    expect(entries(fixture, 'preparing')).toEqual([['L-001', 'Ana']]);
+    expect(entries(fixture, 'ready')).toEqual([['L-002', 'Beto']]);
+  });
+
+  it('shows only the number when the order has no name', async () => {
+    const fixture = await open({ preparing: [{ shortNumber: 'L-003', firstName: null }], ready: [] });
+
+    expect(entries(fixture, 'preparing')).toEqual([['L-003']]);
+  });
+
+  it('keeps the order of the lists', async () => {
+    const fixture = await open({
+      preparing: [
+        { shortNumber: 'L-005', firstName: null },
+        { shortNumber: 'L-004', firstName: null },
+      ],
+      ready: [],
+    });
+
+    expect(entries(fixture, 'preparing')).toEqual([['L-005'], ['L-004']]);
+  });
+
+  it('says there is nothing in a column once the first read is in', async () => {
+    const fixture = await open({ preparing: [], ready: [] });
+
+    expect(column(fixture, 'preparing').textContent).toContain('Sin pedidos');
+    expect(column(fixture, 'ready').textContent).toContain('Sin pedidos');
+  });
+
+  it('renders text only: no buttons, links or form controls on a screen nobody operates', async () => {
+    const fixture = await open({ preparing: [{ shortNumber: 'L-001', firstName: 'Ana' }], ready: [] });
+
+    expect(host(fixture).querySelectorAll('button, a, input, select, textarea')).toHaveLength(0);
+  });
+
+  it('keeps the screen on', async () => {
+    await open({ preparing: [], ready: [] });
+
+    expect(wakeLock.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('warns that the numbers may be out of date while the live connection is down', async () => {
+    const fixture = await open({ preparing: [], ready: [] });
+    expect(host(fixture).querySelector('[data-testid="stale"]')).toBeNull();
+
+    realtime.connected.set(false);
+    await fixture.whenStable();
+
+    expect(host(fixture).querySelector('[data-testid="stale"]')?.textContent).toContain('Actualizando');
+  });
+
+  it('warns when the screen cannot be read', async () => {
+    const fixture = await open('failure');
+
+    expect(host(fixture).querySelector('[data-testid="stale"]')).not.toBeNull();
+  });
+});

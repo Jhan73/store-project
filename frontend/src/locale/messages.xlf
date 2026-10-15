@@ -3,10 +3,18 @@
   <file id="ngi18n" original="ng.template">
     <unit id="setPassword.pageTitle">
       <notes>
-        <note category="location">src/app/app.routes.ts:15</note>
+        <note category="location">src/app/app.routes.ts:16</note>
       </notes>
       <segment>
         <source>Crear contraseña</source>
+      </segment>
+    </unit>
+    <unit id="display.pageTitle">
+      <notes>
+        <note category="location">src/app/app.routes.ts:30</note>
+      </notes>
+      <segment>
+        <source>Pedidos</source>
       </segment>
     </unit>
     <unit id="role.server">
@@ -4283,6 +4291,39 @@
       </notes>
       <segment>
         <source>Invitación enviada a <ph id="0" equiv="email" disp="address"/>.</source>
+      </segment>
+    </unit>
+    <unit id="display.preparing">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:14,16</note>
+      </notes>
+      <segment>
+        <source>Preparando</source>
+      </segment>
+    </unit>
+    <unit id="display.empty">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:26,28</note>
+        <note category="location">src/app/features/display/display.ts:42,44</note>
+      </notes>
+      <segment>
+        <source>Sin pedidos</source>
+      </segment>
+    </unit>
+    <unit id="display.ready">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:30,32</note>
+      </notes>
+      <segment>
+        <source>Listos para recoger</source>
+      </segment>
+    </unit>
+    <unit id="display.stale">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:47,51</note>
+      </notes>
+      <segment>
+        <source>Actualizando…</source>
       </segment>
     </unit>
     <unit id="forbidden.title">

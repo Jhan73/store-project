@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/auth/role-guard';
+import { DisplayApi } from './features/display/display-api';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,13 @@ export const routes: Routes = [
     path: 'staff',
     canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
     loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES),
+  },
+  {
+    path: 'display',
+    title: $localize`:@@display.pageTitle:Pedidos`,
+    canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
+    providers: [DisplayApi],
+    loadComponent: () => import('./features/display/display').then((m) => m.Display),
   },
   {
     path: 'admin',
