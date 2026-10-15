@@ -10,7 +10,7 @@ The password is a Standard SecureString parameter under the default `aws/ssm` ke
 
 ## 1. Create the account
 
-An existing `ADMIN` invites it at `/admin/users` (or with `POST /api/v1/staff`, see "Set the password, sign in, and add staff" in `first-admin-bootstrap.md`), role `ADMIN`. The address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` and, while SES is in the sandbox, a verified identity (`ses-setup.md`). The new account opens the link from the email and sets its password. Use a long random password from a password manager.
+An existing `ADMIN` invites it at `/admin/users` (or with `POST /api/v1/staff`, see "Set the password, sign in, and add staff" in `first-admin-bootstrap.md`), role `ADMIN`. The address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` and, while SES is in the sandbox, a verified identity (`ses-setup.md`). The new account opens the link from the email and sets its password. Use a long random password from a password manager. The account is dedicated to the suite: the floor journeys open register shifts with it and force-close whatever shift it has open, so nobody works the register with it.
 
 ## 2. Apply the permission
 
@@ -49,7 +49,7 @@ Change the account's password (or reissue its link), then run the `put-parameter
 
 ## Cleanup
 
-The API can only deactivate products and categories, so inactive `e2e-*` rows accumulate in `test`. Each run also sweeps leftovers of earlier runs by prefix, which is why the job shares the `deploy-test` concurrency group and two suites never overlap.
+The API can only deactivate products, categories, tables and reasons, so inactive `e2e-*` rows accumulate in `test`, together with the closed shifts and sales of the floor journeys, which are never deleted. Each closed shift also emails its summary to the `ADMIN` accounts that are on the recipient allowlist. Each run also sweeps leftovers of earlier runs by prefix, which is why the job shares the `deploy-test` concurrency group and two suites never overlap.
 
 ## Output
 
