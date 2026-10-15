@@ -1,5 +1,14 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import {
+  afterRenderEffect,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import {
   IconAlertTriangle,
   IconArrowBackUp,
@@ -125,10 +134,11 @@ const MARKER_LABELS = {
                   type="button"
                   severity="secondary"
                   [attr.data-testid]="'undo-line-' + item.id"
+                  [attr.data-action]="'undo-line-' + item.id"
                   pTooltip="Cancelar el aviso de línea lista antes de que se envíe"
                   i18n-pTooltip="@@board.card.line.undo.tooltip"
                   tooltipPosition="top"
-                  (click)="undo.emit(item.id)"
+                  (click)="undoReady(item.id, 'ready-line-' + item.id)"
                 >
                   <tabler-icon [icon]="icons.undo" aria-hidden="true" />
                   <span i18n="@@board.card.line.undo">Deshacer</span>
@@ -138,11 +148,12 @@ const MARKER_LABELS = {
                   pButton
                   type="button"
                   [attr.data-testid]="'ready-line-' + item.id"
+                  [attr.data-action]="'ready-line-' + item.id"
                   [disabled]="!enabled() || pending().has(item.id)"
                   pTooltip="Marcar esta línea como lista"
                   i18n-pTooltip="@@board.card.line.ready.tooltip"
                   tooltipPosition="top"
-                  (click)="readyLine.emit(item.id)"
+                  (click)="markReady(readyLine, item.id, 'undo-line-' + item.id)"
                 >
                   <tabler-icon [icon]="icons.ready" aria-hidden="true" />
                   <span i18n="@@board.card.line.readyAction">Lista</span>
@@ -193,10 +204,11 @@ const MARKER_LABELS = {
                 type="button"
                 severity="secondary"
                 data-testid="undo-order"
+                [attr.data-action]="'undo-order'"
                 pTooltip="Cancelar el aviso de pedido listo antes de que se envíe"
                 i18n-pTooltip="@@board.card.undo.tooltip"
                 tooltipPosition="top"
-                (click)="undo.emit(order().id)"
+                (click)="undoReady(order().id, 'ready-order')"
               >
                 <tabler-icon [icon]="icons.undo" aria-hidden="true" />
                 <span i18n="@@board.card.undo">Deshacer</span>
@@ -206,11 +218,12 @@ const MARKER_LABELS = {
                 pButton
                 type="button"
                 data-testid="ready-order"
+                [attr.data-action]="'ready-order'"
                 [disabled]="!enabled() || pending().has(order().id)"
                 pTooltip="Marcar todo el pedido como listo"
                 i18n-pTooltip="@@board.card.ready.tooltip"
                 tooltipPosition="top"
-                (click)="readyOrder.emit(order().id)"
+                (click)="markReady(readyOrder, order().id, 'undo-order')"
               >
                 <tabler-icon [icon]="icons.readyAll" aria-hidden="true" />
                 <span i18n="@@board.card.ready">Todo listo</span>
@@ -298,6 +311,31 @@ export class BoardCard {
     start: IconPlayerPlay,
     undo: IconArrowBackUp,
   };
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  // Ready and Undo replace each other, so the control that takes over gets the focus the clicked one had.
+  private focusAfterSwap: string | null = null;
+
+  constructor() {
+    afterRenderEffect(() => {
+      this.queued();
+      const action = this.focusAfterSwap;
+      this.focusAfterSwap = null;
+      if (action) {
+        this.host.nativeElement.querySelector<HTMLElement>(`[data-action="${action}"]`)?.focus();
+      }
+    });
+  }
+
+  protected markReady(emitter: { emit(id: string): void }, id: string, next: string): void {
+    this.focusAfterSwap = next;
+    emitter.emit(id);
+  }
+
+  protected undoReady(id: string, next: string): void {
+    this.focusAfterSwap = next;
+    this.undo.emit(id);
+  }
 
   protected readonly channel = computed(() => CHANNELS[this.order().channel]);
   protected readonly scheduledTime = computed(() => {

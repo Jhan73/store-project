@@ -225,6 +225,50 @@ describe('BoardCard', () => {
       expect(undo).toHaveBeenCalledWith('l1');
     });
 
+    describe('keyboard focus', () => {
+      const focused = () => document.activeElement?.getAttribute('data-testid');
+
+      it('moves focus from Ready to Undo and back for the whole order', () => {
+        render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] }));
+        button('ready-order')!.focus();
+        button('ready-order')!.click();
+
+        fixture.componentRef.setInput('queued', new Set(['o1']));
+        fixture.detectChanges();
+        expect(focused()).toBe('undo-order');
+
+        button('undo-order')!.click();
+        fixture.componentRef.setInput('queued', new Set());
+        fixture.detectChanges();
+        expect(focused()).toBe('ready-order');
+      });
+
+      it('moves focus from Ready to Undo and back for a line', () => {
+        render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] }));
+        button('ready-line-l1')!.focus();
+        button('ready-line-l1')!.click();
+
+        fixture.componentRef.setInput('queued', new Set(['l1']));
+        fixture.detectChanges();
+        expect(focused()).toBe('undo-line-l1');
+
+        button('undo-line-l1')!.click();
+        fixture.componentRef.setInput('queued', new Set());
+        fixture.detectChanges();
+        expect(focused()).toBe('ready-line-l1');
+      });
+
+      it('leaves focus alone when the queue changes without a click on this card', () => {
+        render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] }));
+        button('flag-l1')!.focus();
+
+        fixture.componentRef.setInput('queued', new Set(['o1']));
+        fixture.detectChanges();
+
+        expect(document.activeElement).not.toBe(button('undo-order'));
+      });
+    });
+
     it('treats the lines as ready while the whole order waits out the window', () => {
       render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] }), { queued: ['o1'] });
 
