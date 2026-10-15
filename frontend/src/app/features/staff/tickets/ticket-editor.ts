@@ -29,10 +29,13 @@ import { AuthStore } from '../../../core/auth/auth-store';
 import { formatMoney } from '../../../core/money/money';
 import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
+import { VoidDialog, type VoidChoice } from '../../../shared/ui/void-dialog/void-dialog';
 import { methodLabel } from '../register/payment-methods';
 import { ShiftStore } from '../register/shift-store';
 import { PaymentPanel } from './payment-panel';
 import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
+
+type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readonly kind: 'sale' };
 
 @Component({
   selector: 'app-ticket-editor',
@@ -47,6 +50,7 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
     TablerIconComponent,
     ProductConfigurator,
     PaymentPanel,
+    VoidDialog,
   ],
   providers: [TicketEditorStore, ShiftStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -300,6 +304,21 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
                   }
                   @if (payment.voided) {
                     <span class="detail" i18n="@@staff.tickets.payment.voided">Anulado</span>
+                  } @else if (store.isOpen() && canPay()) {
+                    <button
+                      pButton
+                      type="button"
+                      severity="danger"
+                      [attr.data-testid]="'void-payment-' + payment.id"
+                      [disabled]="!store.enabled() || store.pending.has('void-payment:' + payment.id)"
+                      pTooltip="Anular este pago con un motivo"
+                      i18n-pTooltip="@@staff.tickets.voidPayment.tooltip"
+                      tooltipPosition="top"
+                      (click)="startRegisterVoid({ kind: 'payment', id: payment.id })"
+                    >
+                      <tabler-icon [icon]="icons.void" aria-hidden="true" />
+                      <span i18n="@@staff.tickets.voidPayment">Anular pago</span>
+                    </button>
                   }
                 </li>
               }
@@ -387,6 +406,30 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
             @if (paying() && canPay()) {
               <app-payment-panel [ticket]="ticket" />
             }
+          } @else {
+            @if (ticket.saleVoid; as saleVoid) {
+              <p class="closed" data-testid="sale-voided">
+                <ng-container i18n="@@staff.tickets.saleVoided">Venta anulada:</ng-container>
+                {{ label(saleVoid.reasonCode) }}
+              </p>
+            } @else if (canPay()) {
+              <div class="actions">
+                <button
+                  pButton
+                  type="button"
+                  severity="danger"
+                  data-testid="void-sale"
+                  [disabled]="!store.enabled() || store.pending.has('void-sale')"
+                  pTooltip="Anular toda la venta con un motivo"
+                  i18n-pTooltip="@@staff.tickets.voidSale.tooltip"
+                  tooltipPosition="top"
+                  (click)="startRegisterVoid({ kind: 'sale' })"
+                >
+                  <tabler-icon [icon]="icons.void" aria-hidden="true" />
+                  <span i18n="@@staff.tickets.voidSale">Anular venta</span>
+                </button>
+              </div>
+            }
           }
         </section>
       </div>
@@ -471,6 +514,19 @@ import { MAX_LINE_QUANTITY, TicketEditorStore } from './ticket-editor-store';
         </button>
       </ng-template>
     </p-dialog>
+
+    <app-void-dialog
+      [header]="registerVoidTitle()"
+      [confirmLabel]="registerVoidTitle()"
+      [confirmTooltip]="registerVoidTooltip()"
+      [visible]="registerVoid() !== null"
+      [reasons]="store.reasons()"
+      [failed]="store.reasonsLoadFailed()"
+      [busy]="registerVoidBusy()"
+      (confirmed)="confirmRegisterVoid($event)"
+      (dismissed)="registerVoid.set(null)"
+      (retried)="store.loadVoidReasons()"
+    />
 
     <p-dialog
       header="Anular línea"
@@ -604,6 +660,24 @@ export class TicketEditor {
   protected readonly method = methodLabel;
   private readonly auth = inject(AuthStore);
   protected readonly paying = signal(false);
+  protected readonly registerVoid = signal<RegisterVoid | null>(null);
+  protected readonly registerVoidTitle = computed(() =>
+    this.registerVoid()?.kind === 'sale'
+      ? $localize`:@@staff.tickets.voidSale.title:Anular venta`
+      : $localize`:@@staff.tickets.voidPayment.title:Anular pago`,
+  );
+  protected readonly registerVoidTooltip = computed(() =>
+    this.registerVoid()?.kind === 'sale'
+      ? $localize`:@@staff.tickets.voidSale.confirm.tooltip:Anular toda la venta con el motivo elegido`
+      : $localize`:@@staff.tickets.voidPayment.confirm.tooltip:Anular este pago con el motivo elegido`,
+  );
+  protected readonly registerVoidBusy = computed(() => {
+    const target = this.registerVoid();
+    if (target === null) {
+      return false;
+    }
+    return this.store.pending.has(target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`);
+  });
   protected readonly canPay = computed(() => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN');
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
@@ -637,6 +711,21 @@ export class TicketEditor {
   protected closeAdd(visible: boolean): void {
     if (!visible) {
       this.configuring.set(null);
+    }
+  }
+
+  protected startRegisterVoid(target: RegisterVoid): void {
+    this.store.loadVoidReasons();
+    this.registerVoid.set(target);
+  }
+
+  protected confirmRegisterVoid(choice: VoidChoice): void {
+    const target = this.registerVoid();
+    const close = () => this.registerVoid.set(null);
+    if (target?.kind === 'payment') {
+      this.store.voidPayment(target.id, choice, close);
+    } else if (target?.kind === 'sale') {
+      this.store.voidSale(choice, close);
     }
   }
 

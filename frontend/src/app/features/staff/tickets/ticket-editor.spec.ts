@@ -966,6 +966,132 @@ describe('TicketEditor', () => {
     });
   });
 
+  describe('voiding a payment or a sale', () => {
+    const open = (overrides: Partial<Ticket> = {}) =>
+      ticket([line('l1', { state: 'SENT', sentAt: SENT_AT })], {
+        paid: pen('10.00'),
+        balance: pen('20.00'),
+        payments: [payment('p1', { paid: pen('10.00') })],
+        ...overrides,
+      });
+    const closedSale = (overrides: Partial<Ticket> = {}) =>
+      open({ status: 'CLOSED', paid: pen('30.00'), balance: pen('0.00'), ...overrides });
+    const reasons = [
+      { type: 'VOID', code: 'Error' },
+      { type: 'VOID', code: 'Other' },
+    ];
+    const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement;
+
+    it('offers to void a live payment of an open ticket, not a voided one', async () => {
+      const fixture = await ready(
+        open({
+          payments: [payment('p1'), payment('p2', { voided: true, voidReasonCode: 'Error' })],
+        }),
+      );
+
+      expect(find(fixture, 'void-payment-p1')).not.toBeNull();
+      expect(find(fixture, 'void-payment-p2')).toBeNull();
+      expect(text(fixture, 'payment-p2')).toContain('Anulado');
+    });
+
+    it('offers no payment or sale void to a server', async () => {
+      role.set('SERVER');
+      const openTicket = await ready(open());
+      expect(find(openTicket, 'void-payment-p1')).toBeNull();
+      openTicket.destroy();
+
+      const closed = await ready(closedSale());
+      expect(find(closed, 'void-sale')).toBeNull();
+    });
+
+    it('voids a payment with a reason and no idempotency key', async () => {
+      const fixture = await ready(open());
+      await press(fixture, 'void-payment-p1');
+      http.expectOne(REASONS).flush(reasons);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
+
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/payments/p1/void`);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.headers.has('Idempotency-Key')).toBe(false);
+      expect(request.request.body).toEqual({ reason: 'Error', note: null });
+      request.flush(
+        open({
+          paid: pen('0.00'),
+          balance: pen('30.00'),
+          payments: [payment('p1', { voided: true, voidReasonCode: 'Error' })],
+        }),
+      );
+      await fixture.whenStable();
+
+      expect(text(fixture, 'payment-p1')).toContain('Anulado');
+      expect(find(fixture, 'void-payment-p1')).toBeNull();
+      expect(inDialog('[data-testid="vd-confirm"]')).toBeNull();
+    });
+
+    it('offers the sale void on a closed ticket and voids it with a reason', async () => {
+      const fixture = await ready(closedSale());
+      await press(fixture, 'void-sale');
+      http.expectOne(REASONS).flush(reasons);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
+
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/void`);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.headers.has('Idempotency-Key')).toBe(false);
+      expect(request.request.body).toEqual({ reason: 'Error', note: null });
+      request.flush(
+        closedSale({
+          saleVoid: { reasonCode: 'Error', note: null, voidedAt: SENT_AT, voidedBy: 'u1' },
+        }),
+      );
+      await fixture.whenStable();
+
+      expect(text(fixture, 'sale-voided')).toContain('Venta anulada');
+      expect(find(fixture, 'void-sale')).toBeNull();
+    });
+
+    it('offers no sale void on an open ticket or on a sale already voided', async () => {
+      const openTicket = await ready(open());
+      expect(find(openTicket, 'void-sale')).toBeNull();
+      openTicket.destroy();
+
+      const voided = await ready(
+        closedSale({ saleVoid: { reasonCode: 'Error', note: null, voidedAt: SENT_AT, voidedBy: 'u1' } }),
+      );
+      expect(find(voided, 'void-sale')).toBeNull();
+    });
+
+    it('keeps the dialog and shows the refusal when the sale void is not permitted', async () => {
+      const fixture = await ready(closedSale());
+      const added = vi.spyOn(messages, 'add');
+      await press(fixture, 'void-sale');
+      http.expectOne(REASONS).flush(reasons);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
+
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+      http.expectOne(`${TICKET}/void`).flush(
+        { type: 'about:blank', status: 403, code: 'instore.sale-void-not-permitted', correlationId: 'c' },
+        { status: 403, statusText: 'Forbidden' },
+      );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(closedSale());
+      flushBoard([]);
+      await fixture.whenStable();
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      expect(inDialog('[data-testid="vd-confirm"]')).not.toBeNull();
+    });
+  });
+
   it('enables the actions again when a command ends while the reconnect read is in flight', async () => {
     const fixture = await ready();
     await press(fixture, 'send');
