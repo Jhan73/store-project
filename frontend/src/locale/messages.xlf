@@ -1155,7 +1155,7 @@
     </unit>
     <unit id="admin.home.title">
       <notes>
-        <note category="location">src/app/features/admin/admin-home.ts:7,8</note>
+        <note category="location">src/app/features/admin/admin-home.ts:12,13</note>
       </notes>
       <segment>
         <source>Administración</source>
@@ -1163,10 +1163,26 @@
     </unit>
     <unit id="admin.home.empty">
       <notes>
-        <note category="location">src/app/features/admin/admin-home.ts:8,11</note>
+        <note category="location">src/app/features/admin/admin-home.ts:13,16</note>
       </notes>
       <segment>
         <source>Aquí aparecerán las herramientas de administración.</source>
+      </segment>
+    </unit>
+    <unit id="admin.home.stock.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:18,19</note>
+      </notes>
+      <segment>
+        <source>Ver el inventario y registrar entradas y ajustes</source>
+      </segment>
+    </unit>
+    <unit id="admin.home.stock">
+      <notes>
+        <note category="location">src/app/features/admin/admin-home.ts:23,27</note>
+      </notes>
+      <segment>
+        <source>Inventario</source>
       </segment>
     </unit>
     <unit id="admin.audit.detail.when">
@@ -1396,6 +1412,8 @@
         <note category="location">src/app/features/admin/catalog/product-list.ts:75</note>
         <note category="location">src/app/features/admin/settings/reason-list.ts:60</note>
         <note category="location">src/app/features/admin/settings/settings-form.ts:163</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:151</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:112</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
         <note category="location">src/app/features/staff/board/board.ts:157</note>
@@ -3835,6 +3853,814 @@
         <source>Agregar una zona de entrega nueva</source>
       </segment>
     </unit>
+    <unit id="admin.stock.adjust.title">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:83,84</note>
+      </notes>
+      <segment>
+        <source>Ajustar stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.failed">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:94,96</note>
+      </notes>
+      <segment>
+        <source>No se pudieron cargar los motivos.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:101,102</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar los motivos de ajuste</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.retry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:106,108</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.loading">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:110,112</note>
+      </notes>
+      <segment>
+        <source>Cargando los motivos…</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.noReasons">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:114,117</note>
+      </notes>
+      <segment>
+        <source> No hay motivos de ajuste configurados. Agrégalos en Configuración, en motivos. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.delta">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:119,121</note>
+      </notes>
+      <segment>
+        <source>Cambio de unidades</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.delta.hint">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:130,132</note>
+      </notes>
+      <segment>
+        <source> Un número negativo descuenta unidades (por ejemplo -3) y uno positivo las suma. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.delta.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:134,136</note>
+      </notes>
+      <segment>
+        <source> Escribe un número entero distinto de cero. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.reason">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:139,141</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.reason.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:152,153</note>
+      </notes>
+      <segment>
+        <source>Elige un motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.reason.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:160,163</note>
+      </notes>
+      <segment>
+        <source>Elige un motivo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.note">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:164,166</note>
+      </notes>
+      <segment>
+        <source>Nota</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.noteRequired">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:177,179</note>
+      </notes>
+      <segment>
+        <source> Para el motivo «Otro» la nota es obligatoria. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.available">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:184,185</note>
+      </notes>
+      <segment>
+        <source> Disponible ahora: <ph id="0" equiv="INTERPOLATION" disp="{{ available() }}"/> </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:197,198</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin ajustar el stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:202,204</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:211,212</note>
+      </notes>
+      <segment>
+        <source>Aplicar este cambio de unidades al stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.save">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:218,220</note>
+      </notes>
+      <segment>
+        <source>Ajustar stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.title">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:58,59</note>
+      </notes>
+      <segment>
+        <source>Registrar entrada</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.quantity">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:69,71</note>
+      </notes>
+      <segment>
+        <source>Unidades que entran</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.quantity.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:81,84</note>
+      </notes>
+      <segment>
+        <source> Escribe un número entero entre 1 y 1000000. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.note">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:86,88</note>
+      </notes>
+      <segment>
+        <source>Nota (opcional)</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:105,106</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin registrar la entrada</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:110,112</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:118,119</note>
+      </notes>
+      <segment>
+        <source>Sumar estas unidades al stock del producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.save">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:125,127</note>
+      </notes>
+      <segment>
+        <source>Registrar entrada</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.entry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:6</note>
+      </notes>
+      <segment>
+        <source>Entrada</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.adjustment">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:8</note>
+      </notes>
+      <segment>
+        <source>Ajuste</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.sale">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:10</note>
+      </notes>
+      <segment>
+        <source>Venta</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.return">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:12</note>
+      </notes>
+      <segment>
+        <source>Devolución</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.reserve">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:14</note>
+      </notes>
+      <segment>
+        <source>Reserva</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.commit">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:16</note>
+      </notes>
+      <segment>
+        <source>Confirmación</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.release">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:18</note>
+      </notes>
+      <segment>
+        <source>Liberación</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.expire">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:20</note>
+      </notes>
+      <segment>
+        <source>Vencimiento</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.title">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:54,56</note>
+      </notes>
+      <segment>
+        <source>Inventario</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.lowOnly">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:64,66</note>
+      </notes>
+      <segment>
+        <source>Solo stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.new.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:71,72</note>
+      </notes>
+      <segment>
+        <source>Empezar a controlar el stock de un producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.new">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:76,80</note>
+      </notes>
+      <segment>
+        <source>Controlar un producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.loading">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:82,84</note>
+      </notes>
+      <segment>
+        <source>Cargando…</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.error">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:86,88</note>
+      </notes>
+      <segment>
+        <source>No se pudo cargar el inventario.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:93,94</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar el inventario</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.retry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:98,100</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.emptyLow">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:106,107</note>
+      </notes>
+      <segment>
+        <source>Ningún producto tiene el stock bajo.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.empty">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:109,110</note>
+      </notes>
+      <segment>
+        <source> Todavía no hay productos con control de stock. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:114</note>
+      </notes>
+      <segment>
+        <source>Inventario de productos</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.product">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:118,119</note>
+      </notes>
+      <segment>
+        <source>Producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.available">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:119,120</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.onHand">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:120,121</note>
+      </notes>
+      <segment>
+        <source>En existencia</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.reserved">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:121,122</note>
+      </notes>
+      <segment>
+        <source>Reservado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.threshold">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:122,123</note>
+      </notes>
+      <segment>
+        <source>Umbral de stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.state">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:123,124</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.tracked">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:124,125</note>
+      </notes>
+      <segment>
+        <source>Controlado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.actions">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:125,127</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.low">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:140,141</note>
+      </notes>
+      <segment>
+        <source>Stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.normal">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:143,145</note>
+      </notes>
+      <segment>
+        <source>Normal</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:163,164</note>
+      </notes>
+      <segment>
+        <source>Registrar unidades que entraron de un proveedor</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.entry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:168,169</note>
+      </notes>
+      <segment>
+        <source>Entrada</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:177,178</note>
+      </notes>
+      <segment>
+        <source>Corregir las unidades de este producto con un motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.adjust">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:182,183</note>
+      </notes>
+      <segment>
+        <source>Ajustar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:192,193</note>
+      </notes>
+      <segment>
+        <source>Ver los movimientos de este producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:197,198</note>
+      </notes>
+      <segment>
+        <source>Movimientos</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.threshold.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:207,208</note>
+      </notes>
+      <segment>
+        <source>Cambiar el umbral de stock bajo de este producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.threshold">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:212,213</note>
+      </notes>
+      <segment>
+        <source>Umbral</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.title">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:47,48</note>
+      </notes>
+      <segment>
+        <source>Movimientos de stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.loading">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:59,62</note>
+      </notes>
+      <segment>
+        <source>Cargando…</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.error">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:63,65</note>
+      </notes>
+      <segment>
+        <source>No se pudieron cargar los movimientos.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:70,71</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar los movimientos</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.retry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:75,77</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.empty">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:83,85</note>
+      </notes>
+      <segment>
+        <source> Este producto todavía no tiene movimientos. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.tableScroll">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:86</note>
+      </notes>
+      <segment>
+        <source>Movimientos de stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.caption">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:89,90</note>
+      </notes>
+      <segment>
+        <source> Movimientos del producto, del más reciente al más antiguo </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.when">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:93,94</note>
+      </notes>
+      <segment>
+        <source>Cuándo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.type">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:94,95</note>
+      </notes>
+      <segment>
+        <source>Tipo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.onHand">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:95,96</note>
+      </notes>
+      <segment>
+        <source>En existencia</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.reserved">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:96,97</note>
+      </notes>
+      <segment>
+        <source>Reservado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.reason">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:97,98</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.note">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:98,99</note>
+      </notes>
+      <segment>
+        <source>Nota</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.col.actor">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:99,101</note>
+      </notes>
+      <segment>
+        <source>Quién</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.close.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:138,139</note>
+      </notes>
+      <segment>
+        <source>Cerrar los movimientos</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movements.close">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-movements-dialog.ts:143,145</note>
+      </notes>
+      <segment>
+        <source>Cerrar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.help">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:66,69</note>
+      </notes>
+      <segment>
+        <source> Al controlar un producto sin unidades disponibles, deja de estar disponible en el menú. Marcarlo como agotado a mano sigue siendo independiente. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.product">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:72,73</note>
+      </notes>
+      <segment>
+        <source>Producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.failed">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:77,79</note>
+      </notes>
+      <segment>
+        <source>No se pudo cargar la lista de productos con stock.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:84,85</note>
+      </notes>
+      <segment>
+        <source>Volver a cargar los productos con stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.retry">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:89,91</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.none">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:94,96</note>
+      </notes>
+      <segment>
+        <source> Todos los productos del catálogo ya tienen control de stock. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.productLabel">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:99,102</note>
+      </notes>
+      <segment>
+        <source>Producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.product.placeholder">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:113,114</note>
+      </notes>
+      <segment>
+        <source>Elige un producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.product.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:122,125</note>
+      </notes>
+      <segment>
+        <source>Elige un producto.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.threshold">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:127,129</note>
+      </notes>
+      <segment>
+        <source>Avisar cuando queden</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.threshold.hint">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:138,140</note>
+      </notes>
+      <segment>
+        <source> Unidades disponibles o menos; con 0 solo avisa cuando se agota. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.threshold.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:142,145</note>
+      </notes>
+      <segment>
+        <source> Escribe un número entero entre 0 y 1000000. </source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.cancel.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:154,155</note>
+      </notes>
+      <segment>
+        <source>Cerrar sin guardar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.cancel">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:159,161</note>
+      </notes>
+      <segment>
+        <source>Cancelar</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.create.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:193</note>
+      </notes>
+      <segment>
+        <source>Empezar a controlar el stock de este producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.edit.tooltip">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:194</note>
+      </notes>
+      <segment>
+        <source>Guardar el nuevo umbral de stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.create">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:197</note>
+      </notes>
+      <segment>
+        <source>Controlar stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.edit">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:198</note>
+      </notes>
+      <segment>
+        <source>Guardar umbral</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.title.edit">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:224</note>
+      </notes>
+      <segment>
+        <source>Umbral de stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.title.create">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:225</note>
+      </notes>
+      <segment>
+        <source>Controlar un producto</source>
+      </segment>
+    </unit>
     <unit id="admin.tables.title">
       <notes>
         <note category="location">src/app/features/admin/tables/table-list.ts:45,47</note>
@@ -4933,7 +5759,7 @@
     </unit>
     <unit id="staff.quickSale.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:49,52</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:49,51</note>
       </notes>
       <segment>
         <source>Venta rápida</source>
@@ -4981,7 +5807,7 @@
     </unit>
     <unit id="staff.quickSale.openShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:82,86</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:82,85</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -5029,7 +5855,7 @@
     </unit>
     <unit id="staff.quickSale.ticket">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:114,117</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:114,116</note>
       </notes>
       <segment>
         <source>Ver la cuenta</source>
@@ -5077,7 +5903,7 @@
     </unit>
     <unit id="staff.quickSale.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:159,161</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:159,160</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -5093,7 +5919,7 @@
     </unit>
     <unit id="staff.quickSale.cart">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:171,173</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:171,172</note>
       </notes>
       <segment>
         <source>Venta</source>
@@ -5357,7 +6183,7 @@
     </unit>
     <unit id="staff.register.movements.noReasons">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:139,143</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:139,142</note>
       </notes>
       <segment>
         <source>No hay motivos de salida configurados. Pide a un administrador que los agregue.</source>
@@ -5373,7 +6199,7 @@
     </unit>
     <unit id="staff.register.movements.noteLabel">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:157,160</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:157,159</note>
       </notes>
       <segment>
         <source>Nota</source>
@@ -5405,7 +6231,7 @@
     </unit>
     <unit id="staff.register.movements.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:198,203</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:198,202</note>
       </notes>
       <segment>
         <source>Registrar</source>
@@ -5565,7 +6391,7 @@
     </unit>
     <unit id="staff.register.shifts.empty">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:54,57</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:54,56</note>
       </notes>
       <segment>
         <source> No hay turnos abiertos. </source>
@@ -5669,7 +6495,7 @@
     </unit>
     <unit id="staff.register.force.cancel">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:138,141</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:138,140</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -5749,7 +6575,7 @@
     </unit>
     <unit id="staff.register.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:30,33</note>
+        <note category="location">src/app/features/staff/register/register.ts:30,32</note>
       </notes>
       <segment>
         <source>Caja</source>
@@ -5909,7 +6735,7 @@
     </unit>
     <unit id="staff.register.none.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:144,147</note>
+        <note category="location">src/app/features/staff/register/register.ts:144,146</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -6285,7 +7111,7 @@
     </unit>
     <unit id="staff.tickets.pay.openShift">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:73,77</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:73,76</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -6341,7 +7167,7 @@
     </unit>
     <unit id="staff.tickets.pay.submit">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:165,169</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:165,168</note>
       </notes>
       <segment>
         <source>Registrar cobro</source>
@@ -7029,7 +7855,7 @@
     </unit>
     <unit id="workspace.nav.staff">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:27</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:28</note>
       </notes>
       <segment>
         <source>Operación</source>
@@ -7037,7 +7863,7 @@
     </unit>
     <unit id="workspace.nav.floor">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:34</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:35</note>
       </notes>
       <segment>
         <source>Salón</source>
@@ -7045,7 +7871,7 @@
     </unit>
     <unit id="workspace.nav.board">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:40</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:41</note>
       </notes>
       <segment>
         <source>Tablero</source>
@@ -7053,7 +7879,7 @@
     </unit>
     <unit id="workspace.nav.register">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:46</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:47</note>
       </notes>
       <segment>
         <source>Caja</source>
@@ -7061,7 +7887,7 @@
     </unit>
     <unit id="workspace.nav.quickSale">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:53</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:54</note>
       </notes>
       <segment>
         <source>Venta rápida</source>
@@ -7069,7 +7895,7 @@
     </unit>
     <unit id="workspace.nav.shifts">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:59</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:60</note>
       </notes>
       <segment>
         <source>Turnos abiertos</source>
@@ -7077,7 +7903,7 @@
     </unit>
     <unit id="workspace.nav.availability">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:65</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:66</note>
       </notes>
       <segment>
         <source>Disponibilidad</source>
@@ -7085,7 +7911,7 @@
     </unit>
     <unit id="workspace.nav.admin">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:71</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:72</note>
       </notes>
       <segment>
         <source>Administración</source>
@@ -7093,15 +7919,23 @@
     </unit>
     <unit id="workspace.nav.catalog">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:78</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:79</note>
       </notes>
       <segment>
         <source>Catálogo</source>
       </segment>
     </unit>
+    <unit id="workspace.nav.stock">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:85</note>
+      </notes>
+      <segment>
+        <source>Inventario</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.settings">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:84</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:91</note>
       </notes>
       <segment>
         <source>Configuración</source>
@@ -7109,7 +7943,7 @@
     </unit>
     <unit id="workspace.nav.tables">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:90</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:97</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -7117,7 +7951,7 @@
     </unit>
     <unit id="workspace.nav.users">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:96</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:103</note>
       </notes>
       <segment>
         <source>Personal</source>
@@ -7125,7 +7959,7 @@
     </unit>
     <unit id="workspace.nav.audit">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-nav.ts:102</note>
+        <note category="location">src/app/features/workspace/workspace-nav.ts:109</note>
       </notes>
       <segment>
         <source>Auditoría</source>
