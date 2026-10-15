@@ -54,6 +54,12 @@ class BoardController {
 		return AllDayResponse.from(queries.allDay(station));
 	}
 
+	@GetMapping("/display")
+	@PreAuthorize(STAFF)
+	DisplayResponse display() {
+		return DisplayResponse.from(queries.display());
+	}
+
 	@PostMapping("/orders/{id}/start")
 	@PreAuthorize(STAFF)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-already-started" })

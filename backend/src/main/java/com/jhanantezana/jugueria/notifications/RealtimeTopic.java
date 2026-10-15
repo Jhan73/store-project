@@ -10,6 +10,7 @@ public enum RealtimeTopic {
 	CATALOG("catalog", true), STORE_STATUS("store-status", true),
 	BOARD("board", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
 	TABLES("tables", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
+	DISPLAY("display", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
 
 	/** Tells every task to act on a user's sessions; nobody subscribes to it. */
 	SESSIONS("sessions", false);
