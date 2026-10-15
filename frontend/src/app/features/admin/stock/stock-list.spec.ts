@@ -280,6 +280,61 @@ describe('StockList', () => {
     expect(rows(host)[0]).not.toContain('Stock bajo');
   });
 
+  describe('adjusting', () => {
+    const REASONS = `${API}/reasons?type=STOCK_ADJUSTMENT`;
+    const dialog = () => document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+
+    async function openAdjustment(items: StockItem[]) {
+      const context = await render(items);
+      click(context.host, `adjust-${PAPAYA}`);
+      await context.fixture.whenStable();
+      context.http.expectOne(REASONS).flush([{ type: 'STOCK_ADJUSTMENT', code: 'Damaged' }]);
+      await context.fixture.whenStable();
+      typeNumber(dialog(), 'adjust-delta', '-2');
+      await chooseOption(context.fixture, dialog(), 'adjust-reason', 'Damaged');
+      return context;
+    }
+
+    it('adjusts an item from its row and shows the new quantities', async () => {
+      const { fixture, host, http } = await openAdjustment([stock(PAPAYA, 6)]);
+
+      dialog().querySelector<HTMLButtonElement>('[data-testid="adjust-save"]')!.click();
+      const request = http.expectOne(`${STOCK}/${PAPAYA}/adjustments`);
+      expect(request.request.body).toEqual({ quantityDelta: -2, reason: 'Damaged', note: null });
+      request.flush(stock(PAPAYA, 4));
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 4)]);
+      await fixture.whenStable();
+
+      expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+      expect(rows(host)[0]).toContain('4');
+      expect(rows(host)[0]).toContain('Stock bajo');
+    });
+
+    it('re-reads the stock and keeps the dialog open when there is not enough', async () => {
+      const { fixture, host, http } = await openAdjustment([stock(PAPAYA, 6)]);
+
+      dialog().querySelector<HTMLButtonElement>('[data-testid="adjust-save"]')!.click();
+      http.expectOne(`${STOCK}/${PAPAYA}/adjustments`).flush(
+        {
+          type: 'about:blank',
+          status: 409,
+          code: 'inventory.insufficient-stock',
+          correlationId: 'c',
+          productId: PAPAYA,
+          available: 1,
+        },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+      http.expectOne(STOCK).flush([stock(PAPAYA, 1)]);
+      await fixture.whenStable();
+
+      expect(dialog()).not.toBeNull();
+      expect(rows(host)[0]).toContain('1');
+    });
+  });
+
   it('shows an error with a retry when the stock cannot be read', async () => {
     TestBed.configureTestingModule({
       providers: [

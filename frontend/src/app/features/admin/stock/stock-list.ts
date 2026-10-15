@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signa
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgModel } from '@angular/forms';
 import {
+  IconAdjustmentsHorizontal,
   IconAlertTriangle,
   IconPackageImport,
   IconPencil,
@@ -17,6 +18,7 @@ import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 import { shortId } from '../audit/audit-labels';
+import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { StockApi } from './stock-api';
 import { StockEntryDialog } from './stock-entry-dialog';
 import { StockTrackDialog } from './stock-track-dialog';
@@ -35,6 +37,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
   imports: [
     FormsModule,
     ButtonDirective,
+    StockAdjustmentDialog,
     StockEntryDialog,
     StockTrackDialog,
     TableScroll,
@@ -165,6 +168,20 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                         pButton
                         type="button"
                         severity="secondary"
+                        [size]="'small'"
+                        [attr.data-testid]="'adjust-' + row.item.productId"
+                        (click)="openAdjustment(row.item)"
+                        pTooltip="Corregir las unidades de este producto con un motivo"
+                        i18n-pTooltip="@@admin.stock.adjust.tooltip"
+                        tooltipPosition="top"
+                      >
+                        <tabler-icon [icon]="icons.adjust" aria-hidden="true" />
+                        <span i18n="@@admin.stock.adjust">Ajustar</span>
+                      </button>
+                      <button
+                        pButton
+                        type="button"
+                        severity="secondary"
                         [outlined]="true"
                         [size]="'small'"
                         [attr.data-testid]="'threshold-' + row.item.productId"
@@ -185,6 +202,15 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
         }
       }
     }
+
+    <app-stock-adjustment-dialog
+      [visible]="adjustOpen()"
+      [item]="adjustTarget()"
+      [productName]="adjustName()"
+      (saved)="adjustSaved()"
+      (stale)="load(true)"
+      (dismissed)="closeAdjustment()"
+    />
 
     <app-stock-entry-dialog
       [visible]="entryOpen()"
@@ -214,9 +240,12 @@ export class StockList {
     create: IconPlus,
     edit: IconPencil,
     entry: IconPackageImport,
+    adjust: IconAdjustmentsHorizontal,
   };
   protected readonly status = signal<Status>('loading');
   protected readonly lowOnly = signal(false);
+  protected readonly adjustOpen = signal(false);
+  protected readonly adjustTarget = signal<StockItem | null>(null);
   protected readonly entryOpen = signal(false);
   protected readonly entryTarget = signal<StockItem | null>(null);
   protected readonly trackOpen = signal(false);
@@ -238,6 +267,10 @@ export class StockList {
     return this.lowOnly() ? rows : rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   });
 
+  protected readonly adjustName = computed(() => {
+    const target = this.adjustTarget();
+    return target ? this.nameOf(target.productId) : '';
+  });
   protected readonly entryName = computed(() => {
     const target = this.entryTarget();
     return target ? this.nameOf(target.productId) : '';
@@ -259,6 +292,20 @@ export class StockList {
   protected setLowOnly(lowOnly: boolean): void {
     this.lowOnly.set(lowOnly);
     this.load();
+  }
+
+  protected openAdjustment(item: StockItem): void {
+    this.adjustTarget.set(item);
+    this.adjustOpen.set(true);
+  }
+
+  protected closeAdjustment(): void {
+    this.adjustOpen.set(false);
+  }
+
+  protected adjustSaved(): void {
+    this.closeAdjustment();
+    this.load(true);
   }
 
   protected openEntry(item: StockItem): void {
@@ -317,7 +364,7 @@ export class StockList {
     this.loadProducts();
   }
 
-  private load(quiet = false): void {
+  protected load(quiet = false): void {
     const request = ++this.lastRequest;
     if (!quiet) {
       this.status.set('loading');
