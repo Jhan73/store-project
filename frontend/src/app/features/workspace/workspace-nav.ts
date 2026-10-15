@@ -1,6 +1,7 @@
 import {
   IconAdjustments,
   IconBook2,
+  IconCashRegister,
   IconHistory,
   IconHome,
   IconLayoutGrid,
@@ -37,6 +38,13 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     label: $localize`:@@workspace.nav.board:Tablero`,
     icon: IconToolsKitchen2,
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register',
+    label: $localize`:@@workspace.nav.register:Caja`,
+    icon: IconCashRegister,
+    exact: true,
+    roles: ['CASHIER', 'ADMIN'],
   },
   {
     path: '/staff/availability',

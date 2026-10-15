@@ -220,6 +220,37 @@ describe('RegisterApi', () => {
     request.flush({}, { status: 201, statusText: 'Created' });
   });
 
+  it('reads the store time zone from the board thresholds', () => {
+    let zone: string | undefined;
+    api.timeZone().subscribe((value) => (zone = value));
+
+    http
+      .expectOne(`${BASE}/store/board-thresholds`)
+      .flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+
+    expect(zone).toBe('America/Lima');
+  });
+
+  it('takes the store currency from the menu prices', () => {
+    let currency: string | null | undefined;
+    api.currency().subscribe((value) => (currency = value));
+
+    http.expectOne(`${BASE}/catalog/menu`).flush({
+      categories: [{ id: 'c', products: [{ id: 'p', price: pen('9.00') }] }],
+    });
+
+    expect(currency).toBe('PEN');
+  });
+
+  it('has no currency to offer while the menu has no products', () => {
+    let currency: string | null | undefined;
+    api.currency().subscribe((value) => (currency = value));
+
+    http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+    expect(currency).toBeNull();
+  });
+
   it('reads every page of the staff accounts', () => {
     let names: unknown;
     api.staffAccounts().subscribe((value) => (names = value));

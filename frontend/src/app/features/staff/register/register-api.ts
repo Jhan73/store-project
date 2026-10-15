@@ -3,10 +3,12 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, expand, map, Observable, of, reduce, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
+  BoardThresholds,
   CashMovement,
   CashMovementRequest,
   CloseShiftRequest,
   ForceCloseShiftRequest,
+  Menu,
   Money,
   OpenShiftRequest,
   QuickSaleItem,
@@ -122,6 +124,19 @@ export class RegisterApi {
 
   quickSale(request: QuickSaleRequest, key: string): Observable<Ticket> {
     return this.http.post<Ticket>(`${this.base}/quick-sales`, request, idempotencyKey(key));
+  }
+
+  timeZone(): Observable<string> {
+    return this.http
+      .get<BoardThresholds>(`${this.base}/store/board-thresholds`)
+      .pipe(map((thresholds) => thresholds.timeZone));
+  }
+
+  // Floor staff cannot read the store settings; every price carries the store currency.
+  currency(): Observable<string | null> {
+    return this.http
+      .get<Menu>(`${this.base}/catalog/menu`)
+      .pipe(map((menu) => menu.categories.flatMap((category) => category.products)[0]?.price.currency ?? null));
   }
 
   // The shift list only carries the cashier's id; the accounts turn it into an email.

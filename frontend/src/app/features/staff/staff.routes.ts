@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
+import { roleGuard } from '../../core/auth/role-guard';
 import { AvailabilityApi } from './availability/availability-api';
 import { BoardApi } from './board/board-api';
+import { RegisterApi } from './register/register-api';
 import { TicketsApi } from './tickets/tickets-api';
 
 export const STAFF_ROUTES: Routes = [
@@ -11,8 +13,13 @@ export const STAFF_ROUTES: Routes = [
       { path: '', pathMatch: 'full', loadComponent: () => import('./staff-home').then((m) => m.StaffHome) },
       {
         path: '',
-        providers: [TicketsApi],
+        providers: [TicketsApi, RegisterApi],
         children: [
+          {
+            path: 'register',
+            canMatch: [roleGuard('CASHIER', 'ADMIN')],
+            loadComponent: () => import('./register/register').then((m) => m.Register),
+          },
           {
             path: 'tables',
             loadComponent: () => import('./tables/table-grid').then((m) => m.TableGrid),
