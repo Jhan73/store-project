@@ -80,7 +80,7 @@ export class BoardStore {
     const clock = setInterval(() => this.now.set(Date.now()), CLOCK_TICK_MS);
     const refresh = setInterval(() => {
       if (this.realtime.isConnected()) {
-        this.load();
+        this.load(true);
       }
     }, REFRESH_MS);
     const page = inject(DOCUMENT).defaultView;
@@ -148,7 +148,8 @@ export class BoardStore {
     this.currentView.set(view);
   }
 
-  load(): void {
+  // A background read that fails keeps the last good data and tries again on the next tick.
+  load(background = false): void {
     const request = ++this.lastRequest;
     const read = this.sync.begin();
     forkJoin({ tickets: this.api.tickets(), ready: this.api.ready(), allDay: this.api.allDay() })
@@ -169,7 +170,7 @@ export class BoardStore {
           this.sync.applied(read);
         },
         error: (error: unknown) => {
-          if (request === this.lastRequest) {
+          if (request === this.lastRequest && !background) {
             this.loadFailed.set(true);
             this.sync.failed();
             this.notifier.show(error);

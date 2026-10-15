@@ -301,6 +301,28 @@ describe('BoardStore', () => {
     expect(store.cards().map((card) => card.order.id)).toEqual(['fired']);
   });
 
+  it('keeps the last data, the actions and the silence when a background re-read fails, then retries', () => {
+    vi.useFakeTimers();
+    create();
+    answer();
+    connect([order({ id: 'kept' })]);
+    const toasts = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+    vi.advanceTimersByTime(60_000);
+    http.expectOne(TICKETS).flush(serverError, failure);
+    http.match(READY);
+    http.match(ALL_DAY);
+
+    expect(store.failed()).toBe(false);
+    expect(store.enabled()).toBe(true);
+    expect(toasts).not.toHaveBeenCalled();
+    expect(store.cards().map((card) => card.order.id)).toEqual(['kept']);
+
+    vi.advanceTimersByTime(60_000);
+    answer([order({ id: 'fresh' })]);
+    expect(store.cards().map((card) => card.order.id)).toEqual(['fresh']);
+  });
+
   it('does not poll while disconnected', () => {
     vi.useFakeTimers();
     create();
