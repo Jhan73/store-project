@@ -8,6 +8,7 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
+import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
 import { emptyAllDay, line, marker, minutesAgo, order } from '../../../testing/board-fixtures';
 import { BoardApi } from './board-api';
 import { BoardSound } from './board-sound';
@@ -34,6 +35,7 @@ const serverError = { type: 'about:blank', status: 500, code: 'common.internal-e
 const failure = { status: 500, statusText: 'Server Error' };
 
 describe('Board', () => {
+  let wakeLock: { start: ReturnType<typeof vi.fn> };
   let sound: { enabled: WritableSignal<boolean>; unsupported: WritableSignal<boolean>; enable: ReturnType<typeof vi.fn>; play: ReturnType<typeof vi.fn> };
   let realtime: FakeRealtime;
   let http: HttpTestingController;
@@ -50,8 +52,15 @@ describe('Board', () => {
       }),
       play: vi.fn(),
     };
+    wakeLock = { start: vi.fn() };
     TestBed.overrideComponent(Board, {
-      set: { providers: [BoardStore, { provide: BoardSound, useValue: sound }] },
+      set: {
+        providers: [
+          BoardStore,
+          { provide: BoardSound, useValue: sound },
+          { provide: ScreenWakeLock, useValue: wakeLock },
+        ],
+      },
     });
     TestBed.configureTestingModule({
       providers: [
@@ -147,6 +156,12 @@ describe('Board', () => {
 
     expect(query(fixture, 'view-tickets')!.textContent).toContain('2');
     expect(query(fixture, 'view-ready')!.textContent).toContain('1');
+  });
+
+  it('keeps the screen on while the board is open', async () => {
+    await live();
+
+    expect(wakeLock.start).toHaveBeenCalledTimes(1);
   });
 
   describe('sound', () => {

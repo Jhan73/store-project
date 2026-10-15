@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Tooltip } from 'primeng/tooltip';
+import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
 import { BoardAllDayView } from '../../../shared/ui/board-all-day/board-all-day';
 import { BoardCard } from '../../../shared/ui/board-card/board-card';
 import { BoardSound } from './board-sound';
@@ -18,7 +19,7 @@ import { BoardStore } from './board-store';
 @Component({
   selector: 'app-board',
   imports: [BoardAllDayView, BoardCard, ButtonDirective, TablerIconComponent, Tooltip],
-  providers: [BoardStore, BoardSound],
+  providers: [BoardStore, BoardSound, ScreenWakeLock],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './board.scss',
   template: `
@@ -182,6 +183,10 @@ export class Board {
     sound: IconVolume,
     soundOff: IconVolumeOff,
   };
+
+  constructor() {
+    inject(ScreenWakeLock).start();
+  }
 
   protected enableSound(): void {
     void this.sound.enable();
