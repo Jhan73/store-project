@@ -187,6 +187,9 @@ describe('staff and admin area', () => {
     });
     http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
     await harness.fixture.whenStable();
+    http.expectOne('http://api.test/api/v1/shifts/s1/cash-movements').flush([]);
+    http.expectOne('http://api.test/api/v1/reasons?type=CASH_OUT').flush([]);
+    await harness.fixture.whenStable();
 
     const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
       link.getAttribute('href'),

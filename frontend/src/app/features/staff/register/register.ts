@@ -6,11 +6,12 @@ import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import { formatMoney, parseAmount } from '../../../core/money/money';
 import { amountValidator } from '../../admin/amount-validator';
+import { CashMovements } from './cash-movements';
 import { ShiftStore } from './shift-store';
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, ButtonDirective, InputText, Tooltip, TablerIconComponent],
+  imports: [ReactiveFormsModule, ButtonDirective, InputText, Tooltip, TablerIconComponent, CashMovements],
   providers: [ShiftStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './register.scss',
@@ -53,6 +54,7 @@ import { ShiftStore } from './shift-store';
           El efectivo esperado se muestra al cerrar el turno, después de contar la caja.
         </p>
       </section>
+      <app-cash-movements />
     } @else {
       <form data-testid="open-form" (submit)="open($event)" [attr.aria-labelledby]="'open-heading'">
         <h2 id="open-heading" i18n="@@staff.register.none.title">No hay un turno abierto</h2>

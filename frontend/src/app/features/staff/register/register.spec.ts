@@ -52,7 +52,16 @@ describe('Register', () => {
       });
     }
     await fixture.whenStable();
+    if (current) {
+      flushPanels();
+      await fixture.whenStable();
+    }
     return fixture;
+  }
+
+  function flushPanels() {
+    http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([]);
+    http.expectOne(`${BASE}/reasons?type=CASH_OUT`).flush([]);
   }
 
   it('offers to open a shift when none is open', async () => {
@@ -75,6 +84,8 @@ describe('Register', () => {
     expect(request.request.body).toEqual({ openingFloat: pen('50.00') });
     expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
     request.flush(shift(), { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+    flushPanels();
     await fixture.whenStable();
 
     expect(find(fixture, 'open-form')).toBeNull();
@@ -117,7 +128,18 @@ describe('Register', () => {
     http.expectOne(`${BASE}/shifts/current`).flush(shift());
     http.expectOne(`${BASE}/store/board-thresholds`).flush({ timeZone: 'America/Lima' });
     await fixture.whenStable();
+    flushPanels();
 
     expect(find(fixture, 'shift-summary')).not.toBeNull();
+  });
+
+  it('shows the cash movements of the open shift and none without a shift', async () => {
+    const open = await openScreen(shift());
+    expect(host(open).querySelector('app-cash-movements')).not.toBeNull();
+  });
+
+  it('shows no cash movements panel without a shift', async () => {
+    const none = await openScreen(null);
+    expect(host(none).querySelector('app-cash-movements')).toBeNull();
   });
 });

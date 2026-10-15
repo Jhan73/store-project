@@ -1,16 +1,30 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import type { Shift } from '../../../core/api/api-types';
+import type {
+  ActiveReason,
+  CashMovement,
+  CashMovementRequest,
+  Shift,
+} from '../../../core/api/api-types';
+import { ApiError } from '../../../core/errors/api-error';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { RegisterApi } from './register-api';
 
+const SHIFT_STATE_CODES = ['instore.shift-closing', 'instore.shift-closed', 'instore.no-open-shift'];
+
+function isShiftStateError(error: unknown): boolean {
+  return error instanceof ApiError && error.code !== null && SHIFT_STATE_CODES.includes(error.code);
+}
+
 // Provided by each screen that needs the cashier's shift; there is no realtime topic, so it re-reads after its own commands.
 @Injectable()
 export class ShiftStore {
   private readonly api = inject(RegisterApi);
+  private readonly reasonsApi = inject(ReasonsApi);
   private readonly notifier = inject(ErrorNotifier);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
@@ -20,8 +34,15 @@ export class ShiftStore {
   private readonly loadFailed = signal(false);
   private readonly storeCurrency = signal<string | null>(null);
   private readonly zone = signal<string | null>(null);
+  private readonly movementList = signal<readonly CashMovement[]>([]);
+  private readonly reasonList = signal<ActiveReason[] | null>(null);
+  private readonly reasonsFailed = signal(false);
   private lastShiftRequest = 0;
+  private lastMovementsRequest = 0;
 
+  readonly movements = this.movementList.asReadonly();
+  readonly reasons = this.reasonList.asReadonly();
+  readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   readonly shift = this.current.asReadonly();
   readonly loaded = this.isLoaded.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
@@ -84,6 +105,73 @@ export class ShiftStore {
           this.pending.delete('open');
           this.notifier.show(error);
           this.load();
+        },
+      });
+  }
+
+  loadMovements(): void {
+    const shift = this.current();
+    if (shift === null) {
+      return;
+    }
+    const request = ++this.lastMovementsRequest;
+    this.api
+      .movements(shift.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (movements) => {
+          if (request === this.lastMovementsRequest) {
+            this.movementList.set(movements);
+          }
+        },
+        error: (error: unknown) => {
+          if (request === this.lastMovementsRequest) {
+            this.notifier.show(error);
+          }
+        },
+      });
+  }
+
+  loadReasons(): void {
+    this.reasonsApi
+      .active('CASH_OUT')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (reasons) => {
+          this.reasonList.set(reasons);
+          this.reasonsFailed.set(false);
+        },
+        error: (error: unknown) => {
+          this.reasonsFailed.set(true);
+          this.notifier.show(error);
+        },
+      });
+  }
+
+  recordMovement(movement: CashMovementRequest, recorded: () => void): void {
+    const shift = this.current();
+    if (shift === null) {
+      return;
+    }
+    const intent = `movement:${JSON.stringify(movement)}`;
+    this.pending.add('movement');
+    this.api
+      .recordMovement(shift.id, movement, this.keys.keyFor(intent))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.pending.delete('movement');
+          this.keys.release(intent);
+          this.loadMovements();
+          recorded();
+        },
+        error: (error: unknown) => {
+          this.pending.delete('movement');
+          this.notifier.show(error);
+          this.loadMovements();
+          if (isShiftStateError(error)) {
+            this.load();
+          }
         },
       });
   }

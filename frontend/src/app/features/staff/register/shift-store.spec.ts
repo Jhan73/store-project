@@ -87,6 +87,80 @@ describe('ShiftStore', () => {
     expect(store.formatTime('2026-10-13T14:00:00Z')).toContain('9:00');
   });
 
+  describe('cash movements', () => {
+    const out = { type: 'OUT' as const, amount: pen('5.00'), reasonCode: 'Change', note: null, reference: null };
+
+    function withShift() {
+      store.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+    }
+
+    it('reads the movements and the cash-out reasons of the open shift', () => {
+      withShift();
+
+      store.loadMovements();
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([{ id: 'm1', type: 'IN' }]);
+      store.loadReasons();
+      http.expectOne(`${BASE}/reasons?type=CASH_OUT`).flush([{ code: 'Change' }]);
+
+      expect(store.movements()).toEqual([{ id: 'm1', type: 'IN' }]);
+      expect(store.reasons()).toEqual([{ code: 'Change' }]);
+    });
+
+    it('records a movement with its key, reads the movements again and reports it done', () => {
+      withShift();
+      const done = vi.fn();
+
+      store.recordMovement(out, done);
+      const request = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual(out);
+      expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+      request.flush({ id: 'm1' }, { status: 201, statusText: 'Created' });
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([{ id: 'm1' }]);
+
+      expect(done).toHaveBeenCalled();
+      expect(store.movements()).toEqual([{ id: 'm1' }]);
+    });
+
+    it('retries a failed movement with the same key and a new one for the next', () => {
+      withShift();
+      const added = vi.spyOn(messages, 'add');
+
+      store.recordMovement(out, vi.fn());
+      const first = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
+      const key = first.request.headers.get('Idempotency-Key');
+      first.flush(problem(503, 'common.service-unavailable'), { status: 503, statusText: 'Unavailable' });
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([]);
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+
+      store.recordMovement(out, vi.fn());
+      const second = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
+      expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+      second.flush({ id: 'm1' }, { status: 201, statusText: 'Created' });
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([]);
+
+      store.recordMovement(out, vi.fn());
+      const third = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
+      expect(third.request.headers.get('Idempotency-Key')).not.toBe(key);
+      third.flush({ id: 'm2' }, { status: 201, statusText: 'Created' });
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([]);
+    });
+
+    it('reads the shift again when a movement is refused because the shift is closing', () => {
+      withShift();
+
+      store.recordMovement(out, vi.fn());
+      http
+        .expectOne(`${BASE}/shifts/s1/cash-movements`)
+        .flush(problem(409, 'instore.shift-closing'), { status: 409, statusText: 'Conflict' });
+      http.expectOne(`${BASE}/shifts/s1/cash-movements`).flush([]);
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+    });
+  });
+
   describe('opening a shift', () => {
     function loadedWithoutShift() {
       store.load();
