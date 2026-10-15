@@ -4,6 +4,7 @@ import { FormsModule, NgModel } from '@angular/forms';
 import {
   IconAdjustmentsHorizontal,
   IconAlertTriangle,
+  IconListDetails,
   IconPackageImport,
   IconPencil,
   IconPlus,
@@ -21,6 +22,7 @@ import { shortId } from '../audit/audit-labels';
 import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { StockApi } from './stock-api';
 import { StockEntryDialog } from './stock-entry-dialog';
+import { StockMovementsDialog } from './stock-movements-dialog';
 import { StockTrackDialog } from './stock-track-dialog';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -39,6 +41,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
     ButtonDirective,
     StockAdjustmentDialog,
     StockEntryDialog,
+    StockMovementsDialog,
     StockTrackDialog,
     TableScroll,
     TablerIconComponent,
@@ -184,6 +187,21 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                         severity="secondary"
                         [outlined]="true"
                         [size]="'small'"
+                        [attr.data-testid]="'movements-' + row.item.productId"
+                        (click)="openMovements(row.item)"
+                        pTooltip="Ver los movimientos de este producto"
+                        i18n-pTooltip="@@admin.stock.movements.tooltip"
+                        tooltipPosition="top"
+                      >
+                        <tabler-icon [icon]="icons.movements" aria-hidden="true" />
+                        <span i18n="@@admin.stock.movements">Movimientos</span>
+                      </button>
+                      <button
+                        pButton
+                        type="button"
+                        severity="secondary"
+                        [outlined]="true"
+                        [size]="'small'"
                         [attr.data-testid]="'threshold-' + row.item.productId"
                         (click)="openTrack(row.item)"
                         pTooltip="Cambiar el umbral de stock bajo de este producto"
@@ -202,6 +220,13 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
         }
       }
     }
+
+    <app-stock-movements-dialog
+      [visible]="movementsOpen()"
+      [item]="movementsTarget()"
+      [productName]="movementsName()"
+      (dismissed)="closeMovements()"
+    />
 
     <app-stock-adjustment-dialog
       [visible]="adjustOpen()"
@@ -241,9 +266,12 @@ export class StockList {
     edit: IconPencil,
     entry: IconPackageImport,
     adjust: IconAdjustmentsHorizontal,
+    movements: IconListDetails,
   };
   protected readonly status = signal<Status>('loading');
   protected readonly lowOnly = signal(false);
+  protected readonly movementsOpen = signal(false);
+  protected readonly movementsTarget = signal<StockItem | null>(null);
   protected readonly adjustOpen = signal(false);
   protected readonly adjustTarget = signal<StockItem | null>(null);
   protected readonly entryOpen = signal(false);
@@ -267,6 +295,10 @@ export class StockList {
     return this.lowOnly() ? rows : rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   });
 
+  protected readonly movementsName = computed(() => {
+    const target = this.movementsTarget();
+    return target ? this.nameOf(target.productId) : '';
+  });
   protected readonly adjustName = computed(() => {
     const target = this.adjustTarget();
     return target ? this.nameOf(target.productId) : '';
@@ -292,6 +324,15 @@ export class StockList {
   protected setLowOnly(lowOnly: boolean): void {
     this.lowOnly.set(lowOnly);
     this.load();
+  }
+
+  protected openMovements(item: StockItem): void {
+    this.movementsTarget.set(item);
+    this.movementsOpen.set(true);
+  }
+
+  protected closeMovements(): void {
+    this.movementsOpen.set(false);
   }
 
   protected openAdjustment(item: StockItem): void {

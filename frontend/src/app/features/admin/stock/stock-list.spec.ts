@@ -335,6 +335,25 @@ describe('StockList', () => {
     });
   });
 
+  it('opens the movements of an item from its row', async () => {
+    const { fixture, host, http } = await render([stock(PAPAYA, 6)]);
+
+    click(host, `movements-${PAPAYA}`);
+    await fixture.whenStable();
+    http.expectOne(`${API}/admin/settings`).flush({ timeZone: 'America/Lima', currency: 'PEN' });
+    http
+      .expectOne(`${API}/staff?page=0&size=100`)
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne(`${STOCK}/${PAPAYA}/movements?page=0&size=20`)
+      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+    await fixture.whenStable();
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Movimientos de stock');
+    expect(dialog.textContent).toContain('Papaya');
+  });
+
   it('shows an error with a retry when the stock cannot be read', async () => {
     TestBed.configureTestingModule({
       providers: [
