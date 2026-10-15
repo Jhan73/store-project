@@ -121,8 +121,6 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               inputId="adjust-delta"
               formControlName="quantityDelta"
               [useGrouping]="false"
-              [min]="-maxQuantity"
-              [max]="maxQuantity"
               [invalid]="invalid('quantityDelta')"
               [pt]="numberAriaInvalid(invalid('quantityDelta'))"
             />
@@ -238,7 +236,6 @@ export class StockAdjustmentDialog {
   private readonly keys = new IntentKeys();
 
   protected readonly icons = { save: IconDeviceFloppy, cancel: IconX, retry: IconRefresh };
-  protected readonly maxQuantity = MAX_QUANTITY;
   protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly saving = signal(false);

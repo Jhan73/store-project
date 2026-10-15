@@ -149,6 +149,22 @@ describe('StockTrackDialog', () => {
     expect(numberIsInvalid(dialog(), 'stock-threshold')).toBe(true);
   });
 
+  it.each(['-5', '1000001', '2.5'])(
+    'refuses the threshold %s instead of correcting it',
+    async (value) => {
+      const fixture = await open();
+      await choose(fixture, 'Papaya');
+      typeNumber(dialog(), 'stock-threshold', value);
+      await fixture.whenStable();
+
+      inDialog<HTMLButtonElement>('track-save')!.click();
+      await fixture.whenStable();
+
+      http.expectNone(`${STOCK}/${PAPAYA}`);
+      expect(numberIsInvalid(dialog(), 'stock-threshold')).toBe(true);
+    },
+  );
+
   it('keeps the dialog open and tells the user when the request is refused', async () => {
     const fixture = await open();
     await choose(fixture, 'Papaya');

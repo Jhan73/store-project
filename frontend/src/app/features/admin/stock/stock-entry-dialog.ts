@@ -71,8 +71,6 @@ const ENTRY_INTENT = 'entry';
             inputId="entry-quantity"
             formControlName="quantity"
             [useGrouping]="false"
-            [min]="1"
-            [max]="maxQuantity"
             [invalid]="invalid('quantity')"
             [pt]="numberAriaInvalid(invalid('quantity'))"
           />
@@ -142,7 +140,6 @@ export class StockEntryDialog {
   private readonly keys = new IntentKeys();
 
   protected readonly icons = { save: IconDeviceFloppy, cancel: IconX };
-  protected readonly maxQuantity = MAX_QUANTITY;
   protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly saving = signal(false);
   protected readonly form = new FormGroup({

@@ -136,14 +136,28 @@ describe('StockEntryDialog', () => {
     expect(numberIsInvalid(dialog(), 'entry-quantity')).toBe(true);
   });
 
-  it('never sends less than one unit: the field raises a typed zero to the minimum', async () => {
+  it.each(['0', '-3', '1000001', '5000000', '1.5'])(
+    'refuses the quantity %s instead of correcting it, and marks the field',
+    async (value) => {
+      const fixture = await open();
+      await quantity(fixture, value);
+
+      inDialog<HTMLButtonElement>('entry-save').click();
+      await fixture.whenStable();
+
+      http.expectNone(ENTRY);
+      expect(numberIsInvalid(dialog(), 'entry-quantity')).toBe(true);
+    },
+  );
+
+  it('accepts the largest quantity', async () => {
     const fixture = await open();
-    await quantity(fixture, '0');
+    await quantity(fixture, '1000000');
 
     inDialog<HTMLButtonElement>('entry-save').click();
 
     const request = http.expectOne(ENTRY);
-    expect(request.request.body.quantity).toBe(1);
+    expect(request.request.body.quantity).toBe(1000000);
     request.flush(item);
   });
 

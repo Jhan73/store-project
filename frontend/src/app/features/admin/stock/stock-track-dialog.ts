@@ -129,8 +129,6 @@ const MAX_THRESHOLD = 1_000_000;
             inputId="stock-threshold"
             formControlName="lowStockThreshold"
             [useGrouping]="false"
-            [min]="0"
-            [max]="maxThreshold"
             [invalid]="invalid('lowStockThreshold')"
             [pt]="numberAriaInvalid(invalid('lowStockThreshold'))"
           />
@@ -197,7 +195,6 @@ export class StockTrackDialog {
     create: $localize`:@@admin.stock.track.create:Controlar stock`,
     edit: $localize`:@@admin.stock.track.edit:Guardar umbral`,
   };
-  protected readonly maxThreshold = MAX_THRESHOLD;
   protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly saving = signal(false);

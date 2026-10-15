@@ -161,6 +161,18 @@ describe('StockAdjustmentDialog', () => {
     expect(numberIsInvalid(dialog(), 'adjust-delta')).toBe(true);
   });
 
+  it.each(['1000001', '-1000001', '2.5'])('refuses the change %s instead of correcting it', async (value) => {
+    const fixture = await open();
+    await choose(fixture, 'Damaged');
+    await delta(fixture, value);
+
+    save();
+    await fixture.whenStable();
+
+    http.expectNone(ADJUST);
+    expect(numberIsInvalid(dialog(), 'adjust-delta')).toBe(true);
+  });
+
   it('refuses a change without a reason and marks the select', async () => {
     const fixture = await open();
     await delta(fixture, '-1');
