@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
+import { createEnvironmentInjector, EnvironmentInjector, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
@@ -37,16 +37,18 @@ describe('BoardStore', () => {
   let realtime: FakeRealtime;
   let http: HttpTestingController;
   let store: BoardStore;
+  let screen: EnvironmentInjector;
+  let screenClosed: boolean;
 
   beforeEach(() => {
     realtime = new FakeRealtime();
+    screenClosed = false;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         MessageService,
         BoardApi,
-        BoardStore,
         { provide: RealtimeClient, useValue: realtime },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
       ],
@@ -56,8 +58,22 @@ describe('BoardStore', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    closeScreen();
     http.verify();
   });
+
+  // The screen provides the store, so it is destroyed on its own while the root services live on.
+  function build(): BoardStore {
+    screen = createEnvironmentInjector([BoardStore], TestBed.inject(EnvironmentInjector));
+    return screen.get(BoardStore);
+  }
+
+  function closeScreen() {
+    if (!screenClosed) {
+      screenClosed = true;
+      screen.destroy();
+    }
+  }
 
   function answer(
     tickets: BoardOrder[] = [],
@@ -71,7 +87,7 @@ describe('BoardStore', () => {
   }
 
   function create() {
-    store = TestBed.inject(BoardStore);
+    store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10 });
   }
@@ -125,7 +141,7 @@ describe('BoardStore', () => {
   });
 
   it('reads the thresholds once and uses them for the levels', () => {
-    store = TestBed.inject(BoardStore);
+    store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 1, boardLateMinutes: 2 });
     answer([order({ id: 'a', sentAt: minutesAgo(3) })]);
@@ -137,7 +153,7 @@ describe('BoardStore', () => {
   });
 
   it('falls back to 5 and 10 minutes when the thresholds cannot be read', () => {
-    store = TestBed.inject(BoardStore);
+    store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush(serverError, failure);
     answer([order({ id: 'a', sentAt: minutesAgo(6) })]);
@@ -295,10 +311,169 @@ describe('BoardStore', () => {
     answer();
     connect();
 
-    TestBed.resetTestingModule();
+    closeScreen();
     vi.advanceTimersByTime(120_000);
     realtime.signals.next();
 
     http.expectNone(TICKETS);
+  });
+
+  describe('commands', () => {
+    const ready = () => {
+      create();
+      answer();
+      connect([order({ id: 'o1', status: 'PREPARING' })]);
+    };
+    const reload = () => answer();
+
+    it('sends Ready for a whole order only after the 5 second undo window', () => {
+      vi.useFakeTimers();
+      ready();
+
+      store.readyOrder('o1');
+      expect(store.isQueued('order:o1:ready')).toBe(true);
+      vi.advanceTimersByTime(4_999);
+      http.expectNone(`${BASE}/board/orders/o1/ready`);
+
+      vi.advanceTimersByTime(1);
+      const request = http.expectOne(`${BASE}/board/orders/o1/ready`);
+      expect(request.request.method).toBe('POST');
+      expect(store.isQueued('order:o1:ready')).toBe(false);
+      request.flush(order({ id: 'o1', status: 'READY' }));
+      reload();
+    });
+
+    it('sends Ready for a line after the undo window', () => {
+      vi.useFakeTimers();
+      ready();
+
+      store.readyLine('l1');
+      vi.advanceTimersByTime(5_000);
+
+      http.expectOne(`${BASE}/board/lines/l1/ready`).flush(order({ id: 'o1' }));
+      reload();
+    });
+
+    it('never sends a Ready that was undone', () => {
+      vi.useFakeTimers();
+      ready();
+
+      store.readyOrder('o1');
+      store.undo('order:o1:ready');
+      vi.advanceTimersByTime(10_000);
+
+      http.expectNone(`${BASE}/board/orders/o1/ready`);
+    });
+
+    it('sends the pending Ready at once when the page is hidden, so it outlives the page', () => {
+      vi.useFakeTimers();
+      ready();
+      store.readyOrder('o1');
+      store.readyLine('l1');
+
+      window.dispatchEvent(new Event('pagehide'));
+
+      const orderRequest = http.expectOne(`${BASE}/board/orders/o1/ready`);
+      const lineRequest = http.expectOne(`${BASE}/board/lines/l1/ready`);
+      expect(orderRequest.request.keepalive).toBe(true);
+      expect(lineRequest.request.keepalive).toBe(true);
+      orderRequest.flush(order({ id: 'o1' }));
+      lineRequest.flush(order({ id: 'o1' }));
+      http.match(TICKETS);
+      http.match(READY);
+      http.match(ALL_DAY);
+    });
+
+    it('sends the pending Ready when the screen is destroyed and does not cancel it', () => {
+      vi.useFakeTimers();
+      ready();
+      store.readyOrder('o1');
+
+      closeScreen();
+
+      const request = http.expectOne(`${BASE}/board/orders/o1/ready`);
+      expect(request.cancelled).toBe(false);
+      request.flush(order({ id: 'o1' }));
+      http.expectNone(TICKETS);
+    });
+
+    it('stops listening to the page when it is destroyed', () => {
+      vi.useFakeTimers();
+      ready();
+      store.readyOrder('o1');
+      closeScreen();
+      http.expectOne(`${BASE}/board/orders/o1/ready`);
+
+      window.dispatchEvent(new Event('pagehide'));
+
+      http.expectNone(`${BASE}/board/orders/o1/ready`);
+    });
+
+    it('reads the board again after a command and blocks the card while it is in flight', () => {
+      ready();
+
+      store.start('o1');
+      expect(store.pending.has('o1')).toBe(true);
+      http.expectOne(`${BASE}/board/orders/o1/start`).flush(order({ id: 'o1', status: 'PREPARING' }));
+      expect(store.pending.has('o1')).toBe(false);
+
+      answer([order({ id: 'o1', status: 'PREPARING' })]);
+      expect(store.cards()[0].order.status).toBe('PREPARING');
+    });
+
+    it.each([
+      ['start', 'o1', 'orders/o1/start'],
+      ['handover', 'o1', 'orders/o1/handover'],
+      ['recall', 'o1', 'orders/o1/recall'],
+      ['flag', 'l1', 'lines/l1/flag'],
+      ['acknowledge', 'm1', 'markers/m1/ack'],
+    ] as const)('sends %s at once, with no undo window', (action, id, path) => {
+      ready();
+
+      store[action](id);
+
+      http.expectOne(`${BASE}/board/${path}`).flush({});
+      reload();
+    });
+
+    it('does not send a second command for an item that is in flight', () => {
+      ready();
+
+      store.start('o1');
+      store.start('o1');
+
+      expect(http.match(`${BASE}/board/orders/o1/start`).length).toBe(1);
+    });
+
+    it.each(['start', 'handover', 'recall', 'flag', 'acknowledge', 'readyOrder', 'readyLine'] as const)(
+      'ignores %s while the actions are off',
+      (action) => {
+        create();
+        answer();
+
+        store[action]('x');
+
+        http.expectNone((request) => request.method === 'POST');
+        expect(store.isQueued('order:x:ready')).toBe(false);
+        expect(store.isQueued('line:x:ready')).toBe(false);
+      },
+    );
+
+    it('shows the error and reads the board again when a command is refused', () => {
+      ready();
+      const toasts = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+      store.handover('o1');
+      http
+        .expectOne(`${BASE}/board/orders/o1/handover`)
+        .flush(
+          { ...serverError, status: 409, code: 'preparation.order-not-ready' },
+          { status: 409, statusText: 'Conflict' },
+        );
+
+      expect(toasts).toHaveBeenCalledTimes(1);
+      expect(store.pending.has('o1')).toBe(false);
+      reload();
+    });
   });
 });
