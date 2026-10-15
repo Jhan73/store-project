@@ -48,7 +48,7 @@ const MARKER_LABELS = {
   template: `
     <article [attr.data-testid]="'card-' + order().id">
       <header [class]="level()">
-        <span class="number">{{ order().shortNumber }}</span>
+        <span class="number" data-testid="short-number">{{ order().shortNumber }}</span>
         <span class="who">
           {{ channel() }}@if (order().label) {
             · {{ order().label }}
