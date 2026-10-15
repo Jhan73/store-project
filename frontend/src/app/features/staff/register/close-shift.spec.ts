@@ -176,6 +176,34 @@ describe('CloseShift', () => {
     expect(fixture.componentInstance.visible()).toBe(false);
   });
 
+  it('refills the locked count when the dialog is reopened after a cancel following the difference', async () => {
+    const fixture = await open();
+    type('close-count', '90');
+    await fixture.whenStable();
+    await submit(fixture);
+    http
+      .expectOne(CLOSE)
+      .flush(problem(409, 'instore.difference-note-required', { difference: pen('-10.00') }), {
+        status: 409,
+        statusText: 'Conflict',
+      });
+    await fixture.whenStable();
+
+    byId<HTMLButtonElement>('close-cancel')!.click();
+    await fixture.whenStable();
+    fixture.componentInstance.visible.set(true);
+    await fixture.whenStable();
+
+    expect(byId<HTMLInputElement>('close-count')!.value).toBe('90.00');
+    expect(byId<HTMLInputElement>('close-count')!.readOnly).toBe(true);
+    expect(byId('close-note')).not.toBeNull();
+    type('close-note', 'Faltó sencillo');
+    await fixture.whenStable();
+    expect(byId<HTMLButtonElement>('close-confirm')!.disabled).toBe(false);
+    await submit(fixture);
+    expect(http.expectOne(CLOSE).request.body).toEqual({ countedCash: pen('90.00'), note: 'Faltó sencillo' });
+  });
+
   it('closes without sending anything when cancelled', async () => {
     const fixture = await open();
 

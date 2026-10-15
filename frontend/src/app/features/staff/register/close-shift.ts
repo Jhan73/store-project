@@ -157,7 +157,7 @@ export class CloseShift {
     effect(() => {
       if (this.visible()) {
         untracked(() => {
-          this.count.reset();
+          this.count.reset(this.store.noteNeeded()?.count ?? '');
           this.note.reset();
         });
       }
