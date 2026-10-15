@@ -171,8 +171,39 @@ describe('staff and admin area', () => {
       '/staff/tables',
       '/staff/board',
       '/staff/register',
+      '/staff/quick-sale',
       '/staff/availability',
     ]);
+  });
+
+  it('lets a cashier open the quick sale', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+    http.expectOne('http://api.test/api/v1/quick-sales/items').flush([]);
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/shifts/current').flush({
+      id: 's1',
+      status: 'OPEN',
+      openedAt: '2026-10-13T14:00:00Z',
+      openingFloat: { amount: '50.00', currency: 'PEN' },
+    });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/quick-sale');
+    expect(page().body.textContent).toContain('Venta rápida');
+    expect(active).toEqual(['/staff/quick-sale']);
+  });
+
+  it('keeps a server out of the quick sale', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+
+    expect(url()).toBe('/forbidden');
   });
 
   it('lets a cashier open the register', async () => {
@@ -287,6 +318,7 @@ describe('staff and admin area', () => {
       '/staff/tables',
       '/staff/board',
       '/staff/register',
+      '/staff/quick-sale',
       '/staff/register/shifts',
       '/staff/availability',
       '/admin',

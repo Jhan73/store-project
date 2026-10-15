@@ -16,6 +16,11 @@ export const STAFF_ROUTES: Routes = [
         providers: [TicketsApi, RegisterApi],
         children: [
           {
+            path: 'quick-sale',
+            canMatch: [roleGuard('CASHIER', 'ADMIN')],
+            loadComponent: () => import('./quick-sale/quick-sale').then((m) => m.QuickSale),
+          },
+          {
             path: 'register/shifts',
             canMatch: [roleGuard('ADMIN')],
             loadComponent: () => import('./register/open-shifts').then((m) => m.OpenShifts),

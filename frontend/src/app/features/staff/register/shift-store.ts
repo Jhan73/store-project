@@ -17,7 +17,7 @@ import { RegisterApi } from './register-api';
 
 const SHIFT_STATE_CODES = ['instore.shift-closing', 'instore.shift-closed', 'instore.no-open-shift'];
 
-function isShiftStateError(error: unknown): boolean {
+export function isShiftStateError(error: unknown): boolean {
   return error instanceof ApiError && error.code !== null && SHIFT_STATE_CODES.includes(error.code);
 }
 

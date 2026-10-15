@@ -132,11 +132,15 @@ export class RegisterApi {
       .pipe(map((thresholds) => thresholds.timeZone));
   }
 
+  menu(): Observable<Menu> {
+    return this.http.get<Menu>(`${this.base}/catalog/menu`);
+  }
+
   // Floor staff cannot read the store settings; every price carries the store currency.
   currency(): Observable<string | null> {
-    return this.http
-      .get<Menu>(`${this.base}/catalog/menu`)
-      .pipe(map((menu) => menu.categories.flatMap((category) => category.products)[0]?.price.currency ?? null));
+    return this.menu().pipe(
+      map((menu) => menu.categories.flatMap((category) => category.products)[0]?.price.currency ?? null),
+    );
   }
 
   // The shift list only carries the cashier's id; the accounts turn it into an email.

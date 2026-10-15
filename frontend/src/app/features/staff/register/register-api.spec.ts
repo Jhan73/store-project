@@ -242,6 +242,12 @@ describe('RegisterApi', () => {
     expect(currency).toBe('PEN');
   });
 
+  it('reads the menu', () => {
+    api.menu().subscribe();
+
+    http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+  });
+
   it('has no currency to offer while the menu has no products', () => {
     let currency: string | null | undefined;
     api.currency().subscribe((value) => (currency = value));

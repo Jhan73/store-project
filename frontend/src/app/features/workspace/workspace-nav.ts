@@ -1,5 +1,6 @@
 import {
   IconAdjustments,
+  IconBolt,
   IconBook2,
   IconCashRegister,
   IconClockStop,
@@ -45,6 +46,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     label: $localize`:@@workspace.nav.register:Caja`,
     icon: IconCashRegister,
     exact: true,
+    roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/quick-sale',
+    label: $localize`:@@workspace.nav.quickSale:Venta rápida`,
+    icon: IconBolt,
     roles: ['CASHIER', 'ADMIN'],
   },
   {
