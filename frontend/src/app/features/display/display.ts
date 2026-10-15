@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ScreenWakeLock } from '../../core/screen/screen-wake-lock';
+import { densityOf } from './display-density';
 import { DisplayStore } from './display-store';
 
 // A screen for customers: numbers and first names, nothing to click, nothing else of the order.
@@ -9,7 +10,7 @@ import { DisplayStore } from './display-store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './display.scss',
   template: `
-    <div class="columns">
+    <div class="columns" [style.--display-scale]="density().scale" [style.--display-columns]="density().columns">
       <section class="column" [attr.aria-labelledby]="'display-preparing'" data-testid="column-preparing">
         <h2 id="display-preparing" i18n="@@display.preparing">Preparando</h2>
         <ol>
@@ -50,6 +51,9 @@ import { DisplayStore } from './display-store';
 })
 export class Display {
   protected readonly store = inject(DisplayStore);
+  protected readonly density = computed(() =>
+    densityOf(Math.max(this.store.preparing().length, this.store.ready().length)),
+  );
 
   constructor() {
     inject(ScreenWakeLock).start();

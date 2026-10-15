@@ -112,6 +112,16 @@ describe('Display', () => {
     expect(host(fixture).querySelectorAll('button, a, input, select, textarea')).toHaveLength(0);
   });
 
+  it('sizes both columns for the longer one so every number stays on screen', async () => {
+    const many = Array.from({ length: 13 }, (_, index) => ({ shortNumber: `L-${index}`, firstName: null }));
+    const fixture = await open({ preparing: many, ready: [{ shortNumber: 'L-99', firstName: null }] });
+
+    const columns = host(fixture).querySelector<HTMLElement>('.columns')!;
+    expect(columns.style.getPropertyValue('--display-scale')).toBe('0.75');
+    expect(columns.style.getPropertyValue('--display-columns')).toBe('2');
+    expect(host(fixture).querySelectorAll('li')).toHaveLength(14);
+  });
+
   it('keeps the screen on', async () => {
     await open({ preparing: [], ready: [] });
 
