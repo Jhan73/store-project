@@ -51,7 +51,7 @@ test('counter quick sale paid in cash shows the change and moves through the boa
     number = (await card.getByTestId('short-number').textContent()) ?? '';
     const preparing = display.getByTestId('column-preparing');
     await expect(preparing).toContainText(customer, SYNC);
-    await expect(preparing).toContainText(number);
+    await expect(preparing).toContainText(new RegExp(`${number}(?!\\d)`));
   });
 
   await test.step('the cook prepares it and the customer screen moves it to ready', async () => {

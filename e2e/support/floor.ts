@@ -2,7 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 
 const ID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
 
-// A 10" tablet in landscape and a 1080p wall screen: the devices the PRD names for the floor and the board.
+// The sizes the staff screens are laid out for: a 10" tablet in landscape and a 1080p wall screen.
 export const TABLET = { viewport: { width: 1024, height: 768 }, hasTouch: true };
 export const WALL_SCREEN = { viewport: { width: 1920, height: 1080 } };
 

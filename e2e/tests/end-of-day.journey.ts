@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { uniqueName, withAdminApi, type Money } from '../support/api';
+import { minorUnits, uniqueName, withAdminApi } from '../support/api';
 import { pickOption } from '../support/select';
 import { openAdminPage } from '../support/session';
 
@@ -8,9 +8,10 @@ test.afterAll(() => withAdminApi((api) => api.cleanUp()));
 const FLOAT = 100_00;
 const CASH_OUT = 40_00;
 
-function minorUnits(money: Money): number {
-  const [whole = '0', cents = '0'] = money.amount.split('.');
-  return Number(whole) * 100 + Number(cents.padEnd(2, '0'));
+// A formatted amount without the currency symbol and with the sign the difference must carry: counting less than
+// expected is negative, counting more is not.
+function signed(minor: number, negative: boolean): RegExp {
+  return new RegExp(`^${negative ? '-' : ''}[^\\d-]*${amount(minor).replace('.', '\\.')}$`);
 }
 
 function amount(minor: number): string {
@@ -32,7 +33,8 @@ test('end of day: cash out for the supplier, blind close and a justified differe
   });
   const expected = FLOAT - CASH_OUT;
   const gap = threshold + 5_00;
-  const counted = expected - gap >= 0 ? expected - gap : expected + gap;
+  const below = expected - gap >= 0;
+  const counted = below ? expected - gap : expected + gap;
 
   const page = await openAdminPage(browser, '/staff/register');
 
@@ -64,7 +66,7 @@ test('end of day: cash out for the supplier, blind close and a justified differe
   });
 
   await test.step('the difference is shown, the count is locked and the note is required', async () => {
-    await expect(dialog.getByTestId('close-difference')).toContainText(amount(gap));
+    await expect(dialog.getByTestId('close-difference').locator('strong')).toHaveText(signed(gap, below));
     await expect(dialog.getByTestId('close-count')).not.toBeEditable();
     await expect(dialog.getByTestId('close-confirm')).toBeDisabled();
     await dialog.getByTestId('close-note').fill('e2e: missing small change');
@@ -74,9 +76,9 @@ test('end of day: cash out for the supplier, blind close and a justified differe
   await test.step('the closed shift shows expected cash, count, difference and note', async () => {
     await expect(dialog.getByTestId('expected-cash')).toContainText(amount(expected));
     await expect(dialog.getByTestId('counted-cash')).toContainText(amount(counted));
-    await expect(dialog.getByTestId('difference')).toContainText(amount(gap));
+    await expect(dialog.getByTestId('difference')).toHaveText(signed(gap, below));
     await expect(dialog.getByTestId('difference-note')).toContainText('e2e: missing small change');
-    await expect(dialog.getByTestId('cash-in')).toContainText('0.00');
+    await expect(dialog.getByTestId('cash-in')).toHaveText(/^[^\d-]*0\.00$/);
     await dialog.getByTestId('close-done').click();
     await expect(page.getByTestId('closed-summary')).toBeVisible();
   });
