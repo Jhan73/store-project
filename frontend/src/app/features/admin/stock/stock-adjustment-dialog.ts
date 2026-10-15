@@ -85,6 +85,8 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
       [modal]="true"
       [draggable]="false"
       [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [closable]="!saving()"
+      [closeOnEscape]="!saving()"
       [visible]="visible()"
       (visibleChange)="visibleChange($event)"
     >
@@ -191,6 +193,7 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
           type="button"
           severity="secondary"
           data-testid="adjust-cancel"
+          [disabled]="saving()"
           (click)="dismissed.emit()"
           pTooltip="Cerrar sin ajustar el stock"
           i18n-pTooltip="@@admin.stock.adjust.cancel.tooltip"
@@ -283,7 +286,7 @@ export class StockAdjustmentDialog {
   }
 
   protected visibleChange(visible: boolean): void {
-    if (!visible) {
+    if (!visible && !this.saving()) {
       this.dismissed.emit();
     }
   }

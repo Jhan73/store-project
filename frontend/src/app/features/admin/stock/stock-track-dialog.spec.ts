@@ -235,6 +235,20 @@ describe('StockTrackDialog', () => {
     request.flush(stock(PAPAYA, { lowStockThreshold: 12 }));
   });
 
+  it('cannot be cancelled or closed while the product is being saved', async () => {
+    const fixture = await open();
+    await choose(fixture, 'Papaya');
+    typeNumber(dialog(), 'stock-threshold', '8');
+    await fixture.whenStable();
+
+    inDialog<HTMLButtonElement>('track-save')!.click();
+    await fixture.whenStable();
+
+    expect(inDialog<HTMLButtonElement>('track-cancel')!.disabled).toBe(true);
+    expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
+    http.expectOne(`${STOCK}/${PAPAYA}`).flush(stock(PAPAYA));
+  });
+
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 

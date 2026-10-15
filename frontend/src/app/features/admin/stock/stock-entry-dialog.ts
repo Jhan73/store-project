@@ -60,6 +60,8 @@ const ENTRY_INTENT = 'entry';
       [modal]="true"
       [draggable]="false"
       [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [closable]="!saving()"
+      [closeOnEscape]="!saving()"
       [visible]="visible()"
       (visibleChange)="visibleChange($event)"
     >
@@ -99,6 +101,7 @@ const ENTRY_INTENT = 'entry';
           type="button"
           severity="secondary"
           data-testid="entry-cancel"
+          [disabled]="saving()"
           (click)="dismissed.emit()"
           pTooltip="Cerrar sin registrar la entrada"
           i18n-pTooltip="@@admin.stock.entry.cancel.tooltip"
@@ -168,7 +171,7 @@ export class StockEntryDialog {
   }
 
   protected visibleChange(visible: boolean): void {
-    if (!visible) {
+    if (!visible && !this.saving()) {
       this.dismissed.emit();
     }
   }

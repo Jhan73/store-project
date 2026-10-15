@@ -283,6 +283,19 @@ describe('StockAdjustmentDialog', () => {
     expect(await optionLabels(fixture, dialog(), 'adjust-reason')).toEqual(['Damaged', 'Otro']);
   });
 
+  it('cannot be cancelled or closed while the adjustment is being saved', async () => {
+    const fixture = await open();
+    await delta(fixture, '-1');
+    await choose(fixture, 'Damaged');
+
+    save();
+    await fixture.whenStable();
+
+    expect(inDialog<HTMLButtonElement>('adjust-cancel').disabled).toBe(true);
+    expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
+    http.expectOne(ADJUST).flush(item);
+  });
+
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 

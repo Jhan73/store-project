@@ -8,7 +8,9 @@ import type { Product, StockItem } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { primeTranslation } from '../../../core/theme/prime-translation';
 import { chooseOption, typeNumber } from '../../../testing/primeng-controls';
+import { By } from '@angular/platform-browser';
 import { StockApi } from './stock-api';
+import { StockEntryDialog } from './stock-entry-dialog';
 import { StockList } from './stock-list';
 
 const API = 'http://api.test/api/v1';
@@ -333,6 +335,45 @@ describe('StockList', () => {
       expect(dialog()).not.toBeNull();
       expect(rows(host)[0]).toContain('1');
     });
+  });
+
+  it('ignores a late save of another product and keeps the open dialog', async () => {
+    const { fixture, host, http } = await render([stock(PAPAYA, 3), stock(MANGO, 9)]);
+
+    click(host, `entry-${PAPAYA}`);
+    await fixture.whenStable();
+    fixture.debugElement
+      .query(By.directive(StockEntryDialog))
+      .componentInstance.saved.emit(stock(MANGO, 12));
+    await fixture.whenStable();
+
+    expect(document.body.querySelector('[role="dialog"]')).not.toBeNull();
+    http.expectOne(STOCK).flush([stock(PAPAYA, 3), stock(MANGO, 12)]);
+  });
+
+  it('does not bring back an untracked row when an older read answers late', async () => {
+    const { fixture, host, http } = await render([stock(PAPAYA, 3), stock(MANGO, 9)]);
+
+    click(host, `entry-${MANGO}`);
+    await fixture.whenStable();
+    fixture.debugElement
+      .query(By.directive(StockEntryDialog))
+      .componentInstance.saved.emit(stock(MANGO, 12));
+    await fixture.whenStable();
+    const older = http.expectOne(STOCK);
+    host
+      .querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="tracked-${PAPAYA}"] input`)!
+      .click();
+    await fixture.whenStable();
+    http
+      .expectOne(`${STOCK}/${PAPAYA}`)
+      .flush(stock(PAPAYA, 3, { tracked: false }));
+    await fixture.whenStable();
+    older.flush([stock(PAPAYA, 3), stock(MANGO, 12)]);
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Mango');
   });
 
   it('opens the movements of an item from its row', async () => {

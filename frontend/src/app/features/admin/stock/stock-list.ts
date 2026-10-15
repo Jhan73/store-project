@@ -252,7 +252,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
       [visible]="adjustOpen()"
       [item]="adjustTarget()"
       [productName]="adjustName()"
-      (saved)="adjustSaved()"
+      (saved)="adjustSaved($event)"
       (stale)="load(true)"
       (dismissed)="closeAdjustment()"
     />
@@ -261,7 +261,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
       [visible]="entryOpen()"
       [item]="entryTarget()"
       [productName]="entryName()"
-      (saved)="entrySaved()"
+      (saved)="entrySaved($event)"
       (dismissed)="closeEntry()"
     />
 
@@ -271,7 +271,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
       [products]="products()"
       [catalogStatus]="productsStatus()"
       (catalogRetried)="loadProducts()"
-      (saved)="trackSaved()"
+      (saved)="trackSaved($event)"
       (dismissed)="closeTrack()"
     />
   `,
@@ -367,8 +367,11 @@ export class StockList {
     this.adjustOpen.set(false);
   }
 
-  protected adjustSaved(): void {
-    this.closeAdjustment();
+  // A late answer for a product that is no longer the open one must not close the open dialog.
+  protected adjustSaved(saved: StockItem): void {
+    if (this.adjustTarget()?.productId === saved.productId) {
+      this.closeAdjustment();
+    }
     this.load(true);
   }
 
@@ -381,8 +384,10 @@ export class StockList {
     this.entryOpen.set(false);
   }
 
-  protected entrySaved(): void {
-    this.closeEntry();
+  protected entrySaved(saved: StockItem): void {
+    if (this.entryTarget()?.productId === saved.productId) {
+      this.closeEntry();
+    }
     this.load(true);
   }
 
@@ -395,8 +400,11 @@ export class StockList {
     this.trackOpen.set(false);
   }
 
-  protected trackSaved(): void {
-    this.closeTrack();
+  protected trackSaved(saved: StockItem): void {
+    const target = this.trackTarget();
+    if (!target || target.productId === saved.productId) {
+      this.closeTrack();
+    }
     this.load(true);
   }
 
@@ -413,7 +421,12 @@ export class StockList {
       .subscribe({
         next: () => {
           this.pending.delete(id);
+          // An older read still in flight would bring the row back.
+          this.lastRequest++;
           this.items.update((items) => items.filter((entry) => entry.productId !== id));
+          if (this.status() === 'loading') {
+            this.load();
+          }
         },
         error: (error: unknown) => {
           this.pending.delete(id);

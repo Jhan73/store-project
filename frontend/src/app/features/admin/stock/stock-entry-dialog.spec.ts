@@ -220,6 +220,18 @@ describe('StockEntryDialog', () => {
     http.expectOne(ENTRY).flush(item);
   });
 
+  it('cannot be cancelled or closed while the entry is being saved', async () => {
+    const fixture = await open();
+    await quantity(fixture, '5');
+
+    inDialog<HTMLButtonElement>('entry-save').click();
+    await fixture.whenStable();
+
+    expect(inDialog<HTMLButtonElement>('entry-cancel').disabled).toBe(true);
+    expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
+    http.expectOne(ENTRY).flush(item);
+  });
+
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 

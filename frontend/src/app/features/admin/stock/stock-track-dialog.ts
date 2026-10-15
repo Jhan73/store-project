@@ -59,6 +59,8 @@ const MAX_THRESHOLD = 1_000_000;
       [modal]="true"
       [draggable]="false"
       [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [closable]="!saving()"
+      [closeOnEscape]="!saving()"
       [visible]="visible()"
       (visibleChange)="visibleChange($event)"
     >
@@ -173,6 +175,7 @@ const MAX_THRESHOLD = 1_000_000;
           type="button"
           severity="secondary"
           data-testid="track-cancel"
+          [disabled]="saving()"
           (click)="dismissed.emit()"
           pTooltip="Cerrar sin guardar"
           i18n-pTooltip="@@admin.stock.track.cancel.tooltip"
@@ -279,7 +282,7 @@ export class StockTrackDialog {
   }
 
   protected visibleChange(visible: boolean): void {
-    if (!visible) {
+    if (!visible && !this.saving()) {
       this.dismissed.emit();
     }
   }
