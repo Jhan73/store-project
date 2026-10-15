@@ -276,6 +276,7 @@ export class BoardCard {
   // Ids with a request in flight, and ids whose Ready is still inside the undo window.
   readonly pending = input.required<ReadonlySet<string>>();
   readonly queued = input.required<ReadonlySet<string>>();
+  readonly timeZone = input.required<string>();
 
   readonly start = output<string>();
   readonly readyOrder = output<string>();
@@ -301,10 +302,7 @@ export class BoardCard {
   protected readonly channel = computed(() => CHANNELS[this.order().channel]);
   protected readonly scheduledTime = computed(() => {
     const fireAt = this.order().fireAt;
-    // No staff-readable endpoint exposes the store zone, and the board device sits in the store.
-    return fireAt
-      ? formatInStoreZone(fireAt, Intl.DateTimeFormat().resolvedOptions().timeZone, { timeStyle: 'short' })
-      : null;
+    return fireAt ? formatInStoreZone(fireAt, this.timeZone(), { timeStyle: 'short' }) : null;
   });
   private readonly unacknowledged = computed(() =>
     this.order().markers.filter((marker) => marker.acknowledgedAt === null),

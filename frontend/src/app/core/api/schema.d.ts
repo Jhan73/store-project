@@ -1443,6 +1443,7 @@ export interface components {
             boardLateMinutes: number;
             /** Format: int32 */
             boardWarningMinutes: number;
+            timeZone: string;
         };
         CashMovementRequest: {
             amount: components["schemas"]["Money"];

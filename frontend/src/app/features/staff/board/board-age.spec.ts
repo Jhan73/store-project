@@ -23,7 +23,7 @@ describe('board age', () => {
   });
 
   it('reads the thresholds from the API response', () => {
-    expect(thresholdsOf({ boardWarningMinutes: 3, boardLateMinutes: 6 })).toEqual({
+    expect(thresholdsOf({ boardWarningMinutes: 3, boardLateMinutes: 6, timeZone: 'America/Lima' })).toEqual({
       warningMinutes: 3,
       lateMinutes: 6,
     });

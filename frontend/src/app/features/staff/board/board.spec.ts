@@ -92,7 +92,7 @@ describe('Board', () => {
   async function open(tickets: BoardOrder[] = [], ready: BoardOrder[] = [], allDay = emptyAllDay) {
     const fixture = TestBed.createComponent(Board);
     await fixture.whenStable();
-    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10 });
+    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
     await answer(fixture, tickets, ready, allDay);
     return fixture;
   }

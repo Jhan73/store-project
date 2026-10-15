@@ -14,6 +14,7 @@ describe('BoardCard', () => {
       enabled?: boolean;
       pending?: string[];
       queued?: string[];
+      timeZone?: string;
     } = {},
   ) {
     fixture = TestBed.createComponent(BoardCard);
@@ -23,6 +24,7 @@ describe('BoardCard', () => {
     fixture.componentRef.setInput('enabled', options.enabled ?? true);
     fixture.componentRef.setInput('pending', new Set(options.pending ?? []));
     fixture.componentRef.setInput('queued', new Set(options.queued ?? []));
+    fixture.componentRef.setInput('timeZone', options.timeZone ?? 'America/Lima');
     fixture.detectChanges();
   }
 
@@ -79,6 +81,16 @@ describe('BoardCard', () => {
       render(order({ id: 'o1', fireAt: '2026-10-13T15:30:00Z' }));
 
       expect(host().querySelector('[data-testid="scheduled"]')?.textContent).toMatch(/Programado/);
+    });
+
+    it('prints the scheduled time in the store zone, not the device one', () => {
+      const scheduled = order({ id: 'o1', fireAt: '2026-10-13T15:30:00Z' });
+
+      render(scheduled, { timeZone: 'America/Lima' });
+      expect(host().querySelector('[data-testid="scheduled"]')?.textContent).toContain('10:30');
+
+      render(scheduled, { timeZone: 'Asia/Tokyo' });
+      expect(host().querySelector('[data-testid="scheduled"]')?.textContent).toContain('12:30');
     });
 
     it('shows no scheduled time otherwise', () => {

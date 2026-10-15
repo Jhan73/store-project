@@ -95,7 +95,7 @@ describe('BoardStore', () => {
   function create() {
     store = build();
     TestBed.tick();
-    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10 });
+    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
   }
 
   function connect(tickets: BoardOrder[] = [], ready: BoardOrder[] = [], allDay = emptyAllDay) {
@@ -149,7 +149,7 @@ describe('BoardStore', () => {
   it('reads the thresholds once and uses them for the levels', () => {
     store = build();
     TestBed.tick();
-    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 1, boardLateMinutes: 2 });
+    http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 1, boardLateMinutes: 2, timeZone: 'America/Lima' });
     answer([order({ id: 'a', sentAt: minutesAgo(3) })]);
 
     expect(store.cards()[0].level).toBe('late');
@@ -165,6 +165,25 @@ describe('BoardStore', () => {
     answer([order({ id: 'a', sentAt: minutesAgo(6) })]);
 
     expect(store.cards()[0].level).toBe('warning');
+  });
+
+  it('takes the store time zone from the thresholds read', () => {
+    create();
+    answer();
+
+    expect(store.timeZone()).toBe('America/Lima');
+  });
+
+  it('falls back to the device time zone until the thresholds arrive and when they cannot be read', () => {
+    const device = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    store = build();
+    TestBed.tick();
+    expect(store.timeZone()).toBe(device);
+
+    http.expectOne(THRESHOLDS).flush(serverError, failure);
+    answer();
+
+    expect(store.timeZone()).toBe(device);
   });
 
   it('corrects the elapsed time with the offset of the server clock', () => {

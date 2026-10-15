@@ -150,6 +150,7 @@ import { BoardStore } from './board-store';
               [enabled]="store.enabled()"
               [pending]="store.pending.values()"
               [queued]="store.queuedIds()"
+              [timeZone]="store.timeZone()"
               (start)="store.start($event)"
               (readyOrder)="store.readyOrder($event)"
               (readyLine)="store.readyLine($event)"

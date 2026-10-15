@@ -44,6 +44,8 @@ export class BoardStore {
   private readonly now = signal(Date.now());
   private readonly offset = signal(0);
   private readonly ageThresholds = signal<AgeThresholds>(DEFAULT_AGE_THRESHOLDS);
+  // The store zone arrives with the thresholds; the device zone covers the gap and a failed read.
+  private readonly zone = signal(Intl.DateTimeFormat().resolvedOptions().timeZone);
   private readonly queue = new UndoQueue();
   private destroyed = false;
   // Markers nobody has acknowledged as of the previous read; null until the first read has been applied.
@@ -52,6 +54,7 @@ export class BoardStore {
 
   readonly view = this.currentView.asReadonly();
   readonly allDay = this.currentAllDay.asReadonly();
+  readonly timeZone = this.zone.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
   readonly connected = this.realtime.isConnected;
   readonly enabled = this.sync.enabled;
@@ -101,7 +104,10 @@ export class BoardStore {
       .thresholds()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response) => this.ageThresholds.set(thresholdsOf(response)),
+        next: (response) => {
+          this.ageThresholds.set(thresholdsOf(response));
+          this.zone.set(response.timeZone);
+        },
         error: () => this.ageThresholds.set(DEFAULT_AGE_THRESHOLDS),
       });
     this.load();
