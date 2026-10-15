@@ -193,6 +193,8 @@ export class BoardStore {
   setStation(station: string | null): void {
     this.chosenStation.set(station);
     storeStation(station);
+    // Markers that merely came into scope with the new filter are not news.
+    this.knownMarkers = null;
     this.load();
   }
 

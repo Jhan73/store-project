@@ -475,6 +475,50 @@ describe('BoardStore', () => {
       expect(store.cards().map((card) => card.order.id)).toEqual(['all']);
     });
 
+    describe('marker sounds', () => {
+      const withMarker = (id: string) =>
+        order({ id: `o-${id}`, markers: [marker({ id, boardOrderId: `o-${id}`, kind: 'NEW', acknowledgedAt: null })] });
+
+      it('stays quiet for markers that only came into scope when the station changed, then sounds a new one', () => {
+        create();
+        answer([withMarker('m1')]);
+
+        store.setStation('s1');
+        answerFor('s1', [withMarker('m1'), withMarker('m2')]);
+        expect(sound.play).not.toHaveBeenCalled();
+
+        realtime.signals.next();
+        answerFor('s1', [withMarker('m1'), withMarker('m2'), withMarker('m3')]);
+        expect(sound.play).toHaveBeenCalledTimes(1);
+        expect(sound.play).toHaveBeenCalledWith(['NEW']);
+      });
+
+      it('stays quiet when going back to all stations', () => {
+        create();
+        answer();
+        store.setStation('s1');
+        answerFor('s1', [withMarker('m1')]);
+
+        store.setStation(null);
+        answerFor(null, [withMarker('m1'), withMarker('m2')]);
+
+        expect(sound.play).not.toHaveBeenCalled();
+      });
+
+      it('does not take a read made with a station that is gone as the baseline', () => {
+        localStorage.setItem(STATION_KEY, 'gone');
+        store = build();
+        TestBed.tick();
+        http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+        answerFor('gone', [withMarker('m1')]);
+
+        http.expectOne(STATIONS).flush([bar, kitchen]);
+        answerFor(null, [withMarker('m1'), withMarker('m2')]);
+
+        expect(sound.play).not.toHaveBeenCalled();
+      });
+    });
+
     it('works without storage', () => {
       vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
         throw new Error('blocked');
