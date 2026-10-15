@@ -4,18 +4,21 @@ import {
   IconLayoutKanban,
   IconRefresh,
   IconStack2,
+  IconVolume,
+  IconVolumeOff,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Tooltip } from 'primeng/tooltip';
 import { BoardAllDayView } from '../../../shared/ui/board-all-day/board-all-day';
 import { BoardCard } from '../../../shared/ui/board-card/board-card';
+import { BoardSound } from './board-sound';
 import { BoardStore } from './board-store';
 
 @Component({
   selector: 'app-board',
   imports: [BoardAllDayView, BoardCard, ButtonDirective, TablerIconComponent, Tooltip],
-  providers: [BoardStore],
+  providers: [BoardStore, BoardSound],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './board.scss',
   template: `
@@ -52,7 +55,41 @@ import { BoardStore } from './board-store';
       </div>
     }
 
+    @if (sound.unsupported()) {
+      <div class="sound-warning" role="status" data-testid="sound-warning">
+        <tabler-icon [icon]="icons.soundOff" aria-hidden="true" />
+        <ng-container i18n="@@staff.board.sound.unsupported"
+          >Este navegador no permite sonido. Mira el tablero para ver los avisos nuevos.</ng-container
+        >
+      </div>
+    } @else if (!sound.enabled()) {
+      <div class="sound-warning" role="status" data-testid="sound-warning">
+        <tabler-icon [icon]="icons.soundOff" aria-hidden="true" />
+        <ng-container i18n="@@staff.board.sound.off"
+          >Sonido desactivado: no sonarán los avisos de pedidos nuevos, modificados o anulados.</ng-container
+        >
+        <button
+          pButton
+          type="button"
+          data-testid="enable-sound"
+          (click)="enableSound()"
+          pTooltip="Activar los sonidos de aviso del tablero"
+          i18n-pTooltip="@@staff.board.sound.enable.tooltip"
+          tooltipPosition="top"
+        >
+          <tabler-icon [icon]="icons.sound" aria-hidden="true" />
+          <span i18n="@@staff.board.sound.enable">Activar sonido</span>
+        </button>
+      </div>
+    }
+
     <h1 i18n="@@staff.board.title">Tablero</h1>
+    @if (sound.enabled()) {
+      <p class="sound-on" data-testid="sound-on">
+        <tabler-icon [icon]="icons.sound" aria-hidden="true" />
+        <span i18n="@@staff.board.sound.on">Sonido activado</span>
+      </p>
+    }
 
     <div class="views" role="group" aria-label="Vistas del tablero" i18n-aria-label="@@staff.board.views">
       <button
@@ -136,12 +173,19 @@ import { BoardStore } from './board-store';
 })
 export class Board {
   protected readonly store = inject(BoardStore);
+  protected readonly sound = inject(BoardSound);
   protected readonly icons = {
     retry: IconRefresh,
     tickets: IconLayoutKanban,
     allDay: IconStack2,
     ready: IconBellCheck,
+    sound: IconVolume,
+    soundOff: IconVolumeOff,
   };
+
+  protected enableSound(): void {
+    void this.sound.enable();
+  }
 
   protected readonly shown = computed(() =>
     this.store.view() === 'ready' ? this.store.readyCards() : this.store.cards(),

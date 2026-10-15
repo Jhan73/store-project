@@ -27,6 +27,32 @@ h1 {
   font-weight: 700;
 }
 
+.sound-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 3px solid var(--warning);
+  border-radius: var(--radius);
+  font-size: 1.375rem;
+  font-weight: 700;
+
+  button {
+    min-height: 3.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+.sound-on {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 1.125rem;
+}
+
 .views {
   display: flex;
   flex-wrap: wrap;

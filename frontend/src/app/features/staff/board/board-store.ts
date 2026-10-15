@@ -11,6 +11,8 @@ import { AgeLevel, ageLevel, ageStartOf, AgeThresholds, DEFAULT_AGE_THRESHOLDS, 
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { UndoQueue } from '../../../shared/state/undo-queue';
 import { BoardApi } from './board-api';
+import { newMarkerKinds, unacknowledgedMarkerIds } from './board-markers';
+import { BoardSound } from './board-sound';
 
 export type BoardView = 'tickets' | 'allDay' | 'ready';
 
@@ -30,6 +32,7 @@ export class BoardStore {
   private readonly api = inject(BoardApi);
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly sound = inject(BoardSound);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
 
@@ -43,6 +46,8 @@ export class BoardStore {
   private readonly ageThresholds = signal<AgeThresholds>(DEFAULT_AGE_THRESHOLDS);
   private readonly queue = new UndoQueue();
   private destroyed = false;
+  // Markers nobody has acknowledged as of the previous read; null until the first read has been applied.
+  private knownMarkers: ReadonlySet<string> | null = null;
   private lastRequest = 0;
 
   readonly view = this.currentView.asReadonly();
@@ -156,6 +161,7 @@ export class BoardStore {
           this.tickets.set(tickets.orders);
           this.readyOrders.set(ready);
           this.currentAllDay.set(allDay);
+          this.announce([...tickets.orders, ...ready]);
           this.offset.set(clockOffsetMs(tickets.serverDate, Date.now()));
           this.now.set(Date.now());
           this.loadFailed.set(false);
@@ -170,6 +176,17 @@ export class BoardStore {
           }
         },
       });
+  }
+
+  // The first read is the baseline: only markers that show up in a later read are news.
+  private announce(orders: readonly BoardOrder[]): void {
+    if (this.knownMarkers !== null) {
+      const kinds = newMarkerKinds(this.knownMarkers, orders);
+      if (kinds.length > 0) {
+        this.sound.play(kinds);
+      }
+    }
+    this.knownMarkers = unacknowledgedMarkerIds(orders);
   }
 
   private schedule(id: string, request: () => Observable<unknown>): void {

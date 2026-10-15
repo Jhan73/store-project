@@ -4709,7 +4709,7 @@
     </unit>
     <unit id="staff.board.failed">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:25,27</note>
+        <note category="location">src/app/features/staff/board/board.ts:28,30</note>
       </notes>
       <segment>
         <source>No se pudo actualizar el tablero. Las acciones están deshabilitadas.</source>
@@ -4717,7 +4717,7 @@
     </unit>
     <unit id="staff.board.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:33,34</note>
+        <note category="location">src/app/features/staff/board/board.ts:36,37</note>
       </notes>
       <segment>
         <source>Volver a cargar el tablero</source>
@@ -4725,7 +4725,7 @@
     </unit>
     <unit id="staff.board.retry">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:38,40</note>
+        <note category="location">src/app/features/staff/board/board.ts:41,43</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4733,7 +4733,7 @@
     </unit>
     <unit id="staff.board.offline">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:44,46</note>
+        <note category="location">src/app/features/staff/board/board.ts:47,49</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
@@ -4741,23 +4741,63 @@
     </unit>
     <unit id="staff.board.updating">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:50,52</note>
+        <note category="location">src/app/features/staff/board/board.ts:53,55</note>
       </notes>
       <segment>
         <source>Actualizando el tablero. Las acciones se habilitan en unos segundos.</source>
       </segment>
     </unit>
+    <unit id="staff.board.sound.unsupported">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:62,65</note>
+      </notes>
+      <segment>
+        <source>Este navegador no permite sonido. Mira el tablero para ver los avisos nuevos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.sound.off">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:69,71</note>
+      </notes>
+      <segment>
+        <source>Sonido desactivado: no sonarán los avisos de pedidos nuevos, modificados o anulados.</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.sound.enable.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:76,77</note>
+      </notes>
+      <segment>
+        <source>Activar los sonidos de aviso del tablero</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.sound.enable">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:81,84</note>
+      </notes>
+      <segment>
+        <source>Activar sonido</source>
+      </segment>
+    </unit>
     <unit id="staff.board.title">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:55,57</note>
+        <note category="location">src/app/features/staff/board/board.ts:86,87</note>
       </notes>
       <segment>
         <source>Tablero</source>
       </segment>
     </unit>
+    <unit id="staff.board.sound.on">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:90,94</note>
+      </notes>
+      <segment>
+        <source>Sonido activado</source>
+      </segment>
+    </unit>
     <unit id="staff.board.views">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:57</note>
+        <note category="location">src/app/features/staff/board/board.ts:94</note>
       </notes>
       <segment>
         <source>Vistas del tablero</source>
@@ -4765,7 +4805,7 @@
     </unit>
     <unit id="staff.board.view.tickets.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:64,65</note>
+        <note category="location">src/app/features/staff/board/board.ts:101,102</note>
       </notes>
       <segment>
         <source>Ver los pedidos por preparar</source>
@@ -4773,7 +4813,7 @@
     </unit>
     <unit id="staff.board.view.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:70,71</note>
+        <note category="location">src/app/features/staff/board/board.ts:107,108</note>
       </notes>
       <segment>
         <source>Pedidos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.cards().length }}"/>)</source>
@@ -4781,7 +4821,7 @@
     </unit>
     <unit id="staff.board.view.allDay.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:78,79</note>
+        <note category="location">src/app/features/staff/board/board.ts:115,116</note>
       </notes>
       <segment>
         <source>Ver el total de cada producto pendiente</source>
@@ -4789,7 +4829,7 @@
     </unit>
     <unit id="staff.board.view.allDay">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:84,87</note>
+        <note category="location">src/app/features/staff/board/board.ts:121,124</note>
       </notes>
       <segment>
         <source>Todo el día</source>
@@ -4797,7 +4837,7 @@
     </unit>
     <unit id="staff.board.view.ready.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:92,93</note>
+        <note category="location">src/app/features/staff/board/board.ts:129,130</note>
       </notes>
       <segment>
         <source>Ver los pedidos listos para entregar</source>
@@ -4805,7 +4845,7 @@
     </unit>
     <unit id="staff.board.view.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:98,99</note>
+        <note category="location">src/app/features/staff/board/board.ts:135,136</note>
       </notes>
       <segment>
         <source>Listos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.readyCards().length }}"/>)</source>
@@ -4813,7 +4853,7 @@
     </unit>
     <unit id="staff.board.empty.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:129,131</note>
+        <note category="location">src/app/features/staff/board/board.ts:166,168</note>
       </notes>
       <segment>
         <source>No hay pedidos listos para entregar.</source>
@@ -4821,7 +4861,7 @@
     </unit>
     <unit id="staff.board.empty.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:131,137</note>
+        <note category="location">src/app/features/staff/board/board.ts:168,174</note>
       </notes>
       <segment>
         <source>No hay pedidos por preparar.</source>

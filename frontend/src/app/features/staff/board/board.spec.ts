@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
@@ -10,6 +10,8 @@ import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { emptyAllDay, line, marker, minutesAgo, order } from '../../../testing/board-fixtures';
 import { BoardApi } from './board-api';
+import { BoardSound } from './board-sound';
+import { BoardStore } from './board-store';
 import { Board } from './board';
 
 const BASE = 'http://api.test/api/v1';
@@ -32,11 +34,25 @@ const serverError = { type: 'about:blank', status: 500, code: 'common.internal-e
 const failure = { status: 500, statusText: 'Server Error' };
 
 describe('Board', () => {
+  let sound: { enabled: WritableSignal<boolean>; unsupported: WritableSignal<boolean>; enable: ReturnType<typeof vi.fn>; play: ReturnType<typeof vi.fn> };
   let realtime: FakeRealtime;
   let http: HttpTestingController;
 
   beforeEach(() => {
     realtime = new FakeRealtime();
+    const enabled = signal(false);
+    sound = {
+      enabled,
+      unsupported: signal(false),
+      enable: vi.fn(() => {
+        enabled.set(true);
+        return Promise.resolve();
+      }),
+      play: vi.fn(),
+    };
+    TestBed.overrideComponent(Board, {
+      set: { providers: [BoardStore, { provide: BoardSound, useValue: sound }] },
+    });
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
@@ -131,6 +147,35 @@ describe('Board', () => {
 
     expect(query(fixture, 'view-tickets')!.textContent).toContain('2');
     expect(query(fixture, 'view-ready')!.textContent).toContain('1');
+  });
+
+  describe('sound', () => {
+    it('warns while the sound is off and offers to enable it', async () => {
+      const fixture = await live();
+
+      expect(query(fixture, 'sound-warning')?.textContent).toContain('Sonido desactivado');
+      expect(query(fixture, 'enable-sound')).not.toBeNull();
+      expect(query(fixture, 'sound-on')).toBeNull();
+    });
+
+    it('enables the sound on the tap and drops the warning', async () => {
+      const fixture = await live();
+
+      query(fixture, 'enable-sound')!.click();
+      await fixture.whenStable();
+
+      expect(sound.enable).toHaveBeenCalledTimes(1);
+      expect(query(fixture, 'sound-warning')).toBeNull();
+      expect(query(fixture, 'sound-on')?.textContent).toContain('Sonido activado');
+    });
+
+    it('says so when the browser has no audio, without a button that cannot work', async () => {
+      sound.unsupported.set(true);
+      const fixture = await live();
+
+      expect(query(fixture, 'sound-warning')?.textContent).toContain('no permite sonido');
+      expect(query(fixture, 'enable-sound')).toBeNull();
+    });
   });
 
   describe('disconnection', () => {

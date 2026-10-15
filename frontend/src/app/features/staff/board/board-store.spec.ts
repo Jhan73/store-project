@@ -9,7 +9,8 @@ import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
-import { emptyAllDay, minutesAgo, order } from '../../../testing/board-fixtures';
+import { emptyAllDay, marker, minutesAgo, order } from '../../../testing/board-fixtures';
+import { BoardSound } from './board-sound';
 import { BoardStore } from './board-store';
 
 const BASE = 'http://api.test/api/v1';
@@ -39,10 +40,12 @@ describe('BoardStore', () => {
   let store: BoardStore;
   let screen: EnvironmentInjector;
   let screenClosed: boolean;
+  let sound: { play: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     realtime = new FakeRealtime();
     screenClosed = false;
+    sound = { play: vi.fn() };
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(withInterceptors([errorInterceptor])),
@@ -64,7 +67,10 @@ describe('BoardStore', () => {
 
   // The screen provides the store, so it is destroyed on its own while the root services live on.
   function build(): BoardStore {
-    screen = createEnvironmentInjector([BoardStore], TestBed.inject(EnvironmentInjector));
+    screen = createEnvironmentInjector(
+      [BoardStore, { provide: BoardSound, useValue: sound }],
+      TestBed.inject(EnvironmentInjector),
+    );
     return screen.get(BoardStore);
   }
 
@@ -316,6 +322,91 @@ describe('BoardStore', () => {
     realtime.signals.next();
 
     http.expectNone(TICKETS);
+  });
+
+  describe('markers and sound', () => {
+    const withMarker = (id: string, kind: 'NEW' | 'MODIFIED' | 'VOID', acknowledgedAt: string | null = null) =>
+      order({ id: `o-${id}`, markers: [marker({ id, boardOrderId: `o-${id}`, kind, acknowledgedAt })] });
+
+    it('stays quiet on the first read: what was already there is not news', () => {
+      create();
+      answer([withMarker('m1', 'NEW')]);
+
+      expect(sound.play).not.toHaveBeenCalled();
+    });
+
+    it('sounds the kind of a marker that arrives after the first read, and only once', () => {
+      create();
+      answer([withMarker('m1', 'NEW')]);
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW'), withMarker('m2', 'VOID')]);
+      expect(sound.play).toHaveBeenCalledTimes(1);
+      expect(sound.play).toHaveBeenCalledWith(['VOID']);
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW'), withMarker('m2', 'VOID')]);
+      expect(sound.play).toHaveBeenCalledTimes(1);
+    });
+
+    it('sounds each kind that arrived together, most urgent first', () => {
+      create();
+      answer();
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW'), withMarker('m2', 'MODIFIED'), withMarker('m3', 'NEW')]);
+
+      expect(sound.play).toHaveBeenCalledWith(['MODIFIED', 'NEW']);
+    });
+
+    it('does not sound for a marker that was acknowledged', () => {
+      create();
+      answer();
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW', '2026-10-13T10:00:00Z')]);
+
+      expect(sound.play).not.toHaveBeenCalled();
+    });
+
+    it('hears the markers of a ready card too, such as a line added after it was ready', () => {
+      create();
+      answer();
+
+      realtime.signals.next();
+      answer([], [{ ...withMarker('m1', 'MODIFIED'), status: 'READY', readyAt: minutesAgo(1) }]);
+
+      expect(sound.play).toHaveBeenCalledWith(['MODIFIED']);
+    });
+
+    it('does not sound a marker again after a reconnection re-read', () => {
+      create();
+      answer([withMarker('m1', 'NEW')]);
+      connect([withMarker('m1', 'NEW')]);
+      realtime.connected.set(false);
+      TestBed.tick();
+      realtime.connected.set(true);
+      TestBed.tick();
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW')]);
+
+      expect(sound.play).not.toHaveBeenCalled();
+    });
+
+    it('does not take a failed read for a read without markers', () => {
+      create();
+      answer([withMarker('m1', 'NEW')]);
+      realtime.signals.next();
+      http.expectOne(TICKETS).flush(serverError, failure);
+      http.match(READY);
+      http.match(ALL_DAY);
+
+      realtime.signals.next();
+      answer([withMarker('m1', 'NEW')]);
+
+      expect(sound.play).not.toHaveBeenCalled();
+    });
   });
 
   describe('commands', () => {
