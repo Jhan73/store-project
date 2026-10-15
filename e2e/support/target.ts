@@ -17,6 +17,20 @@ function looksLikeProduction(host: string): boolean {
   return host.includes('prod') || PRODUCTION_HOSTS.has(host);
 }
 
+export function isDedicatedAccount(email: string): boolean {
+  return /^e2e[^@]*@[^@]+$/i.test(email);
+}
+
+// The suite force-closes the register shift of its account, so it only does that to an account named for it.
+export function assertDedicatedAccount(email: string): void {
+  if (!isDedicatedAccount(email)) {
+    throw new Error(
+      'The suite closes the open register shift of its account, so E2E_ADMIN_EMAIL must be a dedicated account ' +
+        'whose address starts with "e2e" (see e2e/CLAUDE.md).',
+    );
+  }
+}
+
 // Throws when the suite would run against a non-local or production target without explicit consent.
 export function assertSafeTarget(urls: Record<string, string>, allowRemote: boolean): void {
   for (const [name, url] of Object.entries(urls)) {

@@ -1,5 +1,6 @@
 import { request, type APIRequestContext } from '@playwright/test';
 import { adminCredentials, apiUrl } from './env';
+import { assertDedicatedAccount, isDedicatedAccount } from './target';
 
 export const E2E_NAME = /^e2e-\d{13}-/;
 
@@ -69,6 +70,13 @@ interface TableGridEntry {
 export function uniqueName(label: string): string {
   return `e2e-${Date.now()}-${label}`;
 }
+
+export function minorUnits(money: Money): number {
+  const [whole = '0', cents = '0'] = money.amount.split('.');
+  return Number(whole) * 100 + Number(cents.padEnd(2, '0'));
+}
+
+type Attempt = (what: string, action: () => Promise<unknown>) => Promise<void>;
 
 export async function withAdminApi<T>(action: (api: AdminApi) => Promise<T>): Promise<T> {
   const api = await AdminApi.create();
@@ -157,6 +165,7 @@ export class AdminApi {
   async closeOpenShift(): Promise<void> {
     const shift = await this.currentShift();
     if (shift) {
+      assertDedicatedAccount(adminCredentials().email);
       await this.send('POST', `/api/v1/shifts/${shift.id}/force-close`, { reason: 'e2e cleanup' });
     }
   }
@@ -166,7 +175,7 @@ export class AdminApi {
   // processed independently and failures are reported together at the end.
   async cleanUp(): Promise<void> {
     const errors: string[] = [];
-    const attempt = async (what: string, action: () => Promise<unknown>) => {
+    const attempt: Attempt = async (what, action) => {
       try {
         await action();
       } catch (error) {
@@ -177,8 +186,22 @@ export class AdminApi {
     // Tickets and cards of a failed run are finished first: a table with an open ticket cannot be retired.
     await attempt('open tickets', () => this.settleTickets());
     await attempt('board orders', () => this.finishBoardOrders());
-    await attempt('open shift', () => this.closeOpenShift());
+    if (isDedicatedAccount(adminCredentials().email)) {
+      await attempt('open shift', () => this.closeOpenShift());
+    } else {
+      console.warn('Left the open shift alone: E2E_ADMIN_EMAIL is not a dedicated e2e account.');
+    }
 
+    await attempt('products and modifier groups', () => this.sweepCatalog(attempt));
+    await attempt('categories', () => this.sweepCategories(attempt));
+    await attempt('tables', () => this.sweepTables(attempt));
+    await attempt('reasons', () => this.sweepReasons(attempt));
+    if (errors.length > 0) {
+      throw new Error([`Cleanup left ${errors.length} item(s) behind:`, ...errors].join('\n'));
+    }
+  }
+
+  private async sweepCatalog(attempt: Attempt): Promise<void> {
     const products = await this.products();
     const usedByOthers = new Set(
       products.filter((product) => !E2E_NAME.test(product.name)).flatMap((product) => product.modifierGroupIds),
@@ -209,6 +232,9 @@ export class AdminApi {
         this.send('DELETE', `/api/v1/admin/modifier-groups/${group.id}`, undefined, group.etag),
       );
     }
+  }
+
+  private async sweepCategories(attempt: Attempt): Promise<void> {
     for (const category of await this.get<Category[]>('/api/v1/admin/categories')) {
       if (E2E_NAME.test(category.name) && category.active) {
         await attempt(`category ${category.id}`, () =>
@@ -216,6 +242,9 @@ export class AdminApi {
         );
       }
     }
+  }
+
+  private async sweepTables(attempt: Attempt): Promise<void> {
     const occupied = new Set(
       (await this.get<TableGridEntry[]>('/api/v1/tables'))
         .filter((entry) => entry.status !== 'FREE')
@@ -231,17 +260,19 @@ export class AdminApi {
         this.send('POST', `/api/v1/admin/tables/${table.id}/deactivate`, undefined, table.etag),
       );
     }
+  }
+
+  private async sweepReasons(attempt: Attempt): Promise<void> {
     for (const type of ['VOID', 'COMP', 'CASH_OUT', 'STOCK_ADJUSTMENT'] as const) {
-      for (const reason of await this.get<Reason[]>(`/api/v1/admin/reasons?type=${type}`)) {
-        if (E2E_NAME.test(reason.code) && reason.active) {
-          await attempt(`reason ${reason.id}`, () =>
-            this.send('POST', `/api/v1/admin/reasons/${reason.id}/deactivate`, undefined, reason.etag),
-          );
+      await attempt(`reasons of type ${type}`, async () => {
+        for (const reason of await this.get<Reason[]>(`/api/v1/admin/reasons?type=${type}`)) {
+          if (E2E_NAME.test(reason.code) && reason.active) {
+            await attempt(`reason ${reason.id}`, () =>
+              this.send('POST', `/api/v1/admin/reasons/${reason.id}/deactivate`, undefined, reason.etag),
+            );
+          }
         }
-      }
-    }
-    if (errors.length > 0) {
-      throw new Error([`Cleanup left ${errors.length} item(s) behind:`, ...errors].join('\n'));
+      });
     }
   }
 
@@ -262,10 +293,9 @@ export class AdminApi {
       for (const line of initial.lines.filter((candidate) => candidate.state === 'UNSENT')) {
         await this.send('DELETE', `/api/v1/tickets/${summary.id}/lines/${line.id}`);
       }
-      const { balance } = await this.get<TicketDetail>(`/api/v1/tickets/${summary.id}`);
-      if (balance.amount === '0.00') {
-        console.warn(`Ticket ${summary.id} has nothing to charge, so it stays open.`);
-        continue;
+      let { balance } = await this.get<TicketDetail>(`/api/v1/tickets/${summary.id}`);
+      if (minorUnits(balance) === 0) {
+        balance = await this.addChargeableLine(summary.id);
       }
       if (!(await this.currentShift())) await this.openShift('0.00');
       await this.send(
@@ -276,6 +306,22 @@ export class AdminApi {
         { 'Idempotency-Key': crypto.randomUUID() },
       );
     }
+  }
+
+  // A ticket only ends by a payment, and one with nothing left to charge (only voided lines) has none to take: give
+  // it a line, so it can be sent and paid and its table retired. The product and category go with the sweep.
+  private async addChargeableLine(ticketId: string): Promise<Money> {
+    const category = await this.createCategory(uniqueName('settle-category'));
+    const product = await this.createProduct(uniqueName('settle'), category.id);
+    await this.send(
+      'POST',
+      `/api/v1/tickets/${ticketId}/lines`,
+      { productId: product.id, quantity: 1, allergy: false },
+      undefined,
+      { 'Idempotency-Key': crypto.randomUUID() },
+    );
+    await this.send('POST', `/api/v1/tickets/${ticketId}/send`);
+    return (await this.get<TicketDetail>(`/api/v1/tickets/${ticketId}`)).balance;
   }
 
   private async finishBoardOrders(): Promise<void> {
