@@ -258,6 +258,28 @@ describe('StockList', () => {
     });
   });
 
+  it('records an entry from the row and shows the new quantities', async () => {
+    const { fixture, host, http } = await render([stock(PAPAYA, 3)]);
+
+    click(host, `entry-${PAPAYA}`);
+    await fixture.whenStable();
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Papaya');
+    typeNumber(dialog, 'entry-quantity', '20');
+    await fixture.whenStable();
+    dialog.querySelector<HTMLButtonElement>('[data-testid="entry-save"]')!.click();
+    const request = http.expectOne(`${STOCK}/${PAPAYA}/entries`);
+    expect(request.request.body).toEqual({ quantity: 20, note: null });
+    request.flush(stock(PAPAYA, 23));
+    await fixture.whenStable();
+    http.expectOne(STOCK).flush([stock(PAPAYA, 23)]);
+    await fixture.whenStable();
+
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+    expect(rows(host)[0]).toContain('23');
+    expect(rows(host)[0]).not.toContain('Stock bajo');
+  });
+
   it('shows an error with a retry when the stock cannot be read', async () => {
     TestBed.configureTestingModule({
       providers: [

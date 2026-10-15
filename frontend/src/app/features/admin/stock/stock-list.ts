@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgModel } from '@angular/forms';
 import {
   IconAlertTriangle,
+  IconPackageImport,
   IconPencil,
   IconPlus,
   IconRefresh,
@@ -17,6 +18,7 @@ import { PendingIds } from '../../../shared/state/pending-ids';
 import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 import { shortId } from '../audit/audit-labels';
 import { StockApi } from './stock-api';
+import { StockEntryDialog } from './stock-entry-dialog';
 import { StockTrackDialog } from './stock-track-dialog';
 
 type Status = 'loading' | 'ready' | 'error';
@@ -33,6 +35,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
   imports: [
     FormsModule,
     ButtonDirective,
+    StockEntryDialog,
     StockTrackDialog,
     TableScroll,
     TablerIconComponent,
@@ -148,6 +151,19 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                       <button
                         pButton
                         type="button"
+                        [size]="'small'"
+                        [attr.data-testid]="'entry-' + row.item.productId"
+                        (click)="openEntry(row.item)"
+                        pTooltip="Registrar unidades que entraron de un proveedor"
+                        i18n-pTooltip="@@admin.stock.entry.tooltip"
+                        tooltipPosition="top"
+                      >
+                        <tabler-icon [icon]="icons.entry" aria-hidden="true" />
+                        <span i18n="@@admin.stock.entry">Entrada</span>
+                      </button>
+                      <button
+                        pButton
+                        type="button"
                         severity="secondary"
                         [outlined]="true"
                         [size]="'small'"
@@ -170,6 +186,14 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
       }
     }
 
+    <app-stock-entry-dialog
+      [visible]="entryOpen()"
+      [item]="entryTarget()"
+      [productName]="entryName()"
+      (saved)="entrySaved()"
+      (dismissed)="closeEntry()"
+    />
+
     <app-stock-track-dialog
       [visible]="trackOpen()"
       [target]="trackTarget()"
@@ -189,9 +213,12 @@ export class StockList {
     low: IconAlertTriangle,
     create: IconPlus,
     edit: IconPencil,
+    entry: IconPackageImport,
   };
   protected readonly status = signal<Status>('loading');
   protected readonly lowOnly = signal(false);
+  protected readonly entryOpen = signal(false);
+  protected readonly entryTarget = signal<StockItem | null>(null);
   protected readonly trackOpen = signal(false);
   protected readonly trackTarget = signal<StockItem | null>(null);
   protected readonly products = signal<readonly Product[]>([]);
@@ -205,15 +232,24 @@ export class StockList {
   protected readonly rows = computed<StockRow[]>(() => {
     const rows = this.items().map((item) => ({
       item,
-      name: this.names().get(item.productId) ?? shortId(item.productId),
+      name: this.nameOf(item.productId),
     }));
     // The low list already comes emptiest first.
     return this.lowOnly() ? rows : rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   });
 
+  protected readonly entryName = computed(() => {
+    const target = this.entryTarget();
+    return target ? this.nameOf(target.productId) : '';
+  });
+
   constructor() {
     this.load();
     this.loadProducts();
+  }
+
+  protected nameOf(productId: string): string {
+    return this.names().get(productId) ?? shortId(productId);
   }
 
   protected count(quantity: number): string {
@@ -223,6 +259,20 @@ export class StockList {
   protected setLowOnly(lowOnly: boolean): void {
     this.lowOnly.set(lowOnly);
     this.load();
+  }
+
+  protected openEntry(item: StockItem): void {
+    this.entryTarget.set(item);
+    this.entryOpen.set(true);
+  }
+
+  protected closeEntry(): void {
+    this.entryOpen.set(false);
+  }
+
+  protected entrySaved(): void {
+    this.closeEntry();
+    this.load(true);
   }
 
   protected openTrack(target: StockItem | null): void {
