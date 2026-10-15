@@ -462,7 +462,7 @@ IDs are UUID v7 (time-ordered, generated in the application). Money is `numeric(
 | `audit` | `audit_log` (partitioned by year) |
 | `modulith` | `event_publication` |
 
-Short order numbers (`W-042`, `L-017`) come from `daily_order_counter`, reset per business day in the store timezone.
+Short order numbers (`W-042`, `L-017`) come from `daily_order_counter`, reset per business day in the store timezone. As built for in-store sales (M2), the number on the board is the ticket's own sequence with a letter, `T<n>` for a ticket and `Q<n>` for a quick sale (suffixed `-<round>` after the first), and does not reset per day; `L-` and the counter table are not used.
 
 Line snapshots store product name, chosen options with their price deltas, and the line total, so reports, refunds, and substitutions never depend on the current catalog (BR-03).
 
@@ -1219,7 +1219,8 @@ Coverage gates: backend ≥ 80% lines on `internal` packages; frontend ≥ 80% l
 - Configured only through environment variables (frontend URL, API URL, admin credentials); credentials are never in a file. Typed values are recorded as step titles (`Fill "<value>"`) in html, json and blob reports and in traces, so those reporters and artifacts are not used (only `list` locally and `github`/`line` in CI; trace, video and screenshot stay off), and `test-results` or reports are never uploaded. `npm run check:config` enforces this.
 - The runner refuses any frontend or API URL that is not local unless `E2E_ALLOW_REMOTE=1` is set, and refuses production hosts even then.
 - Every browser context signs in through the login screen: the refresh cookie rotates on use and reuse revokes the session family (§6.4), so a stored `storageState` cannot be shared between contexts or runs.
-- Test data is prefixed `e2e-<timestamp>-` and cleaned up through the API after each journey (products and categories are deactivated, modifier groups deleted).
+- Test data is prefixed `e2e-<timestamp>-` and cleaned up through the API after each journey (products, categories, tables and reasons are deactivated, modifier groups deleted, open tickets of the suite settled with a cash payment, their board cards handed over, and the account's open shift force-closed, so the account must be dedicated to the suite, with an address that starts with `e2e`, which the code enforces).
+- The floor journeys (PRD §7 journeys 2, 3, 4 and 7, built at M2-close) open one browser context per role or device: a 10" tablet viewport for the server, a 1080p one for the board and the customer screen, and a desktop one for the cashier. One `ADMIN` account plays every role, so role restrictions are covered by the module and component tests. Each journey seeds its own shift, tables, products and reasons through the API.
 - Wired into `cd-test.yml` (`e2e` job after `smoke`; `record` waits for it) behind the `test` environment variable `E2E_ENABLED`. The admin password is a manual SecureString at `/jugueria/test/e2e/admin-password`, read through the `test` deploy role and masked; the other settings are `test` environment variables. Setup in `docs/runbooks/e2e-setup.md`.
 
 ## 12. Observability and operations

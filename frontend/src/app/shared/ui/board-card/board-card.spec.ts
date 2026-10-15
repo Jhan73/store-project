@@ -48,6 +48,12 @@ describe('BoardCard', () => {
       expect(host().querySelector('[data-testid="elapsed"]')?.textContent).toContain('12 min');
     });
 
+    it('exposes the short number on its own so screens can be matched by it', () => {
+      render(order({ id: 'o1', shortNumber: 'L-018', channel: 'COUNTER', label: 'Ana' }));
+
+      expect(host().querySelector('[data-testid="short-number"]')?.textContent?.trim()).toBe('L-018');
+    });
+
     it.each([
       ['TABLE', 'Mesa'],
       ['COUNTER', 'Mostrador'],

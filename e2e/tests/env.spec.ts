@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { assertSafeTarget } from '../support/target';
+import { assertDedicatedAccount, assertSafeTarget, isDedicatedAccount } from '../support/target';
 
 const local = { E2E_BASE_URL: 'http://localhost:4200', E2E_API_URL: 'http://127.0.0.1:8080' };
 
@@ -31,5 +31,20 @@ test.describe('target guard', () => {
 
   test('refuses an invalid URL', () => {
     expect(() => assertSafeTarget({ ...local, E2E_API_URL: 'not a url' }, false)).toThrow(/valid URL/);
+  });
+});
+
+test.describe('dedicated account guard', () => {
+  test('accepts an address whose local part starts with e2e', () => {
+    expect(isDedicatedAccount('e2e-admin@example.test')).toBe(true);
+    expect(isDedicatedAccount('E2E.Runner@example.test')).toBe(true);
+    expect(() => assertDedicatedAccount('e2e@example.test')).not.toThrow();
+  });
+
+  test('refuses any other address, naming the rule', () => {
+    for (const email of ['owner@example.test', 'admin-e2e@example.test', 'x@e2e.test', 'not an email', '']) {
+      expect(isDedicatedAccount(email)).toBe(false);
+      expect(() => assertDedicatedAccount(email)).toThrow(/e2e\/CLAUDE\.md/);
+    }
   });
 });
