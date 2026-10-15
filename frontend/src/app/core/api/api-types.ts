@@ -67,3 +67,4 @@ export type BoardAllDay = Schemas['AllDayResponse'];
 export type BoardAllDayGroup = Schemas['AllDayGroupResponse'];
 export type BoardAllDayLine = Schemas['AllDayLineResponse'];
 export type BoardThresholds = Schemas['BoardThresholdsResponse'];
+export type StationOption = Schemas['StationOptionResponse'];

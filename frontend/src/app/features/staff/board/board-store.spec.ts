@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
-import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
+import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
@@ -18,6 +18,10 @@ const TICKETS = `${BASE}/board/tickets`;
 const READY = `${BASE}/board/ready`;
 const ALL_DAY = `${BASE}/board/all-day`;
 const THRESHOLDS = `${BASE}/store/board-thresholds`;
+const STATIONS = `${BASE}/stations`;
+const STATION_KEY = 'board.station';
+const bar = { id: 's1', name: 'Bar' };
+const kitchen = { id: 's2', name: 'Cocina' };
 
 class FakeRealtime {
   readonly connected = signal(false);
@@ -63,6 +67,8 @@ describe('BoardStore', () => {
     vi.useRealTimers();
     closeScreen();
     http.verify();
+    vi.restoreAllMocks();
+    localStorage.removeItem(STATION_KEY);
   });
 
   // The screen provides the store, so it is destroyed on its own while the root services live on.
@@ -92,10 +98,11 @@ describe('BoardStore', () => {
     http.expectOne(ALL_DAY).flush(allDay);
   }
 
-  function create() {
+  function create(stations: StationOption[] = [bar, kitchen]) {
     store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+    http.expectOne(STATIONS).flush(stations);
   }
 
   function connect(tickets: BoardOrder[] = [], ready: BoardOrder[] = [], allDay = emptyAllDay) {
@@ -150,6 +157,7 @@ describe('BoardStore', () => {
     store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 1, boardLateMinutes: 2, timeZone: 'America/Lima' });
+    http.expectOne(STATIONS).flush([]);
     answer([order({ id: 'a', sentAt: minutesAgo(3) })]);
 
     expect(store.cards()[0].level).toBe('late');
@@ -162,6 +170,7 @@ describe('BoardStore', () => {
     store = build();
     TestBed.tick();
     http.expectOne(THRESHOLDS).flush(serverError, failure);
+    http.expectOne(STATIONS).flush([]);
     answer([order({ id: 'a', sentAt: minutesAgo(6) })]);
 
     expect(store.cards()[0].level).toBe('warning');
@@ -181,6 +190,7 @@ describe('BoardStore', () => {
     expect(store.timeZone()).toBe(device);
 
     http.expectOne(THRESHOLDS).flush(serverError, failure);
+    http.expectOne(STATIONS).flush([]);
     answer();
 
     expect(store.timeZone()).toBe(device);
@@ -363,6 +373,120 @@ describe('BoardStore', () => {
     realtime.signals.next();
 
     http.expectNone(TICKETS);
+  });
+
+  describe('station filter', () => {
+    const answerFor = (station: string | null, tickets: BoardOrder[] = []) => {
+      const query = station === null ? '' : `?station=${station}`;
+      http.expectOne(`${TICKETS}${query}`).flush(tickets);
+      http.expectOne(`${READY}${query}`).flush([]);
+      http.expectOne(`${ALL_DAY}${query}`).flush(emptyAllDay);
+    };
+
+    it('offers the stations the API lists and starts on all of them', () => {
+      create();
+      answer();
+
+      expect(store.stations()).toEqual([bar, kitchen]);
+      expect(store.station()).toBeNull();
+    });
+
+    it('reads every view for the chosen station and remembers the choice on this device', () => {
+      create();
+      answer();
+
+      store.setStation('s1');
+
+      answerFor('s1', [order({ id: 'bar-order' })]);
+      expect(store.station()).toBe('s1');
+      expect(store.cards().map((card) => card.order.id)).toEqual(['bar-order']);
+      expect(localStorage.getItem(STATION_KEY)).toBe('s1');
+    });
+
+    it('goes back to all stations and forgets the choice', () => {
+      create();
+      answer();
+      store.setStation('s1');
+      answerFor('s1');
+
+      store.setStation(null);
+
+      answerFor(null);
+      expect(store.station()).toBeNull();
+      expect(localStorage.getItem(STATION_KEY)).toBeNull();
+    });
+
+    it('keeps the filter on every later read', () => {
+      create();
+      answer();
+      store.setStation('s2');
+      answerFor('s2');
+
+      realtime.signals.next();
+
+      answerFor('s2');
+    });
+
+    it('applies only the read of the station chosen last', () => {
+      create();
+      answer();
+      store.setStation('s1');
+      store.setStation('s2');
+
+      answerFor('s2', [order({ id: 'kitchen-order' })]);
+      answerFor('s1', [order({ id: 'bar-order' })]);
+
+      expect(store.cards().map((card) => card.order.id)).toEqual(['kitchen-order']);
+    });
+
+    it('starts on the remembered station', () => {
+      localStorage.setItem(STATION_KEY, 's2');
+      create();
+
+      answerFor('s2', [order({ id: 'kitchen-order' })]);
+
+      expect(store.station()).toBe('s2');
+    });
+
+    it('falls back to all stations when the remembered one is not in the list any more', () => {
+      localStorage.setItem(STATION_KEY, 'gone');
+      create();
+
+      answerFor('gone', [order({ id: 'stale' })]);
+      answerFor(null, [order({ id: 'all' })]);
+
+      expect(store.station()).toBeNull();
+      expect(store.cards().map((card) => card.order.id)).toEqual(['all']);
+      expect(localStorage.getItem(STATION_KEY)).toBeNull();
+    });
+
+    it('falls back to all stations when the stations cannot be read', () => {
+      localStorage.setItem(STATION_KEY, 's1');
+      store = build();
+      TestBed.tick();
+      http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+      http.expectOne(STATIONS).flush(serverError, failure);
+
+      answerFor('s1');
+      answerFor(null, [order({ id: 'all' })]);
+
+      expect(store.station()).toBeNull();
+      expect(store.stations()).toEqual([]);
+      expect(store.cards().map((card) => card.order.id)).toEqual(['all']);
+    });
+
+    it('works without storage', () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new Error('blocked');
+      });
+      create();
+      answer();
+
+      store.setStation('s1');
+
+      answerFor('s1');
+      expect(store.station()).toBe('s1');
+    });
   });
 
   describe('markers and sound', () => {

@@ -5,7 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
-import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
+import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
@@ -20,6 +20,9 @@ const TICKETS = `${BASE}/board/tickets`;
 const READY = `${BASE}/board/ready`;
 const ALL_DAY = `${BASE}/board/all-day`;
 const THRESHOLDS = `${BASE}/store/board-thresholds`;
+const STATIONS = `${BASE}/stations`;
+const bar = { id: 's1', name: 'Bar' };
+const kitchen = { id: 's2', name: 'Cocina' };
 
 class FakeRealtime {
   readonly connected = signal(false);
@@ -75,7 +78,10 @@ describe('Board', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    http.verify();
+    localStorage.removeItem('board.station');
+  });
 
   async function answer(
     fixture: ComponentFixture<Board>,
@@ -89,16 +95,27 @@ describe('Board', () => {
     await fixture.whenStable();
   }
 
-  async function open(tickets: BoardOrder[] = [], ready: BoardOrder[] = [], allDay = emptyAllDay) {
+  async function open(
+    tickets: BoardOrder[] = [],
+    ready: BoardOrder[] = [],
+    allDay = emptyAllDay,
+    stations: StationOption[] = [],
+  ) {
     const fixture = TestBed.createComponent(Board);
     await fixture.whenStable();
     http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+    http.expectOne(STATIONS).flush(stations);
     await answer(fixture, tickets, ready, allDay);
     return fixture;
   }
 
-  async function live(tickets: BoardOrder[] = [], ready: BoardOrder[] = [], allDay = emptyAllDay) {
-    const fixture = await open(tickets, ready, allDay);
+  async function live(
+    tickets: BoardOrder[] = [],
+    ready: BoardOrder[] = [],
+    allDay = emptyAllDay,
+    stations: StationOption[] = [],
+  ) {
+    const fixture = await open(tickets, ready, allDay, stations);
     realtime.connected.set(true);
     realtime.signals.next();
     await answer(fixture, tickets, ready, allDay);
@@ -125,6 +142,92 @@ describe('Board', () => {
     const fixture = await live();
 
     expect(host(fixture).textContent).toContain('No hay pedidos por preparar');
+  });
+
+  describe('station filter', () => {
+    const selector = (fixture: ComponentFixture<Board>) => host(fixture).querySelector('p-select');
+
+    async function choose(fixture: ComponentFixture<Board>, name: string) {
+      selector(fixture)!.querySelector<HTMLElement>('[role="combobox"]')!.click();
+      await fixture.whenStable();
+      await vi.waitFor(() => expect(document.body.querySelector('li[role="option"]')).not.toBeNull());
+      const option = Array.from(document.body.querySelectorAll<HTMLElement>('li[role="option"]')).find((node) =>
+        node.textContent?.includes(name),
+      )!;
+      option.click();
+      await fixture.whenStable();
+    }
+
+    it('has no station selector while there are no stations', async () => {
+      const fixture = await live();
+
+      expect(selector(fixture)).toBeNull();
+    });
+
+    it('has no station selector while there is a single station', async () => {
+      const fixture = await live([], [], emptyAllDay, [bar]);
+
+      expect(selector(fixture)).toBeNull();
+    });
+
+    it('offers all stations and each station once there are two or more', async () => {
+      const fixture = await live([], [], emptyAllDay, [bar, kitchen]);
+
+      expect(selector(fixture)).not.toBeNull();
+      expect(host(fixture).querySelector('label[for="board-station"]')?.textContent).toContain('Estación');
+      expect(selector(fixture)!.textContent).toContain('Todas las estaciones');
+    });
+
+    it('reads the board for the chosen station and shows what comes back', async () => {
+      const fixture = await live(
+        [order({ id: 'a', shortNumber: 'L-001' }), order({ id: 'b', shortNumber: 'L-002' })],
+        [],
+        emptyAllDay,
+        [bar, kitchen],
+      );
+
+      await choose(fixture, 'Bar');
+      http.expectOne(`${TICKETS}?station=s1`).flush([order({ id: 'b', shortNumber: 'L-002' })]);
+      http.expectOne(`${READY}?station=s1`).flush([]);
+      http.expectOne(`${ALL_DAY}?station=s1`).flush(emptyAllDay);
+      await fixture.whenStable();
+
+      expect(numbers(fixture)).toEqual(['L-002']);
+      expect(selector(fixture)!.textContent).toContain('Bar');
+    });
+
+    it('goes back to all stations from the first option', async () => {
+      localStorage.setItem('board.station', 's1');
+      const fixture = TestBed.createComponent(Board);
+      await fixture.whenStable();
+      http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+      http.expectOne(STATIONS).flush([bar, kitchen]);
+      http.expectOne(`${TICKETS}?station=s1`).flush([]);
+      http.expectOne(`${READY}?station=s1`).flush([]);
+      http.expectOne(`${ALL_DAY}?station=s1`).flush(emptyAllDay);
+      await fixture.whenStable();
+      expect(selector(fixture)!.textContent).toContain('Bar');
+
+      await choose(fixture, 'Todas las estaciones');
+      await answer(fixture, [order({ id: 'a', shortNumber: 'L-001' })]);
+
+      expect(numbers(fixture)).toEqual(['L-001']);
+    });
+
+    it('shows all stations when the remembered one is gone', async () => {
+      localStorage.setItem('board.station', 'gone');
+      const fixture = TestBed.createComponent(Board);
+      await fixture.whenStable();
+      http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+      http.expectOne(STATIONS).flush([bar, kitchen]);
+      http.expectOne(`${TICKETS}?station=gone`).flush([]);
+      http.expectOne(`${READY}?station=gone`).flush([]);
+      http.expectOne(`${ALL_DAY}?station=gone`).flush(emptyAllDay);
+      await answer(fixture, [order({ id: 'a', shortNumber: 'L-001' })]);
+
+      expect(numbers(fixture)).toEqual(['L-001']);
+      expect(selector(fixture)!.textContent).toContain('Todas las estaciones');
+    });
   });
 
   it('switches between the three views and keeps the choice visible', async () => {

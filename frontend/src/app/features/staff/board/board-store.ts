@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, Observable } from 'rxjs';
-import type { BoardAllDay, BoardOrder } from '../../../core/api/api-types';
+import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { LiveSync } from '../../../core/realtime/live-sync';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
@@ -22,9 +22,30 @@ export interface BoardCard {
   readonly level: AgeLevel;
 }
 
+const STATION_KEY = 'board.station';
 const CLOCK_TICK_MS = 30_000;
 // A scheduled card is hidden by the API until it fires and nothing signals that moment, so the board asks again.
 const REFRESH_MS = 60_000;
+
+function readStation(): string | null {
+  try {
+    return localStorage.getItem(STATION_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeStation(station: string | null): void {
+  try {
+    if (station === null) {
+      localStorage.removeItem(STATION_KEY);
+    } else {
+      localStorage.setItem(STATION_KEY, station);
+    }
+  } catch {
+    // Private mode or blocked storage: the choice just lasts for this page.
+  }
+}
 
 // Provided by the screen itself: it owns a realtime subscription and timers that must end with the screen.
 @Injectable()
@@ -46,6 +67,8 @@ export class BoardStore {
   private readonly ageThresholds = signal<AgeThresholds>(DEFAULT_AGE_THRESHOLDS);
   // The store zone arrives with the thresholds; the device zone covers the gap and a failed read.
   private readonly zone = signal(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  private readonly stationList = signal<readonly StationOption[]>([]);
+  private readonly chosenStation = signal<string | null>(readStation());
   private readonly queue = new UndoQueue();
   private destroyed = false;
   // Markers nobody has acknowledged as of the previous read; null until the first read has been applied.
@@ -55,6 +78,9 @@ export class BoardStore {
   readonly view = this.currentView.asReadonly();
   readonly allDay = this.currentAllDay.asReadonly();
   readonly timeZone = this.zone.asReadonly();
+  readonly stations = this.stationList.asReadonly();
+  // The station this device filters by, or null for all of them.
+  readonly station = this.chosenStation.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
   readonly connected = this.realtime.isConnected;
   readonly enabled = this.sync.enabled;
@@ -110,6 +136,16 @@ export class BoardStore {
         },
         error: () => this.ageThresholds.set(DEFAULT_AGE_THRESHOLDS),
       });
+    this.api
+      .stations()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (stations) => {
+          this.stationList.set(stations);
+          this.dropUnknownStation();
+        },
+        error: () => this.dropUnknownStation(),
+      });
     this.load();
   }
 
@@ -154,11 +190,18 @@ export class BoardStore {
     this.currentView.set(view);
   }
 
+  setStation(station: string | null): void {
+    this.chosenStation.set(station);
+    storeStation(station);
+    this.load();
+  }
+
   // A background read that fails keeps the last good data and tries again on the next tick.
   load(background = false): void {
     const request = ++this.lastRequest;
     const read = this.sync.begin();
-    forkJoin({ tickets: this.api.tickets(), ready: this.api.ready(), allDay: this.api.allDay() })
+    const station = this.chosenStation();
+    forkJoin({ tickets: this.api.tickets(station), ready: this.api.ready(station), allDay: this.api.allDay(station) })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: ({ tickets, ready, allDay }) => {
@@ -183,6 +226,14 @@ export class BoardStore {
           }
         },
       });
+  }
+
+  // A remembered station may no longer exist; an unknown id would show an empty board, so it means all stations.
+  private dropUnknownStation(): void {
+    const station = this.chosenStation();
+    if (station !== null && !this.stationList().some((option) => option.id === station)) {
+      this.setStation(null);
+    }
   }
 
   // The first read is the baseline: only markers that show up in a later read are news.

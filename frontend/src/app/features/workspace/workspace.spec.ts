@@ -147,6 +147,7 @@ describe('staff and admin area', () => {
       boardLateMinutes: 10,
       timeZone: 'America/Lima',
     });
+    http.expectOne('http://api.test/api/v1/stations').flush([]);
     http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
     http.expectOne('http://api.test/api/v1/board/ready').flush([]);
     http.expectOne('http://api.test/api/v1/board/all-day').flush({ groups: [], individual: [] });

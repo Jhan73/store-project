@@ -1390,6 +1390,7 @@
         <note category="location">src/app/features/admin/settings/settings-form.ts:163</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:85</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:209</note>
+        <note category="location">src/app/features/staff/board/board.ts:157</note>
         <note category="location">src/app/features/staff/tickets/ticket-editor.ts:384</note>
         <note category="location">src/app/features/staff/tickets/ticket-editor.ts:468</note>
       </notes>
@@ -4709,7 +4710,7 @@
     </unit>
     <unit id="staff.board.failed">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:29,31</note>
+        <note category="location">src/app/features/staff/board/board.ts:32,34</note>
       </notes>
       <segment>
         <source>No se pudo actualizar el tablero. Las acciones están deshabilitadas.</source>
@@ -4717,7 +4718,7 @@
     </unit>
     <unit id="staff.board.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:37,38</note>
+        <note category="location">src/app/features/staff/board/board.ts:40,41</note>
       </notes>
       <segment>
         <source>Volver a cargar el tablero</source>
@@ -4725,7 +4726,7 @@
     </unit>
     <unit id="staff.board.retry">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:42,44</note>
+        <note category="location">src/app/features/staff/board/board.ts:45,47</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4733,7 +4734,7 @@
     </unit>
     <unit id="staff.board.offline">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:48,50</note>
+        <note category="location">src/app/features/staff/board/board.ts:51,53</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
@@ -4741,7 +4742,7 @@
     </unit>
     <unit id="staff.board.updating">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:54,56</note>
+        <note category="location">src/app/features/staff/board/board.ts:57,59</note>
       </notes>
       <segment>
         <source>Actualizando el tablero. Las acciones se habilitan en unos segundos.</source>
@@ -4749,7 +4750,7 @@
     </unit>
     <unit id="staff.board.sound.unsupported">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:63,66</note>
+        <note category="location">src/app/features/staff/board/board.ts:66,69</note>
       </notes>
       <segment>
         <source>Este navegador no permite sonido. Mira el tablero para ver los avisos nuevos.</source>
@@ -4757,7 +4758,7 @@
     </unit>
     <unit id="staff.board.sound.off">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:70,72</note>
+        <note category="location">src/app/features/staff/board/board.ts:73,75</note>
       </notes>
       <segment>
         <source>Sonido desactivado: no sonarán los avisos de pedidos nuevos, modificados o anulados.</source>
@@ -4765,7 +4766,7 @@
     </unit>
     <unit id="staff.board.sound.enable.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:77,78</note>
+        <note category="location">src/app/features/staff/board/board.ts:80,81</note>
       </notes>
       <segment>
         <source>Activar los sonidos de aviso del tablero</source>
@@ -4773,7 +4774,7 @@
     </unit>
     <unit id="staff.board.sound.enable">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:82,85</note>
+        <note category="location">src/app/features/staff/board/board.ts:85,88</note>
       </notes>
       <segment>
         <source>Activar sonido</source>
@@ -4781,7 +4782,7 @@
     </unit>
     <unit id="staff.board.title">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:87,88</note>
+        <note category="location">src/app/features/staff/board/board.ts:90,91</note>
       </notes>
       <segment>
         <source>Tablero</source>
@@ -4789,7 +4790,7 @@
     </unit>
     <unit id="staff.board.sound.on">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:91,95</note>
+        <note category="location">src/app/features/staff/board/board.ts:94,98</note>
       </notes>
       <segment>
         <source>Sonido activado</source>
@@ -4797,7 +4798,7 @@
     </unit>
     <unit id="staff.board.views">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:95</note>
+        <note category="location">src/app/features/staff/board/board.ts:98</note>
       </notes>
       <segment>
         <source>Vistas del tablero</source>
@@ -4805,7 +4806,7 @@
     </unit>
     <unit id="staff.board.view.tickets.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:102,103</note>
+        <note category="location">src/app/features/staff/board/board.ts:105,106</note>
       </notes>
       <segment>
         <source>Ver los pedidos por preparar</source>
@@ -4813,7 +4814,7 @@
     </unit>
     <unit id="staff.board.view.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:108,109</note>
+        <note category="location">src/app/features/staff/board/board.ts:111,112</note>
       </notes>
       <segment>
         <source>Pedidos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.cards().length }}"/>)</source>
@@ -4821,7 +4822,7 @@
     </unit>
     <unit id="staff.board.view.allDay.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:116,117</note>
+        <note category="location">src/app/features/staff/board/board.ts:119,120</note>
       </notes>
       <segment>
         <source>Ver el total de cada producto pendiente</source>
@@ -4829,7 +4830,7 @@
     </unit>
     <unit id="staff.board.view.allDay">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:122,125</note>
+        <note category="location">src/app/features/staff/board/board.ts:125,128</note>
       </notes>
       <segment>
         <source>Todo el día</source>
@@ -4837,7 +4838,7 @@
     </unit>
     <unit id="staff.board.view.ready.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:130,131</note>
+        <note category="location">src/app/features/staff/board/board.ts:133,134</note>
       </notes>
       <segment>
         <source>Ver los pedidos listos para entregar</source>
@@ -4845,15 +4846,23 @@
     </unit>
     <unit id="staff.board.view.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:136,137</note>
+        <note category="location">src/app/features/staff/board/board.ts:139,140</note>
       </notes>
       <segment>
         <source>Listos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.readyCards().length }}"/>)</source>
       </segment>
     </unit>
+    <unit id="staff.board.station">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:145,147</note>
+      </notes>
+      <segment>
+        <source>Estación</source>
+      </segment>
+    </unit>
     <unit id="staff.board.empty.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:168,170</note>
+        <note category="location">src/app/features/staff/board/board.ts:191,193</note>
       </notes>
       <segment>
         <source>No hay pedidos listos para entregar.</source>
@@ -4861,10 +4870,18 @@
     </unit>
     <unit id="staff.board.empty.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:170,176</note>
+        <note category="location">src/app/features/staff/board/board.ts:193,199</note>
       </notes>
       <segment>
         <source>No hay pedidos por preparar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.station.all">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:214</note>
+      </notes>
+      <segment>
+        <source>Todas las estaciones</source>
       </segment>
     </unit>
     <unit id="staff.home.title">

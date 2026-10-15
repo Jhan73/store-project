@@ -64,6 +64,19 @@ h1 {
   }
 }
 
+.station {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.25rem;
+  font-weight: 700;
+
+  p-select {
+    min-width: min(18rem, 100%);
+  }
+}
+
 .cards {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

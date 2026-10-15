@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import {
   IconBellCheck,
   IconLayoutKanban,
@@ -9,6 +11,7 @@ import {
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
+import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
 import { BoardAllDayView } from '../../../shared/ui/board-all-day/board-all-day';
@@ -18,7 +21,7 @@ import { BoardStore } from './board-store';
 
 @Component({
   selector: 'app-board',
-  imports: [BoardAllDayView, BoardCard, ButtonDirective, TablerIconComponent, Tooltip],
+  imports: [BoardAllDayView, BoardCard, ButtonDirective, ReactiveFormsModule, Select, TablerIconComponent, Tooltip],
   providers: [BoardStore, BoardSound, ScreenWakeLock],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './board.scss',
@@ -137,6 +140,26 @@ import { BoardStore } from './board-store';
       </button>
     </div>
 
+    @if (store.stations().length > 1) {
+      <div class="station">
+        <label for="board-station" id="board-station-label" i18n="@@staff.board.station">Estación</label>
+        <p-select
+          inputId="board-station"
+          [ariaLabelledBy]="'board-station-label'"
+          [formControl]="station"
+          optionLabel="name"
+          optionValue="id"
+          [options]="stationOptions()"
+          [filter]="true"
+          filterBy="name"
+          [resetFilterOnHide]="true"
+          filterPlaceholder="Buscar"
+          i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+          [appendTo]="'body'"
+        />
+      </div>
+    }
+
     @if (store.view() === 'allDay') {
       <app-board-all-day [allDay]="store.allDay()" />
     } @else {
@@ -185,8 +208,17 @@ export class Board {
     soundOff: IconVolumeOff,
   };
 
+  // '' stands for all stations: a select option cannot carry null.
+  protected readonly station = new FormControl('', { nonNullable: true });
+  protected readonly stationOptions = computed(() => [
+    { id: '', name: $localize`:@@staff.board.station.all:Todas las estaciones` },
+    ...this.store.stations(),
+  ]);
+
   constructor() {
     inject(ScreenWakeLock).start();
+    this.station.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => this.store.setStation(id || null));
+    effect(() => this.station.setValue(this.store.station() ?? '', { emitEvent: false }));
   }
 
   protected enableSound(): void {

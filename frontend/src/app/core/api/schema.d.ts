@@ -1076,6 +1076,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/stations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["floorStationList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/store/board-thresholds": {
         parameters: {
             query?: never;
@@ -1941,6 +1957,11 @@ export interface components {
             id: string;
             /** @enum {string} */
             role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
+        };
+        StationOptionResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
         };
         StationResponse: {
             defaultStation: boolean;
@@ -9529,6 +9550,62 @@ export interface operations {
             };
             /** @description Unprocessable Content. Error codes: identity.cannot-modify-own-account */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    floorStationList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StationOptionResponse"][];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
                 headers: {
                     [name: string]: unknown;
                 };

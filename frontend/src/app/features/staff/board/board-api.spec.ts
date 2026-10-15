@@ -49,6 +49,26 @@ describe('BoardApi', () => {
     expect(thresholds).toEqual({ boardWarningMinutes: 4, boardLateMinutes: 8 });
   });
 
+  it('asks each view for one station only when a station is given', () => {
+    api.tickets('s1').subscribe();
+    http.expectOne(`${BASE}/board/tickets?station=s1`).flush([]);
+    api.ready('s1').subscribe();
+    http.expectOne(`${BASE}/board/ready?station=s1`).flush([]);
+    api.allDay('s1').subscribe();
+    http.expectOne(`${BASE}/board/all-day?station=s1`).flush({ groups: [], individual: [] });
+    api.tickets(null).subscribe();
+    http.expectOne(`${BASE}/board/tickets`).flush([]);
+  });
+
+  it('reads the stations floor staff can filter by', () => {
+    let result: unknown;
+    api.stations().subscribe((value) => (result = value));
+
+    http.expectOne(`${BASE}/stations`).flush([{ id: 's1', name: 'Bar' }]);
+
+    expect(result).toEqual([{ id: 's1', name: 'Bar' }]);
+  });
+
   it.each([
     ['start', 'orders/o1/start'],
     ['readyOrder', 'orders/o1/ready'],
