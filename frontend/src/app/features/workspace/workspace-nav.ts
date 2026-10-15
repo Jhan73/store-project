@@ -1,6 +1,7 @@
 import {
   IconAdjustments,
   IconBolt,
+  IconBoxSeam,
   IconBook2,
   IconCashRegister,
   IconClockStop,
@@ -77,6 +78,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/admin/catalog',
     label: $localize`:@@workspace.nav.catalog:Catálogo`,
     icon: IconBook2,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/admin/stock',
+    label: $localize`:@@workspace.nav.stock:Inventario`,
+    icon: IconBoxSeam,
     roles: ['ADMIN'],
   },
   {

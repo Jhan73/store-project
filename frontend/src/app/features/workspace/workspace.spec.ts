@@ -323,6 +323,7 @@ describe('staff and admin area', () => {
       '/staff/availability',
       '/admin',
       '/admin/catalog',
+      '/admin/stock',
       '/admin/settings',
       '/admin/tables',
       '/admin/users',
@@ -380,6 +381,37 @@ describe('staff and admin area', () => {
 
     expect(url()).toBe('/admin/audit?entityType=USER');
     expect(page().body.textContent).toContain('Auditoría');
+  });
+
+  it('links the stock from the admin home', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin');
+
+    const link = page().body.querySelector('[data-testid="stock-link"]');
+    expect(link?.getAttribute('href')).toBe('/admin/stock');
+  });
+
+  it('keeps floor staff out of the stock', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/stock');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the stock', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/stock');
+    http.expectOne('http://api.test/api/v1/admin/stock-items').flush([]);
+    http
+      .expectOne('http://api.test/api/v1/admin/products?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/stock');
+    expect(page().body.textContent).toContain('Todavía no hay productos con control de stock');
   });
 
   it('keeps floor staff out of the table configuration', async () => {
