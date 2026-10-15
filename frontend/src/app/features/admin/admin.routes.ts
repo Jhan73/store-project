@@ -11,6 +11,10 @@ export const ADMIN_ROUTES: Routes = [
         loadChildren: () => import('./catalog/catalog.routes').then((m) => m.CATALOG_ROUTES),
       },
       {
+        path: 'stock',
+        loadChildren: () => import('./stock/stock.routes').then((m) => m.STOCK_ROUTES),
+      },
+      {
         path: 'settings',
         loadChildren: () => import('./settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
       },
