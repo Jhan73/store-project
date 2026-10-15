@@ -88,7 +88,7 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/staff');
 
-    expect(navLinks()).toEqual(['/staff', '/staff/tables', '/staff/availability']);
+    expect(navLinks()).toEqual(['/staff', '/staff/tables', '/staff/board', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
   });
 
@@ -136,6 +136,29 @@ describe('staff and admin area', () => {
     expect(url()).toBe('/staff/tables');
     expect(page().body.textContent).toContain('Salón');
     expect(active).toEqual(['/staff/tables']);
+  });
+
+  it('lets floor staff open the board', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/board');
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({
+      boardWarningMinutes: 5,
+      boardLateMinutes: 10,
+      timeZone: 'America/Lima',
+    });
+    http.expectOne('http://api.test/api/v1/stations').flush([]);
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
+    http.expectOne('http://api.test/api/v1/board/all-day').flush({ groups: [], individual: [] });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/board');
+    expect(page().body.textContent).toContain('Tablero');
+    expect(active).toEqual(['/staff/board']);
   });
 
   it('lets floor staff open a ticket editor', async () => {
@@ -186,6 +209,7 @@ describe('staff and admin area', () => {
     expect(navLinks()).toEqual([
       '/staff',
       '/staff/tables',
+      '/staff/board',
       '/staff/availability',
       '/admin',
       '/admin/catalog',

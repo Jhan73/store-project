@@ -4,6 +4,7 @@ import static com.jhanantezana.jugueria.preparation.internal.BoardStore.utc;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jhanantezana.jugueria.preparation.BoardChannel;
 import com.jhanantezana.jugueria.preparation.PreparationError;
 import com.jhanantezana.jugueria.shared.BusinessException;
 
@@ -77,6 +79,26 @@ public class BoardQueries {
 				rs.getObject("product_id", UUID.class), rs.getString("display_name"), rs.getInt("quantity"),
 				rs.getString("modifiers_text"), rs.getString("note"), rs.getBoolean("allergy"))).list();
 		return new AllDayView(groups, individual);
+	}
+
+	/**
+	 * What the customer screen shows: numbers and first names only. Waiting and preparing cards share a column, since a
+	 * customer cannot tell them apart.
+	 */
+	@Transactional(readOnly = true)
+	public DisplayView display() {
+		var preparing = new ArrayList<DisplayView.Entry>();
+		var ready = new ArrayList<DisplayView.Entry>();
+		jdbc.sql("""
+				SELECT o.short_number, o.channel, o.label, o.status FROM preparation.board_order o
+				WHERE o.status IN ('WAITING', 'PREPARING', 'READY') AND %s
+				ORDER BY CASE WHEN o.status = 'READY' THEN o.ready_at ELSE coalesce(o.fire_at, o.sent_at) END, o.sent_at, o.id
+				""".formatted(VISIBLE)).param("now", utc(Instant.now(clock))).query(rs -> {
+			var channel = BoardChannel.valueOf(rs.getString("channel"));
+			var entry = new DisplayView.Entry(rs.getString("short_number"), FirstName.of(channel, rs.getString("label")));
+			("READY".equals(rs.getString("status")) ? ready : preparing).add(entry);
+		});
+		return new DisplayView(preparing, ready);
 	}
 
 	/** The card in whatever status it is in; the commands return it to the caller. */

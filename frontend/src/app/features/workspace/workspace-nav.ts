@@ -6,6 +6,7 @@ import {
   IconLayoutGrid,
   IconSettings,
   IconTable,
+  IconToolsKitchen2,
   IconToggleRight,
   IconUsers,
 } from '@tabler/icons-angular';
@@ -29,6 +30,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/staff/tables',
     label: $localize`:@@workspace.nav.floor:Salón`,
     icon: IconLayoutGrid,
+    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/board',
+    label: $localize`:@@workspace.nav.board:Tablero`,
+    icon: IconToolsKitchen2,
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
   },
   {

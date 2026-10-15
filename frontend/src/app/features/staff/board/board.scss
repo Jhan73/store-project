@@ -1,0 +1,101 @@
+@use '../../../../styles/breakpoints' as bp;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+h1 {
+  margin: 0;
+}
+
+.offline {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  // Full width of the content area, ignoring the page padding.
+  margin-inline: calc(-1 * var(--page-padding));
+  padding: var(--space-4) var(--page-padding);
+  color: var(--warning-foreground);
+  background: var(--warning);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.sound-warning {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 3px solid var(--warning);
+  border-radius: var(--radius);
+  font-size: 1.375rem;
+  font-weight: 700;
+
+  button {
+    min-height: 3.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+.sound-on {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 1.125rem;
+}
+
+.views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+
+  button {
+    min-height: 3.5rem;
+    font-size: 1.25rem;
+  }
+}
+
+.station {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.25rem;
+  font-weight: 700;
+
+  p-select {
+    min-width: min(18rem, 100%);
+  }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include bp.tablet-up {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include bp.desktop-up {
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+  }
+}
+
+.empty {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--muted-foreground);
+}

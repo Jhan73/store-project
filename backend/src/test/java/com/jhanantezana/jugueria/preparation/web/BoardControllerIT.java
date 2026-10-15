@@ -166,6 +166,25 @@ class BoardControllerIT {
 	}
 
 	@Test
+	void readyAndAllDayCanBeFilteredByStationAndAnUnknownStationMatchesNothing() {
+		var station = UUID.randomUUID();
+		var order = preparation.accept(anOrder(aLineAt(station)));
+		commands.start(order);
+		commands.readyOrder(order);
+		preparation.accept(anOrder(aLineAt(station)));
+		preparation.accept(anOrder(aLine()));
+
+		var ready = mvc.get().uri(BOARD + "/ready").param("station", station.toString()).with(server()).exchange();
+		var allDay = mvc.get().uri(BOARD + "/all-day").param("station", station.toString()).with(server()).exchange();
+		var unknown = mvc.get().uri(BOARD + "/all-day").param("station", UUID.randomUUID().toString()).with(server())
+			.exchange();
+
+		assertThat(ready).bodyJson().extractingPath("$.length()").isEqualTo(1);
+		assertThat(allDay).bodyJson().extractingPath("$.groups[0].quantity").isEqualTo(1);
+		assertThat(unknown).bodyJson().extractingPath("$.groups.length()").isEqualTo(0);
+	}
+
+	@Test
 	void aMalformedStationIsABadRequest() {
 		var result = mvc.get().uri(BOARD + "/tickets").param("station", "nope").with(server()).exchange();
 
