@@ -29,9 +29,54 @@ interface Page<T> {
   content: T[];
   totalPages: number;
 }
+interface Table extends Versioned {
+  active: boolean;
+}
+type ReasonType = 'VOID' | 'COMP' | 'CASH_OUT' | 'STOCK_ADJUSTMENT';
+interface Reason {
+  id: string;
+  etag: string;
+  code: string;
+  type: ReasonType;
+  active: boolean;
+}
+interface Shift {
+  id: string;
+  status: 'OPEN' | 'CLOSED';
+}
+interface TicketSummary {
+  id: string;
+  tableName: string | null;
+  counterName: string | null;
+}
+interface TicketDetail {
+  id: string;
+  status: 'OPEN' | 'CLOSED';
+  balance: Money;
+  lines: { id: string; state: 'UNSENT' | 'SENT' | 'VOIDED' }[];
+}
+interface BoardOrder {
+  id: string;
+  label: string | null;
+  status: 'WAITING' | 'PREPARING' | 'READY' | 'HANDED_OVER' | 'CANCELLED';
+  markers: { id: string; acknowledgedAt: string | null }[];
+}
+interface TableGridEntry {
+  id: string;
+  status: 'FREE' | 'OCCUPIED' | 'WAITING_FOR_PAYMENT';
+}
 
 export function uniqueName(label: string): string {
   return `e2e-${Date.now()}-${label}`;
+}
+
+export async function withAdminApi<T>(action: (api: AdminApi) => Promise<T>): Promise<T> {
+  const api = await AdminApi.create();
+  try {
+    return await action(api);
+  } finally {
+    await api.dispose();
+  }
 }
 
 export class AdminApi {
@@ -68,15 +113,52 @@ export class AdminApi {
     return this.send<Category>('POST', '/api/v1/admin/categories', { name, displayOrder: 0 });
   }
 
-  async createProduct(name: string, categoryId: string): Promise<Product> {
+  async createProduct(
+    name: string,
+    categoryId: string,
+    options: { price?: string; quickSalePinned?: boolean } = {},
+  ): Promise<Product> {
     const currency = await this.currency();
     return this.send<Product>('POST', '/api/v1/admin/products', {
       name,
       categoryId,
       displayOrder: 0,
-      price: { amount: '5.00', currency },
-      quickSalePinned: false,
+      price: { amount: options.price ?? '5.00', currency },
+      quickSalePinned: options.quickSalePinned ?? false,
     });
+  }
+
+  async createTable(name: string): Promise<Table> {
+    return this.send<Table>('POST', '/api/v1/admin/tables', { name });
+  }
+
+  async createReason(type: ReasonType, code: string): Promise<Reason> {
+    return this.send<Reason>('POST', '/api/v1/admin/reasons', { type, code });
+  }
+
+  async registerDifferenceThreshold(): Promise<Money> {
+    const settings = await this.get<{ registerDifferenceThreshold: Money }>('/api/v1/admin/settings');
+    return settings.registerDifferenceThreshold;
+  }
+
+  // The account has at most one open shift, so a journey that needs a known state replaces whatever is open.
+  async openShift(openingFloat: string): Promise<void> {
+    await this.closeOpenShift();
+    const currency = await this.currency();
+    await this.send(
+      'POST',
+      '/api/v1/shifts',
+      { openingFloat: { amount: openingFloat, currency } },
+      undefined,
+      { 'Idempotency-Key': crypto.randomUUID() },
+    );
+  }
+
+  async closeOpenShift(): Promise<void> {
+    const shift = await this.currentShift();
+    if (shift) {
+      await this.send('POST', `/api/v1/shifts/${shift.id}/force-close`, { reason: 'e2e cleanup' });
+    }
   }
 
   // Removes everything this suite created, whichever run left it behind. Products and categories can only be
@@ -91,6 +173,11 @@ export class AdminApi {
         errors.push(`${what}: ${error instanceof Error ? error.message : String(error)}`);
       }
     };
+
+    // Tickets and cards of a failed run are finished first: a table with an open ticket cannot be retired.
+    await attempt('open tickets', () => this.settleTickets());
+    await attempt('board orders', () => this.finishBoardOrders());
+    await attempt('open shift', () => this.closeOpenShift());
 
     const products = await this.products();
     const usedByOthers = new Set(
@@ -129,9 +216,94 @@ export class AdminApi {
         );
       }
     }
+    const occupied = new Set(
+      (await this.get<TableGridEntry[]>('/api/v1/tables'))
+        .filter((entry) => entry.status !== 'FREE')
+        .map((entry) => entry.id),
+    );
+    for (const table of await this.get<Table[]>('/api/v1/admin/tables')) {
+      if (!E2E_NAME.test(table.name) || !table.active) continue;
+      if (occupied.has(table.id)) {
+        console.warn(`Skipped table ${table.id}: it still has an open ticket.`);
+        continue;
+      }
+      await attempt(`table ${table.id}`, () =>
+        this.send('POST', `/api/v1/admin/tables/${table.id}/deactivate`, undefined, table.etag),
+      );
+    }
+    for (const type of ['VOID', 'COMP', 'CASH_OUT', 'STOCK_ADJUSTMENT'] as const) {
+      for (const reason of await this.get<Reason[]>(`/api/v1/admin/reasons?type=${type}`)) {
+        if (E2E_NAME.test(reason.code) && reason.active) {
+          await attempt(`reason ${reason.id}`, () =>
+            this.send('POST', `/api/v1/admin/reasons/${reason.id}/deactivate`, undefined, reason.etag),
+          );
+        }
+      }
+    }
     if (errors.length > 0) {
       throw new Error([`Cleanup left ${errors.length} item(s) behind:`, ...errors].join('\n'));
     }
+  }
+
+  private async currentShift(): Promise<Shift | null> {
+    const response = await this.http.get('/api/v1/shifts/current');
+    if (response.status() === 404) return null;
+    if (!response.ok()) {
+      throw new Error(`GET /api/v1/shifts/current failed with status ${response.status()}: ${await response.text()}`);
+    }
+    return (await response.json()) as Shift;
+  }
+
+  // Closes the open tickets of this suite with a cash payment, which is the only way a ticket can end.
+  private async settleTickets(): Promise<void> {
+    const open = await this.get<TicketSummary[]>('/api/v1/tickets');
+    for (const summary of open.filter((ticket) => E2E_NAME.test(ticket.tableName ?? ticket.counterName ?? ''))) {
+      const initial = await this.get<TicketDetail>(`/api/v1/tickets/${summary.id}`);
+      for (const line of initial.lines.filter((candidate) => candidate.state === 'UNSENT')) {
+        await this.send('DELETE', `/api/v1/tickets/${summary.id}/lines/${line.id}`);
+      }
+      const { balance } = await this.get<TicketDetail>(`/api/v1/tickets/${summary.id}`);
+      if (balance.amount === '0.00') {
+        console.warn(`Ticket ${summary.id} has nothing to charge, so it stays open.`);
+        continue;
+      }
+      if (!(await this.currentShift())) await this.openShift('0.00');
+      await this.send(
+        'POST',
+        `/api/v1/tickets/${summary.id}/payments`,
+        { method: 'CASH', amount: balance, receivedAmount: balance },
+        undefined,
+        { 'Idempotency-Key': crypto.randomUUID() },
+      );
+    }
+  }
+
+  private async finishBoardOrders(): Promise<void> {
+    const cards = [
+      ...(await this.get<BoardOrder[]>('/api/v1/board/tickets')),
+      ...(await this.get<BoardOrder[]>('/api/v1/board/ready')),
+    ];
+    const errors: string[] = [];
+    for (const card of cards.filter((candidate) => candidate.label && E2E_NAME.test(candidate.label))) {
+      try {
+        let status = card.status;
+        if (status === 'WAITING') {
+          status = (await this.send<BoardOrder>('POST', `/api/v1/board/orders/${card.id}/start`)).status;
+        }
+        for (const marker of card.markers.filter((candidate) => candidate.acknowledgedAt === null)) {
+          await this.send('POST', `/api/v1/board/markers/${marker.id}/ack`);
+        }
+        if (status === 'PREPARING') {
+          status = (await this.send<BoardOrder>('POST', `/api/v1/board/orders/${card.id}/ready`)).status;
+        }
+        if (status === 'READY') {
+          await this.send('POST', `/api/v1/board/orders/${card.id}/handover`);
+        }
+      } catch (error) {
+        errors.push(`card ${card.id}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    if (errors.length > 0) throw new Error(errors.join('\n'));
   }
 
   private saveBody(product: Product, modifierGroupIds: string[]) {
@@ -160,11 +332,17 @@ export class AdminApi {
     return this.send<T>('GET', path);
   }
 
-  private async send<T>(method: string, path: string, data?: unknown, etag?: string): Promise<T> {
+  private async send<T>(
+    method: string,
+    path: string,
+    data?: unknown,
+    etag?: string,
+    headers: Record<string, string> = {},
+  ): Promise<T> {
     const response = await this.http.fetch(path, {
       method,
       data,
-      headers: etag ? { 'If-Match': etag } : undefined,
+      headers: etag ? { ...headers, 'If-Match': etag } : headers,
     });
     if (!response.ok()) {
       throw new Error(`${method} ${path} failed with status ${response.status()}: ${await response.text()}`);

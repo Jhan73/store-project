@@ -1,4 +1,4 @@
-import type { Browser, Page } from '@playwright/test';
+import type { Browser, BrowserContextOptions, Page } from '@playwright/test';
 import { adminCredentials } from './env';
 
 export async function signIn(page: Page): Promise<void> {
@@ -12,8 +12,12 @@ export async function signIn(page: Page): Promise<void> {
 
 // Each session is its own sign-in: the refresh cookie rotates on every use and reuse revokes the whole session
 // family, so a saved storage state cannot be shared between contexts or runs.
-export async function openAdminPage(browser: Browser, path: string): Promise<Page> {
-  const context = await browser.newContext();
+export async function openAdminPage(
+  browser: Browser,
+  path: string,
+  options?: BrowserContextOptions,
+): Promise<Page> {
+  const context = await browser.newContext(options);
   const page = await context.newPage();
   await signIn(page);
   await page.goto(path);
