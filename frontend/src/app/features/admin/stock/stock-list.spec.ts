@@ -223,6 +223,12 @@ describe('StockList', () => {
       expect(rows(host)[0]).toContain('30');
     });
 
+    it('names the tracking switch by what it does and the product', async () => {
+      const { host } = await render([stock(PAPAYA, 40)]);
+
+      expect(trackedSwitch(host, PAPAYA).getAttribute('aria-label')).toBe('Controlado: Papaya');
+    });
+
     it('stops tracking an item, keeping its threshold, and drops its row', async () => {
       const { fixture, host, http } = await render([
         stock(PAPAYA, 40, { lowStockThreshold: 7 }),

@@ -169,7 +169,7 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
                         [ngModel]="row.item.tracked"
                         [disabled]="pending.has(row.item.productId)"
                         [attr.data-testid]="'tracked-' + row.item.productId"
-                        [ariaLabel]="row.name"
+                        [ariaLabel]="trackedLabel(row.name)"
                         (onChange)="setTracked(row.item, $event.checked, tracked)"
                       />
                     </td>
@@ -338,6 +338,10 @@ export class StockList {
 
   protected nameOf(productId: string): string {
     return this.names().get(productId) ?? shortId(productId);
+  }
+
+  protected trackedLabel(name: string): string {
+    return $localize`:@@admin.stock.tracked.aria:Controlado: ${name}:name:`;
   }
 
   protected count(quantity: number): string {
