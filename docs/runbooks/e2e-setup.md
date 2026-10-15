@@ -10,7 +10,7 @@ The password is a Standard SecureString parameter under the default `aws/ssm` ke
 
 ## 1. Create the account
 
-An existing `ADMIN` invites it at `/admin/users` (or with `POST /api/v1/staff`, see "Set the password, sign in, and add staff" in `first-admin-bootstrap.md`), role `ADMIN`. The address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` and, while SES is in the sandbox, a verified identity (`ses-setup.md`). The new account opens the link from the email and sets its password. Use a long random password from a password manager. The account is dedicated to the suite: the floor journeys open register shifts with it and force-close whatever shift it has open, so nobody works the register with it.
+An existing `ADMIN` invites it at `/admin/users` (or with `POST /api/v1/staff`, see "Set the password, sign in, and add staff" in `first-admin-bootstrap.md`), role `ADMIN`. The address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` and, while SES is in the sandbox, a verified identity (`ses-setup.md`). The new account opens the link from the email and sets its password. Use a long random password from a password manager. The account is dedicated to the suite: the floor journeys open register shifts with it and force-close whatever shift it has open, so nobody works the register with it. Its address must start with `e2e` (for example `e2e-admin@…`): the suite refuses to close a shift of any other account. If `E2E_ADMIN_EMAIL` already points at an account with another name, invite a new one, store its password in the same parameter and update the variable.
 
 ## 2. Apply the permission
 
