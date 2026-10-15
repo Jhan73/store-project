@@ -7,6 +7,7 @@ import {
   IconLockOpen,
   IconMinus,
   IconPlus,
+  IconReceipt,
   IconRefresh,
   IconShoppingCartPlus,
   IconTrash,
@@ -100,6 +101,18 @@ interface Configuring {
             <strong data-testid="sale-change">{{ money(change) }}</strong>
           </p>
         }
+        <a
+          pButton
+          severity="secondary"
+          data-testid="sale-ticket"
+          [routerLink]="['/staff/tickets', sold.id]"
+          pTooltip="Abrir la cuenta de esta venta, por ejemplo para anularla"
+          i18n-pTooltip="@@staff.quickSale.ticket.tooltip"
+          tooltipPosition="top"
+        >
+          <tabler-icon [icon]="icons.ticket" aria-hidden="true" />
+          <span i18n="@@staff.quickSale.ticket">Ver la cuenta</span>
+        </a>
         <button
           pButton
           type="button"
@@ -322,6 +335,7 @@ export class QuickSale {
     remove: IconTrash,
     item: IconShoppingCartPlus,
     pay: IconCash,
+    ticket: IconReceipt,
     retry: IconRefresh,
     openShift: IconLockOpen,
   };

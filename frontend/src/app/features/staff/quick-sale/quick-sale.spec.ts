@@ -245,6 +245,17 @@ describe('QuickSale', () => {
     expect(find<HTMLButtonElement>(fixture, 'item-p1')!.disabled).toBe(false);
   });
 
+  it('links the sold ticket so the sale can be voided from its view', async () => {
+    const fixture = await open();
+    await press(fixture, 'item-p1');
+    await chooseOption(fixture, host(fixture), 'qs-method', 'Tarjeta');
+    await press(fixture, 'qs-submit');
+    http.expectOne(`${BASE}/quick-sales`).flush(sale({ payments: [] }), { status: 201, statusText: 'Created' });
+    await fixture.whenStable();
+
+    expect(find<HTMLAnchorElement>(fixture, 'sale-ticket')!.getAttribute('href')).toBe('/staff/tickets/k1');
+  });
+
   it('sells by card without an amount received', async () => {
     const fixture = await open();
     await press(fixture, 'item-p1');
