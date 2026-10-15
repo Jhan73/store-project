@@ -350,6 +350,7 @@ export class BoardCard {
 
   protected mayFlag(line: BoardLine): boolean {
     const open = this.order().status === 'WAITING' || this.order().status === 'PREPARING';
-    return open && line.state === 'PENDING' && !line.flaggedUnavailable;
+    const queued = this.queued().has(line.id) || this.queued().has(this.order().id);
+    return open && line.state === 'PENDING' && !line.flaggedUnavailable && !queued;
   }
 }

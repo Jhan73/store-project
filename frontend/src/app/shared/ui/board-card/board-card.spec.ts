@@ -220,6 +220,19 @@ describe('BoardCard', () => {
       expect(host().querySelector('[data-testid="line-state-l1"]')?.textContent).toContain('Lista');
     });
 
+    it('takes the run-out flag away while the line or the whole order waits out the undo window', () => {
+      const value = order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] });
+
+      render(value, { queued: ['l1'] });
+      expect(button('flag-l1')).toBeNull();
+
+      render(value, { queued: ['o1'] });
+      expect(button('flag-l1')).toBeNull();
+
+      render(value, { queued: [] });
+      expect(button('flag-l1')).not.toBeNull();
+    });
+
     it('hands over or recalls a ready order', () => {
       render(order({ id: 'o1', status: 'READY', lines: [line({ id: 'l1', state: 'READY' })] }));
       const handover = emitted('handover');
