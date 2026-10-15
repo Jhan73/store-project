@@ -475,6 +475,19 @@ describe('BoardStore', () => {
       expect(store.cards().map((card) => card.order.id)).toEqual(['all']);
     });
 
+    it('keeps the remembered station saved when the stations read failed, since the failure may be passing', () => {
+      localStorage.setItem(STATION_KEY, 's1');
+      store = build();
+      TestBed.tick();
+      http.expectOne(THRESHOLDS).flush({ boardWarningMinutes: 5, boardLateMinutes: 10, timeZone: 'America/Lima' });
+      http.expectOne(STATIONS).flush(serverError, failure);
+      answerFor('s1');
+      answerFor(null);
+
+      expect(store.station()).toBeNull();
+      expect(localStorage.getItem(STATION_KEY)).toBe('s1');
+    });
+
     describe('marker sounds', () => {
       const withMarker = (id: string) =>
         order({ id: `o-${id}`, markers: [marker({ id, boardOrderId: `o-${id}`, kind: 'NEW', acknowledgedAt: null })] });

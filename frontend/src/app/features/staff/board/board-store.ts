@@ -142,9 +142,9 @@ export class BoardStore {
       .subscribe({
         next: (stations) => {
           this.stationList.set(stations);
-          this.dropUnknownStation();
+          this.dropUnknownStation(true);
         },
-        error: () => this.dropUnknownStation(),
+        error: () => this.dropUnknownStation(false),
       });
     this.load();
   }
@@ -190,9 +190,11 @@ export class BoardStore {
     this.currentView.set(view);
   }
 
-  setStation(station: string | null): void {
+  setStation(station: string | null, remember = true): void {
     this.chosenStation.set(station);
-    storeStation(station);
+    if (remember) {
+      storeStation(station);
+    }
     // Markers that merely came into scope with the new filter are not news.
     this.knownMarkers = null;
     this.load();
@@ -231,10 +233,11 @@ export class BoardStore {
   }
 
   // A remembered station may no longer exist; an unknown id would show an empty board, so it means all stations.
-  private dropUnknownStation(): void {
+  // Only a successful read proves the station is gone: after a failed one the saved choice is kept for the next visit.
+  private dropUnknownStation(forget: boolean): void {
     const station = this.chosenStation();
     if (station !== null && !this.stationList().some((option) => option.id === station)) {
-      this.setStation(null);
+      this.setStation(null, forget);
     }
   }
 
