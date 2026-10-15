@@ -10,7 +10,8 @@ class FakeOscillator {
 }
 
 class FakeContext {
-  state: 'suspended' | 'running' = 'suspended';
+  state: 'suspended' | 'running' | 'interrupted' = 'suspended';
+  onstatechange: (() => void) | null = null;
   readonly currentTime = 10;
   readonly destination = {};
   readonly oscillators: FakeOscillator[] = [];
@@ -19,6 +20,12 @@ class FakeContext {
     return Promise.resolve();
   });
   readonly close = vi.fn(() => Promise.resolve());
+
+  // What the browser does when it suspends or interrupts the audio on its own.
+  moveTo(state: 'suspended' | 'running' | 'interrupted') {
+    this.state = state;
+    this.onstatechange?.();
+  }
 
   createOscillator() {
     const oscillator = new FakeOscillator();
@@ -116,6 +123,42 @@ describe('BoardSound', () => {
 
     await sound.enable();
 
+    expect(sound.enabled()).toBe(false);
+  });
+
+  it.each(['suspended', 'interrupted'] as const)('turns itself off when the audio becomes %s', async (state) => {
+    const sound = create();
+    await sound.enable();
+
+    context.moveTo(state);
+
+    expect(sound.enabled()).toBe(false);
+    context.oscillators.length = 0;
+    sound.play(['NEW']);
+    expect(context.oscillators).toEqual([]);
+  });
+
+  it('turns itself back on when the audio runs again, and can be enabled again with a tap', async () => {
+    const sound = create();
+    await sound.enable();
+    context.moveTo('suspended');
+
+    context.moveTo('running');
+    expect(sound.enabled()).toBe(true);
+
+    context.moveTo('suspended');
+    await sound.enable();
+    expect(sound.enabled()).toBe(true);
+  });
+
+  it('stops listening to the audio context when it is destroyed', async () => {
+    const sound = create();
+    await sound.enable();
+
+    TestBed.resetTestingModule();
+
+    expect(context.onstatechange).toBeNull();
+    context.moveTo('running');
     expect(sound.enabled()).toBe(false);
   });
 

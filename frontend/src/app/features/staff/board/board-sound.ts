@@ -56,6 +56,9 @@ export class BoardSound {
   constructor() {
     inject(DestroyRef).onDestroy(() => {
       this.on.set(false);
+      if (this.context) {
+        this.context.onstatechange = null;
+      }
       void this.context?.close().catch(() => undefined);
       this.context = null;
     });
@@ -77,6 +80,8 @@ export class BoardSound {
       return;
     }
     this.on.set(true);
+    // The browser may suspend or interrupt the audio later (tab sleep, phone call): the warning must come back.
+    context.onstatechange = () => this.on.set(context.state === 'running');
     this.note(context, CONFIRMATION, context.currentTime);
   }
 
