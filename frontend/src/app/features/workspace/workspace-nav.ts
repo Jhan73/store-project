@@ -1,10 +1,16 @@
 import {
   IconAdjustments,
+  IconBolt,
+  IconBoxSeam,
   IconBook2,
+  IconCashRegister,
+  IconClockStop,
   IconHistory,
   IconHome,
+  IconLayoutGrid,
   IconSettings,
   IconTable,
+  IconToolsKitchen2,
   IconToggleRight,
   IconUsers,
 } from '@tabler/icons-angular';
@@ -25,6 +31,37 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     roles: ['SERVER', 'CASHIER', 'ADMIN'],
   },
   {
+    path: '/staff/tables',
+    label: $localize`:@@workspace.nav.floor:Salón`,
+    icon: IconLayoutGrid,
+    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/board',
+    label: $localize`:@@workspace.nav.board:Tablero`,
+    icon: IconToolsKitchen2,
+    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register',
+    label: $localize`:@@workspace.nav.register:Caja`,
+    icon: IconCashRegister,
+    exact: true,
+    roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/quick-sale',
+    label: $localize`:@@workspace.nav.quickSale:Venta rápida`,
+    icon: IconBolt,
+    roles: ['CASHIER', 'ADMIN'],
+  },
+  {
+    path: '/staff/register/shifts',
+    label: $localize`:@@workspace.nav.shifts:Turnos abiertos`,
+    icon: IconClockStop,
+    roles: ['ADMIN'],
+  },
+  {
     path: '/staff/availability',
     label: $localize`:@@workspace.nav.availability:Disponibilidad`,
     icon: IconToggleRight,
@@ -41,6 +78,12 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/admin/catalog',
     label: $localize`:@@workspace.nav.catalog:Catálogo`,
     icon: IconBook2,
+    roles: ['ADMIN'],
+  },
+  {
+    path: '/admin/stock',
+    label: $localize`:@@workspace.nav.stock:Inventario`,
+    icon: IconBoxSeam,
     roles: ['ADMIN'],
   },
   {

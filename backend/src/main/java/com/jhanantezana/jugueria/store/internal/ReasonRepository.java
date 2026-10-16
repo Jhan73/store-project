@@ -11,4 +11,6 @@ public interface ReasonRepository extends JpaRepository<Reason, UUID> {
 
 	List<Reason> findByType(ReasonType type);
 
+	List<Reason> findByTypeAndActiveTrue(ReasonType type);
+
 }

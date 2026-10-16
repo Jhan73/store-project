@@ -23,6 +23,7 @@ import {
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Checkbox } from 'primeng/checkbox';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
@@ -112,6 +113,7 @@ function timeZoneOptions(current: string): string[] {
   imports: [
     ReactiveFormsModule,
     ButtonDirective,
+    Checkbox,
     InputNumber,
     InputText,
     Select,
@@ -229,6 +231,26 @@ function timeZoneOptions(current: string): string[] {
         <ng-container *ngTemplateOutlet="numberInput; context: { $implicit: exceptionField }" />
       </fieldset>
 
+      <fieldset>
+        <legend i18n="@@admin.settings.general.stock">Venta en tienda y stock</legend>
+        <div class="check">
+          <p-checkbox
+            inputId="settings-allowNegativeStockOnSale"
+            formControlName="allowNegativeStockOnSale"
+            [binary]="true"
+            [attr.aria-describedby]="'settings-allowNegativeStockOnSale-hint'"
+          />
+          <label
+            for="settings-allowNegativeStockOnSale"
+            i18n="@@admin.settings.general.allowNegativeStockOnSale"
+            >Permitir ventas sin stock suficiente</label
+          >
+        </div>
+        <small id="settings-allowNegativeStockOnSale-hint" i18n="@@admin.settings.general.allowNegativeStockOnSaleHint"
+          >La venta se cierra aunque no haya stock y el stock del producto quedará en negativo.</small
+        >
+      </fieldset>
+
       <div class="actions">
         <button
           pButton
@@ -289,6 +311,7 @@ export class SettingsForm {
         validators: [Validators.required, amountOrZero],
       }),
       exceptionThreshold: new FormControl<number | null>(null, wholeNumber(1)),
+      allowNegativeStockOnSale: new FormControl(false, { nonNullable: true }),
     },
     { validators: [lateAfterWarning] },
   );
@@ -338,6 +361,7 @@ export class SettingsForm {
           currency,
         },
         exceptionThreshold: raw.exceptionThreshold ?? 0,
+        allowNegativeStockOnSale: raw.allowNegativeStockOnSale,
       })
       .subscribe({
         next: (result) => {
@@ -370,6 +394,7 @@ export class SettingsForm {
       boardLateMinutes: value.boardLateMinutes,
       registerDifferenceThreshold: value.registerDifferenceThreshold.amount,
       exceptionThreshold: value.exceptionThreshold,
+      allowNegativeStockOnSale: value.allowNegativeStockOnSale,
     });
   }
 

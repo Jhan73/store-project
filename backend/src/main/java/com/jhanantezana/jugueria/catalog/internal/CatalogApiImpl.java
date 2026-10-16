@@ -1,10 +1,13 @@
 package com.jhanantezana.jugueria.catalog.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +16,8 @@ import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.catalog.CatalogError;
 import com.jhanantezana.jugueria.catalog.PricedOption;
 import com.jhanantezana.jugueria.catalog.PricedSelection;
+import com.jhanantezana.jugueria.catalog.ProductCategory;
+import com.jhanantezana.jugueria.catalog.QuickSaleItem;
 import com.jhanantezana.jugueria.shared.BusinessException;
 
 @Service
@@ -24,10 +29,52 @@ class CatalogApiImpl implements CatalogApi {
 
 	private final ModifierGroupRepository groups;
 
-	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups) {
+	private final AvailabilityService availability;
+
+	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups,
+			AvailabilityService availability) {
 		this.products = products;
 		this.categories = categories;
 		this.groups = groups;
+		this.availability = availability;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public boolean productExists(UUID productId) {
+		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<QuickSaleItem> quickSaleItems() {
+		return products.findQuickSaleItems()
+			.stream()
+			.map(product -> new QuickSaleItem(product.getId(), product.getName(), product.getPrice()))
+			.toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Map<UUID, ProductCategory> categoriesOf(Collection<UUID> productIds) {
+		var found = products.findAllById(productIds);
+		var categoryById = new HashMap<UUID, Category>();
+		categories.findAllById(found.stream().map(Product::getCategoryId).collect(Collectors.toSet()))
+			.forEach(category -> categoryById.put(category.getId(), category));
+		var result = new HashMap<UUID, ProductCategory>();
+		for (var product : found) {
+			var category = categoryById.get(product.getCategoryId());
+			if (category != null) {
+				result.put(product.getId(), new ProductCategory(category.getId(), category.getName()));
+			}
+		}
+		return result;
+	}
+
+	@Override
+	@Transactional
+	public void setProductAvailability(UUID productId, boolean available) {
+		availability.setProductAvailability(productId, available);
 	}
 
 	@Override
@@ -77,7 +124,8 @@ class CatalogApiImpl implements CatalogApi {
 		for (var group : productGroups) {
 			group.requireSelectionCount(chosenPerGroup.getOrDefault(group.getId(), 0));
 		}
-		return new PricedSelection(product.getId(), product.getName(), total, List.copyOf(priced));
+		return new PricedSelection(product.getId(), product.getName(), category.get().getStationId(), total,
+				List.copyOf(priced));
 	}
 
 	private static BusinessException invalidSelection(String detail) {

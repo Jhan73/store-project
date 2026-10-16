@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.Type;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +26,8 @@ import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketHttpHeaders;
@@ -32,7 +36,13 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
+import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.identity.internal.security.AccessTokenIssuer;
+import com.jhanantezana.jugueria.preparation.BoardChannel;
+import com.jhanantezana.jugueria.preparation.BoardLineIntake;
+import com.jhanantezana.jugueria.preparation.BoardOrderIntake;
+import com.jhanantezana.jugueria.preparation.BoardSource;
+import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.shared.Role;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -64,7 +74,8 @@ class RealtimeTwoInstanceIT {
 			  "boardLateMinutes": 10,
 			  "registerDifferenceThreshold": { "amount": "20.00", "currency": "PEN" },
 			  "exceptionThreshold": 3,
-			  "onlineCapacityLimit": 20
+			  "onlineCapacityLimit": 20,
+			  "allowNegativeStockOnSale": false
 			}
 			""";
 
@@ -150,12 +161,112 @@ class RealtimeTwoInstanceIT {
 		var connection = connect(portB, null);
 		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
+			session.subscribe("/topic/tables", stringHandler(new CompletableFuture<>()));
+
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
+		}
+		finally {
+			disconnectQuietly(session);
+		}
+	}
+
+	@Test
+	void rejectsAnAnonymousSubscriberToTheBoard() throws Exception {
+		var connection = connect(portB, null);
+		var session = connection.session().get(5, TimeUnit.SECONDS);
+		try {
 			session.subscribe("/topic/board", stringHandler(new CompletableFuture<>()));
 
 			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
 		}
 		finally {
 			disconnectQuietly(session);
+		}
+	}
+
+	@Test
+	void rejectsACustomerSubscribingToTheBoard() throws Exception {
+		var connection = connect(portB, bearer(contextB, Role.CUSTOMER));
+		var session = connection.session().get(5, TimeUnit.SECONDS);
+		try {
+			session.subscribe("/topic/board", stringHandler(new CompletableFuture<>()));
+
+			assertThat(connection.anyRejection().get(5, TimeUnit.SECONDS)).isNotNull();
+		}
+		finally {
+			disconnectQuietly(session);
+		}
+	}
+
+	@Test
+	void aBoardChangeOnInstanceAReachesAStaffSubscriberOnInstanceBWithinFiveSeconds() throws Exception {
+		var connection = connect(portB, bearer(contextB, Role.SERVER));
+		var session = connection.session().get(5, TimeUnit.SECONDS);
+		try {
+			var received = new CompletableFuture<String>();
+			session.subscribe("/topic/board", stringHandler(received, "ORDER_STARTED"));
+			var order = contextA.getBean(PreparationApi.class)
+				.accept(new BoardOrderIntake(BoardSource.TICKET, UUID.randomUUID(), "L-001", BoardChannel.TABLE, "Table 4",
+						Instant.now(), null, List.of(new BoardLineIntake(UUID.randomUUID(), UUID.randomUUID(), "Juice", 1,
+								null, List.of(), null, false, null))));
+
+			var started = clientOnA().post()
+				.uri("/api/v1/board/orders/" + order + "/start")
+				.header(HttpHeaders.AUTHORIZATION,
+						"Bearer " + contextA.getBean(AccessTokenIssuer.class).issue(UUID.randomUUID(), Role.SERVER))
+				.retrieve()
+				.toBodilessEntity();
+
+			assertThat(started.getStatusCode().is2xxSuccessful()).isTrue();
+			var outcome = CompletableFuture.anyOf(received, connection.anyRejection()).get(5, TimeUnit.SECONDS);
+			assertThat(outcome).as("the subscription was rejected").isInstanceOf(String.class);
+			assertThat((String) outcome).contains("\"type\":\"ORDER_STARTED\"").contains(order.toString());
+		}
+		finally {
+			disconnectQuietly(session);
+			deleteBoardRows();
+		}
+	}
+
+	@Test
+	void deactivatingAUserOnInstanceAClosesTheirSessionOnInstanceBAndLeavesOthersOpen() throws Exception {
+		var deactivated = UUID.randomUUID();
+		var bystander = UUID.randomUUID();
+		var closing = connect(portB, bearerFor(contextB, deactivated, Role.SERVER));
+		var staying = connect(portB, bearerFor(contextB, bystander, Role.SERVER));
+		var closingSession = closing.session().get(5, TimeUnit.SECONDS);
+		var stayingSession = staying.session().get(5, TimeUnit.SECONDS);
+		try {
+			new TransactionTemplate(contextA.getBean(PlatformTransactionManager.class)).executeWithoutResult(
+					status -> contextA.publishEvent(new UserDeactivated(deactivated, UUID.randomUUID(), Role.ADMIN, Instant.now())));
+
+			assertThat(closing.transportClosed().get(5, TimeUnit.SECONDS)).isNotNull();
+			assertThat(stayingSession.isConnected()).isTrue();
+		}
+		finally {
+			disconnectQuietly(closingSession);
+			disconnectQuietly(stayingSession);
+		}
+	}
+
+	private static StompHeaders bearerFor(ConfigurableApplicationContext context, UUID user, Role role) {
+		var headers = new StompHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + context.getBean(AccessTokenIssuer.class).issue(user, role));
+		return headers;
+	}
+
+	private static StompHeaders bearer(ConfigurableApplicationContext context, Role role) {
+		var headers = new StompHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + context.getBean(AccessTokenIssuer.class).issue(UUID.randomUUID(), role));
+		return headers;
+	}
+
+	private static void deleteBoardRows() throws SQLException {
+		try (var connection = DriverManager.getConnection(TestcontainersConfiguration.POSTGRES.getJdbcUrl(), "app",
+				"app"); var statement = connection.createStatement()) {
+			statement.execute("delete from preparation.board_marker");
+			statement.execute("delete from preparation.board_line");
+			statement.execute("delete from preparation.board_order");
 		}
 	}
 

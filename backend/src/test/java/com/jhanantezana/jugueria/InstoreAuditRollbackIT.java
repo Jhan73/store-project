@@ -28,6 +28,7 @@ import com.jhanantezana.jugueria.audit.internal.AuditLogRepository;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
+import com.jhanantezana.testsupport.PreparationTables;
 
 // Same guarantee as StoreAuditRollbackIT for every audited instore command: no change commits without its audit row.
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
@@ -36,6 +37,8 @@ import com.jhanantezana.testsupport.InstoreTables;
 class InstoreAuditRollbackIT {
 
 	static final String TABLES = "/api/v1/admin/tables";
+
+	static final String TICKETS = "/api/v1/tickets";
 
 	@Autowired
 	MockMvcTester mvc;
@@ -53,7 +56,7 @@ class InstoreAuditRollbackIT {
 
 	@AfterEach
 	void cleanUp() {
-		InstoreTables.clean(jdbc);
+		InstoreTables.cleanAll(jdbc);
 	}
 
 	@Test
@@ -123,6 +126,112 @@ class InstoreAuditRollbackIT {
 
 		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 		assertThat(isActive(idOf(table))).isFalse();
+	}
+
+	@Test
+	void anAuditWriteFailureRollsBackAnOpenedTicket() {
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(TICKETS)
+			.with(floorStaff())
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"counterName\":\"Ana\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(InstoreTables.count(jdbc, "ticket")).isZero();
+	}
+
+	@Test
+	void anAuditWriteFailureRollsBackASend() {
+		var ticket = openTicketWithALine();
+		auditWritesNowFail();
+
+		var result = mvc.post().uri(TICKETS + "/" + ticket + "/send").with(floorStaff()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(jdbc.sql("select state from instore.ticket_line where ticket_id = ?")
+			.param(ticket)
+			.query(String.class)
+			.single()).isEqualTo("UNSENT");
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+	}
+
+	@Test
+	void anAuditWriteFailureRollsBackAVoid() {
+		var ticket = openTicketWithALine();
+		mvc.post().uri(TICKETS + "/" + ticket + "/send").with(floorStaff()).exchange();
+		var line = jdbc.sql("select id from instore.ticket_line where ticket_id = ?")
+			.param(ticket)
+			.query(UUID.class)
+			.single();
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(TICKETS + "/" + ticket + "/lines/" + line + "/void")
+			.with(floorStaff())
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"reason\":\"Changed mind\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("SENT");
+		assertThat(jdbc.sql("select state from preparation.board_line").query(String.class).single())
+			.isEqualTo("PENDING");
+	}
+
+	@Test
+	void anAuditWriteFailureRollsBackATransfer() {
+		var ticket = openTicketWithALine();
+		mvc.post().uri(TICKETS + "/" + ticket + "/send").with(floorStaff()).exchange();
+		var target = InstoreTables.aTable(jdbc, "Elsewhere");
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(TICKETS + "/" + ticket + "/transfer")
+			.with(floorStaff())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"tableId\":\"%s\"}".formatted(target))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(jdbc.sql("select table_id from instore.ticket where id = ?")
+			.param(ticket)
+			.query(UUID.class)
+			.single()).isNotEqualTo(target);
+		assertThat(jdbc.sql("select label from preparation.board_order").query(String.class).single())
+			.isNotEqualTo("Elsewhere");
+	}
+
+	private UUID openTicketWithALine() {
+		InstoreTables.aVoidReason(jdbc, "Changed mind");
+		var juice = InstoreTables.aSizedProduct(jdbc);
+		var table = InstoreTables.aTable(jdbc, "Table 4");
+		var opened = mvc.post()
+			.uri(TICKETS)
+			.with(floorStaff())
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"tableId\":\"%s\"}".formatted(table))
+			.exchange();
+		var ticket = UUID.fromString(idOf(opened));
+		var added = mvc.post()
+			.uri(TICKETS + "/" + ticket + "/lines")
+			.with(floorStaff())
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"productId\":\"%s\",\"modifierOptionIds\":[\"%s\"],\"quantity\":1,\"allergy\":false}"
+				.formatted(juice.productId(), juice.small()))
+			.exchange();
+		assertThat(added).hasStatus(HttpStatus.CREATED);
+		return ticket;
+	}
+
+	private static RequestPostProcessor floorStaff() {
+		return AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER);
 	}
 
 	private void auditWritesNowFail() {

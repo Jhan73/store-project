@@ -10,6 +10,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationsServiceTest {
@@ -29,11 +33,26 @@ class NotificationsServiceTest {
 	@Mock
 	StaffSetPasswordEmailTemplate template;
 
+	@Mock
+	ShiftSummaryEmailTemplate shiftSummaryTemplate;
+
+	@Mock
+	AppEventsPublisher appEvents;
+
 	NotificationsService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new NotificationsService(emailSender, template, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new NotificationsService(emailSender, template, shiftSummaryTemplate, appEvents, Clock.fixed(NOW, ZoneOffset.UTC));
+	}
+
+	@Test
+	void signalsEveryTaskToCloseTheSessionsOfAUser() {
+		var user = UUID.randomUUID();
+
+		service.revokeSessions(user);
+
+		verify(appEvents).publish(RealtimeTopic.SESSIONS, "USER_SESSIONS_REVOKED", Map.of("userId", user.toString()));
 	}
 
 	@Test
@@ -49,6 +68,16 @@ class NotificationsServiceTest {
 		assertThat(captor.getValue().to()).isEqualTo("new-staff@jugueria.pe");
 		assertThat(captor.getValue().subject()).isEqualTo("Set your password");
 		assertThat(captor.getValue().body()).isEqualTo("body");
+	}
+
+	@Test
+	void rendersAndSendsTheShiftSummaryEmail() {
+		var summary = ShiftSummaryEmailTemplateTest.summary(false, null, null, null);
+		when(shiftSummaryTemplate.render(summary)).thenReturn(new RenderedEmail("Shift summary", "totals"));
+
+		service.sendShiftSummaryEmail("admin@jugueria.pe", summary);
+
+		verify(emailSender).send(new EmailMessage("admin@jugueria.pe", "Shift summary", "totals"));
 	}
 
 	@Test

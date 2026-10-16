@@ -370,7 +370,20 @@ describe('AppShell', () => {
   });
 
   describe('sidebar', () => {
-    const aside = (host: HTMLElement) => host.querySelector<HTMLElement>('aside')!;
+    let visibleSidebar: HTMLStyleElement;
+
+    beforeEach(() => {
+      // jsdom does not focus display:none elements, and below the desktop breakpoint the sidebar is
+      visibleSidebar = document.createElement('style');
+      visibleSidebar.textContent = '.sidebar { display: block !important; }';
+      document.head.appendChild(visibleSidebar);
+    });
+
+    afterEach(() => {
+      visibleSidebar.remove();
+    });
+
+    const aside =(host: HTMLElement) => host.querySelector<HTMLElement>('aside')!;
     const toggle = (host: HTMLElement) =>
       host.querySelector<HTMLButtonElement>('[data-testid="sidebar-toggle"]')!;
     const pin = (host: HTMLElement) =>

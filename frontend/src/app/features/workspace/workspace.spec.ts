@@ -88,7 +88,7 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/staff');
 
-    expect(navLinks()).toEqual(['/staff', '/staff/availability']);
+    expect(navLinks()).toEqual(['/staff', '/staff/tables', '/staff/board', '/staff/availability']);
     expect(page().body.textContent).toContain('Mozo');
   });
 
@@ -122,6 +122,172 @@ describe('staff and admin area', () => {
     expect(active).toEqual(['/staff/availability']);
   });
 
+  it('lets floor staff open the table grid', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/tables');
+    http.expectOne('http://api.test/api/v1/tables').flush([]);
+    http.expectOne('http://api.test/api/v1/tickets').flush([]);
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/tables');
+    expect(page().body.textContent).toContain('Salón');
+    expect(active).toEqual(['/staff/tables']);
+  });
+
+  it('lets floor staff open the board', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/board');
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({
+      boardWarningMinutes: 5,
+      boardLateMinutes: 10,
+      timeZone: 'America/Lima',
+    });
+    http.expectOne('http://api.test/api/v1/stations').flush([]);
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
+    http.expectOne('http://api.test/api/v1/board/all-day').flush({ groups: [], individual: [] });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/board');
+    expect(page().body.textContent).toContain('Tablero');
+    expect(active).toEqual(['/staff/board']);
+  });
+
+  it('shows a cashier the register entry', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff');
+
+    expect(navLinks()).toEqual([
+      '/staff',
+      '/staff/tables',
+      '/staff/board',
+      '/staff/register',
+      '/staff/quick-sale',
+      '/staff/availability',
+    ]);
+  });
+
+  it('lets a cashier open the quick sale', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+    http.expectOne('http://api.test/api/v1/quick-sales/items').flush([]);
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/shifts/current').flush({
+      id: 's1',
+      status: 'OPEN',
+      openedAt: '2026-10-13T14:00:00Z',
+      openingFloat: { amount: '50.00', currency: 'PEN' },
+    });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/quick-sale');
+    expect(page().body.textContent).toContain('Venta rápida');
+    expect(active).toEqual(['/staff/quick-sale']);
+  });
+
+  it('keeps a server out of the quick sale', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/quick-sale');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('lets a cashier open the register', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/register');
+    http.expectOne('http://api.test/api/v1/shifts/current').flush({
+      id: 's1',
+      status: 'OPEN',
+      openedAt: '2026-10-13T14:00:00Z',
+      openingFloat: { amount: '50.00', currency: 'PEN' },
+    });
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
+    await harness.fixture.whenStable();
+    http.expectOne('http://api.test/api/v1/shifts/s1/cash-movements').flush([]);
+    http.expectOne('http://api.test/api/v1/reasons?type=CASH_OUT').flush([]);
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/register');
+    expect(page().body.textContent).toContain('Turno abierto');
+    expect(active).toEqual(['/staff/register']);
+  });
+
+  it('keeps a cashier out of the open shifts', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the open shifts', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/staff/register/shifts');
+    http
+      .expectOne('http://api.test/api/v1/shifts?status=OPEN&page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({ timeZone: 'America/Lima' });
+    await harness.fixture.whenStable();
+
+    const active = Array.from(page().querySelectorAll('nav a.is-active')).map((link) =>
+      link.getAttribute('href'),
+    );
+    expect(url()).toBe('/staff/register/shifts');
+    expect(page().body.textContent).toContain('No hay turnos abiertos');
+    expect(active).toEqual(['/staff/register/shifts']);
+  });
+
+  it('keeps a server out of the register', async () => {
+    await signInAs('SERVER');
+
+    await harness.navigateByUrl('/staff/register');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('lets floor staff open a ticket editor', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/staff/tickets/k1');
+    http.expectOne('http://api.test/api/v1/tickets/k1').flush({
+      id: 'k1',
+      type: 'TABLE',
+      status: 'OPEN',
+      lines: [],
+      payments: [],
+      tableName: 'Mesa 1',
+      total: { amount: '0.00', currency: 'PEN' },
+    });
+    http.expectOne('http://api.test/api/v1/catalog/menu').flush({ categories: [] });
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/staff/tickets/k1');
+  });
+
   it('sends a visitor without a session away from the availability screen', async () => {
     const navigation = harness.navigateByUrl('/staff/availability');
     (await vi.waitFor(() => http.expectOne(REFRESH))).flush(null, {
@@ -149,9 +315,15 @@ describe('staff and admin area', () => {
 
     expect(navLinks()).toEqual([
       '/staff',
+      '/staff/tables',
+      '/staff/board',
+      '/staff/register',
+      '/staff/quick-sale',
+      '/staff/register/shifts',
       '/staff/availability',
       '/admin',
       '/admin/catalog',
+      '/admin/stock',
       '/admin/settings',
       '/admin/tables',
       '/admin/users',
@@ -209,6 +381,37 @@ describe('staff and admin area', () => {
 
     expect(url()).toBe('/admin/audit?entityType=USER');
     expect(page().body.textContent).toContain('Auditoría');
+  });
+
+  it('links the stock from the admin home', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin');
+
+    const link = page().body.querySelector('[data-testid="stock-link"]');
+    expect(link?.getAttribute('href')).toBe('/admin/stock');
+  });
+
+  it('keeps floor staff out of the stock', async () => {
+    await signInAs('CASHIER');
+
+    await harness.navigateByUrl('/admin/stock');
+
+    expect(url()).toBe('/forbidden');
+  });
+
+  it('gives an administrator the stock', async () => {
+    await signInAs('ADMIN');
+
+    await harness.navigateByUrl('/admin/stock');
+    http.expectOne('http://api.test/api/v1/admin/stock-items').flush([]);
+    http
+      .expectOne('http://api.test/api/v1/admin/products?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/admin/stock');
+    expect(page().body.textContent).toContain('Todavía no hay productos con control de stock');
   });
 
   it('keeps floor staff out of the table configuration', async () => {

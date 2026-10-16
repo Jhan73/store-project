@@ -44,8 +44,8 @@ Database conventions for PostgreSQL 18. Repo-wide rules are in the root `CLAUDE.
 | `app` | Application | DML only |
 
 Append-only tables are enforced by grants, not by convention — `app` has `INSERT, SELECT` and **no** `UPDATE/DELETE/TRUNCATE` on:
-`audit.audit_log`, `inventory.stock_movement`, `ordering.order_status_history`, `instore.in_store_payment`, `instore.cash_movement`.
-Corrections are new rows (e.g. `payment_void`), never updates. Default privileges grant DML on every new table `migrator`
+`audit.audit_log`, `inventory.stock_movement`, `ordering.order_status_history`, `instore.in_store_payment`, `instore.payment_line`, `instore.payment_void`, `instore.sale_void`, `instore.cash_movement`.
+Corrections are new rows (e.g. `payment_void`), never updates. Append-only tables carry no foreign keys, so tests that cannot wipe them never block wiping the tables they point at. Default privileges grant DML on every new table `migrator`
 creates, so a partitioned append-only table needs the `REVOKE` repeated for the parent **and every partition**, in the
 same migration that creates them (`audit.audit_log`'s migration is the reference).
 

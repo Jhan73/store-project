@@ -1,0 +1,3 @@
+Subject: Hello [(${name})]
+
+Body for [(${name})].

@@ -222,6 +222,41 @@ class TableAdminControllerIT {
 	}
 
 	@Test
+	void refusesToDeactivateATableWithAnOpenTicket() {
+		var created = create("Busy-" + UUID.randomUUID(), null, 0);
+		var id = idOf(created);
+		openTicketOn(UUID.fromString(id));
+
+		var result = deactivate(id, etagOf(created));
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.table-has-open-ticket");
+		assertThat(jdbc.sql("select active from instore.dining_table where id = ?")
+			.param(UUID.fromString(id))
+			.query(Boolean.class)
+			.single()).isTrue();
+	}
+
+	@Test
+	void deactivatesATableOnceItsTicketIsNoLongerOpen() {
+		var created = create("Free-" + UUID.randomUUID(), null, 0);
+		var id = idOf(created);
+		openTicketOn(UUID.fromString(id));
+		jdbc.sql("update instore.ticket set status = 'CLOSED', closed_at = now() where table_id = ?")
+			.param(UUID.fromString(id))
+			.update();
+
+		assertThat(deactivate(id, etagOf(created))).hasStatusOk();
+	}
+
+	private void openTicketOn(UUID tableId) {
+		jdbc.sql("""
+				insert into instore.ticket (id, type, table_id, status, currency, opened_by, created_at, updated_at)
+				values (?, 'TABLE', ?, 'OPEN', 'PEN', ?, now(), now())
+				""").param(UUID.randomUUID()).param(tableId).param(UUID.randomUUID()).update();
+	}
+
+	@Test
 	void deactivatesAndReactivatesATable() {
 		var created = create("Mesa-" + UUID.randomUUID(), null, 0);
 		var id = idOf(created);

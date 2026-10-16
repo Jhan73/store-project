@@ -21,7 +21,7 @@ Principles behind every rule below:
 
 Java 25 · Spring Boot 4.1 · Spring Modulith 2.1 · Spring Security 7 · Spring Data JPA (Hibernate 7) · Flyway · PostgreSQL 18 · Lombok. Virtual threads enabled.
 
-Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
+Not yet in `pom.xml` (tech-spec §3): Bucket4j, AWS SDK `sso`/`ssooidc` (Thymeleaf landed at M2-B6, for the email templates; the AWS SDK BOM and `sesv2` landed at M1-B2's email-transport slice; WireMock landed with it too, for the SES adapter's tests; Modulith `-starter-jdbc` landed at M1-B5's real-time slice, backing `@ApplicationModuleListener`'s event publication registry; Cache + Caffeine and AWS SDK `s3` landed at M1-B6, for the menu cache and product images; springdoc-openapi landed with the OpenAPI spec work package, as `-starter-webmvc-api` with no Swagger UI). Add each with the first work package that needs it, not speculatively.
 
 ## Commands
 
@@ -89,7 +89,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Only the top-level package of a module is public. Never import another module's `internal` or `web` types.
 - Cross-module reactions use domain events with `@ApplicationModuleListener` (async, after commit, persisted in the Modulith JDBC outbox).
 - Exception: `audit` listens with a plain synchronous `@EventListener` so an audit failure rolls back the business change.
-- Exception: commands needing an atomic decision across two modules (voiding a line, cancelling an order vs board state) call the other module's API synchronously in the same transaction. Keep this list short and documented in the module's API.
+- Exception: commands needing an atomic decision across two modules (voiding a line, cancelling an order vs board state, sending a ticket, moving it to another table) call the other module's API synchronously in the same transaction. Keep this list short and documented in the module's API.
 - Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer. The event carries the before/after snapshot the audit row needs (products, categories, stations, and modifier groups do).
 - No cyclic dependencies between modules.
 
@@ -98,7 +98,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Lock multiple products in ascending `product_id` order to avoid deadlocks.
 - `preparation.board_order.status` arbitrates races between staff and customer commands.
 - Mutable aggregates use `@Version` optimistic locking.
-- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library.
+- Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library. Use `shared`'s `Jobs.drain(batch)` (capped at 10 batches per run) with one `@Transactional` batch method per bean, or a non-transactional batch method that hands each unit to a separate `@Transactional` bean for per-unit isolation (never call it inside an outer transaction); `@Scheduled`/`SchedulingConfigurer` tasks run on the `job-*` scheduler, never on the STOMP heartbeat one (give any new scheduler bean a `@Qualifier` at its injection points); when the batch deletes, claim in a `WITH … AS MATERIALIZED` CTE (see `IdempotencyCleanup`).
 - Commands that move money or stock require an `Idempotency-Key` header. See "Idempotency" below.
 
 **Money**
@@ -168,6 +168,7 @@ Full design in tech-spec §5.2.
 - Implement it **inside the use-case transaction** through `shared`'s idempotency API. Never as a servlet filter or MVC interceptor: they run outside the transaction.
 - The controller validates the `Idempotency-Key` header (UUID, required) and passes it to the service; the service's first statement registers it with actor ID + request hash.
 - Keys are scoped by `actor_id`. Replays return the stored response with `Idempotent-Replayed: true`; a different body with the same key is `422`. Rejected commands roll back their key.
+- The API: `IdempotencyKeyHeader.require(header)` in the controller; `RequestHash.of(method, path, body)` for the hash; `Idempotency.register(...)` then `storeResponse(...)` in the service (`Propagation.MANDATORY`). A `Replay` is returned with `Idempotent-Replayed: true`. `IdempotentProbeService` and `IdempotentProbeController` in the test sources show the full shape.
 - Payment webhooks dedupe by provider event ID instead.
 
 ## Persistence (JPA)

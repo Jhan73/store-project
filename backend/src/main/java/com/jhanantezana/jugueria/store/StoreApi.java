@@ -17,6 +17,9 @@ public interface StoreApi {
 
 	StoreThresholds thresholds();
 
+	/** Whether an in-store sale closes even when the shelf cannot cover it, taking stock below zero. */
+	boolean allowsNegativeStockOnSale();
+
 	List<ReasonView> reasons(ReasonType type);
 
 	Optional<DeliveryZoneView> deliveryZone(UUID zoneId);

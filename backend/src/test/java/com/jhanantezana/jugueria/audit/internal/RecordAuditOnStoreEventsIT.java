@@ -73,6 +73,20 @@ class RecordAuditOnStoreEventsIT {
 	}
 
 	@Test
+	void recordsTheNegativeStockFlagInTheSettingsChange() {
+		var settingsId = UUID.randomUUID();
+		var before = new StoreSettingsSnapshot("America/Lima", PEN, 10, 2, 15, 5, 10, Money.of("20.00", PEN), 3, 20, false);
+		var after = new StoreSettingsSnapshot("America/Lima", PEN, 10, 2, 15, 5, 10, Money.of("20.00", PEN), 3, 20, true);
+
+		transactionTemplate.executeWithoutResult(status -> events
+			.publishEvent(new StoreSettingsChanged(settingsId, before, after, UUID.randomUUID(), Role.ADMIN, NOW)));
+
+		var entry = findByEntityId(settingsId);
+		assertThat(entry.getBefore()).containsEntry("allowNegativeStockOnSale", false);
+		assertThat(entry.getAfter()).containsEntry("allowNegativeStockOnSale", true);
+	}
+
+	@Test
 	void recordsAnOpeningHoursChange() {
 		var settingsId = UUID.randomUUID();
 		var before = java.util.List.of(new OpeningHourSnapshot(java.time.DayOfWeek.MONDAY, false,

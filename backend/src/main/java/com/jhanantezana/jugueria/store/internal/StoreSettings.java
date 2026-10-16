@@ -58,6 +58,9 @@ public class StoreSettings extends BaseEntity {
 	@Column(name = "online_capacity_limit", nullable = false)
 	private int onlineCapacityLimit;
 
+	@Column(name = "allow_negative_stock_on_sale", nullable = false)
+	private boolean allowNegativeStockOnSale;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -109,10 +112,15 @@ public class StoreSettings extends BaseEntity {
 		this.updatedAt = now;
 	}
 
+	/** Whether a sale the shelf cannot cover still closes, taking stock below zero. */
+	public void allowNegativeStockOnSale(boolean allowed) {
+		this.allowNegativeStockOnSale = allowed;
+	}
+
 	public StoreSettingsSnapshot snapshot() {
 		return new StoreSettingsSnapshot(timeZone, currency, basePrepMinutes, queueMinutesPerOrder, busyModeMinutes,
 				boardWarningMinutes, boardLateMinutes, registerDifferenceThreshold, exceptionThreshold,
-				onlineCapacityLimit);
+				onlineCapacityLimit, allowNegativeStockOnSale);
 	}
 
 	public ZoneId zoneId() {

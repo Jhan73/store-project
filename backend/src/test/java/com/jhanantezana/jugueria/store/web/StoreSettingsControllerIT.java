@@ -81,6 +81,67 @@ class StoreSettingsControllerIT {
 	}
 
 	@Test
+	void negativeStockOnSaleIsOffByDefault() {
+		var result = mvc.get().uri(SETTINGS).with(admin()).exchange();
+
+		assertThat(result).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(false);
+	}
+
+	@Test
+	void anAdminTurnsNegativeStockOnSaleOnAndOffAndEachChangeBumpsTheETag() {
+		var before = currentETag();
+
+		var on = putWithFlag(before, true);
+
+		assertThat(on).hasStatusOk();
+		assertThat(on).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(true);
+		var afterOn = on.getResponse().getHeader(HttpHeaders.ETAG);
+		assertThat(afterOn).isNotEqualTo(before);
+		assertThat(mvc.get().uri(SETTINGS).with(admin()).exchange()).bodyJson()
+			.extractingPath("$.allowNegativeStockOnSale")
+			.isEqualTo(true);
+
+		var off = putWithFlag(afterOn, false);
+
+		assertThat(off).bodyJson().extractingPath("$.allowNegativeStockOnSale").isEqualTo(false);
+		assertThat(off.getResponse().getHeader(HttpHeaders.ETAG)).isNotEqualTo(afterOn);
+	}
+
+	@Test
+	void anUpdateWithoutTheFlagIsRejectedSoNoEditCanResetItBySilence() {
+		var result = mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, currentETag())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20).replace(",\n  \"allowNegativeStockOnSale\": false", ""))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	void aStaleIfMatchLeavesTheFlagUntouched() {
+		var result = putWithFlag("\"999999\"", true);
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_FAILED);
+		assertThat(mvc.get().uri(SETTINGS).with(admin()).exchange()).bodyJson()
+			.extractingPath("$.allowNegativeStockOnSale")
+			.isEqualTo(false);
+	}
+
+	@Test
+	void changingTheFlagWithoutIfMatchIsRequiredLikeAnyOtherSetting() {
+		var result = mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20, true))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.PRECONDITION_REQUIRED);
+	}
+
 	void rejectsAnUpdateWithoutIfMatch() {
 		var result = mvc.put()
 			.uri(SETTINGS)
@@ -223,8 +284,25 @@ class StoreSettingsControllerIT {
 		return result.getResponse().getHeader(HttpHeaders.ETAG);
 	}
 
+	private MvcTestResult putWithFlag(String etag, boolean allowed) {
+		return mvc.put()
+			.uri(SETTINGS)
+			.with(admin())
+			.header(HttpHeaders.IF_MATCH, etag)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(settingsJson(10, 2, 15, 5, 10, "20.00", 3, 20, allowed))
+			.exchange();
+	}
+
 	private static String settingsJson(int basePrep, int queuePerOrder, int busyMinutes, int boardWarning,
 			int boardLate, String registerThreshold, int exceptionThreshold, int onlineCapacity) {
+		return settingsJson(basePrep, queuePerOrder, busyMinutes, boardWarning, boardLate, registerThreshold,
+				exceptionThreshold, onlineCapacity, false);
+	}
+
+	private static String settingsJson(int basePrep, int queuePerOrder, int busyMinutes, int boardWarning,
+			int boardLate, String registerThreshold, int exceptionThreshold, int onlineCapacity,
+			boolean allowNegativeStock) {
 		return """
 				{
 				  "timeZone": "America/Lima",
@@ -236,10 +314,11 @@ class StoreSettingsControllerIT {
 				  "boardLateMinutes": %d,
 				  "registerDifferenceThreshold": { "amount": "%s", "currency": "PEN" },
 				  "exceptionThreshold": %d,
-				  "onlineCapacityLimit": %d
+				  "onlineCapacityLimit": %d,
+				  "allowNegativeStockOnSale": %b
 				}
 				""".formatted(basePrep, queuePerOrder, busyMinutes, boardWarning, boardLate, registerThreshold,
-				exceptionThreshold, onlineCapacity);
+				exceptionThreshold, onlineCapacity, allowNegativeStock);
 	}
 
 	private static RequestPostProcessor admin() {

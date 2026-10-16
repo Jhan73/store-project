@@ -83,7 +83,7 @@ class StoreAuditRollbackIT {
 					{ "timeZone": "America/Lima", "currency": "PEN", "basePrepMinutes": 99,
 					  "queueMinutesPerOrder": 2, "busyModeMinutes": 15, "boardWarningMinutes": 5,
 					  "boardLateMinutes": 10, "registerDifferenceThreshold": { "amount": "20.00", "currency": "PEN" },
-					  "exceptionThreshold": 3, "onlineCapacityLimit": 20 }
+					  "exceptionThreshold": 3, "onlineCapacityLimit": 20, "allowNegativeStockOnSale": false }
 					""")
 			.exchange();
 

@@ -39,6 +39,7 @@ class RecordAuditOnStoreSettingsChanged {
 		map.put("registerDifferenceThreshold", snapshot.registerDifferenceThreshold().amount().toPlainString());
 		map.put("exceptionThreshold", snapshot.exceptionThreshold());
 		map.put("onlineCapacityLimit", snapshot.onlineCapacityLimit());
+		map.put("allowNegativeStockOnSale", snapshot.allowNegativeStockOnSale());
 		return map;
 	}
 

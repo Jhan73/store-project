@@ -1,6 +1,8 @@
 package com.jhanantezana.jugueria.catalog;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface CatalogApi {
@@ -13,5 +15,20 @@ public interface CatalogApi {
 	 * group below its minimum or above its maximum).
 	 */
 	PricedSelection priceSelection(UUID productId, List<UUID> optionIds);
+
+	boolean productExists(UUID productId);
+
+	/** The products pinned for quick sales that can be sold right now, in the order the admin set. */
+	List<QuickSaleItem> quickSaleItems();
+
+	/** The current category of each product that exists; unknown IDs are left out of the result. */
+	Map<UUID, ProductCategory> categoriesOf(Collection<UUID> productIds);
+
+	/**
+	 * Sets the product's availability and publishes {@link AvailabilityChanged} when the flag flips, in the
+	 * caller's transaction. Used by {@code inventory} so a stock-tracked product is unavailable exactly while
+	 * nothing is left to sell. Throws {@code BusinessException} with {@code catalog.product-not-found}.
+	 */
+	void setProductAvailability(UUID productId, boolean available);
 
 }

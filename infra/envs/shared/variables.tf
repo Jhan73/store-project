@@ -33,7 +33,7 @@ variable "developer_username" {
 variable "custom_domain_environments" {
   description = "Environments whose custom hostnames point at the shared ALB. Add prod only after its listener rules and NG_ALLOWED_HOSTS are wired: DNS reaching the ALB before the rules exist returns 404."
   type        = list(string)
-  default     = ["test"]
+  default     = ["test", "prod"]
 
   validation {
     condition     = alltrue([for env in var.custom_domain_environments : contains(["test", "prod"], env)])

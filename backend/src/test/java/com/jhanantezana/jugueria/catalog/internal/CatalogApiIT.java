@@ -68,6 +68,14 @@ class CatalogApiIT {
 	}
 
 	@Test
+	void reportsTheStationThatPreparesTheProduct() {
+		var station = jdbc.sql("select id from catalog.station where default_station").query(UUID.class).single();
+		var product = product("Water", "3.00");
+
+		assertThat(catalog.priceSelection(product, List.of()).stationId()).isEqualTo(station);
+	}
+
+	@Test
 	void anOptionalGroupMayBeSkipped() {
 		var size = requiredSizeGroup();
 		var boosters = optionalBoostersGroup();
@@ -219,6 +227,45 @@ class CatalogApiIT {
 		var group = groups.create("Boosters-" + UUID.randomUUID(), false, 0, 2,
 				List.of(option("Chia", "0.00"), option("Ginger", "0.00"), option("Spirulina", "1.50")));
 		return new Boosters(group.getId(), group.getOptions().get(0).getId(), group.getOptions().get(1).getId());
+	}
+
+	@Test
+	void reportsWhetherAProductExists() {
+		var product = product("Water", "3.00");
+
+		assertThat(catalog.productExists(product)).isTrue();
+		assertThat(catalog.productExists(UUID.randomUUID())).isFalse();
+	}
+
+	@Test
+	void resolvesTheCategoryOfEachKnownProduct() {
+		var category = categories.create("Juices-" + UUID.randomUUID(), null, 0);
+		var mango = products.create(new ProductDefinition("Mango", null, category.getId(), Money.of("12.50", PEN), 0,
+				false, Set.of(), List.of())).id();
+
+		var found = catalog.categoriesOf(List.of(mango, UUID.randomUUID()));
+
+		assertThat(found).containsOnlyKeys(mango);
+		assertThat(found.get(mango).categoryId()).isEqualTo(category.getId());
+		assertThat(found.get(mango).categoryName()).isEqualTo(category.getName());
+	}
+
+	@Test
+	void setsAProductAvailabilityAndTheSaleStopsAcceptingIt() {
+		var product = product("Water", "3.00");
+
+		catalog.setProductAvailability(product, false);
+
+		assertThatThrownBy(() -> catalog.priceSelection(product, List.of())).isInstanceOfSatisfying(
+				BusinessException.class, e -> assertThat(e.errorCode()).isEqualTo(CatalogError.PRODUCT_UNAVAILABLE));
+		catalog.setProductAvailability(product, true);
+		assertThat(catalog.priceSelection(product, List.of()).productId()).isEqualTo(product);
+	}
+
+	@Test
+	void settingAvailabilityOfAnUnknownProductIsRejected() {
+		assertThatThrownBy(() -> catalog.setProductAvailability(UUID.randomUUID(), false)).isInstanceOfSatisfying(
+				BusinessException.class, e -> assertThat(e.errorCode()).isEqualTo(CatalogError.PRODUCT_NOT_FOUND));
 	}
 
 	private UUID product(String name, String price, UUID... groupIds) {
