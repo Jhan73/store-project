@@ -1,5 +1,6 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MessageService } from 'primeng/api';
 import type {
   ActiveReason,
   CashMovement,
@@ -27,6 +28,7 @@ export class ShiftStore {
   private readonly api = inject(RegisterApi);
   private readonly reasonsApi = inject(ReasonsApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly messages = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
@@ -41,6 +43,7 @@ export class ShiftStore {
   private readonly closed = signal<Shift | null>(null);
   private readonly noteRequired = signal<{ count: string; difference: Money } | null>(null);
   private readonly locked = signal(false);
+  private destroyed = false;
   private lastShiftRequest = 0;
   private lastMovementsRequest = 0;
 
@@ -57,6 +60,10 @@ export class ShiftStore {
   readonly currency = this.storeCurrency.asReadonly();
   readonly timeZone = this.zone.asReadonly();
   readonly pending = new PendingIds();
+
+  constructor() {
+    this.destroyRef.onDestroy(() => (this.destroyed = true));
+  }
 
   // `shift` reads only the current shift, for screens that need to know whether one is open and nothing else.
   load(scope: 'full' | 'shift' = 'full'): void {
@@ -102,11 +109,13 @@ export class ShiftStore {
     this.pending.add('open');
     this.api
       .openShift({ openingFloat: { amount, currency } }, this.keys.keyFor(intent))
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (shift) => {
           this.pending.delete('open');
           this.keys.release(intent);
+          if (this.destroyed) {
+            return;
+          }
           this.lastShiftRequest++;
           this.current.set(shift);
           this.isLoaded.set(true);
@@ -115,7 +124,7 @@ export class ShiftStore {
         error: (error: unknown) => {
           this.pending.delete('open');
           this.notifier.show(error);
-          this.load();
+          this.reload();
         },
       });
   }
@@ -168,17 +177,21 @@ export class ShiftStore {
     this.pending.add('movement');
     this.api
       .recordMovement(shift.id, movement, this.keys.keyFor(intent))
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.pending.delete('movement');
           this.keys.release(intent);
-          this.loadMovements();
-          recorded();
+          if (!this.destroyed) {
+            this.loadMovements();
+            recorded();
+          }
         },
         error: (error: unknown) => {
           this.pending.delete('movement');
           this.notifier.show(error);
+          if (this.destroyed) {
+            return;
+          }
           this.loadMovements();
           if (isShiftStateError(error)) {
             this.load();
@@ -197,10 +210,18 @@ export class ShiftStore {
     this.pending.add('close');
     this.api
       .closeShift(shift.id, { countedCash: { amount: count, currency }, note })
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (outcome) => {
           this.pending.delete('close');
+          if (this.destroyed) {
+            if (outcome.kind === 'closed') {
+              this.messages.add({
+                severity: 'success',
+                summary: $localize`:@@staff.register.close.registered:El turno quedó cerrado.`,
+              });
+            }
+            return;
+          }
           if (outcome.kind === 'closed') {
             this.lastShiftRequest++;
             this.current.set(null);
@@ -218,13 +239,19 @@ export class ShiftStore {
         error: (error: unknown) => {
           this.pending.delete('close');
           this.notifier.show(error);
-          this.load();
+          this.reload();
         },
       });
   }
 
   dismissClosed(): void {
     this.closed.set(null);
+  }
+
+  private reload(): void {
+    if (!this.destroyed) {
+      this.load();
+    }
   }
 
   private loadCurrency(): void {

@@ -5909,6 +5909,14 @@
         <source>Todas las estaciones</source>
       </segment>
     </unit>
+    <unit id="staff.quickSale.registered">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:178</note>
+      </notes>
+      <segment>
+        <source>Se registró la venta del ticket <ph id="0" equiv="number" disp="ticket.number"/>.</source>
+      </segment>
+    </unit>
     <unit id="staff.quickSale.title">
       <notes>
         <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:49,51</note>
@@ -7053,6 +7061,14 @@
         <source>Neto</source>
       </segment>
     </unit>
+    <unit id="staff.register.close.registered">
+      <notes>
+        <note category="location">src/app/features/staff/register/shift-store.ts:220</note>
+      </notes>
+      <segment>
+        <source>El turno quedó cerrado.</source>
+      </segment>
+    </unit>
     <unit id="staff.home.title">
       <notes>
         <note category="location">src/app/features/staff/staff-home.ts:40,42</note>
@@ -7371,6 +7387,14 @@
       </notes>
       <segment>
         <source>Usar esta parte como el monto a cobrar</source>
+      </segment>
+    </unit>
+    <unit id="staff.ticket.moneyRegistered">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:389</note>
+      </notes>
+      <segment>
+        <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
       </segment>
     </unit>
     <unit id="staff.tickets.back.tooltip">

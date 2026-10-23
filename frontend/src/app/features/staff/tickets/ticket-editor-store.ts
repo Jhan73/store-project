@@ -1,6 +1,7 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { forkJoin, Observable } from 'rxjs';
 import type {
   ActiveReason,
@@ -48,6 +49,7 @@ export class TicketEditorStore {
   private readonly register = inject(RegisterApi);
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly messages = inject(MessageService);
   private readonly reasonsApi = inject(ReasonsApi);
   private readonly auth = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
@@ -66,6 +68,7 @@ export class TicketEditorStore {
   private readonly splitList = signal<readonly Money[] | null>(null);
   private readonly shiftErrors = signal(0);
   private ticketId = '';
+  private destroyed = false;
   private lastTicketRequest = 0;
   private lastBoardRequest = 0;
   private lastMenuRequest = 0;
@@ -102,6 +105,7 @@ export class TicketEditorStore {
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => (this.destroyed = true));
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.ticketId = params.get('id') ?? '';
       this.current.set(null);
@@ -230,10 +234,15 @@ export class TicketEditorStore {
 
   pay(request: RecordPaymentRequest, paid: () => void): void {
     const intent = `pay:${JSON.stringify(request)}`;
-    this.command('pay', this.register.pay(this.ticketId, request, this.keys.keyFor(intent)), () => {
-      this.keys.release(intent);
-      paid();
-    });
+    this.command(
+      'pay',
+      this.register.pay(this.ticketId, request, this.keys.keyFor(intent)),
+      () => {
+        this.keys.release(intent);
+        paid();
+      },
+      true,
+    );
   }
 
   voidPayment(paymentId: string, request: VoidPaymentRequest, voided: () => void): void {
@@ -244,11 +253,12 @@ export class TicketEditorStore {
         this.splitList.set(null);
         voided();
       },
+      true,
     );
   }
 
   voidSale(request: VoidSaleRequest, voided: () => void): void {
-    this.command('void-sale', this.register.voidSale(this.ticketId, request), voided);
+    this.command('void-sale', this.register.voidSale(this.ticketId, request), voided, true);
   }
 
   loadSplit(parts: number): void {
@@ -361,11 +371,26 @@ export class TicketEditorStore {
       });
   }
 
-  private command(pendingId: string, request: Observable<Ticket>, done?: () => void): void {
+  // A money command is not tied to the screen: leaving must not drop the answer or the idempotency key.
+  private command(
+    pendingId: string,
+    request: Observable<Ticket>,
+    done?: () => void,
+    detached = false,
+  ): void {
     this.pending.add(pendingId);
-    request.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    (detached ? request : request.pipe(takeUntilDestroyed(this.destroyRef))).subscribe({
       next: (ticket) => {
         this.pending.delete(pendingId);
+        if (this.destroyed) {
+          if (detached) {
+            this.messages.add({
+              severity: 'success',
+              summary: $localize`:@@staff.ticket.moneyRegistered:El cambio del ticket ${ticket.number}:number: quedó registrado.`,
+            });
+          }
+          return;
+        }
         // A read that began before the command would bring back the old ticket.
         this.lastTicketRequest++;
         this.current.set(ticket);
@@ -381,10 +406,13 @@ export class TicketEditorStore {
 
   private commandFailed(pendingId: string, error: unknown): void {
     this.pending.delete(pendingId);
+    this.notifier.show(error);
+    if (this.destroyed) {
+      return;
+    }
     if (isShiftStateError(error)) {
       this.shiftErrors.update((count) => count + 1);
     }
-    this.notifier.show(error);
     this.load();
   }
 }

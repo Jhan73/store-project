@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
@@ -247,6 +248,63 @@ describe('ShiftStore', () => {
       store.dismissClosed();
 
       expect(store.closedShift()).toBeNull();
+    });
+  });
+
+  describe('commands that outlive the screen', () => {
+    let screen: EnvironmentInjector;
+    let own: ShiftStore;
+
+    beforeEach(() => {
+      screen = createEnvironmentInjector([ShiftStore], TestBed.inject(EnvironmentInjector));
+      own = screen.get(ShiftStore);
+      own.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+    });
+
+    it('lets a close finish after the screen is destroyed', () => {
+      own.close('100.00', null);
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+
+      screen.destroy();
+      expect(request.cancelled).toBe(false);
+      request.flush(shift({ status: 'CLOSED' }));
+    });
+
+    it('reports a close that fails after the screen is destroyed without reading again', () => {
+      const added = vi.spyOn(messages, 'add');
+      own.close('100.00', null);
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+
+      screen.destroy();
+      request.flush(problem(503, 'common.service-unavailable'), {
+        status: 503,
+        statusText: 'Unavailable',
+      });
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+
+    it('lets a cash movement finish after the screen is destroyed', () => {
+      own.recordMovement(
+        { type: 'OUT', amount: pen('5.00'), reasonCode: 'Change', note: null, reference: null },
+        vi.fn(),
+      );
+      const request = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
+
+      screen.destroy();
+      expect(request.cancelled).toBe(false);
+      request.flush({ id: 'm1' }, { status: 201, statusText: 'Created' });
+    });
+
+    it('lets opening a shift finish after the screen is destroyed', () => {
+      own.open('50.00');
+      const request = http.expectOne(`${BASE}/shifts`);
+
+      screen.destroy();
+      expect(request.cancelled).toBe(false);
+      request.flush(shift(), { status: 201, statusText: 'Created' });
     });
   });
 

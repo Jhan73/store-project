@@ -1,5 +1,6 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MessageService } from 'primeng/api';
 import type {
   LineRequest,
   Menu,
@@ -44,6 +45,7 @@ export interface SellInput {
 export class QuickSaleStore {
   private readonly api = inject(RegisterApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly messages = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
@@ -53,6 +55,7 @@ export class QuickSaleStore {
   private readonly loadFailed = signal(false);
   private readonly lines = signal<readonly CartLine[]>([]);
   private readonly lastSale = signal<Ticket | null>(null);
+  private destroyed = false;
 
   readonly items = this.pinned.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
@@ -69,6 +72,10 @@ export class QuickSaleStore {
     const minor = lines.reduce((sum, line) => sum + toMinorUnits(line.unitPrice) * line.quantity, 0);
     return fromMinorUnits(minor, lines[0].unitPrice.currency);
   });
+
+  constructor() {
+    this.destroyRef.onDestroy(() => (this.destroyed = true));
+  }
 
   load(): void {
     this.loadFailed.set(false);
@@ -161,18 +168,24 @@ export class QuickSaleStore {
     this.pending.add('sell');
     this.api
       .quickSale(request, this.keys.keyFor(intent))
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (ticket) => {
           this.pending.delete('sell');
           this.keys.release(intent);
+          if (this.destroyed) {
+            this.messages.add({
+              severity: 'success',
+              summary: $localize`:@@staff.quickSale.registered:Se registró la venta del ticket ${ticket.number}:number:.`,
+            });
+            return;
+          }
           this.lastSale.set(ticket);
           this.lines.set([]);
         },
         error: (error: unknown) => {
           this.pending.delete('sell');
           this.notifier.show(error);
-          if (isShiftStateError(error)) {
+          if (!this.destroyed && isShiftStateError(error)) {
             this.loadShift();
           }
         },
