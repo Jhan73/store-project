@@ -37,7 +37,7 @@ class Tickets {
 	private static final String TICKET_COLUMNS = """
 			k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.note, k.status, k.bill_requested,
 			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale,
-				k.merged_into_id
+			k.merged_into_id
 			FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 			""";
 

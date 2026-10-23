@@ -10857,7 +10857,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Not Found. Error codes: instore.line-not-found, instore.ticket-not-found */
+            /** @description Not Found. Error codes: instore.line-not-found, instore.ticket-not-found, preparation.line-not-found */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -10875,7 +10875,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: common.idempotency-in-progress, instore.line-covered-by-payment, instore.ticket-closed, preparation.order-closed */
+            /** @description Conflict. Error codes: common.idempotency-in-progress, instore.line-covered-by-payment, instore.ticket-closed, preparation.line-not-pending, preparation.order-closed */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -11092,7 +11092,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: instore.ticket-closed, instore.ticket-has-payments */
+            /** @description Conflict. Error codes: common.concurrent-modification, instore.ticket-closed, instore.ticket-has-payments */
             409: {
                 headers: {
                     [name: string]: unknown;

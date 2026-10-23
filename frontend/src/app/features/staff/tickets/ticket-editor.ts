@@ -77,7 +77,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           @if (ticket.type === 'TABLE') {
             {{ ticket.tableName }}
           } @else {
-            <ng-container i18n="@@staff.tickets.counterTitle">Mostrador: {{ ticket.counterName }}</ng-container>
+            <ng-container i18n="@@staff.tickets.counterTitle"
+              >Mostrador: {{ ticket.counterName }}</ng-container
+            >
           }
         </h1>
         <p class="muted" i18n="@@staff.tickets.number">Cuenta {{ ticket.number }}</p>
@@ -176,7 +178,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           <h2 id="ticket-heading" i18n="@@staff.tickets.lines">Cuenta</h2>
           <ul class="lines">
             @for (line of ticket.lines; track line.id) {
-              <li [attr.data-testid]="'line-' + line.id" [class.voided]="line.state === 'VOIDED'"
+              <li
+                [attr.data-testid]="'line-' + line.id"
+                [class.voided]="line.state === 'VOIDED'"
                 [class.comped]="line.state === 'COMPED'"
               >
                 <div class="line-main">
@@ -235,7 +239,10 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       <span i18n="@@staff.tickets.void">Anular</span>
                     </button>
                   } @else if (store.isOpen() && store.mustAskCashier(line)) {
-                    <span class="detail warn" [attr.data-testid]="'void-blocked-' + line.id" i18n="@@staff.tickets.void.blocked"
+                    <span
+                      class="detail warn"
+                      [attr.data-testid]="'void-blocked-' + line.id"
+                      i18n="@@staff.tickets.void.blocked"
                       >Ya está lista: pide a un cajero que la anule.</span
                     >
                   }
@@ -262,7 +269,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         type="button"
                         severity="secondary"
                         [attr.data-testid]="'quantity-down-' + line.id"
-                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id) || line.quantity <= 1"
+                        [disabled]="
+                          !store.enabled() ||
+                          store.pending.has('line:' + line.id) ||
+                          line.quantity <= 1
+                        "
                         aria-label="Una unidad menos"
                         i18n-aria-label="@@staff.tickets.quantity.downLabel"
                         pTooltip="Una unidad menos"
@@ -277,7 +288,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         type="button"
                         severity="secondary"
                         [attr.data-testid]="'quantity-up-' + line.id"
-                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id) || line.quantity >= maxQuantity"
+                        [disabled]="
+                          !store.enabled() ||
+                          store.pending.has('line:' + line.id) ||
+                          line.quantity >= maxQuantity
+                        "
                         aria-label="Una unidad más"
                         i18n-aria-label="@@staff.tickets.quantity.upLabel"
                         pTooltip="Una unidad más"
@@ -346,7 +361,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       type="button"
                       severity="danger"
                       [attr.data-testid]="'void-payment-' + payment.id"
-                      [disabled]="!store.enabled() || store.pending.has('void-payment:' + payment.id)"
+                      [disabled]="
+                        !store.enabled() || store.pending.has('void-payment:' + payment.id)
+                      "
                       pTooltip="Anular este pago con un motivo"
                       i18n-pTooltip="@@staff.tickets.voidPayment.tooltip"
                       tooltipPosition="top"
@@ -393,7 +410,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 pButton
                 type="button"
                 data-testid="send"
-                [disabled]="!store.enabled() || store.pending.has('send') || store.unsent().length === 0"
+                [disabled]="
+                  !store.enabled() || store.pending.has('send') || store.unsent().length === 0
+                "
                 pTooltip="Enviar las líneas nuevas a cocina"
                 i18n-pTooltip="@@staff.tickets.send.tooltip"
                 tooltipPosition="top"
@@ -407,7 +426,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 type="button"
                 severity="secondary"
                 data-testid="repeat"
-                [disabled]="!store.enabled() || store.pending.has('repeat') || store.lastRound().length === 0"
+                [disabled]="
+                  !store.enabled() || store.pending.has('repeat') || store.lastRound().length === 0
+                "
                 pTooltip="Agregar de nuevo las líneas de la última ronda enviada"
                 i18n-pTooltip="@@staff.tickets.repeat.tooltip"
                 tooltipPosition="top"
@@ -640,7 +661,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
         <p class="muted" i18n="@@staff.tickets.merge.loading">Cargando las cuentas abiertas…</p>
       } @else {
         @if (store.mergeCandidates().length === 0) {
-          <p data-testid="merge-empty" i18n="@@staff.tickets.merge.empty">No hay otras cuentas abiertas para unir.</p>
+          <p data-testid="merge-empty" i18n="@@staff.tickets.merge.empty">
+            No hay otras cuentas abiertas para unir.
+          </p>
         }
         <div class="field">
           <label for="merge-source" id="merge-source-label" i18n="@@staff.tickets.merge.source"
@@ -705,8 +728,8 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       (visibleChange)="closeCancel($event)"
     >
       <p data-testid="cancel-explain" i18n="@@staff.tickets.cancel.explain">
-        Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar libre y
-        esto no se puede deshacer.
+        Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar
+        libre y esto no se puede deshacer.
       </p>
       <ng-template #footer>
         <button
@@ -809,7 +832,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
             </p>
           }
           <div class="field" data-testid="void-reason-box">
-            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason">Motivo</label>
+            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason"
+              >Motivo</label
+            >
             <p-select
               inputId="void-reason"
               [ariaLabelledBy]="'void-reason-label'"
@@ -840,7 +865,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
               fluid
             ></textarea>
             @if (noteRequired()) {
-              <small i18n="@@staff.tickets.void.noteRequired">Para el motivo «Otro» la nota es obligatoria.</small>
+              <small i18n="@@staff.tickets.void.noteRequired"
+                >Para el motivo «Otro» la nota es obligatoria.</small
+              >
             }
           </div>
         } @else {
@@ -926,7 +953,9 @@ export class TicketEditor {
   protected readonly noteControl = new FormControl('', { nonNullable: true });
   private readonly typedTicketNote = toSignal(this.noteControl.valueChanges, { initialValue: '' });
   private readonly savedNote = computed(() => this.store.ticket()?.note ?? '');
-  protected readonly noteChanged = computed(() => this.typedTicketNote().trim() !== this.savedNote());
+  protected readonly noteChanged = computed(
+    () => this.typedTicketNote().trim() !== this.savedNote(),
+  );
   // The text follows the server's note, except while the user is typing a different one.
   private readonly syncNote = effect(() => {
     const saved = this.savedNote();
@@ -955,12 +984,16 @@ export class TicketEditor {
     if (target === null) {
       return false;
     }
-    return this.store.pending.has(target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`);
+    return this.store.pending.has(
+      target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`,
+    );
   });
   protected readonly compLabel = $localize`:@@staff.tickets.comp.confirm:Dar de cortesía`;
   protected readonly compTooltip = $localize`:@@staff.tickets.comp.confirm.tooltip:Dar la línea de cortesía con el motivo elegido`;
   protected readonly comping = signal<TicketLine | null>(null);
-  protected readonly compBusy = computed(() => this.store.pending.has(`comp:${this.comping()?.id}`));
+  protected readonly compBusy = computed(() =>
+    this.store.pending.has(`comp:${this.comping()?.id}`),
+  );
   protected readonly merging = signal(false);
   protected readonly mergeSource = new FormControl<string | null>(null);
   protected readonly chosenSource = toSignal(this.mergeSource.valueChanges, { initialValue: null });
@@ -973,13 +1006,18 @@ export class TicketEditor {
           : $localize`:@@staff.tickets.merge.option.counter:Mostrador: ${candidate.counterName}:name: · Cuenta ${candidate.number}:number:`,
     })),
   );
-  protected readonly canPay = computed(() => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN');
+  protected readonly canPay = computed(
+    () => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN',
+  );
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
   protected readonly label = reasonLabel;
   protected readonly reasonOptions = computed(() =>
-    (this.store.reasons() ?? []).map((reason) => ({ code: reason.code, label: reasonLabel(reason.code) })),
+    (this.store.reasons() ?? []).map((reason) => ({
+      code: reason.code,
+      label: reasonLabel(reason.code),
+    })),
   );
   protected readonly voiding = signal<TicketLine | null>(null);
   protected readonly voidReason = new FormControl<string | null>(null);
@@ -1091,7 +1129,9 @@ export class TicketEditor {
     const reason = this.voidReason.value;
     if (line && reason !== null && this.canConfirmVoid()) {
       const note = this.voidNote.value.trim();
-      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () => this.voiding.set(null));
+      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () =>
+        this.voiding.set(null),
+      );
     }
   }
 

@@ -72,12 +72,12 @@ class TicketController {
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
 			TicketPlacement placement, TicketCancellation cancellation, TicketMerging merging,
 			CurrentActor currentActor) {
-		this.merging = merging;
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
 		this.placement = placement;
 		this.cancellation = cancellation;
+		this.merging = merging;
 		this.commands = commands;
 		this.currentActor = currentActor;
 	}
@@ -180,7 +180,8 @@ class TicketController {
 	@PostMapping("/{id}/lines/{lineId}/void")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
-			"instore.line-comped", "instore.line-covered-by-payment", "instore.invalid-reason", "preparation.line-already-ready", "preparation.order-closed",
+			"instore.line-comped", "instore.line-covered-by-payment", "instore.invalid-reason",
+			"preparation.line-already-ready", "preparation.order-closed",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> voidLine(@PathVariable UUID id, @PathVariable UUID lineId,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
@@ -199,7 +200,8 @@ class TicketController {
 	@PostMapping("/{id}/lines/{lineId}/comp")
 	@PreAuthorize(REGISTER_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
-			"instore.line-voided", "instore.line-covered-by-payment", "instore.invalid-reason", "preparation.order-closed",
+			"instore.line-voided", "instore.line-covered-by-payment", "instore.invalid-reason",
+			"preparation.line-not-found", "preparation.line-not-pending", "preparation.order-closed",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> compLine(@PathVariable UUID id, @PathVariable UUID lineId,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
@@ -233,7 +235,7 @@ class TicketController {
 	@PostMapping("/{id}/merge")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.invalid-merge",
-			"instore.ticket-has-payments", "instore.too-many-lines" })
+			"instore.ticket-has-payments", "instore.too-many-lines", "common.concurrent-modification" })
 	TicketResponse merge(@PathVariable UUID id, @Valid @RequestBody MergeTicketRequest request) {
 		return TicketResponse.from(merging.merge(id, request.sourceTicketId()));
 	}

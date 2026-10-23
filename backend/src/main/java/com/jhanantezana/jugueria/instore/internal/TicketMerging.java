@@ -102,7 +102,9 @@ public class TicketMerging {
 		tickets.markMerged(sourceId, targetId, now);
 		var label = target.type() == TicketType.TABLE ? target.tableName() : target.counterName();
 		for (var card : cards) {
-			preparation.relabel(BoardSource.TICKET, card, label);
+			if (label != null) {
+				preparation.relabel(BoardSource.TICKET, card, label);
+			}
 		}
 		events.publishEvent(new TicketsMerged(targetId, sourceId, source.number(), source.tableId(), moved,
 				currentActor.id(), currentActor.role(), now));
