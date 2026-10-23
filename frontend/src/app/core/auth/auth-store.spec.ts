@@ -360,4 +360,56 @@ describe('AuthStore', () => {
       expect(store.isAuthenticated()).toBe(false);
     });
   });
+
+  describe('sign-out hooks', () => {
+    it('runs before the server is called and waits for them', async () => {
+      await signIn();
+      let release!: () => void;
+      const hook = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+      store.onSignOut(hook);
+
+      const done = store.logout();
+      expect(hook).toHaveBeenCalled();
+      http.expectNone(LOGOUT);
+
+      release();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+      expect(await done).toBe(true);
+    });
+
+    it('does not let a failing hook stop the sign out', async () => {
+      await signIn();
+      store.onSignOut(() => Promise.reject(new Error('boom')));
+
+      const done = store.logout();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+
+      expect(await done).toBe(true);
+    });
+
+    it('stops waiting for a hook that never answers', async () => {
+      vi.useFakeTimers();
+      await signIn();
+      store.onSignOut(() => new Promise<void>(() => undefined));
+
+      const done = store.logout();
+      await vi.advanceTimersByTimeAsync(10_000);
+      http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+
+      expect(await done).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('forgets a hook that was removed', async () => {
+      await signIn();
+      const hook = vi.fn();
+      store.onSignOut(hook)();
+
+      const done = store.logout();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+      await done;
+
+      expect(hook).not.toHaveBeenCalled();
+    });
+  });
 });

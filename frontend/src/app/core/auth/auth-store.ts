@@ -17,6 +17,8 @@ export type RefreshOutcome = 'refreshed' | 'rejected' | 'unavailable';
 const REFRESH_LOCK = 'auth-refresh';
 // A hung refresh would otherwise hold the cross-tab lock, and every tab's refresh, forever.
 const REFRESH_TIMEOUT_MS = 10_000;
+// A sign-out hook (flushing queued commands) that never answers must not keep the employee signed in.
+const SIGN_OUT_HOOK_TIMEOUT_MS = 5_000;
 
 function toSession({ accessToken, userId, role }: LoginResponse): Session {
   return { accessToken, userId, role };
@@ -38,6 +40,7 @@ export class AuthStore {
   // Bumped by login and logout so a refresh that started before them cannot change the session afterwards.
   private generation = 0;
   private ended = false;
+  private readonly signOutHooks = new Set<() => Promise<void> | void>();
 
   readonly session = this.state.asReadonly();
   readonly isAuthenticated = computed(() => this.state() !== null);
@@ -80,6 +83,12 @@ export class AuthStore {
     return this.restoration;
   }
 
+  // Runs before the server is told to end the session, while the token still works. Returns how to remove it.
+  onSignOut(hook: () => Promise<void> | void): () => void {
+    this.signOutHooks.add(hook);
+    return () => this.signOutHooks.delete(hook);
+  }
+
   // Concurrent callers in this tab share one request; the lock serializes it across tabs.
   refresh(): Promise<RefreshOutcome> {
     this.inFlight ??= runExclusive(REFRESH_LOCK, () => this.requestRefresh()).finally(() => {
@@ -91,6 +100,9 @@ export class AuthStore {
   // False when the server could not revoke the cookie: the session stays, because dropping it locally
   // would let the next restore reopen it on a shared device.
   async logout(): Promise<boolean> {
+    if (this.signOutHooks.size > 0) {
+      await this.runSignOutHooks();
+    }
     this.generation++;
     try {
       await firstValueFrom(this.api.logout());
@@ -103,6 +115,14 @@ export class AuthStore {
     this.restoration = Promise.resolve();
     this.state.set(null);
     return true;
+  }
+
+  private async runSignOutHooks(): Promise<void> {
+    const running = Promise.allSettled([...this.signOutHooks].map(async (hook) => hook()));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const gaveUp = new Promise<void>((resolve) => (timer = setTimeout(resolve, SIGN_OUT_HOOK_TIMEOUT_MS)));
+    await Promise.race([running, gaveUp]);
+    clearTimeout(timer);
   }
 
   private async requestRefresh(): Promise<RefreshOutcome> {

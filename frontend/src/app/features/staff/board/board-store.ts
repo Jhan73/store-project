@@ -3,6 +3,7 @@ import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, Observable } from 'rxjs';
 import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { LiveSync } from '../../../core/realtime/live-sync';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
@@ -54,6 +55,7 @@ export class BoardStore {
   private readonly realtime = inject(RealtimeClient);
   private readonly notifier = inject(ErrorNotifier);
   private readonly sound = inject(BoardSound);
+  private readonly auth = inject(AuthStore);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
 
@@ -71,6 +73,7 @@ export class BoardStore {
   private readonly chosenStation = signal<string | null>(readStation());
   private readonly queue = new UndoQueue();
   private destroyed = false;
+  private readonly inFlight = new Set<Promise<void>>();
   // Markers nobody has acknowledged as of the previous read; null until the first read has been applied.
   private knownMarkers: ReadonlySet<string> | null = null;
   private lastRequest = 0;
@@ -115,7 +118,9 @@ export class BoardStore {
     const page = inject(DOCUMENT).defaultView;
     const flush = () => this.queue.flush();
     page?.addEventListener('pagehide', flush);
+    const leaveSignOut = this.auth.onSignOut(() => this.drain());
     this.destroyRef.onDestroy(() => {
+      leaveSignOut();
       clearInterval(clock);
       clearInterval(refresh);
       page?.removeEventListener('pagehide', flush);
@@ -147,6 +152,12 @@ export class BoardStore {
         error: () => this.dropUnknownStation(false),
       });
     this.load();
+  }
+
+  // Sends what is waiting out its undo window and resolves once every command in flight has been answered.
+  drain(): Promise<void> {
+    this.queue.flush();
+    return Promise.allSettled([...this.inFlight]).then(() => undefined);
   }
 
   isQueued(id: string): boolean {
@@ -269,15 +280,21 @@ export class BoardStore {
   // Not tied to the screen's lifetime: a command flushed while the screen closes must still go out.
   private send(pendingId: string, request: Observable<unknown>): void {
     this.pending.add(pendingId);
+    let settle!: () => void;
+    const answered = new Promise<void>((resolve) => (settle = resolve));
+    this.inFlight.add(answered);
+    void answered.then(() => this.inFlight.delete(answered));
     request.subscribe({
       next: () => {
         this.pending.delete(pendingId);
         this.reload();
+        settle();
       },
       error: (error: unknown) => {
         this.pending.delete(pendingId);
         this.notifier.show(error);
         this.reload();
+        settle();
       },
     });
   }

@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
@@ -696,6 +697,29 @@ describe('BoardStore', () => {
       http.match(TICKETS);
       http.match(READY);
       http.match(ALL_DAY);
+    });
+
+    it('sends the pending Ready before the session is signed out and waits for its answer', async () => {
+      vi.useFakeTimers();
+      ready();
+      const auth = TestBed.inject(AuthStore);
+      const login = auth.login({ email: 'a@b.pe', password: 'x' });
+      http
+        .expectOne(`${BASE}/auth/login`)
+        .flush({ accessToken: 'jwt', tokenType: 'Bearer', userId: 'u', role: 'CASHIER' });
+      await login;
+      store.readyOrder('o1');
+
+      const out = auth.logout();
+      const request = http.expectOne(`${BASE}/board/orders/o1/ready`);
+      http.expectNone(`${BASE}/auth/logout`);
+      request.flush(order({ id: 'o1', status: 'READY' }));
+      reload();
+      await vi.waitFor(() =>
+        http.expectOne(`${BASE}/auth/logout`).flush(null, { status: 204, statusText: 'No Content' }),
+      );
+
+      expect(await out).toBe(true);
     });
 
     it('sends the pending Ready when the screen is destroyed and does not cancel it', () => {
