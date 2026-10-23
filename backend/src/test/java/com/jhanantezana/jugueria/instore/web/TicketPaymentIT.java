@@ -110,6 +110,22 @@ class TicketPaymentIT {
 	}
 
 	@Test
+	void aSaleClosedByAVoidIsAttributedToWhoeverTookTheLastPaymentNotToTheVoider() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBody("CARD", "5.00", null, List.of(small)));
+		var server = UUID.randomUUID();
+
+		var result = voidLineAs(large, server, Role.SERVER);
+
+		assertThat(result).hasStatusOk();
+		assertThat(events.stream(SaleRecorded.class)).singleElement().satisfies(sale -> {
+			assertThat(sale.actorId()).isEqualTo(cashier);
+			assertThat(sale.actorRole()).isNull();
+		});
+	}
+
+	@Test
 	void severalPaymentsCoverATicketAndOnlyTheLastOneClosesIt() {
 		sentLine(juice.small());
 		sentLine(juice.large());

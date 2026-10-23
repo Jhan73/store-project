@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.instore.internal;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -53,8 +54,11 @@ class TicketSettlement {
 		}
 		inventory.deductAllowingShortfall(ticket.id(), stockLines(lines));
 		tickets.close(ticket.id(), now);
+		// A void can close the ticket, and whoever voided it may be a server with no shift: the sale is the cashier's.
+		var seller = payments.lastLivePayer(ticket.id()).orElseGet(currentActor::id);
+		var sellerRole = seller != null && seller.equals(currentActor.id()) ? currentActor.role() : null;
 		events.publishEvent(new SaleRecorded(ticket.id(), ticket.number(), ticket.type(), ticket.quickSale(), total,
-				soldLines(lines), currentActor.id(), currentActor.role(), now));
+				soldLines(lines), seller, sellerRole, now));
 		if (ticket.tableId() != null) {
 			events.publishEvent(new TableOccupancyChanged(ticket.tableId(), now));
 		}
