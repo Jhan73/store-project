@@ -135,4 +135,24 @@ describe('TicketsApi', () => {
     expect(request.request.body).toEqual({ requested: true });
     request.flush({});
   });
+
+  it('cancels the ticket with nothing billed on it', () => {
+    api.cancel('k1').subscribe();
+
+    const request = http.expectOne(`${BASE}/tickets/k1/cancel`);
+    expect(request.request.method).toBe('POST');
+    request.flush({});
+  });
+
+  it('replaces the ticket note and clears it with null', () => {
+    api.changeNote('k1', 'Sin hielo').subscribe();
+    api.changeNote('k1', null).subscribe();
+
+    const [first, second] = http.match(`${BASE}/tickets/k1/note`);
+    expect(first.request.method).toBe('PUT');
+    expect(first.request.body).toEqual({ note: 'Sin hielo' });
+    expect(second.request.body).toEqual({ note: null });
+    first.flush({});
+    second.flush({});
+  });
 });

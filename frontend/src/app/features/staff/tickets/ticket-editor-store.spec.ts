@@ -109,7 +109,7 @@ describe('TicketEditorStore', () => {
         TicketsApi,
         RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
-        { provide: AuthStore, useValue: { role } },
+        { provide: AuthStore, useValue: { role, session: () => null } },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
       ],

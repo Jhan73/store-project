@@ -89,6 +89,14 @@ export class TicketsApi {
     );
   }
 
+  cancel(id: string): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.base}/tickets/${id}/cancel`, null);
+  }
+
+  changeNote(id: string, note: string | null): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.base}/tickets/${id}/note`, { note });
+  }
+
   setBillRequested(id: string, requested: boolean): Observable<Ticket> {
     return this.http.put<Ticket>(`${this.base}/tickets/${id}/bill-requested`, { requested });
   }

@@ -231,26 +231,6 @@ function timeZoneOptions(current: string): string[] {
         <ng-container *ngTemplateOutlet="numberInput; context: { $implicit: exceptionField }" />
       </fieldset>
 
-      <fieldset>
-        <legend i18n="@@admin.settings.general.stock">Venta en tienda y stock</legend>
-        <div class="check">
-          <p-checkbox
-            inputId="settings-allowNegativeStockOnSale"
-            formControlName="allowNegativeStockOnSale"
-            [binary]="true"
-            [attr.aria-describedby]="'settings-allowNegativeStockOnSale-hint'"
-          />
-          <label
-            for="settings-allowNegativeStockOnSale"
-            i18n="@@admin.settings.general.allowNegativeStockOnSale"
-            >Permitir ventas sin stock suficiente</label
-          >
-        </div>
-        <small id="settings-allowNegativeStockOnSale-hint" i18n="@@admin.settings.general.allowNegativeStockOnSaleHint"
-          >La venta se cierra aunque no haya stock y el stock del producto quedará en negativo.</small
-        >
-      </fieldset>
-
       <div class="actions">
         <button
           pButton
@@ -292,6 +272,8 @@ export class SettingsForm {
   protected readonly saving = signal(false);
   protected readonly saved = signal(false);
   private etag = '';
+  // In-store sales no longer read it; the API still takes it, so the stored value goes back unchanged.
+  private allowNegativeStockOnSale = false;
   private lastRead = 0;
   protected readonly form = new FormGroup(
     {
@@ -311,7 +293,6 @@ export class SettingsForm {
         validators: [Validators.required, amountOrZero],
       }),
       exceptionThreshold: new FormControl<number | null>(null, wholeNumber(1)),
-      allowNegativeStockOnSale: new FormControl(false, { nonNullable: true }),
     },
     { validators: [lateAfterWarning] },
   );
@@ -361,7 +342,7 @@ export class SettingsForm {
           currency,
         },
         exceptionThreshold: raw.exceptionThreshold ?? 0,
-        allowNegativeStockOnSale: raw.allowNegativeStockOnSale,
+        allowNegativeStockOnSale: this.allowNegativeStockOnSale,
       })
       .subscribe({
         next: (result) => {
@@ -381,6 +362,7 @@ export class SettingsForm {
 
   private apply({ value, etag }: Versioned<StoreSettings>): void {
     this.etag = etag;
+    this.allowNegativeStockOnSale = value.allowNegativeStockOnSale;
     this.currency.set(value.currency);
     this.timeZones.set(timeZoneOptions(value.timeZone));
     this.form.reset({
@@ -394,7 +376,6 @@ export class SettingsForm {
       boardLateMinutes: value.boardLateMinutes,
       registerDifferenceThreshold: value.registerDifferenceThreshold.amount,
       exceptionThreshold: value.exceptionThreshold,
-      allowNegativeStockOnSale: value.allowNegativeStockOnSale,
     });
   }
 

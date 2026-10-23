@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { computed, effect, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IconArrowLeft,
   IconArrowsExchange,
   IconBan,
+  IconCircleOff,
+  IconDeviceFloppy,
   IconCash,
   IconCheck,
   IconMinus,
@@ -116,7 +118,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
     @if (store.missing()) {
       <p data-testid="missing-notice" i18n="@@staff.tickets.missing">La cuenta no existe.</p>
     } @else if (store.ticket(); as ticket) {
-      @if (!store.isOpen()) {
+      @if (ticket.status === 'CANCELLED') {
+        <p class="closed" data-testid="cancelled-notice" i18n="@@staff.tickets.cancelled">
+          La cuenta fue cancelada y ya no se puede modificar.
+        </p>
+      } @else if (!store.isOpen()) {
         <p class="closed" data-testid="closed-notice" i18n="@@staff.tickets.closed">
           La cuenta está cerrada y ya no se puede modificar.
         </p>
@@ -326,6 +332,32 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           }
 
           @if (store.isOpen()) {
+            <div class="field">
+              <label for="ticket-note" i18n="@@staff.tickets.note">Nota de la cuenta</label>
+              <textarea
+                pTextarea
+                id="ticket-note"
+                data-testid="ticket-note"
+                [formControl]="noteControl"
+                maxlength="140"
+                rows="2"
+                fluid
+              ></textarea>
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                data-testid="ticket-note-save"
+                [disabled]="!store.enabled() || store.pending.has('note') || !noteChanged()"
+                pTooltip="Guardar la nota de la cuenta"
+                i18n-pTooltip="@@staff.tickets.note.save.tooltip"
+                tooltipPosition="top"
+                (click)="saveNote()"
+              >
+                <tabler-icon [icon]="icons.save" aria-hidden="true" />
+                <span i18n="@@staff.tickets.note.save">Guardar nota</span>
+              </button>
+            </div>
             <div class="actions">
               <button
                 pButton
@@ -385,6 +417,22 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 >
                   <tabler-icon [icon]="icons.transfer" aria-hidden="true" />
                   <span i18n="@@staff.tickets.transfer">Cambiar de mesa</span>
+                </button>
+              }
+              @if (store.canCancel()) {
+                <button
+                  pButton
+                  type="button"
+                  severity="danger"
+                  data-testid="cancel-open"
+                  [disabled]="!store.enabled()"
+                  pTooltip="Descartar la cuenta si todavía no se cobró nada"
+                  i18n-pTooltip="@@staff.tickets.cancel.open.tooltip"
+                  tooltipPosition="top"
+                  (click)="cancelling.set(true)"
+                >
+                  <tabler-icon [icon]="icons.cancelTicket" aria-hidden="true" />
+                  <span i18n="@@staff.tickets.cancel.open">Cancelar cuenta</span>
                 </button>
               }
               @if (canPay()) {
@@ -511,6 +559,53 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
         >
           <tabler-icon [icon]="icons.confirm" aria-hidden="true" />
           <span i18n="@@staff.tickets.transfer.confirm">Mover</span>
+        </button>
+      </ng-template>
+    </p-dialog>
+
+    <p-dialog
+      header="Cancelar cuenta"
+      i18n-header="@@staff.tickets.cancel.title"
+      [modal]="true"
+      [draggable]="false"
+      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [visible]="cancelling()"
+      (visibleChange)="closeCancel($event)"
+    >
+      <p data-testid="cancel-explain" i18n="@@staff.tickets.cancel.explain">
+        Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar libre y
+        esto no se puede deshacer.
+      </p>
+      <ng-template #footer>
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="cancel-back"
+          pTooltip="Volver sin cancelar la cuenta"
+          i18n-pTooltip="@@staff.tickets.cancel.back.tooltip"
+          tooltipPosition="top"
+          (click)="closeCancel(false)"
+        >
+          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+          <span i18n="@@staff.tickets.cancel.back">Volver</span>
+        </button>
+        <button
+          pButton
+          type="button"
+          severity="danger"
+          data-testid="cancel-confirm"
+          [loading]="store.pending.has('cancel')"
+          [disabled]="store.pending.has('cancel')"
+          pTooltip="Cancelar la cuenta definitivamente"
+          i18n-pTooltip="@@staff.tickets.cancel.confirm.tooltip"
+          tooltipPosition="top"
+          (click)="cancelTicket()"
+        >
+          @if (!store.pending.has('cancel')) {
+            <tabler-icon [icon]="icons.cancelTicket" aria-hidden="true" />
+          }
+          <span i18n="@@staff.tickets.cancel.confirm">Cancelar cuenta</span>
         </button>
       </ng-template>
     </p-dialog>
@@ -650,6 +745,8 @@ export class TicketEditor {
     cancel: IconX,
     confirm: IconCheck,
     pay: IconCash,
+    save: IconDeviceFloppy,
+    cancelTicket: IconCircleOff,
   };
   protected readonly tips = {
     billOn: $localize`:@@staff.tickets.billOn.tooltip:Avisar que la mesa pidió la cuenta`,
@@ -670,7 +767,25 @@ export class TicketEditor {
       });
     }
   });
+  private readonly router = inject(Router);
   protected readonly paying = signal(false);
+  protected readonly cancelling = signal(false);
+  protected readonly noteControl = new FormControl('', { nonNullable: true });
+  private readonly typedTicketNote = toSignal(this.noteControl.valueChanges, { initialValue: '' });
+  private readonly savedNote = computed(() => this.store.ticket()?.note ?? '');
+  protected readonly noteChanged = computed(() => this.typedTicketNote().trim() !== this.savedNote());
+  // The text follows the server's note, except while the user is typing a different one.
+  private readonly syncNote = effect(() => {
+    const saved = this.savedNote();
+    untracked(() => {
+      const typed = this.noteControl.value;
+      if (typed.trim() === '' || typed === this.lastSyncedNote || typed.trim() === saved) {
+        this.noteControl.setValue(saved);
+      }
+      this.lastSyncedNote = saved;
+    });
+  });
+  private lastSyncedNote = '';
   protected readonly registerVoid = signal<RegisterVoid | null>(null);
   protected readonly registerVoidTitle = computed(() =>
     this.registerVoid()?.kind === 'sale'
@@ -723,6 +838,24 @@ export class TicketEditor {
     if (!visible) {
       this.configuring.set(null);
     }
+  }
+
+  protected saveNote(): void {
+    const note = this.noteControl.value.trim();
+    this.store.changeNote(note === '' ? null : note);
+  }
+
+  protected closeCancel(visible: boolean): void {
+    if (!visible) {
+      this.cancelling.set(false);
+    }
+  }
+
+  protected cancelTicket(): void {
+    this.store.cancel(() => {
+      this.cancelling.set(false);
+      void this.router.navigateByUrl('/staff/tables');
+    });
   }
 
   protected startRegisterVoid(target: RegisterVoid): void {

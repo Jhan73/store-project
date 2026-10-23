@@ -90,6 +90,15 @@ export class TicketEditorStore {
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
   readonly isOpen = computed(() => this.current()?.status === 'OPEN');
+  // Nothing billed: no line was sent and no payment is live, so the whole ticket can be dropped.
+  readonly canCancel = computed(() => {
+    const ticket = this.current();
+    return (
+      ticket?.status === 'OPEN' &&
+      !ticket.lines.some((line) => line.state === 'SENT') &&
+      ticket.payments.every((payment) => payment.voided)
+    );
+  });
   readonly isTable = computed(() => this.current()?.type === 'TABLE');
   readonly unsent = computed(() => this.current()?.lines.filter((line) => line.state === 'UNSENT') ?? []);
   // The lines that went out together in the latest send, minus those voided since.
@@ -226,6 +235,14 @@ export class TicketEditorStore {
 
   setBillRequested(requested: boolean): void {
     this.command('bill', this.api.setBillRequested(this.ticketId, requested));
+  }
+
+  cancel(cancelled: () => void): void {
+    this.command('cancel', this.api.cancel(this.ticketId), cancelled);
+  }
+
+  changeNote(note: string | null): void {
+    this.command('note', this.api.changeNote(this.ticketId, note));
   }
 
   transfer(tableId: string, moved: () => void): void {
