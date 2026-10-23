@@ -48,7 +48,7 @@ describe('TicketsApi', () => {
   it('reads the open tickets, one ticket, the menu and the board', () => {
     api.openTickets().subscribe();
     http
-      .expectOne(`${BASE}/tickets`)
+      .expectOne(`${BASE}/tickets?page=0&size=100`)
       .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     api.ticket('k1').subscribe();
     http.expectOne(`${BASE}/tickets/k1`).flush({});
@@ -56,6 +56,20 @@ describe('TicketsApi', () => {
     http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
     api.board().subscribe();
     http.expectOne(`${BASE}/board/tickets`).flush([]);
+  });
+
+  it('reads every page of open tickets', () => {
+    let tickets: unknown[] = [];
+    api.openTickets().subscribe((result) => (tickets = result));
+
+    http
+      .expectOne(`${BASE}/tickets?page=0&size=100`)
+      .flush({ content: [{ id: 'a' }], page: 0, size: 100, totalElements: 2, totalPages: 2 });
+    http
+      .expectOne(`${BASE}/tickets?page=1&size=100`)
+      .flush({ content: [{ id: 'b' }], page: 1, size: 100, totalElements: 2, totalPages: 2 });
+
+    expect(tickets).toEqual([{ id: 'a' }, { id: 'b' }]);
   });
 
   it('opens a ticket with the idempotency key of the intent', () => {

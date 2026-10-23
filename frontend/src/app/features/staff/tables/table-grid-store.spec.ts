@@ -15,6 +15,7 @@ import { TableGridStore } from './table-grid-store';
 const BASE = 'http://api.test/api/v1';
 const TABLES = `${BASE}/tables`;
 const TICKETS = `${BASE}/tickets`;
+const TICKET_PAGE = `${BASE}/tickets?page=0&size=100`;
 const emptyPage = { content: [], page: 0, size: 100, totalElements: 0, totalPages: 1 };
 
 class FakeRealtime {
@@ -89,7 +90,7 @@ describe('TableGridStore', () => {
     http
       .expectOne(TABLES)
       .flush(tables, date ? { headers: { Date: date } } : undefined);
-    http.expectOne(TICKETS).flush(emptyPage);
+    http.expectOne(TICKET_PAGE).flush(emptyPage);
   }
 
   function connect(tables: TableGridEntry[] = []) {
@@ -127,7 +128,7 @@ describe('TableGridStore', () => {
 
   it('shows only counter tickets in the counters list', () => {
     http.expectOne(TABLES).flush([]);
-    http.expectOne(TICKETS).flush({
+    http.expectOne(TICKET_PAGE).flush({
       ...emptyPage,
       content: [counter('k1', 'COUNTER'), counter('k2', 'TABLE')],
     });
@@ -146,10 +147,10 @@ describe('TableGridStore', () => {
 
   it('applies only the latest tables read when an older one answers late', () => {
     const first = http.expectOne(TABLES);
-    http.expectOne(TICKETS).flush(emptyPage);
+    http.expectOne(TICKET_PAGE).flush(emptyPage);
     realtime.signals.next();
     const second = http.expectOne(TABLES);
-    http.expectOne(TICKETS).flush(emptyPage);
+    http.expectOne(TICKET_PAGE).flush(emptyPage);
 
     second.flush([table({ id: 'new', name: 'Nueva' })]);
     first.flush([table({ id: 'old', name: 'Vieja' })]);
@@ -177,7 +178,7 @@ describe('TableGridStore', () => {
   it('reports a failed read, disables the actions and recovers on the next good read', () => {
     const added = vi.spyOn(messages, 'add');
     http.expectOne(TABLES).flush(problem(500, 'common.internal-error'), { status: 500, statusText: 'Error' });
-    http.expectOne(TICKETS).flush(emptyPage);
+    http.expectOne(TICKET_PAGE).flush(emptyPage);
 
     expect(store.failed()).toBe(true);
     expect(store.enabled()).toBe(false);

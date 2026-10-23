@@ -1,6 +1,6 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { expand, map, Observable, reduce } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
   BoardOrder,
@@ -20,6 +20,8 @@ export interface TableGridRead {
   readonly serverDate: string | null;
 }
 
+const PAGE_SIZE = 100;
+
 const idempotencyKey = (key: string) => ({ headers: new HttpHeaders({ 'Idempotency-Key': key }) });
 
 @Injectable()
@@ -34,7 +36,14 @@ export class TicketsApi {
   }
 
   openTickets(): Observable<TicketSummary[]> {
-    return this.http.get<TicketSummaryPage>(`${this.base}/tickets`).pipe(map((page) => page.content));
+    const read = (page: number) =>
+      this.http.get<TicketSummaryPage>(`${this.base}/tickets`, {
+        params: new HttpParams().set('page', page).set('size', PAGE_SIZE),
+      });
+    return read(0).pipe(
+      expand((result) => (result.page + 1 < result.totalPages ? read(result.page + 1) : [])),
+      reduce<TicketSummaryPage, TicketSummary[]>((all, result) => [...all, ...result.content], []),
+    );
   }
 
   ticket(id: string): Observable<Ticket> {

@@ -128,7 +128,7 @@ describe('staff and admin area', () => {
     await harness.navigateByUrl('/staff/tables');
     http.expectOne('http://api.test/api/v1/tables').flush([]);
     http
-      .expectOne('http://api.test/api/v1/tickets')
+      .expectOne('http://api.test/api/v1/tickets?page=0&size=100')
       .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     await harness.fixture.whenStable();
 
