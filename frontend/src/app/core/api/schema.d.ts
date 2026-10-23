@@ -2225,6 +2225,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             lines: components["schemas"]["TicketLineResponse"][];
+            /** Format: uuid */
+            mergedIntoId: string | null;
             note: string | null;
             /** Format: int64 */
             number: number;

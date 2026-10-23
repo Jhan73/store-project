@@ -14902,6 +14902,10 @@
               "$ref" : "#/components/schemas/TicketLineResponse"
             }
           },
+          "mergedIntoId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
           "note" : {
             "type" : [ "string", "null" ]
           },
@@ -14951,7 +14955,7 @@
             "enum" : [ "TABLE", "COUNTER" ]
           }
         },
-        "required" : [ "balance", "billRequested", "counterName", "id", "lines", "note", "number", "openedAt", "paid", "payments", "quickSale", "saleVoid", "status", "tableId", "tableName", "total", "type" ]
+        "required" : [ "balance", "billRequested", "counterName", "id", "lines", "mergedIntoId", "note", "number", "openedAt", "paid", "payments", "quickSale", "saleVoid", "status", "tableId", "tableName", "total", "type" ]
       },
       "TicketSummaryResponse" : {
         "type" : "object",

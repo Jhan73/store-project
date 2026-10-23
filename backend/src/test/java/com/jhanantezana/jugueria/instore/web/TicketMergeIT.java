@@ -115,6 +115,20 @@ class TicketMergeIT {
 	}
 
 	@Test
+	void aMergedTicketPointsToTheOneItWasFoldedInto() {
+		sentLine(target, juice.small());
+		sentLine(source, juice.large());
+		assertThat(merge(target, source, Role.SERVER)).hasStatusOk();
+
+		var merged = mvc.get().uri("/api/v1/tickets/" + source).with(as(Role.SERVER)).exchange();
+		var survivor = mvc.get().uri("/api/v1/tickets/" + target).with(as(Role.SERVER)).exchange();
+
+		assertThat(merged).bodyJson().extractingPath("$.status").isEqualTo("MERGED");
+		assertThat(merged).bodyJson().extractingPath("$.mergedIntoId").isEqualTo(target.toString());
+		assertThat(survivor).bodyJson().extractingPath("$.mergedIntoId").isNull();
+	}
+
+	@Test
 	void theBoardCardsOfTheSourceFollowTheTargetsLabelAndKeepTheirLines() {
 		sentLine(target, juice.small());
 		var sent = sentLine(source, juice.large());

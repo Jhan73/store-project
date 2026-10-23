@@ -30,12 +30,14 @@ class Tickets {
 
 	record TicketRow(UUID id, long number, TicketType type, @Nullable UUID tableId, @Nullable String tableName,
 			@Nullable String counterName, @Nullable String note, TicketStatus status, boolean billRequested,
-			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt, boolean quickSale) {
+			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt, boolean quickSale,
+			@Nullable UUID mergedIntoId) {
 	}
 
 	private static final String TICKET_COLUMNS = """
 			k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.note, k.status, k.bill_requested,
-			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale
+			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale,
+				k.merged_into_id
 			FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 			""";
 
@@ -489,7 +491,8 @@ class Tickets {
 				rs.getString("counter_name"), rs.getString("note"), TicketStatus.valueOf(rs.getString("status")),
 				rs.getBoolean("bill_requested"), rs.getObject("board_source_id", UUID.class), rs.getInt("board_rounds"),
 				Currency.getInstance(rs.getString("currency").trim()),
-				rs.getObject("created_at", OffsetDateTime.class).toInstant(), rs.getBoolean("quick_sale"));
+				rs.getObject("created_at", OffsetDateTime.class).toInstant(), rs.getBoolean("quick_sale"),
+				rs.getObject("merged_into_id", UUID.class));
 	}
 
 	private TicketSummary summary(ResultSet rs) throws SQLException {
