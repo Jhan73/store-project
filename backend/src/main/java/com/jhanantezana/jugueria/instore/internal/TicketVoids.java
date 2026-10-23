@@ -88,12 +88,12 @@ public class TicketVoids {
 		var waste = preparation.voidLine(BoardSource.TICKET, tickets.boardSourceOf(lineId), lineId,
 				TicketRules.voidModeFor(role));
 		tickets.markVoided(ticketId, lineId, waste, reason, text, actor, now);
-		events.publishEvent(new TicketLineVoided(ticketId, lineId, line.productId(), line.quantity(), waste, reason, text,
-				actor, role, now));
 		if (waste) {
 			inventory.recordWaste(lineId, List.of(new StockLine(line.productId(), line.quantity())));
 		}
-		settlement.closeWhenSettled(ticket, now);
+		var closed = settlement.closeWhenSettled(ticket, now);
+		events.publishEvent(new TicketLineVoided(ticketId, lineId, line.productId(), line.quantity(), waste, reason, text,
+				actor, role, now, line.lineTotal(), closed));
 		return ticketService.view(tickets.require(ticketId));
 	}
 

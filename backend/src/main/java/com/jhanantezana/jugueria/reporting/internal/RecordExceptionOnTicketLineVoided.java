@@ -18,7 +18,7 @@ class RecordExceptionOnTicketLineVoided {
 	void on(TicketLineVoided event) {
 		var type = event.waste() ? ExceptionType.WASTE : ExceptionType.LINE_VOID;
 		exceptions.record(new ExceptionEvents.Entry(type, event.lineId(), event.occurredAt(), event.actorId(),
-				event.reasonCode(), event.note(), null, event.ticketId(), null));
+				event.reasonCode(), event.note(), event.amount(), event.ticketId(), null));
 	}
 
 }

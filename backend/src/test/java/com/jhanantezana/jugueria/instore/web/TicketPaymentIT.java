@@ -672,6 +672,11 @@ class TicketPaymentIT {
 			assertThat(sale.total().amount()).isEqualByComparingTo("5.00");
 			assertThat(sale.lines()).hasSize(1);
 		});
+		var audited = jdbc.sql("select after::text from audit.audit_log where action = 'TICKET_LINE_VOIDED' and entity_id = ?")
+			.param(large)
+			.query(String.class)
+			.single();
+		assertThat(audited).contains("\"ticketClosed\": true").contains("\"amount\": \"8.00\"");
 	}
 
 	@Test
@@ -841,9 +846,13 @@ class TicketPaymentIT {
 	}
 
 	private MvcTestResult voidLine(UUID line) {
+		return voidLineAs(line, cashier, Role.CASHIER);
+	}
+
+	private MvcTestResult voidLineAs(UUID line, UUID actor, Role role) {
 		return mvc.post()
 			.uri(TICKETS + "/" + ticket + "/lines/" + line + "/void")
-			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.with(AuthenticatedAs.user(actor, role))
 			.header("Idempotency-Key", UUID.randomUUID().toString())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(CHANGED_MIND)
