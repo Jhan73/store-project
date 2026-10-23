@@ -181,4 +181,270 @@ describe('TicketEditorStore', () => {
       expect(store.ticket()?.status).toBe('CLOSED');
     });
   });
+
+  describe('reading the ticket', () => {
+    it('holds the ticket and the menu', () => {
+      expect(store.ticket()?.id).toBe('k1');
+      expect(store.menu()).toEqual({ categories: [] });
+      expect(store.missing()).toBe(false);
+      expect(store.failed()).toBe(false);
+    });
+
+    it('shows a sent line as ready once the board lists it by its source line', () => {
+      store.load();
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([
+        { lines: [{ id: 'board-line', sourceLineId: 'l1', state: 'READY' }] },
+      ]);
+
+      const [sent] = store.ticket()!.lines;
+      expect(store.stateOf(sent)).toBe('READY');
+    });
+
+    it('says the ticket is missing when the API does not know it', () => {
+      store.load();
+      http
+        .expectOne(TICKET)
+        .flush(problem(404, 'instore.ticket-not-found'), { status: 404, statusText: 'Not Found' });
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.missing()).toBe(true);
+      expect(store.failed()).toBe(false);
+    });
+
+    it('reports a failed read and lets it be retried', () => {
+      const added = vi.spyOn(messages, 'add');
+      store.load();
+      http
+        .expectOne(TICKET)
+        .flush(problem(500, 'common.internal-error'), { status: 500, statusText: 'Error' });
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.failed()).toBe(true);
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+
+      store.load();
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      expect(store.failed()).toBe(false);
+    });
+
+    it('applies only the latest ticket read', () => {
+      store.load();
+      const first = http.expectOne(TICKET);
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      store.load();
+      const second = http.expectOne(TICKET);
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      second.flush(ticket({ number: 99 }));
+      first.flush(ticket({ number: 1 }));
+
+      expect(store.ticket()?.number).toBe(99);
+    });
+
+    it('enables the actions only after a read made on the live connection', () => {
+      expect(store.enabled()).toBe(false);
+
+      realtime.connected.set(true);
+      TestBed.tick();
+      realtime.fire('/topic/tables');
+      http.expectOne(TICKET).flush(ticket());
+
+      expect(store.enabled()).toBe(true);
+    });
+  });
+
+  describe('what the roles may void', () => {
+    const sentLine = line('l1', { state: 'SENT', sentAt: '2026-10-13T10:05:00Z' });
+
+    function markReady() {
+      store.load();
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([
+        { lines: [{ id: 'b1', sourceLineId: 'l1', state: 'READY' }] },
+      ]);
+    }
+
+    it('lets a server void a sent line, but not a ready one', () => {
+      role.set('SERVER');
+      expect(store.mayVoid(sentLine)).toBe(true);
+
+      markReady();
+
+      expect(store.mayVoid(sentLine)).toBe(false);
+      expect(store.mustAskCashier(sentLine)).toBe(true);
+    });
+
+    it('lets a cashier void a ready line', () => {
+      markReady();
+
+      expect(store.mayVoid(sentLine)).toBe(true);
+      expect(store.mustAskCashier(sentLine)).toBe(false);
+    });
+
+    it('never offers a void on an unsent line', () => {
+      expect(store.mayVoid(line('l2'))).toBe(false);
+      expect(store.mustAskCashier(line('l2'))).toBe(false);
+    });
+  });
+
+  describe('commands', () => {
+    function rereadAfterFailure() {
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+    }
+
+    it('adds a line under one key, reuses it on a retry and releases it after success', () => {
+      const added = vi.fn();
+      const request = { productId: 'p1', quantity: 1, modifierOptionIds: [], note: null, allergy: false };
+
+      store.addLine(request, added);
+      const first = http.expectOne(`${TICKET}/lines`);
+      const key = first.request.headers.get('Idempotency-Key');
+      first.flush(problem(503, 'common.service-unavailable'), { status: 503, statusText: 'Unavailable' });
+      rereadAfterFailure();
+
+      store.addLine(request, added);
+      const second = http.expectOne(`${TICKET}/lines`);
+      expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+      second.flush(ticket());
+      expect(added).toHaveBeenCalledTimes(1);
+
+      store.addLine(request, added);
+      const third = http.expectOne(`${TICKET}/lines`);
+      expect(third.request.headers.get('Idempotency-Key')).not.toBe(key);
+      third.flush(ticket());
+    });
+
+    it('blocks a command while it is in flight and takes the ticket from its answer', () => {
+      store.send();
+      expect(store.pending.has('send')).toBe(true);
+      http.expectOne(`${TICKET}/send`).flush(ticket({ number: 55 }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.pending.has('send')).toBe(false);
+      expect(store.ticket()?.number).toBe(55);
+    });
+
+    it('reads the ticket again when a command is refused', () => {
+      store.send();
+      http
+        .expectOne(`${TICKET}/send`)
+        .flush(problem(409, 'instore.ticket-closed'), { status: 409, statusText: 'Conflict' });
+      http.expectOne(TICKET).flush(ticket({ status: 'CLOSED' }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.isOpen()).toBe(false);
+    });
+
+    it('counts the commands refused because of the cashier shift', () => {
+      expect(store.shiftStateErrors()).toBe(0);
+
+      store.pay(payRequest, vi.fn());
+      http
+        .expectOne(`${TICKET}/payments`)
+        .flush(problem(409, 'instore.no-open-shift'), { status: 409, statusText: 'Conflict' });
+      rereadAfterFailure();
+
+      expect(store.shiftStateErrors()).toBe(1);
+    });
+
+    it('releases the payment key after success so the next payment is a new intent', () => {
+      store.pay(payRequest, vi.fn());
+      const first = http.expectOne(`${TICKET}/payments`);
+      const key = first.request.headers.get('Idempotency-Key');
+      first.flush(ticket());
+
+      store.pay(payRequest, vi.fn());
+      const second = http.expectOne(`${TICKET}/payments`);
+      expect(second.request.headers.get('Idempotency-Key')).not.toBe(key);
+      second.flush(ticket());
+    });
+
+    it('repeats the lines of the latest round only', () => {
+      store.load();
+      http.expectOne(TICKET).flush(
+        ticket({
+          lines: [
+            line('old', { state: 'SENT', sentAt: '2026-10-13T10:00:00Z' }),
+            line('a', { state: 'SENT', sentAt: '2026-10-13T10:30:00Z' }),
+            line('b', { state: 'SENT', sentAt: '2026-10-13T10:30:00Z' }),
+            line('gone', { state: 'VOIDED', sentAt: '2026-10-13T10:30:00Z' }),
+          ],
+        }),
+      );
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      store.repeatLastRound();
+
+      const request = http.expectOne(`${TICKET}/repeat`);
+      expect(request.request.body).toEqual({ lineIds: ['a', 'b'] });
+      request.flush(ticket());
+    });
+
+    it('cancels the ticket only while nothing is billed', () => {
+      expect(store.canCancel()).toBe(false);
+
+      store.load();
+      http.expectOne(TICKET).flush(ticket({ lines: [line('l1')] }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      expect(store.canCancel()).toBe(true);
+
+      const done = vi.fn();
+      store.cancel(done);
+      http.expectOne(`${TICKET}/cancel`).flush(ticket({ status: 'CANCELLED', lines: [] }));
+      expect(done).toHaveBeenCalled();
+      expect(store.canCancel()).toBe(false);
+    });
+
+    it('replaces the ticket note', () => {
+      store.changeNote('Sin hielo');
+
+      const request = http.expectOne(`${TICKET}/note`);
+      expect(request.request.body).toEqual({ note: 'Sin hielo' });
+      request.flush(ticket({ note: 'Sin hielo' }));
+
+      expect(store.ticket()?.note).toBe('Sin hielo');
+    });
+  });
+
+  describe('void reasons', () => {
+    it('reads the void reasons and reports a failure so it can be retried', () => {
+      store.loadVoidReasons();
+      http.expectOne(`${BASE}/reasons?type=VOID`).flush([{ type: 'VOID', code: 'Error' }]);
+      expect(store.reasons()).toEqual([{ type: 'VOID', code: 'Error' }]);
+
+      store.loadVoidReasons();
+      http
+        .expectOne(`${BASE}/reasons?type=VOID`)
+        .flush(problem(500, 'common.internal-error'), { status: 500, statusText: 'Error' });
+      expect(store.reasonsLoadFailed()).toBe(true);
+      expect(store.reasons()).toBeNull();
+    });
+  });
+
+  describe('splitting the bill', () => {
+    it('keeps the parts the API computed until they are cleared', () => {
+      store.loadSplit(2);
+      expect(store.pending.has('split')).toBe(true);
+      http.expectOne(`${TICKET}/split?parts=2`).flush({ parts: [pen('5.00'), pen('5.00')] });
+      expect(store.splitParts()).toEqual([pen('5.00'), pen('5.00')]);
+
+      store.clearSplit();
+      expect(store.splitParts()).toBeNull();
+    });
+  });
 });
