@@ -699,6 +699,18 @@ describe('BoardStore', () => {
       http.match(ALL_DAY);
     });
 
+    it('renews a token that is about to expire when a Ready is queued, so the page-close flush can use it', () => {
+      vi.useFakeTimers();
+      ready();
+      const fresh = vi.spyOn(TestBed.inject(AuthStore), 'ensureFresh').mockResolvedValue();
+
+      store.readyOrder('o1');
+
+      expect(fresh).toHaveBeenCalledWith(expect.any(Number));
+      expect(fresh.mock.calls[0][0]).toBeGreaterThanOrEqual(5_000);
+      store.undo('o1');
+    });
+
     it('sends the pending Ready before the session is signed out and waits for its answer', async () => {
       vi.useFakeTimers();
       ready();

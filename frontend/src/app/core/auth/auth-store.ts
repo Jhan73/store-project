@@ -20,6 +20,16 @@ const REFRESH_TIMEOUT_MS = 10_000;
 // A sign-out hook (flushing queued commands) that never answers must not keep the employee signed in.
 const SIGN_OUT_HOOK_TIMEOUT_MS = 5_000;
 
+function expiryOf(token: string): number | null {
+  try {
+    const payload = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+    const exp = payload === undefined ? undefined : (JSON.parse(atob(payload)) as { exp?: unknown }).exp;
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 function toSession({ accessToken, userId, role }: LoginResponse): Session {
   return { accessToken, userId, role };
 }
@@ -81,6 +91,16 @@ export class AuthStore {
         : Promise.resolve();
     }
     return this.restoration;
+  }
+
+  // Renews the token when it would expire within `windowMs`, so work that must still be authorized then
+  // (a command flushed as the page closes) does not depend on a refresh that cannot finish by then.
+  async ensureFresh(windowMs: number): Promise<void> {
+    const token = this.accessToken();
+    const expiry = token === null ? null : expiryOf(token);
+    if (expiry !== null && expiry - Date.now() < windowMs) {
+      await this.refresh();
+    }
   }
 
   // Runs before the server is told to end the session, while the token still works. Returns how to remove it.

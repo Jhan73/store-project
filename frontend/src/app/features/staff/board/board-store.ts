@@ -10,7 +10,7 @@ import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { clockOffsetMs, elapsedMinutes } from '../../../core/time/store-time';
 import { AgeLevel, ageLevel, ageStartOf, AgeThresholds, DEFAULT_AGE_THRESHOLDS, thresholdsOf } from './board-age';
 import { PendingIds } from '../../../shared/state/pending-ids';
-import { UndoQueue } from '../../../shared/state/undo-queue';
+import { UNDO_WINDOW_MS, UndoQueue } from '../../../shared/state/undo-queue';
 import { BoardApi } from './board-api';
 import { newMarkerKinds, unacknowledgedMarkerIds } from './board-markers';
 import { BoardSound } from './board-sound';
@@ -27,6 +27,8 @@ const STATION_KEY = 'board.station';
 const CLOCK_TICK_MS = 30_000;
 // A scheduled card is hidden by the API until it fires and nothing signals that moment, so the board asks again.
 const REFRESH_MS = 60_000;
+// A Ready can be flushed as the page closes, when no refresh can finish: the token must outlive the undo window.
+const TOKEN_MARGIN_MS = 30_000;
 
 function readStation(): string | null {
   try {
@@ -267,7 +269,9 @@ export class BoardStore {
     if (!this.enabled() || this.pending.has(id)) {
       return;
     }
-    this.queue.schedule(id, () => this.send(id, request()));
+    if (this.queue.schedule(id, () => this.send(id, request()))) {
+      void this.auth.ensureFresh(UNDO_WINDOW_MS + TOKEN_MARGIN_MS);
+    }
   }
 
   private run(pendingId: string, request: () => Observable<unknown>): void {

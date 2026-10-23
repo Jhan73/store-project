@@ -14,6 +14,14 @@ function session(accessToken: string, role: 'ADMIN' | 'CASHIER' = 'CASHIER') {
   return { accessToken, tokenType: 'Bearer', userId: 'u1', role };
 }
 
+function tokenExpiring(inSeconds: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + inSeconds }))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  return `header.${payload}.signature`;
+}
+
 describe('AuthStore', () => {
   let store: AuthStore;
   let http: HttpTestingController;
@@ -358,6 +366,40 @@ describe('AuthStore', () => {
 
       expect(await done).toBe(true);
       expect(store.isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('ensureFresh', () => {
+    it('refreshes a token that expires inside the window', async () => {
+      await signIn(tokenExpiring(10));
+
+      const done = store.ensureFresh(30_000);
+      http.expectOne(REFRESH).flush(session('jwt-new'));
+      await done;
+
+      expect(store.accessToken()).toBe('jwt-new');
+    });
+
+    it('leaves a token that stays valid through the window', async () => {
+      await signIn(tokenExpiring(600));
+
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
+    });
+
+    it('leaves a token it cannot read alone', async () => {
+      await signIn('opaque');
+
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
+    });
+
+    it('does nothing without a session', async () => {
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
     });
   });
 
