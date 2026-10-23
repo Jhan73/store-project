@@ -13481,7 +13481,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "ENTRY", "ADJUSTMENT", "SALE", "RETURN", "RESERVE", "COMMIT", "RELEASE", "EXPIRE" ]
+            "enum" : [ "ENTRY", "ADJUSTMENT", "SALE", "RETURN", "WASTE", "RESERVE", "COMMIT", "RELEASE", "EXPIRE" ]
           }
         },
         "required" : [ "actorId", "actorRole", "id", "note", "occurredAt", "onHandDelta", "productId", "reasonCode", "referenceId", "reservedDelta", "type" ]

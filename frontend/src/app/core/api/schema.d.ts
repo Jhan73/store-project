@@ -1789,7 +1789,7 @@ export interface components {
             /** Format: int32 */
             reservedDelta: number;
             /** @enum {string} */
-            type: "ENTRY" | "ADJUSTMENT" | "SALE" | "RETURN" | "RESERVE" | "COMMIT" | "RELEASE" | "EXPIRE";
+            type: "ENTRY" | "ADJUSTMENT" | "SALE" | "RETURN" | "WASTE" | "RESERVE" | "COMMIT" | "RELEASE" | "EXPIRE";
         };
         OpenShiftRequest: {
             openingFloat: components["schemas"]["Money"];

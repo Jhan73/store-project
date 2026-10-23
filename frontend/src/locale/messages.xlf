@@ -4181,9 +4181,17 @@
         <source>Devolución</source>
       </segment>
     </unit>
-    <unit id="admin.stock.movement.reserve">
+    <unit id="admin.stock.movement.waste">
       <notes>
         <note category="location">src/app/features/admin/stock/stock-labels.ts:14</note>
+      </notes>
+      <segment>
+        <source>Merma</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.reserve">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:16</note>
       </notes>
       <segment>
         <source>Reserva</source>
@@ -4191,7 +4199,7 @@
     </unit>
     <unit id="admin.stock.movement.commit">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:16</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:18</note>
       </notes>
       <segment>
         <source>Confirmación</source>
@@ -4199,7 +4207,7 @@
     </unit>
     <unit id="admin.stock.movement.release">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:18</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:20</note>
       </notes>
       <segment>
         <source>Liberación</source>
@@ -4207,7 +4215,7 @@
     </unit>
     <unit id="admin.stock.movement.expire">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:20</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:22</note>
       </notes>
       <segment>
         <source>Vencimiento</source>

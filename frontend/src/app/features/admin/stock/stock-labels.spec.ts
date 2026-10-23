@@ -6,6 +6,7 @@ const TYPES: StockMovementType[] = [
   'ADJUSTMENT',
   'SALE',
   'RETURN',
+  'WASTE',
   'RESERVE',
   'COMMIT',
   'RELEASE',
@@ -18,6 +19,7 @@ describe('stock labels', () => {
     expect(movementTypeLabel('ADJUSTMENT')).toBe('Ajuste');
     expect(movementTypeLabel('SALE')).toBe('Venta');
     expect(movementTypeLabel('RETURN')).toBe('Devolución');
+    expect(movementTypeLabel('WASTE')).toBe('Merma');
     for (const type of TYPES) {
       expect(movementTypeLabel(type)).not.toBe(type);
     }

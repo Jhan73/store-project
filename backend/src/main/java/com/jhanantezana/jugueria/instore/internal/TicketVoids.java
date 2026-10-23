@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.instore.internal;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
+import com.jhanantezana.jugueria.inventory.InventoryApi;
+import com.jhanantezana.jugueria.inventory.StockLine;
 import com.jhanantezana.jugueria.preparation.BoardSource;
 import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.shared.BusinessException;
@@ -32,6 +35,8 @@ public class TicketVoids {
 
 	private final PreparationApi preparation;
 
+	private final InventoryApi inventory;
+
 	private final VoidReasons voidReasons;
 
 	private final ApplicationEventPublisher events;
@@ -41,13 +46,14 @@ public class TicketVoids {
 	private final Clock clock;
 
 	TicketVoids(Tickets tickets, TicketService ticketService, Payments payments, TicketSettlement settlement,
-			PreparationApi preparation, VoidReasons voidReasons, ApplicationEventPublisher events,
+			PreparationApi preparation, InventoryApi inventory, VoidReasons voidReasons, ApplicationEventPublisher events,
 			CurrentActor currentActor, Clock clock) {
 		this.tickets = tickets;
 		this.ticketService = ticketService;
 		this.payments = payments;
 		this.settlement = settlement;
 		this.preparation = preparation;
+		this.inventory = inventory;
 		this.voidReasons = voidReasons;
 		this.events = events;
 		this.currentActor = currentActor;
@@ -84,6 +90,9 @@ public class TicketVoids {
 		tickets.markVoided(ticketId, lineId, waste, reason, text, actor, now);
 		events.publishEvent(new TicketLineVoided(ticketId, lineId, line.productId(), line.quantity(), waste, reason, text,
 				actor, role, now));
+		if (waste) {
+			inventory.recordWaste(lineId, List.of(new StockLine(line.productId(), line.quantity())));
+		}
 		settlement.closeWhenSettled(ticket, now);
 		return ticketService.view(tickets.require(ticketId));
 	}

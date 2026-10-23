@@ -10,6 +10,8 @@ export function movementTypeLabel(type: StockMovementType): string {
       return $localize`:@@admin.stock.movement.sale:Venta`;
     case 'RETURN':
       return $localize`:@@admin.stock.movement.return:Devolución`;
+    case 'WASTE':
+      return $localize`:@@admin.stock.movement.waste:Merma`;
     case 'RESERVE':
       return $localize`:@@admin.stock.movement.reserve:Reserva`;
     case 'COMMIT':
