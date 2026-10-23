@@ -184,6 +184,47 @@ class TicketListsIT {
 	}
 
 	@Test
+	void aVoidedPaymentDoesNotMakeItsRecorderTheCashierOfTheTicket() {
+		var ticket = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
+		close(ticket, cashier, "2026-03-10T15:00:00Z", 1);
+		var voidedPayment = jdbc.sql("select id from instore.in_store_payment where ticket_id = ?")
+			.param(ticket)
+			.query(UUID.class)
+			.single();
+		jdbc.sql("""
+				insert into instore.payment_void (id, payment_id, ticket_id, reason_code, voided_by, voided_at)
+				values (?, ?, ?, 'Changed mind', ?, ?)
+				""")
+			.param(UUID.randomUUID())
+			.param(voidedPayment)
+			.param(ticket)
+			.param(cashier)
+			.param(java.time.OffsetDateTime.parse("2026-03-10T15:30:00Z"))
+			.update();
+		jdbc.sql("""
+				insert into instore.in_store_payment (id, ticket_id, shift_id, method, currency, paid_amount, change_amount,
+					recorded_by, recorded_at)
+				values (?, ?, ?, 'CARD', 'PEN', 5.00, 0, ?, ?)
+				""")
+			.param(UUID.randomUUID())
+			.param(ticket)
+			.param(UUID.randomUUID())
+			.param(otherCashier)
+			.param(java.time.OffsetDateTime.parse("2026-03-10T14:00:00Z"))
+			.update();
+
+		assertThat(get(TICKETS + "/closed", Role.ADMIN)).bodyJson()
+			.extractingPath("$.content[0].cashierId")
+			.isEqualTo(otherCashier.toString());
+		assertThat(get(TICKETS + "/closed?cashierId=" + cashier, Role.ADMIN)).bodyJson()
+			.extractingPath("$.totalElements")
+			.isEqualTo(0);
+		assertThat(get(TICKETS + "/closed?cashierId=" + otherCashier, Role.ADMIN)).bodyJson()
+			.extractingPath("$.totalElements")
+			.isEqualTo(1);
+	}
+
+	@Test
 	void flagsAVoidedSaleAndPages() {
 		var first = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
 		var second = UUID.fromString(idOf(open("{\"counterName\":\"Luis\"}")));

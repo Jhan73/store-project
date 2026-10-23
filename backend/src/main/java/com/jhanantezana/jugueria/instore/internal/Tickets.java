@@ -238,7 +238,8 @@ class Tickets {
 				AND (CAST(:table AS uuid) IS NULL OR k.table_id = CAST(:table AS uuid))
 				AND (CAST(:type AS varchar) IS NULL OR k.type = CAST(:type AS varchar))
 				AND (CAST(:cashier AS uuid) IS NULL OR EXISTS (SELECT 1 FROM instore.in_store_payment p
-					WHERE p.ticket_id = k.id AND p.recorded_by = CAST(:cashier AS uuid)))
+					WHERE p.ticket_id = k.id AND p.recorded_by = CAST(:cashier AS uuid)
+						AND NOT EXISTS (SELECT 1 FROM instore.payment_void v WHERE v.payment_id = p.id)))
 			""";
 
 	List<ClosedTicketSummary> closed(ClosedTicketFilter filter, DayRange range, int limit, long offset) {
@@ -249,6 +250,7 @@ class Tickets {
 						WHERE l.ticket_id = k.id AND l.state IN ('UNSENT', 'SENT')), 0) AS total,
 					EXISTS (SELECT 1 FROM instore.sale_void v WHERE v.ticket_id = k.id) AS voided,
 					(SELECT p.recorded_by FROM instore.in_store_payment p WHERE p.ticket_id = k.id
+							AND NOT EXISTS (SELECT 1 FROM instore.payment_void v WHERE v.payment_id = p.id)
 						ORDER BY p.recorded_at DESC, p.id DESC LIMIT 1) AS cashier_id
 				FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 				""" + CLOSED_FILTER + " ORDER BY k.closed_at DESC, k.id DESC LIMIT :limit OFFSET :offset"), filter, range)
