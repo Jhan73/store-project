@@ -96,7 +96,9 @@ export class TicketEditorStore {
   readonly reasons = this.voidReasons.asReadonly();
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
   // Null until the read of the open tickets answers.
-  readonly mergeCandidates = computed(() => (this.candidateList() ?? []).filter((ticket) => ticket.id !== this.ticketId));
+  readonly mergeCandidates = computed(() =>
+    (this.candidateList() ?? []).filter((ticket) => ticket.id !== this.ticketId),
+  );
   readonly mergeCandidatesLoaded = computed(() => this.candidateList() !== null);
   readonly mergeCandidatesFailed = this.candidatesError.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
@@ -111,7 +113,9 @@ export class TicketEditorStore {
     );
   });
   readonly isTable = computed(() => this.current()?.type === 'TABLE');
-  readonly unsent = computed(() => this.current()?.lines.filter((line) => line.state === 'UNSENT') ?? []);
+  readonly unsent = computed(
+    () => this.current()?.lines.filter((line) => line.state === 'UNSENT') ?? [],
+  );
   // The lines that went out together in the latest send, minus those voided since.
   readonly lastRound = computed(() => {
     const sent = (this.current()?.lines ?? []).filter(
@@ -162,7 +166,9 @@ export class TicketEditorStore {
 
   // A server may not void a line once it is ready: that is for a cashier or an admin, and it counts as waste.
   mayVoid(line: TicketLine): boolean {
-    return line.state === 'SENT' && (this.auth.role() !== 'SERVER' || this.stateOf(line) !== 'READY');
+    return (
+      line.state === 'SENT' && (this.auth.role() !== 'SERVER' || this.stateOf(line) !== 'READY')
+    );
   }
 
   mustAskCashier(line: TicketLine): boolean {
@@ -173,6 +179,10 @@ export class TicketEditorStore {
   mayComp(line: TicketLine): boolean {
     const role = this.auth.role();
     return line.state === 'SENT' && (role === 'CASHIER' || role === 'ADMIN');
+  }
+
+  mustAskCashierToComp(line: TicketLine): boolean {
+    return line.state === 'SENT' && this.auth.role() === 'SERVER';
   }
 
   loadVoidReasons(): void {
@@ -417,7 +427,11 @@ export class TicketEditorStore {
 
   // A screen left open on a ticket that was folded into another continues on the one that stayed.
   private followMerge(ticket: Ticket): void {
-    if (ticket.status !== 'MERGED' || ticket.mergedIntoId === null || ticket.mergedIntoId === undefined) {
+    if (
+      ticket.status !== 'MERGED' ||
+      ticket.mergedIntoId === null ||
+      ticket.mergedIntoId === undefined
+    ) {
       return;
     }
     this.messages.add({

@@ -261,6 +261,13 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       <tabler-icon [icon]="icons.comp" aria-hidden="true" />
                       <span i18n="@@staff.tickets.comp">Cortesía</span>
                     </button>
+                  } @else if (store.isOpen() && store.mustAskCashierToComp(line)) {
+                    <span
+                      class="detail warn"
+                      [attr.data-testid]="'comp-blocked-' + line.id"
+                      i18n="@@staff.tickets.comp.blocked"
+                      >Para dar una cortesía, pide a un cajero.</span
+                    >
                   }
                   @if (store.isOpen() && line.state === 'UNSENT') {
                     <span class="line-actions">

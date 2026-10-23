@@ -574,6 +574,18 @@ describe('TicketEditor', () => {
       expect(find(server, 'comp-l1')).toBeNull();
     });
 
+    it('tells a server to ask a cashier for the comp, and tells nobody else', async () => {
+      role.set('SERVER');
+      const server = await ready(sent());
+      expect(text(server, 'comp-blocked-l1')).toContain('pide a un cajero');
+      expect(find(server, 'comp-blocked-l2')).toBeNull();
+      server.destroy();
+
+      role.set('CASHIER');
+      const cashier = await ready(sent());
+      expect(find(cashier, 'comp-blocked-l1')).toBeNull();
+    });
+
     it('offers no comp on a voided or comped line or on a closed ticket', async () => {
       const lines = [
         line('l1', { state: 'VOIDED' }),
