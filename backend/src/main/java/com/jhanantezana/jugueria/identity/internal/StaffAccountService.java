@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,7 @@ import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Role;
+import com.jhanantezana.jugueria.shared.StaffChangeGuard;
 
 @Service
 public class StaffAccountService {
@@ -43,11 +45,14 @@ public class StaffAccountService {
 
 	private final ActiveAdminLock activeAdminLock;
 
+	private final List<StaffChangeGuard> changeGuards;
+
 	private final Clock clock;
 
 	StaffAccountService(UserAccountRepository accounts, SetPasswordTokenService setPasswordTokens,
 			RefreshTokenService refreshTokens, PasswordEncoder passwordEncoder, ApplicationEventPublisher events,
-			CurrentActor currentActor, ActiveAdminLock activeAdminLock, Clock clock) {
+			CurrentActor currentActor, ActiveAdminLock activeAdminLock, List<StaffChangeGuard> changeGuards,
+			Clock clock) {
 		this.accounts = accounts;
 		this.setPasswordTokens = setPasswordTokens;
 		this.refreshTokens = refreshTokens;
@@ -55,6 +60,7 @@ public class StaffAccountService {
 		this.events = events;
 		this.currentActor = currentActor;
 		this.activeAdminLock = activeAdminLock;
+		this.changeGuards = changeGuards;
 		this.clock = clock;
 	}
 
@@ -128,6 +134,7 @@ public class StaffAccountService {
 		if (oldRole == Role.ADMIN && isLastActiveAdmin()) {
 			throw lastActiveAdminRequired();
 		}
+		changeGuards.forEach(guard -> guard.requireCanLeaveRole(id));
 		var now = Instant.now(clock);
 		account.changeRole(newRole, now);
 		refreshTokens.revokeAllForUser(id);
@@ -146,6 +153,7 @@ public class StaffAccountService {
 		if (account.getRole() == Role.ADMIN && isLastActiveAdmin()) {
 			throw lastActiveAdminRequired();
 		}
+		changeGuards.forEach(guard -> guard.requireCanLeaveRole(id));
 		var now = Instant.now(clock);
 		account.deactivate(now);
 		refreshTokens.revokeAllForUser(id);

@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -52,8 +53,12 @@ class StaffControllerIT {
 	@Autowired
 	SetPasswordTokenRepository setPasswordTokens;
 
+	@Autowired
+	JdbcClient jdbc;
+
 	@AfterEach
 	void cleanUp() {
+		jdbc.sql("delete from instore.register_shift").update();
 		refreshTokens.deleteAll();
 		setPasswordTokens.deleteAll();
 		accounts.deleteAll();
@@ -143,6 +148,47 @@ class StaffControllerIT {
 		assertThat(result).hasStatusOk();
 		assertThat(result).bodyJson().extractingPath("$.role").isEqualTo("SERVER");
 		assertThat(refreshTokens.findAll()).allSatisfy(token -> assertThat(token.getRevokedAt()).isNotNull());
+	}
+
+	@Test
+	void rejectsChangingTheRoleOfAUserWhoseRegisterShiftIsOpen() {
+		var cashier = accounts.save(new UserAccount("open-shift@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		openShiftOf(cashier.getId());
+
+		var result = changeRole(cashier.getId(), Role.SERVER, admin());
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.user-has-open-shift");
+		assertThat(accounts.findById(cashier.getId()).orElseThrow().getRole()).isEqualTo(Role.CASHIER);
+	}
+
+	@Test
+	void changesTheRoleOnceTheShiftIsClosed() {
+		var cashier = accounts.save(new UserAccount("closed-shift@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		openShiftOf(cashier.getId());
+		jdbc.sql("delete from instore.register_shift").update();
+
+		assertThat(changeRole(cashier.getId(), Role.SERVER, admin())).hasStatusOk();
+	}
+
+	@Test
+	void rejectsDeactivatingAUserWhoseRegisterShiftIsOpen() {
+		var cashier = accounts.save(new UserAccount("open-shift2@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		openShiftOf(cashier.getId());
+
+		var result = mvc.post().uri(STAFF + "/" + cashier.getId() + "/deactivate").with(admin()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.user-has-open-shift");
+		assertThat(accounts.findById(cashier.getId()).orElseThrow().isActive()).isTrue();
+	}
+
+	@Test
+	void anOpenShiftOfSomeoneElseDoesNotBlockTheChange() {
+		var cashier = accounts.save(new UserAccount("no-shift@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+		openShiftOf(UUID.randomUUID());
+
+		assertThat(mvc.post().uri(STAFF + "/" + cashier.getId() + "/deactivate").with(admin()).exchange()).hasStatusOk();
 	}
 
 	@Test
@@ -306,6 +352,13 @@ class StaffControllerIT {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"role\":\"%s\"}".formatted(role))
 			.exchange();
+	}
+
+	private void openShiftOf(UUID cashierId) {
+		jdbc.sql("""
+				insert into instore.register_shift (id, cashier_id, status, currency, float_amount, opened_at, updated_at)
+				values (?, ?, 'OPEN', 'PEN', 10.00, now(), now())
+				""").param(UUID.randomUUID()).param(cashierId).update();
 	}
 
 	private void seedRefreshToken(UUID userId) {

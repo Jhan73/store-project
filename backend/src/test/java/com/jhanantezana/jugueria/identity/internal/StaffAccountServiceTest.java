@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -70,7 +71,7 @@ class StaffAccountServiceTest {
 	@BeforeEach
 	void setUp() {
 		service = new StaffAccountService(accounts, setPasswordTokens, refreshTokens, passwordEncoder, events,
-				currentActor, activeAdminLock, Clock.fixed(NOW, ZoneOffset.UTC));
+				currentActor, activeAdminLock, List.of(), Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test

@@ -24,6 +24,7 @@ public enum InstoreError implements ErrorCode {
 	INVALID_AMOUNT("instore.invalid-amount", HttpStatus.UNPROCESSABLE_CONTENT),
 	SHIFT_NOT_FOUND("instore.shift-not-found", HttpStatus.NOT_FOUND),
 	SHIFT_ALREADY_OPEN("instore.shift-already-open", HttpStatus.CONFLICT),
+	USER_HAS_OPEN_SHIFT("instore.user-has-open-shift", HttpStatus.CONFLICT),
 	NO_OPEN_SHIFT("instore.no-open-shift", HttpStatus.CONFLICT),
 	SHIFT_CLOSED("instore.shift-closed", HttpStatus.CONFLICT),
 	SHIFT_CLOSING("instore.shift-closing", HttpStatus.CONFLICT),
