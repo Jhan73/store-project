@@ -175,7 +175,7 @@ class TicketController {
 	@PostMapping("/{id}/lines/{lineId}/void")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
-			"instore.invalid-reason", "preparation.line-already-ready", "preparation.order-closed",
+			"instore.line-comped", "instore.line-covered-by-payment", "instore.invalid-reason", "preparation.line-already-ready", "preparation.order-closed",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> voidLine(@PathVariable UUID id, @PathVariable UUID lineId,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
@@ -183,6 +183,25 @@ class TicketController {
 		var key = IdempotencyKeyHeader.require(idempotencyKey);
 		var path = BASE + "/" + id + "/lines/" + lineId + "/void";
 		var outcome = commands.voidLine(requireActor(), key, RequestHash.of("POST", path, request), id, lineId,
+				request.reason(), request.note());
+		var response = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
+		if (outcome.replayed()) {
+			response.header("Idempotent-Replayed", "true");
+		}
+		return response.body(TicketResponse.from(outcome.ticket()));
+	}
+
+	@PostMapping("/{id}/lines/{lineId}/comp")
+	@PreAuthorize(REGISTER_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
+			"instore.line-voided", "instore.line-covered-by-payment", "instore.invalid-reason", "preparation.order-closed",
+			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
+	ResponseEntity<TicketResponse> compLine(@PathVariable UUID id, @PathVariable UUID lineId,
+			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
+			@Valid @RequestBody CompLineRequest request) {
+		var key = IdempotencyKeyHeader.require(idempotencyKey);
+		var path = BASE + "/" + id + "/lines/" + lineId + "/comp";
+		var outcome = commands.compLine(requireActor(), key, RequestHash.of("POST", path, request), id, lineId,
 				request.reason(), request.note());
 		var response = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
 		if (outcome.replayed()) {

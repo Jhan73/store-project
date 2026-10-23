@@ -34,6 +34,7 @@ import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
 import com.jhanantezana.jugueria.instore.TicketCancelled;
+import com.jhanantezana.jugueria.instore.TicketLineComped;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
@@ -180,6 +181,43 @@ class RecordAuditOnInstoreEventsIT {
 				UUID.randomUUID(), Role.SERVER, NOW, null, false));
 
 		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Changed mind");
+	}
+
+	@Test
+	void recordsALineCompWithItsReasonAndAmount() {
+		var ticketId = UUID.randomUUID();
+		var lineId = UUID.randomUUID();
+		var product = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new TicketLineComped(ticketId, lineId, product, 2, "Staff meal", "Cook's lunch", actorId, Role.CASHIER, NOW,
+				new Money(new BigDecimal("16.00"), PEN), false));
+
+		var entry = findByEntityId(lineId);
+		assertThat(entry.getAction()).isEqualTo("TICKET_LINE_COMPED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET_LINE");
+		assertThat(entry.getActorId()).isEqualTo(actorId);
+		assertThat(entry.getActorRole()).isEqualTo("CASHIER");
+		assertThat(entry.getReason()).isEqualTo("Staff meal: Cook's lunch");
+		assertThat(entry.getBefore()).containsEntry("state", "SENT");
+		assertThat(entry.getAfter()).containsEntry("state", "COMPED")
+			.containsEntry("waste", true)
+			.containsEntry("ticketId", ticketId.toString())
+			.containsEntry("productId", product.toString())
+			.containsEntry("quantity", 2)
+			.containsEntry("amount", "16.00")
+			.containsEntry("currency", "PEN")
+			.containsEntry("ticketClosed", false);
+	}
+
+	@Test
+	void recordsALineCompWithoutANote() {
+		var lineId = UUID.randomUUID();
+
+		publish(new TicketLineComped(UUID.randomUUID(), lineId, UUID.randomUUID(), 1, "Staff meal", null, UUID.randomUUID(),
+				Role.ADMIN, NOW, Money.of("5.00", PEN), true));
+
+		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Staff meal");
 	}
 
 	@Test

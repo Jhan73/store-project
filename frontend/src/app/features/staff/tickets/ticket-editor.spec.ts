@@ -49,6 +49,8 @@ function line(id: string, overrides: Partial<TicketLine> = {}): TicketLine {
     state: 'UNSENT',
     sentAt: null,
     voidNote: null,
+    compReasonCode: null,
+    compNote: null,
     voidReasonCode: null,
     waste: false,
     ...overrides,
@@ -90,6 +92,8 @@ function payment(id: string, overrides: Partial<Payment> = {}): Payment {
     voided: false,
     voidReasonCode: null,
     voidNote: null,
+    compReasonCode: null,
+    compNote: null,
     ...overrides,
   };
 }

@@ -184,6 +184,31 @@ class InstoreAuditRollbackIT {
 	}
 
 	@Test
+	void anAuditWriteFailureRollsBackAComp() {
+		InstoreTables.aCompReason(jdbc, "Staff meal");
+		var ticket = openTicketWithALine();
+		mvc.post().uri(TICKETS + "/" + ticket + "/send").with(floorStaff()).exchange();
+		var line = jdbc.sql("select id from instore.ticket_line where ticket_id = ?")
+			.param(ticket)
+			.query(UUID.class)
+			.single();
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(TICKETS + "/" + ticket + "/lines/" + line + "/comp")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.CASHIER))
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"reason\":\"Staff meal\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("SENT");
+		assertThat(jdbc.sql("select state from preparation.board_line").query(String.class).single())
+			.isEqualTo("PENDING");
+	}
+
+	@Test
 	void anAuditWriteFailureRollsBackATransfer() {
 		var ticket = openTicketWithALine();
 		mvc.post().uri(TICKETS + "/" + ticket + "/send").with(floorStaff()).exchange();

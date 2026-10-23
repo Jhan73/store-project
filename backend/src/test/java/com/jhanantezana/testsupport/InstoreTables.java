@@ -101,6 +101,14 @@ public final class InstoreTables {
 				""").param("id", UUID.randomUUID()).param("code", code).param("now", now).update();
 	}
 
+	public static void aCompReason(JdbcClient jdbc, String code) {
+		var now = OffsetDateTime.now(ZoneOffset.UTC);
+		jdbc.sql("""
+				insert into store.reason (id, type, code, active, created_at, updated_at)
+				values (:id, 'COMP', :code, true, :now, :now) on conflict do nothing
+				""").param("id", UUID.randomUUID()).param("code", code).param("now", now).update();
+	}
+
 	public static void aCashOutReason(JdbcClient jdbc, String code) {
 		var now = OffsetDateTime.now(ZoneOffset.UTC);
 		jdbc.sql("""

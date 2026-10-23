@@ -23,6 +23,8 @@ public enum InstoreError implements ErrorCode {
 	PRODUCT_NOT_QUICK_SALE("instore.product-not-quick-sale", HttpStatus.UNPROCESSABLE_CONTENT),
 	TOO_MANY_LINES("instore.too-many-lines", HttpStatus.UNPROCESSABLE_CONTENT),
 	LINE_NOT_SENT("instore.line-not-sent", HttpStatus.UNPROCESSABLE_CONTENT),
+	LINE_VOIDED("instore.line-voided", HttpStatus.UNPROCESSABLE_CONTENT),
+	LINE_COMPED("instore.line-comped", HttpStatus.UNPROCESSABLE_CONTENT),
 	INVALID_REASON("instore.invalid-reason", HttpStatus.UNPROCESSABLE_CONTENT),
 	INVALID_AMOUNT("instore.invalid-amount", HttpStatus.UNPROCESSABLE_CONTENT),
 	SHIFT_NOT_FOUND("instore.shift-not-found", HttpStatus.NOT_FOUND),

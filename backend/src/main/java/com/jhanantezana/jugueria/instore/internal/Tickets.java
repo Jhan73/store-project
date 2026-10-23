@@ -41,7 +41,7 @@ class Tickets {
 
 	private static final String LINE_COLUMNS = """
 			id, product_id, product_name, quantity, unit_price_amount, unit_price_currency, modifiers, note, allergy, state,
-			sent_at, waste, void_reason_code, void_note
+			sent_at, waste, void_reason_code, void_note, comp_reason_code, comp_note
 			""";
 
 	private static final TypeReference<List<ChosenOption>> OPTIONS = new TypeReference<>() {
@@ -346,6 +346,25 @@ class Tickets {
 		}
 	}
 
+	void markComped(UUID ticketId, UUID lineId, String reasonCode, @Nullable String note, UUID actor, Instant now) {
+		var comped = jdbc.sql("""
+				UPDATE instore.ticket_line
+				SET state = 'COMPED', waste = true, comp_reason_code = :reason, comp_note = :note, comped_by = :actor,
+					comped_at = :now, version = version + 1, updated_at = :now
+				WHERE id = :id AND ticket_id = :ticket AND state = 'SENT'
+				""")
+			.param("reason", reasonCode)
+			.param("note", note)
+			.param("actor", actor)
+			.param("now", utc(now))
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.update();
+		if (comped != 1) {
+			throw new IllegalStateException("Line " + lineId + " changed state while its ticket was locked");
+		}
+	}
+
 	Optional<TicketLineView> line(UUID ticketId, UUID lineId) {
 		return jdbc.sql("SELECT " + LINE_COLUMNS + " FROM instore.ticket_line WHERE id = :id AND ticket_id = :ticket")
 			.param("id", lineId)
@@ -471,7 +490,8 @@ class Tickets {
 				rs.getString("product_name"), rs.getInt("quantity"), new Money(rs.getBigDecimal("unit_price_amount"), currency),
 				json.readValue(rs.getString("modifiers"), OPTIONS), rs.getString("note"), rs.getBoolean("allergy"),
 				TicketLineState.valueOf(rs.getString("state")), sentAt == null ? null : sentAt.toInstant(),
-				rs.getBoolean("waste"), rs.getString("void_reason_code"), rs.getString("void_note"));
+				rs.getBoolean("waste"), rs.getString("void_reason_code"), rs.getString("void_note"),
+				rs.getString("comp_reason_code"), rs.getString("comp_note"));
 	}
 
 }

@@ -12,7 +12,8 @@ import com.jhanantezana.jugueria.shared.Money;
 
 record TicketLineResponse(UUID id, UUID productId, String productName, int quantity, Money unitPrice, Money lineTotal,
 		List<ModifierResponse> modifiers, @Nullable String note, boolean allergy, TicketLineState state,
-		@Nullable Instant sentAt, boolean waste, @Nullable String voidReasonCode, @Nullable String voidNote) {
+		@Nullable Instant sentAt, boolean waste, @Nullable String voidReasonCode, @Nullable String voidNote,
+		@Nullable String compReasonCode, @Nullable String compNote) {
 
 	record ModifierResponse(UUID optionId, String name, Money priceDelta) {
 	}
@@ -22,7 +23,7 @@ record TicketLineResponse(UUID id, UUID productId, String productName, int quant
 				line.lineTotal(),
 				line.modifiers().stream().map(o -> new ModifierResponse(o.optionId(), o.name(), o.priceDelta())).toList(),
 				line.note(), line.allergy(), line.state(), line.sentAt(), line.waste(), line.voidReasonCode(),
-				line.voidNote());
+				line.voidNote(), line.compReasonCode(), line.compNote());
 	}
 
 }

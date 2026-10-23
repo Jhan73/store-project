@@ -1,6 +1,5 @@
 package com.jhanantezana.jugueria.instore.internal;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +28,7 @@ public class TicketVoids {
 
 	private final TicketService ticketService;
 
-	private final Payments payments;
+	private final PaidLineGuard paidLines;
 
 	private final TicketSettlement settlement;
 
@@ -45,12 +44,12 @@ public class TicketVoids {
 
 	private final Clock clock;
 
-	TicketVoids(Tickets tickets, TicketService ticketService, Payments payments, TicketSettlement settlement,
+	TicketVoids(Tickets tickets, TicketService ticketService, PaidLineGuard paidLines, TicketSettlement settlement,
 			PreparationApi preparation, InventoryApi inventory, VoidReasons voidReasons, ApplicationEventPublisher events,
 			CurrentActor currentActor, Clock clock) {
 		this.tickets = tickets;
 		this.ticketService = ticketService;
-		this.payments = payments;
+		this.paidLines = paidLines;
 		this.settlement = settlement;
 		this.preparation = preparation;
 		this.inventory = inventory;
@@ -73,6 +72,9 @@ public class TicketVoids {
 		if (line.state() == TicketLineState.VOIDED) {
 			return ticketService.view(ticket);
 		}
+		if (line.state() == TicketLineState.COMPED) {
+			throw new BusinessException(InstoreError.LINE_COMPED, "Line " + lineId + " was comped; it cannot be voided");
+		}
 		if (line.state() != TicketLineState.SENT) {
 			throw new BusinessException(InstoreError.LINE_NOT_SENT,
 					"Line " + lineId + " was not sent; delete it instead of voiding it");
@@ -84,7 +86,7 @@ public class TicketVoids {
 		if (role == null || actor == null) {
 			throw new IllegalStateException("A void needs a signed-in user");
 		}
-		requireNotCovered(ticket, line);
+		paidLines.requireNotCovered(ticket, line);
 		var waste = preparation.voidLine(BoardSource.TICKET, tickets.boardSourceOf(lineId), lineId,
 				TicketRules.voidModeFor(role));
 		tickets.markVoided(ticketId, lineId, waste, reason, text, actor, now);
@@ -98,21 +100,6 @@ public class TicketVoids {
 			settlement.close(ticket, now);
 		}
 		return ticketService.view(tickets.require(ticketId));
-	}
-
-	private void requireNotCovered(Tickets.TicketRow ticket, TicketLineView line) {
-		if (payments.coveredLines(ticket.id()).contains(line.id())) {
-			throw covered(line);
-		}
-		var remaining = TicketRules.total(tickets.lines(ticket.id()), ticket.currency()).minus(line.lineTotal());
-		if (payments.livePaid(ticket.id()).compareTo(remaining.amount().max(BigDecimal.ZERO)) > 0) {
-			throw covered(line);
-		}
-	}
-
-	private static BusinessException covered(TicketLineView line) {
-		return new BusinessException(InstoreError.LINE_COVERED_BY_PAYMENT,
-				"Line " + line.id() + " is covered by a payment; void the payment first");
 	}
 
 }
