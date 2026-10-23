@@ -18,6 +18,9 @@ public interface CatalogApi {
 
 	boolean productExists(UUID productId);
 
+	/** Whether the admin pinned the product as a frequent item, on sale or not; false for an unknown product. */
+	boolean isQuickSalePinned(UUID productId);
+
 	/** The products pinned for quick sales that can be sold right now, in the order the admin set. */
 	List<QuickSaleItem> quickSaleItems();
 

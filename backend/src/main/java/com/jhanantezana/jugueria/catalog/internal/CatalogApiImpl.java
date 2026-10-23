@@ -47,6 +47,12 @@ class CatalogApiImpl implements CatalogApi {
 
 	@Override
 	@Transactional(readOnly = true)
+	public boolean isQuickSalePinned(UUID productId) {
+		return products.findById(productId).map(Product::isQuickSalePinned).orElse(false);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public List<QuickSaleItem> quickSaleItems() {
 		return products.findQuickSaleItems()
 			.stream()

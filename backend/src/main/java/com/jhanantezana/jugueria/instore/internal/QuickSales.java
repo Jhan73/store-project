@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.catalog.QuickSaleItem;
+import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.PaymentMethod;
+import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Money;
 
@@ -56,6 +58,7 @@ public class QuickSales {
 			throw new IllegalStateException("A quick sale needs a signed-in user");
 		}
 		shifts.requireWritableOf(actor);
+		drafts.forEach(this::requirePinned);
 		var id = ticketService.openQuickSale(customerName).id();
 		for (var draft : drafts) {
 			lines.add(id, draft);
@@ -64,6 +67,14 @@ public class QuickSales {
 		var ticket = tickets.require(id);
 		var total = TicketRules.total(tickets.lines(id), ticket.currency());
 		return payments.record(id, method, total, received, null);
+	}
+
+	// An unknown product is left to the line itself, which answers not found.
+	private void requirePinned(LineDraft draft) {
+		if (catalog.productExists(draft.productId()) && !catalog.isQuickSalePinned(draft.productId())) {
+			throw new BusinessException(InstoreError.PRODUCT_NOT_QUICK_SALE,
+					"Product " + draft.productId() + " is not pinned for quick sales");
+		}
 	}
 
 	/** The products the admin pinned as frequent items that can be sold right now. */

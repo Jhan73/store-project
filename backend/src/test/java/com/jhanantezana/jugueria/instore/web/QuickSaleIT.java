@@ -59,6 +59,7 @@ class QuickSaleIT {
 	@BeforeEach
 	void anOpenShiftAndAProduct() {
 		juice = InstoreTables.aSizedProduct(jdbc);
+		InstoreTables.pinnedForQuickSale(jdbc, juice.productId());
 		openShift(cashier);
 	}
 
@@ -141,7 +142,7 @@ class QuickSaleIT {
 
 	@Test
 	void aSaleTheShelfCannotCoverStillClosesAndTakesStockBelowZero() {
-		var bottle = InventoryTables.aProduct(jdbc);
+		var bottle = InstoreTables.pinnedForQuickSale(jdbc, InventoryTables.aProduct(jdbc));
 		stock.track(bottle, true, 0);
 		stock.recordEntry(bottle, 1, null);
 
@@ -214,7 +215,21 @@ class QuickSaleIT {
 	}
 
 	@Test
+	void refusesAProductTheAdminDidNotPinAndLeavesNothingBehind() {
+		var unpinned = InventoryTables.aProduct(jdbc);
+		var line = "{\"productId\":\"%s\",\"modifierOptionIds\":[],\"quantity\":1,\"note\":null,\"allergy\":false}"
+			.formatted(unpinned);
+
+		var result = quickSale(cashier, Role.CASHIER, UUID.randomUUID(), body(null, line, "CARD", null));
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.product-not-quick-sale");
+		assertThat(InstoreTables.count(jdbc, "ticket")).isZero();
+	}
+
+	@Test
 	void theFrequentItemsAreTheOnesTheAdminPinnedThatAreOnSale() {
+		jdbc.sql("update catalog.product set quick_sale_pinned = false where id = ?").param(juice.productId()).update();
 		var pinned = InventoryTables.aProduct(jdbc);
 		var unpinned = InventoryTables.aProduct(jdbc);
 		var hidden = InventoryTables.aProduct(jdbc);
