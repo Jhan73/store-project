@@ -9,6 +9,7 @@ import type {
   Shift,
 } from '../../../core/api/api-types';
 import { ApiError } from '../../../core/errors/api-error';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { formatInStoreZone } from '../../../core/time/store-time';
@@ -31,6 +32,7 @@ export class ShiftStore {
   private readonly notifier = inject(ErrorNotifier);
   private readonly messages = inject(MessageService);
   private readonly handoff = inject(ClosedShiftHandoff);
+  private readonly auth = inject(AuthStore);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
@@ -88,7 +90,7 @@ export class ShiftStore {
             this.handoff.shift.set(null);
             this.storeCurrency.set(shift.openingFloat.currency);
           } else {
-            this.closed.update((closed) => closed ?? this.handoff.shift());
+            this.closed.update((closed) => closed ?? this.keptSummary());
             if (scope === 'full' && this.storeCurrency() === null) {
               this.loadCurrency();
             }
@@ -286,6 +288,13 @@ export class ShiftStore {
       },
       error: () => this.reload(),
     });
+  }
+
+  // A summary left by another cashier on this device is not this cashier's to see.
+  private keptSummary(): Shift | null {
+    const kept = this.handoff.shift();
+    const user = this.auth.session()?.userId;
+    return kept !== null && user !== undefined && kept.cashierId !== user ? null : kept;
   }
 
   private reload(): void {

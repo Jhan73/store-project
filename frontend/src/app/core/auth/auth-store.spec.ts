@@ -235,6 +235,63 @@ describe('AuthStore', () => {
       expect(store.hasEnded()).toBe(false);
     });
 
+    it('ends the session when another tab signed in as someone else', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+
+      expect(await done).toBe('rejected');
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.accessToken()).toBeNull();
+      expect(store.hasEnded()).toBe(true);
+      expect(store.identityChanged()).toBe(true);
+    });
+
+    it('does not sign the other user out on the server when it drops their identity', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      http.expectNone(LOGOUT);
+    });
+
+    it('does not restore the other identity by itself afterwards', async () => {
+      await signIn();
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      await store.restore();
+
+      http.expectNone(REFRESH);
+      expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it('keeps the session when the refresh brings the same user', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush(session('jwt-2'));
+
+      expect(await done).toBe('refreshed');
+      expect(store.accessToken()).toBe('jwt-2');
+      expect(store.identityChanged()).toBe(false);
+    });
+
+    it('forgets the identity change once someone signs in again', async () => {
+      await signIn();
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      await signIn('jwt-c');
+
+      expect(store.identityChanged()).toBe(false);
+    });
+
     it('serializes refreshes across tabs with the Web Locks API', async () => {
       const request = vi.fn((_name: string, callback: () => Promise<unknown>) => callback());
       vi.stubGlobal('navigator', { locks: { request } });

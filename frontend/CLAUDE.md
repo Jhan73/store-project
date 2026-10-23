@@ -136,6 +136,7 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 **Auth** (tech-spec §6.4)
 - Access token in memory only. Refresh token is a `__Host-` HttpOnly cookie handled by the browser. The session is restored lazily: the first role guard and the login page await one `POST /auth/refresh` (`credentials: 'include'`, `X-Requested-With`); public pages make no call.
 - One auth interceptor in `core/auth`: attaches the bearer token **only** to API-origin requests; on `401` runs a **single-flight** refresh (concurrent `401`s share one refresh), and retries once. Only a `401` from the refresh ends the session (clear it, redirect to login once); an outage (network, `5xx`, 10 s timeout) keeps the session and fails the request with that outage. Never retries `/auth/*` calls. `403` never triggers a refresh. Tabs serialize refreshes with the Web Locks API.
+- The refresh cookie is shared by all tabs. If a refresh brings another `userId` than the tab's session, the tab drops its session without calling logout (that would revoke the other user's cookie), does not restore by itself, and `App` navigates to `/login`, which destroys the open screens and their stores.
 - Sign-out ends the session only after the server revoked the refresh cookie (a `401` also counts); when it cannot be reached the session stays and the workspace shows a toast, so the next `restore()` can never reopen a session the employee believes is closed.
 - Role guards per feature with `canMatch`. They are UX only — the backend enforces.
 

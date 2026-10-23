@@ -32,6 +32,7 @@ export class AuthStore {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly state = signal<Session | null>(null);
   private readonly failure = signal<unknown>(null);
+  private readonly identityShift = signal(false);
   private restoration: Promise<void> | null = null;
   private inFlight: Promise<RefreshOutcome> | null = null;
   // Bumped by login and logout so a refresh that started before them cannot change the session afterwards.
@@ -43,6 +44,8 @@ export class AuthStore {
   readonly role = computed(() => this.state()?.role ?? null);
   // The last refresh failure that was not a rejection (network, 5xx, timeout); cleared by the next success.
   readonly refreshError = this.failure.asReadonly();
+  // True when a refresh brought another user's session (the cookie is shared between tabs); until the next login.
+  readonly identityChanged = this.identityShift.asReadonly();
 
   accessToken(): string | null {
     return this.state()?.accessToken ?? null;
@@ -57,6 +60,7 @@ export class AuthStore {
     const response = await firstValueFrom(this.api.login(credentials));
     this.generation++;
     this.ended = false;
+    this.identityShift.set(false);
     this.failure.set(null);
     this.state.set(toSession(response));
     this.restoration ??= Promise.resolve();
@@ -106,6 +110,15 @@ export class AuthStore {
     try {
       const response = await firstValueFrom(this.api.refresh().pipe(timeout(REFRESH_TIMEOUT_MS)));
       if (generation !== this.generation) {
+        return 'rejected';
+      }
+      const previous = this.state();
+      if (previous !== null && previous.userId !== response.userId) {
+        // Not a logout: the cookie now belongs to the other user, and revoking it would sign them out.
+        this.state.set(null);
+        this.ended = true;
+        this.identityShift.set(true);
+        this.failure.set(null);
         return 'rejected';
       }
       this.state.set(toSession(response));

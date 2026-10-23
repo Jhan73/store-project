@@ -6,6 +6,8 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { pen, problem, shift } from '../../../testing/register-fixtures';
+import { AuthStore } from '../../../core/auth/auth-store';
+import { ClosedShiftHandoff } from './closed-shift-handoff';
 import { RegisterApi } from './register-api';
 import { ShiftStore } from './shift-store';
 
@@ -429,6 +431,23 @@ describe('ShiftStore', () => {
       expect(request.cancelled).toBe(false);
       request.flush(shift(), { status: 201, statusText: 'Created' });
     });
+  });
+
+  it('does not hand a closed shift of another cashier to this screen', async () => {
+    const auth = TestBed.inject(AuthStore);
+    const login = auth.login({ email: 'a@b.pe', password: 'x' });
+    http
+      .expectOne(`${BASE}/auth/login`)
+      .flush({ accessToken: 'a', tokenType: 'Bearer', userId: 'other', role: 'CASHIER' });
+    await login;
+    TestBed.inject(ClosedShiftHandoff).shift.set(shift({ status: 'CLOSED', cashierId: 'u1' }));
+
+    store.load();
+    http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+    zone();
+    http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+    expect(store.closedShift()).toBeNull();
   });
 
   describe('opening a shift', () => {
