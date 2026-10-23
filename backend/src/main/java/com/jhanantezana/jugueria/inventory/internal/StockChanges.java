@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.inventory.InventoryError;
+import com.jhanantezana.jugueria.inventory.StockDeficit;
 import com.jhanantezana.jugueria.inventory.StockDepleted;
 import com.jhanantezana.jugueria.inventory.StockLow;
 import com.jhanantezana.jugueria.shared.BusinessException;
@@ -125,6 +126,10 @@ class StockChanges {
 			.optional()
 			.orElseThrow(() -> rejection(productId));
 		reconcileAvailability(productId, balance, onHandDelta - reservedDelta, now);
+		if (type == StockMovementType.SALE && balance.onHand() < 0 && referenceId != null) {
+			events.publishEvent(new StockDeficit(productId, referenceId, Math.min(-onHandDelta, -balance.onHand()),
+					balance.onHand(), currentActor.id(), currentActor.role(), now));
+		}
 		return true;
 	}
 

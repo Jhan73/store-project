@@ -96,7 +96,7 @@ class PaymentRaceIT {
 	}
 
 	@Test
-	void theLastUnitIsSoldOnceWhenTwoTicketsAreClosedAtOnce() throws Exception {
+	void twoTicketsClosedOnTheLastUnitAtOnceAreBothRecordedAndStockGoesNegativeOnce() throws Exception {
 		var cashier = UUID.randomUUID();
 		openShift(cashier);
 		var bottle = trackedProduct(1);
@@ -105,14 +105,10 @@ class PaymentRaceIT {
 
 		var results = race(2, i -> () -> pay(i == 0 ? first : second, cashier, "5.00"));
 
-		assertThat(results.stream().map(r -> r.getResponse().getStatus())).containsExactlyInAnyOrder(201, 409);
-		assertThat(results.stream().filter(r -> r.getResponse().getStatus() == 409).findFirst().orElseThrow())
-			.bodyJson()
-			.extractingPath("$.code")
-			.isEqualTo("inventory.insufficient-stock");
-		assertThat(sales(bottle)).isEqualTo(1);
-		assertThat(stock.get(bottle).onHand()).isZero();
-		assertThat(payments(first) + payments(second)).isEqualTo(1);
+		assertThat(results.stream().map(r -> r.getResponse().getStatus())).containsExactly(201, 201);
+		assertThat(sales(bottle)).isEqualTo(2);
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
+		assertThat(payments(first) + payments(second)).isEqualTo(2);
 	}
 
 	@Test

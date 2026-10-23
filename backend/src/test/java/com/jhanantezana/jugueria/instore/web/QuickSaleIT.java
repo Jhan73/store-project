@@ -140,7 +140,7 @@ class QuickSaleIT {
 	}
 
 	@Test
-	void aSaleTheShelfCannotCoverIsRejectedAsAWholeAndLeavesNoCardOnTheBoard() {
+	void aSaleTheShelfCannotCoverStillClosesAndTakesStockBelowZero() {
 		var bottle = InventoryTables.aProduct(jdbc);
 		stock.track(bottle, true, 0);
 		stock.recordEntry(bottle, 1, null);
@@ -148,10 +148,9 @@ class QuickSaleIT {
 		var result = quickSale(cashier, Role.CASHIER, UUID.randomUUID(),
 				body(null, "{\"productId\":\"%s\",\"modifierOptionIds\":[],\"quantity\":2,\"note\":null,\"allergy\":false}".formatted(bottle), "CARD", null));
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(ticketCount()).isZero();
-		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
-		assertThat(stock.get(bottle).onHand()).isEqualTo(1);
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(ticketCount()).isEqualTo(1);
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
 	}
 
 	@Test

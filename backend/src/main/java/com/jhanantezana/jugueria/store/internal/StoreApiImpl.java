@@ -65,12 +65,6 @@ class StoreApiImpl implements StoreApi {
 
 	@Override
 	@Transactional(readOnly = true)
-	public boolean allowsNegativeStockOnSale() {
-		return singleton().isAllowNegativeStockOnSale();
-	}
-
-	@Override
-	@Transactional(readOnly = true)
 	public List<ReasonView> reasons(ReasonType type) {
 		return reasons.findByType(type)
 			.stream()

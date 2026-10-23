@@ -371,17 +371,17 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void aPaymentThatClosesTheTicketIsRejectedWhenThereIsNotEnoughStockAndNothingIsRecorded() {
+	void aPaymentThatClosesTheTicketIsRecordedWhenThereIsNotEnoughStockAndStockGoesNegative() {
 		var bottle = trackedProduct(1);
 		sentLine(bottle, 2);
 
 		var result = pay(ticket, "CARD", "10.00", null);
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(paymentCount()).isZero();
-		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("OPEN");
-		assertThat(stock.get(bottle).onHand()).isEqualTo(1);
-		assertThat(events.stream(SaleRecorded.class)).isEmpty();
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(paymentCount()).isEqualTo(1);
+		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("CLOSED");
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
+		assertThat(events.stream(SaleRecorded.class)).hasSize(1);
 	}
 
 	@Test
@@ -637,7 +637,7 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void aLineVoidThatWouldCloseTheTicketIsRejectedWhenTheShelfCannotCoverTheSale() {
+	void aLineVoidThatClosesTheTicketSucceedsWhenTheShelfCannotCoverTheSale() {
 		var bottle = trackedProduct(2);
 		var bottles = sentLine(bottle, 2);
 		var small = sentLine(juice.small());
@@ -646,10 +646,11 @@ class TicketPaymentIT {
 
 		var result = voidLine(small);
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(InstoreTables.lineState(jdbc, small)).isEqualTo("SENT");
-		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("OPEN");
-		assertThat(events.stream(SaleRecorded.class)).isEmpty();
+		assertThat(result).hasStatusOk();
+		assertThat(InstoreTables.lineState(jdbc, small)).isEqualTo("VOIDED");
+		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("CLOSED");
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
+		assertThat(events.stream(SaleRecorded.class)).hasSize(1);
 	}
 
 	@Test

@@ -70,7 +70,7 @@ public class TicketPayments {
 	/**
 	 * Takes a payment into the cashier's open shift. Cash states the amount received and the change follows; every
 	 * other method states none. A payment by items must equal the chosen lines. The payment that covers the total
-	 * closes the ticket and deducts its stock, and is rejected with it if the shelf cannot cover the sale.
+	 * closes the ticket and deducts its stock, below zero if the shelf cannot cover the sale.
 	 */
 	@Transactional
 	public TicketView record(UUID ticketId, PaymentMethod method, Money amount, @Nullable Money received,
