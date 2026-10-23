@@ -2101,6 +2101,10 @@ export interface components {
             tracked: boolean;
         };
         StoreSettingsResponse: {
+            /**
+             * @deprecated
+             * @description No longer affects sales; a sale is always recorded and stock may go negative.
+             */
             allowNegativeStockOnSale: boolean;
             /** Format: int32 */
             basePrepMinutes: number;
@@ -2252,6 +2256,10 @@ export interface components {
             opensAt?: string | null;
         };
         UpdateStoreSettingsRequest: {
+            /**
+             * @deprecated
+             * @description No longer affects sales; a sale is always recorded and stock may go negative.
+             */
             allowNegativeStockOnSale: boolean;
             /** Format: int32 */
             basePrepMinutes: number;

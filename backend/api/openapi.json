@@ -14387,7 +14387,9 @@
         "type" : "object",
         "properties" : {
           "allowNegativeStockOnSale" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "deprecated" : true,
+            "description" : "No longer affects sales; a sale is always recorded and stock may go negative."
           },
           "basePrepMinutes" : {
             "type" : "integer",
@@ -14767,7 +14769,9 @@
         "type" : "object",
         "properties" : {
           "allowNegativeStockOnSale" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "deprecated" : true,
+            "description" : "No longer affects sales; a sale is always recorded and stock may go negative."
           },
           "basePrepMinutes" : {
             "type" : "integer",

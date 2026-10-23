@@ -132,6 +132,17 @@ class OpenApiSpecIT {
 	}
 
 	@Test
+	void marksTheNegativeStockSettingAsDeprecatedInBothDirections() throws IOException {
+		var schemas = new JsonMapper().readTree(generate()).path("components").path("schemas");
+
+		for (var name : List.of("StoreSettingsResponse", "UpdateStoreSettingsRequest")) {
+			var property = schemas.path(name).path("properties").path("allowNegativeStockOnSale");
+			assertThat(property.path("deprecated").asBoolean()).as(name).isTrue();
+			assertThat(property.path("description").asString()).as(name).isNotBlank();
+		}
+	}
+
+	@Test
 	void tableRequestsMarkOnlyWhatTheyRequire() throws IOException {
 		var schemas = new JsonMapper().readTree(generate()).path("components").path("schemas");
 
