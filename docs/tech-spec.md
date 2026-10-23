@@ -1145,7 +1145,7 @@ Application secrets are **not** GitHub secrets: they live in SSM and are injecte
 - ECS rolling deployment with `prod` minimum 1 healthy task, so deploys cause no downtime (NFR-01); the ALB health check targets `/actuator/health/readiness` (backend) and `/healthz` (frontend). A task that fails readiness never receives traffic.
 - Smoke tests after each deploy hit health, menu, and auth endpoints; when `CUSTOM_FRONTEND_HOST` and `CUSTOM_API_HOST` are set they also check the custom hosts (frontend health and login, API readiness, and a CORS preflight with the exact frontend origin). Failure marks the run red and blocks promotion.
 - Rollback = `rollback.yml` with the previous SHA (target < 30 min, PRD §9), one app at a time. Safe because migrations follow expand/contract (§4.10). Runbook: `docs/runbooks/rollback.md`, which also shows how to find the SHA to go back to.
-- Database restore (disaster, not rollback) is a documented runbook: RDS point-in-time restore to a new instance, switch the SSM endpoint, redeploy. Drill at M4 (NFR-07).
+- Database restore (disaster, not rollback) is a documented runbook (`docs/runbooks/database-restore.md`): RDS point-in-time restore to a new instance, switch the SSM endpoint, redeploy. Rehearsed on `test` before the pilot and again at M4 (NFR-07).
 
 ### 10.6 Course coverage
 
