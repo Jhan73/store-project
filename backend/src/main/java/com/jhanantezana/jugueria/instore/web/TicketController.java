@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.instore.internal.TicketCancellation;
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
 import com.jhanantezana.jugueria.instore.internal.TicketPlacement;
@@ -53,14 +54,17 @@ class TicketController {
 
 	private final TicketPlacement placement;
 
+	private final TicketCancellation cancellation;
+
 	private final CurrentActor currentActor;
 
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
-			TicketPlacement placement, CurrentActor currentActor) {
+			TicketPlacement placement, TicketCancellation cancellation, CurrentActor currentActor) {
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
 		this.placement = placement;
+		this.cancellation = cancellation;
 		this.commands = commands;
 		this.currentActor = currentActor;
 	}
@@ -183,6 +187,13 @@ class TicketController {
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
 	TicketResponse billRequested(@PathVariable UUID id, @Valid @RequestBody BillRequestedRequest request) {
 		return TicketResponse.from(placement.setBillRequested(id, request.requested()));
+	}
+
+	@PostMapping("/{id}/cancel")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.ticket-not-empty" })
+	TicketResponse cancel(@PathVariable UUID id) {
+		return TicketResponse.from(cancellation.cancel(id));
 	}
 
 	private static ResponseEntity<TicketResponse> created(TicketCommands.Outcome outcome) {

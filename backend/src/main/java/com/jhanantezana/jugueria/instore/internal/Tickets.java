@@ -112,6 +112,23 @@ class Tickets {
 		}
 	}
 
+	/** Ends a ticket this transaction holds the lock of without a sale; the table is free again from here on. */
+	void cancel(UUID id, Instant now) {
+		var cancelled = jdbc.sql("UPDATE instore.ticket SET status = 'CANCELLED', closed_at = :now WHERE id = :id AND status = 'OPEN'")
+			.param("now", utc(now))
+			.param("id", id)
+			.update();
+		if (cancelled != 1) {
+			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
+		}
+	}
+
+	void deleteUnsentLines(UUID ticketId) {
+		jdbc.sql("DELETE FROM instore.ticket_line WHERE ticket_id = :ticket AND state = 'UNSENT'")
+			.param("ticket", ticketId)
+			.update();
+	}
+
 	/** @return false when the table already has an open ticket */
 	boolean insert(UUID id, TicketType type, @Nullable UUID tableId, @Nullable String counterName, @Nullable String note,
 			Currency currency, UUID openedBy, Instant now) {

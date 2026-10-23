@@ -32,6 +32,7 @@ import com.jhanantezana.jugueria.instore.TableCreated;
 import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
+import com.jhanantezana.jugueria.instore.TicketCancelled;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
@@ -190,6 +191,20 @@ class RecordAuditOnInstoreEventsIT {
 		assertThat(entry.getEntityType()).isEqualTo("TICKET");
 		assertThat(entry.getBefore()).containsEntry("tableId", from.toString());
 		assertThat(entry.getAfter()).containsEntry("tableId", to.toString());
+	}
+
+	@Test
+	void recordsATicketCancellation() {
+		var ticketId = UUID.randomUUID();
+		var table = UUID.randomUUID();
+
+		publish(new TicketCancelled(ticketId, 12, TicketType.TABLE, table, UUID.randomUUID(), Role.SERVER, NOW));
+
+		var entry = findByEntityId(ticketId);
+		assertThat(entry.getAction()).isEqualTo("TICKET_CANCELLED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET");
+		assertThat(entry.getBefore()).containsEntry("number", "12").containsEntry("tableId", table.toString());
+		assertThat(entry.getAfter()).containsEntry("status", "CANCELLED");
 	}
 
 	@Test

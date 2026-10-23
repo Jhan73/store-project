@@ -14,6 +14,7 @@ public enum InstoreError implements ErrorCode {
 	TICKET_NOT_FOUND("instore.ticket-not-found", HttpStatus.NOT_FOUND),
 	TICKET_CLOSED("instore.ticket-closed", HttpStatus.CONFLICT),
 	INVALID_TICKET("instore.invalid-ticket", HttpStatus.UNPROCESSABLE_CONTENT),
+	TICKET_NOT_EMPTY("instore.ticket-not-empty", HttpStatus.CONFLICT),
 	TICKET_HAS_NO_TABLE("instore.ticket-has-no-table", HttpStatus.UNPROCESSABLE_CONTENT),
 	LINE_NOT_FOUND("instore.line-not-found", HttpStatus.NOT_FOUND),
 	LINE_ALREADY_SENT("instore.line-already-sent", HttpStatus.UNPROCESSABLE_CONTENT),
