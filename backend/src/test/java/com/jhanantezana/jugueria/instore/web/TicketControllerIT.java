@@ -184,8 +184,8 @@ class TicketControllerIT {
 		assertThat(one).hasStatusOk();
 		assertThat(one).bodyJson().extractingPath("$.id").isEqualTo(first);
 		assertThat(all).hasStatusOk();
-		assertThat(all).bodyJson().extractingPath("$[*].id").asList().containsExactly(first, second);
-		assertThat(all).bodyJson().extractingPath("$[0].total.amount").isEqualTo("0.00");
+		assertThat(all).bodyJson().extractingPath("$.content[*].id").asList().containsExactly(first, second);
+		assertThat(all).bodyJson().extractingPath("$.content[0].total.amount").isEqualTo("0.00");
 	}
 
 	@Test

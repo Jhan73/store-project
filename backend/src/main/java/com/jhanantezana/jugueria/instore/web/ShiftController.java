@@ -1,10 +1,12 @@
 package com.jhanantezana.jugueria.instore.web;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -101,9 +103,14 @@ class ShiftController {
 
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "instore.invalid-date-range" })
 	PageResponse<ShiftResponse> list(@RequestParam(required = false) @Nullable ShiftStatus status,
+			@RequestParam(required = false) @Nullable UUID cashierId,
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-		return PageResponse.from(shifts.list(status, PageRequests.of(page, size)), ShiftResponse::from);
+		return PageResponse.from(shifts.list(status, cashierId, from, to, PageRequests.of(page, size)),
+				ShiftResponse::from);
 	}
 
 	@PostMapping("/{id}/close")

@@ -374,6 +374,50 @@ class ShiftControllerIT {
 		assertThat(get(SHIFTS, cashier, Role.CASHIER)).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
+	@Test
+	void anAdminFiltersTheShiftListByCashier() {
+		var mine = idOf(open(cashier, Role.CASHIER, "1.00", UUID.randomUUID()));
+		var other = UUID.randomUUID();
+		var theirs = idOf(open(other, Role.CASHIER, "2.00", UUID.randomUUID()));
+
+		var result = get(SHIFTS + "?cashierId=" + other, UUID.randomUUID(), Role.ADMIN);
+
+		assertThat(result).bodyJson().extractingPath("$.content[*].id").asList().containsExactly(theirs);
+		assertThat(result).bodyJson().extractingPath("$.totalElements").isEqualTo(1);
+		assertThat(mine).isNotEqualTo(theirs);
+	}
+
+	@Test
+	void anAdminFiltersTheShiftListByTheStoreDayItOpenedOn() {
+		var lateNight = idOf(open(cashier, Role.CASHIER, "1.00", UUID.randomUUID()));
+		var nextDay = idOf(open(UUID.randomUUID(), Role.CASHIER, "2.00", UUID.randomUUID()));
+		// 03:00 UTC is still the 9th in Lima (UTC-5).
+		openedAt(lateNight, "2026-03-10T03:00:00Z");
+		openedAt(nextDay, "2026-03-11T15:00:00Z");
+
+		var ninth = get(SHIFTS + "?from=2026-03-09&to=2026-03-09", UUID.randomUUID(), Role.ADMIN);
+		var fromTenth = get(SHIFTS + "?from=2026-03-10", UUID.randomUUID(), Role.ADMIN);
+		var upToTenth = get(SHIFTS + "?to=2026-03-10&status=OPEN", UUID.randomUUID(), Role.ADMIN);
+
+		assertThat(ninth).bodyJson().extractingPath("$.content[*].id").asList().containsExactly(lateNight);
+		assertThat(fromTenth).bodyJson().extractingPath("$.content[*].id").asList().containsExactly(nextDay);
+		assertThat(upToTenth).bodyJson().extractingPath("$.content[*].id").asList().containsExactly(lateNight);
+	}
+
+	@Test
+	void aReversedDateRangeOnTheShiftListIsRejected() {
+		var result = get(SHIFTS + "?from=2026-03-11&to=2026-03-10", UUID.randomUUID(), Role.ADMIN);
+
+		assertProblem(result, HttpStatus.UNPROCESSABLE_CONTENT, "instore.invalid-date-range");
+	}
+
+	private void openedAt(String shift, String instant) {
+		jdbc.sql("update instore.register_shift set opened_at = ? where id = ?")
+			.param(java.time.OffsetDateTime.parse(instant))
+			.param(UUID.fromString(shift))
+			.update();
+	}
+
 	private static String openBody(String amount) {
 		return "{\"openingFloat\":{\"amount\":\"%s\",\"currency\":\"PEN\"}}".formatted(amount);
 	}

@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,9 +93,26 @@ public class TicketService {
 		return view(tickets.require(id));
 	}
 
+	/** Oldest first, so the floor works through them in the order they were opened. */
 	@Transactional(readOnly = true)
-	public List<TicketSummary> listOpen() {
-		return tickets.open();
+	public Page<TicketSummary> listOpen(Pageable pageable) {
+		return new PageImpl<>(tickets.open(pageable.getPageSize(), pageable.getOffset()), pageable, tickets.countOpen());
+	}
+
+	/** The sales that were closed, newest first, so a mistyped one can be found after its screen is gone. */
+	@Transactional(readOnly = true)
+	public Page<ClosedTicketSummary> listClosed(ClosedTicketFilter filter, Pageable pageable) {
+		var range = DayRange.of(filter.from(), filter.to(), store.timeZone());
+		return new PageImpl<>(tickets.closed(filter, range, pageable.getPageSize(), pageable.getOffset()), pageable,
+				tickets.countClosed(filter, range));
+	}
+
+	/** Replaces the note of an open ticket; blank clears it. */
+	@Transactional
+	public TicketView changeNote(UUID ticketId, @Nullable String note) {
+		tickets.lockOpen(ticketId, Instant.now(clock));
+		tickets.setNote(ticketId, blankToNull(note));
+		return view(tickets.require(ticketId));
 	}
 
 	TicketView view(Tickets.TicketRow ticket) {

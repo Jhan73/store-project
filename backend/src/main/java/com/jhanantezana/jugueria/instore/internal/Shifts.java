@@ -205,19 +205,30 @@ class Shifts {
 				money(moved.get("IN"), currency), money(moved.get("OUT"), currency), byMethod);
 	}
 
-	long count(@Nullable ShiftStatus status) {
-		return jdbc.sql("SELECT count(*) FROM instore.register_shift WHERE (CAST(:status AS varchar) IS NULL OR status = :status)")
-			.param("status", status == null ? null : status.name())
+	private static final String LIST_FILTER = """
+			 WHERE (CAST(:status AS varchar) IS NULL OR status = :status)
+				AND (CAST(:cashier AS uuid) IS NULL OR cashier_id = CAST(:cashier AS uuid))
+				AND (CAST(:from AS timestamptz) IS NULL OR opened_at >= CAST(:from AS timestamptz))
+				AND (CAST(:to AS timestamptz) IS NULL OR opened_at < CAST(:to AS timestamptz))
+			""";
+
+	private static JdbcClient.StatementSpec listParams(JdbcClient.StatementSpec spec, @Nullable ShiftStatus status,
+			@Nullable UUID cashierId, DayRange range) {
+		return spec.param("status", status == null ? null : status.name())
+			.param("cashier", cashierId)
+			.param("from", range.from() == null ? null : Tickets.utc(range.from()))
+			.param("to", range.to() == null ? null : Tickets.utc(range.to()));
+	}
+
+	long count(@Nullable ShiftStatus status, @Nullable UUID cashierId, DayRange range) {
+		return listParams(jdbc.sql("SELECT count(*) FROM instore.register_shift" + LIST_FILTER), status, cashierId, range)
 			.query(Long.class)
 			.single();
 	}
 
-	List<ShiftRow> page(@Nullable ShiftStatus status, int limit, long offset) {
-		return jdbc.sql("SELECT " + COLUMNS + """
-				 WHERE (CAST(:status AS varchar) IS NULL OR status = :status)
-				ORDER BY opened_at DESC, id DESC LIMIT :limit OFFSET :offset
-				""")
-			.param("status", status == null ? null : status.name())
+	List<ShiftRow> page(@Nullable ShiftStatus status, @Nullable UUID cashierId, DayRange range, int limit, long offset) {
+		return listParams(jdbc.sql("SELECT " + COLUMNS + LIST_FILTER
+				+ " ORDER BY opened_at DESC, id DESC LIMIT :limit OFFSET :offset"), status, cashierId, range)
 			.param("limit", limit)
 			.param("offset", offset)
 			.query((rs, row) -> shift(rs))

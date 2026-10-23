@@ -1,10 +1,11 @@
 package com.jhanantezana.jugueria.instore.web;
 
 import java.net.URI;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,12 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.instore.TicketType;
+import com.jhanantezana.jugueria.instore.internal.ClosedTicketFilter;
 import com.jhanantezana.jugueria.instore.internal.TicketCancellation;
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
@@ -29,6 +33,8 @@ import com.jhanantezana.jugueria.instore.internal.TicketService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.IdempotencyKeyHeader;
+import com.jhanantezana.jugueria.shared.PageRequests;
+import com.jhanantezana.jugueria.shared.PageResponse;
 import com.jhanantezana.jugueria.shared.RequestHash;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,6 +49,8 @@ class TicketController {
 	static final String IDEMPOTENCY_KEY = "Idempotency-Key";
 
 	private static final String FLOOR_STAFF = "hasAnyRole('SERVER', 'CASHIER', 'ADMIN')";
+
+	private static final String REGISTER_STAFF = "hasAnyRole('CASHIER', 'ADMIN')";
 
 	private final TicketService tickets;
 
@@ -71,8 +79,24 @@ class TicketController {
 
 	@GetMapping
 	@PreAuthorize(FLOOR_STAFF)
-	List<TicketSummaryResponse> listOpen() {
-		return tickets.listOpen().stream().map(TicketSummaryResponse::from).toList();
+	PageResponse<TicketSummaryResponse> listOpen(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "" + PageRequests.MAX_PAGE_SIZE) int size) {
+		return PageResponse.from(tickets.listOpen(PageRequests.of(page, size)), TicketSummaryResponse::from);
+	}
+
+	@GetMapping("/closed")
+	@PreAuthorize(REGISTER_STAFF)
+	@ApiErrors({ "instore.invalid-date-range" })
+	PageResponse<ClosedTicketSummaryResponse> listClosed(
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+			@RequestParam(required = false) @Nullable UUID cashierId,
+			@RequestParam(required = false) @Nullable UUID tableId,
+			@RequestParam(required = false) @Nullable TicketType type, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		var filter = new ClosedTicketFilter(from, to, cashierId, tableId, type);
+		return PageResponse.from(tickets.listClosed(filter, PageRequests.of(page, size)),
+				ClosedTicketSummaryResponse::from);
 	}
 
 	@GetMapping("/{id}")
@@ -187,6 +211,13 @@ class TicketController {
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
 	TicketResponse billRequested(@PathVariable UUID id, @Valid @RequestBody BillRequestedRequest request) {
 		return TicketResponse.from(placement.setBillRequested(id, request.requested()));
+	}
+
+	@PutMapping("/{id}/note")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
+	TicketResponse changeNote(@PathVariable UUID id, @Valid @RequestBody ChangeNoteRequest request) {
+		return TicketResponse.from(tickets.changeNote(id, request.note()));
 	}
 
 	@PostMapping("/{id}/cancel")
