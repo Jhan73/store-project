@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.catalog;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 public interface CatalogApi {
@@ -17,6 +18,9 @@ public interface CatalogApi {
 	PricedSelection priceSelection(UUID productId, List<UUID> optionIds);
 
 	boolean productExists(UUID productId);
+
+	/** The given products that cannot be sold right now: unknown, inactive, unavailable or in a hidden category. */
+	Set<UUID> notOnSale(Collection<UUID> productIds);
 
 	/** Whether the admin pinned the product as a frequent item, on sale or not; false for an unknown product. */
 	boolean isQuickSalePinned(UUID productId);

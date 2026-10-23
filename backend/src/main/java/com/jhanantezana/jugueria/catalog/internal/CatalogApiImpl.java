@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -43,6 +44,25 @@ class CatalogApiImpl implements CatalogApi {
 	@Transactional(readOnly = true)
 	public boolean productExists(UUID productId) {
 		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Set<UUID> notOnSale(Collection<UUID> productIds) {
+		var found = products.findAllById(productIds);
+		var activeCategories = categories.findAllById(found.stream().map(Product::getCategoryId).collect(Collectors.toSet()))
+			.stream()
+			.filter(Category::isActive)
+			.map(Category::getId)
+			.collect(Collectors.toSet());
+		var onSale = found.stream()
+			.filter(product -> product.isActive() && product.isAvailable()
+					&& activeCategories.contains(product.getCategoryId()))
+			.map(Product::getId)
+			.collect(Collectors.toSet());
+		var result = new HashSet<>(productIds);
+		result.removeAll(onSale);
+		return result;
 	}
 
 	@Override

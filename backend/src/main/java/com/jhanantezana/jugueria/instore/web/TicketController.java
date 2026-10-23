@@ -193,7 +193,7 @@ class TicketController {
 
 	@PostMapping("/{id}/send")
 	@PreAuthorize(FLOOR_STAFF)
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-product-unavailable" })
 	TicketResponse send(@PathVariable UUID id) {
 		return TicketResponse.from(sending.send(id));
 	}

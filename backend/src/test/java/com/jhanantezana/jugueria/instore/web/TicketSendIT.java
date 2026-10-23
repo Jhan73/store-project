@@ -104,6 +104,36 @@ class TicketSendIT {
 	}
 
 	@Test
+	void sendingRefusesAProductThatStoppedBeingOnSaleSinceItWasAddedAndKeepsTheLineUnsent() {
+		var line = addLine(juice.small(), 1, null, false);
+		jdbc.sql("update catalog.product set available = false where id = ?").param(juice.productId()).update();
+
+		var result = send(Role.SERVER);
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.line-product-unavailable");
+		assertThat(result).bodyJson().extractingPath("$.productIds").asList().containsExactly(juice.productId().toString());
+		assertThat(jdbc.sql("select state from instore.ticket_line where id = ?").param(line).query(String.class).single())
+			.isEqualTo("UNSENT");
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+	}
+
+	@Test
+	void sendingRefusesAProductDeactivatedOrWhoseCategoryWasHiddenSinceItWasAdded() {
+		addLine(juice.small(), 1, null, false);
+		jdbc.sql("update catalog.category set active = false where id = (select category_id from catalog.product where id = ?)")
+			.param(juice.productId())
+			.update();
+
+		assertThat(send(Role.SERVER)).hasStatus(HttpStatus.CONFLICT);
+
+		jdbc.sql("update catalog.category set active = true").update();
+		jdbc.sql("update catalog.product set active = false where id = ?").param(juice.productId()).update();
+		assertThat(send(Role.SERVER)).hasStatus(HttpStatus.CONFLICT);
+		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
+	}
+
+	@Test
 	void aCounterTicketAppearsOnTheBoardAsACounterOrderLabelledWithTheCustomer() {
 		var counter = UUID.fromString(idOf(open("{\"counterName\":\"Ana\"}")));
 		addLineTo(counter, juice.small(), 1, null, false);

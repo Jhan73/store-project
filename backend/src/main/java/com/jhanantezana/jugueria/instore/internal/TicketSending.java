@@ -3,12 +3,16 @@ package com.jhanantezana.jugueria.instore.internal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jhanantezana.jugueria.catalog.CatalogApi;
+import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.preparation.BoardChannel;
@@ -16,6 +20,7 @@ import com.jhanantezana.jugueria.preparation.BoardLineIntake;
 import com.jhanantezana.jugueria.preparation.BoardOrderIntake;
 import com.jhanantezana.jugueria.preparation.BoardSource;
 import com.jhanantezana.jugueria.preparation.PreparationApi;
+import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.Ids;
 
@@ -29,6 +34,8 @@ public class TicketSending {
 
 	private final PreparationApi preparation;
 
+	private final CatalogApi catalog;
+
 	private final ApplicationEventPublisher events;
 
 	private final CurrentActor currentActor;
@@ -36,10 +43,11 @@ public class TicketSending {
 	private final Clock clock;
 
 	TicketSending(Tickets tickets, TicketService ticketService, PreparationApi preparation,
-			ApplicationEventPublisher events, CurrentActor currentActor, Clock clock) {
+			CatalogApi catalog, ApplicationEventPublisher events, CurrentActor currentActor, Clock clock) {
 		this.tickets = tickets;
 		this.ticketService = ticketService;
 		this.preparation = preparation;
+		this.catalog = catalog;
 		this.events = events;
 		this.currentActor = currentActor;
 		this.clock = clock;
@@ -54,6 +62,7 @@ public class TicketSending {
 		if (lines.isEmpty()) {
 			return ticketService.view(ticket);
 		}
+		requireOnSale(lines);
 		var source = ticket.boardSourceId();
 		if (source == null) {
 			source = ticket.id();
@@ -67,6 +76,16 @@ public class TicketSending {
 		tickets.markSent(ticketId, lineIds, source, now);
 		events.publishEvent(new TicketLinesSent(ticketId, source, lineIds, currentActor.id(), currentActor.role(), now));
 		return ticketService.view(tickets.require(ticketId));
+	}
+
+	// The lines were priced when they were added; a product 86'd or hidden since must not reach the board.
+	private void requireOnSale(List<BoardLineIntake> lines) {
+		var gone = catalog.notOnSale(lines.stream().map(BoardLineIntake::productId).collect(Collectors.toSet()));
+		if (!gone.isEmpty()) {
+			throw new BusinessException(InstoreError.LINE_PRODUCT_UNAVAILABLE,
+					"A product on the ticket is not on sale anymore; remove its line before sending",
+					Map.of("productIds", gone.stream().map(UUID::toString).sorted().toList()));
+		}
 	}
 
 	private static BoardSource boardSource(Tickets.TicketRow ticket) {
