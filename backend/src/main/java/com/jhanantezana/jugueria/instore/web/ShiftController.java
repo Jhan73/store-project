@@ -132,8 +132,8 @@ class ShiftController {
 	@PreAuthorize(REGISTER_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
 	@ApiErrors({ "instore.shift-not-found", "instore.shift-closed", "instore.shift-closing", "instore.invalid-amount",
-			"instore.invalid-reason", "instore.invalid-cash-movement", "common.idempotency-key-required",
-			"common.idempotency-key-reused", "common.idempotency-in-progress" })
+			"instore.invalid-reason", "instore.invalid-cash-movement", "instore.cash-out-exceeds-drawer",
+			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<CashMovementResponse> recordMovement(@PathVariable UUID id,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
 			@Valid @RequestBody CashMovementRequest request) {

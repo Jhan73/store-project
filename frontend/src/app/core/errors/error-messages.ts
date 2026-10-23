@@ -82,6 +82,7 @@ export const ERROR_MESSAGES = {
   'instore.shift-closing': $localize`:@@error.instore.shift-closing:El turno se está cerrando y no admite más cambios.`,
   'instore.shift-not-found': $localize`:@@error.instore.shift-not-found:El turno de caja no existe.`,
   'instore.ticket-has-unsent-lines': $localize`:@@error.instore.ticket-has-unsent-lines:Envía o elimina las líneas pendientes antes de cobrar.`,
+  'instore.cash-out-exceeds-drawer': $localize`:@@error.instore.cash-out-exceeds-drawer:La salida es mayor que el efectivo que debería haber en caja. Explica el motivo en la nota.`,
   'instore.line-product-unavailable': $localize`:@@error.instore.line-product-unavailable:Un producto de la cuenta ya no está disponible. Elimina esa línea antes de enviar.`,
   'instore.product-not-quick-sale': $localize`:@@error.instore.product-not-quick-sale:Este producto no está en los frecuentes de venta rápida. Agrégalo a una cuenta.`,
   'instore.too-many-lines': $localize`:@@error.instore.too-many-lines:La cuenta alcanzó el máximo de 100 líneas. Cóbrala o divídela en otra cuenta.`,

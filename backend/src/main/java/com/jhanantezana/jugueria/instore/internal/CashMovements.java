@@ -73,6 +73,9 @@ public class CashMovements {
 			throw new BusinessException(InstoreError.INVALID_CASH_MOVEMENT, "The reference is too long");
 		}
 		var reason = type == CashMovementType.OUT ? requireOutReason(reasonCode, text) : requireInNote(reasonCode, text);
+		if (type == CashMovementType.OUT && text == null) {
+			requireDrawerCovers(shiftId, amount);
+		}
 		var now = Instant.now(clock);
 		var id = Ids.newId();
 		log.insert(id, shiftId, type, amount, reason, text, ref, actor, now);
@@ -96,6 +99,16 @@ public class CashMovements {
 			.filter(movement -> movement.id().equals(movementId))
 			.findFirst()
 			.orElseThrow(() -> new BusinessException(InstoreError.CASH_MOVEMENT_NOT_FOUND, "Cash movement not found"));
+	}
+
+	// Recorded sales lag behind the cash really in the drawer, so an excess is explained in a note, not refused.
+	private void requireDrawerCovers(UUID shiftId, Money amount) {
+		var row = shifts.find(shiftId).orElseThrow(ShiftService::notFound);
+		var inDrawer = ShiftReconciliation.expectedCash(row.floatMoney(), shifts.totals(shiftId, row.currency()));
+		if (amount.compareTo(inDrawer) > 0) {
+			throw new BusinessException(InstoreError.CASH_OUT_EXCEEDS_DRAWER,
+					"The cash out is above the cash the drawer should hold; explain it in the note");
+		}
 	}
 
 	private @Nullable String requireInNote(@Nullable String reasonCode, @Nullable String note) {

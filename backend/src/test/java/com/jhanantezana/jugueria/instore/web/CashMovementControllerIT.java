@@ -86,6 +86,28 @@ class CashMovementControllerIT {
 	}
 
 	@Test
+	void aCashOutAboveTheCashInTheDrawerNeedsANoteExplainingIt() {
+		var tooMuch = "\"amount\":{\"amount\":\"100.01\",\"currency\":\"PEN\"},\"reasonCode\":\"Supplier\"";
+
+		assertProblem(record(cashier, Role.CASHIER, UUID.randomUUID(), "{\"type\":\"OUT\"," + tooMuch + "}"),
+				HttpStatus.UNPROCESSABLE_CONTENT, "instore.cash-out-exceeds-drawer");
+		assertThat(movementCount()).isZero();
+		assertThat(record(cashier, Role.CASHIER, UUID.randomUUID(),
+				"{\"type\":\"OUT\"," + tooMuch + ",\"note\":\"Supplier waited, sales not rung up yet\"}"))
+			.hasStatus(HttpStatus.CREATED);
+		assertProblem(record(cashier, Role.CASHIER, UUID.randomUUID(),
+				"{\"type\":\"OUT\",\"amount\":{\"amount\":\"1.00\",\"currency\":\"PEN\"},\"reasonCode\":\"Supplier\"}"),
+				HttpStatus.UNPROCESSABLE_CONTENT, "instore.cash-out-exceeds-drawer");
+	}
+
+	@Test
+	void aCashOutUpToTheCashInTheDrawerNeedsNoNote() {
+		assertThat(record(cashier, Role.CASHIER, UUID.randomUUID(),
+				"{\"type\":\"OUT\",\"amount\":{\"amount\":\"100.00\",\"currency\":\"PEN\"},\"reasonCode\":\"Supplier\"}"))
+			.hasStatus(HttpStatus.CREATED);
+	}
+
+	@Test
 	void cashInNeedsANoteAndHasNoReasonList() {
 		var in = "{\"type\":\"IN\",\"amount\":{\"amount\":\"20.00\",\"currency\":\"PEN\"},\"note\":\"Change from the bank\"}";
 
