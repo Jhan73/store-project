@@ -124,7 +124,7 @@ class TicketController {
 	@PostMapping("/{id}/lines")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "catalog.product-not-found",
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.too-many-lines", "catalog.product-not-found",
 			"catalog.product-unavailable", "catalog.modifier-option-unavailable", "catalog.invalid-modifier-selection",
 			"catalog.price-currency-mismatch", "common.idempotency-key-required", "common.idempotency-key-reused",
 			"common.idempotency-in-progress" })
@@ -159,7 +159,7 @@ class TicketController {
 	@PostMapping("/{id}/repeat")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found",
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.too-many-lines",
 			"catalog.product-not-found", "catalog.product-unavailable", "catalog.modifier-option-unavailable",
 			"catalog.invalid-modifier-selection", "catalog.price-currency-mismatch", "common.idempotency-key-required",
 			"common.idempotency-key-reused", "common.idempotency-in-progress" })

@@ -357,6 +357,14 @@ class Tickets {
 			.orElseThrow(() -> new BusinessException(InstoreError.LINE_NOT_FOUND, "The ticket has no such line"));
 	}
 
+	/** The lines that still count on the bill or the board: everything but the voided ones. */
+	int liveLineCount(UUID ticketId) {
+		return jdbc.sql("SELECT count(*) FROM instore.ticket_line WHERE ticket_id = :id AND state <> 'VOIDED'")
+			.param("id", ticketId)
+			.query(Integer.class)
+			.single();
+	}
+
 	int nextPosition(UUID ticketId) {
 		return jdbc.sql("SELECT coalesce(max(position) + 1, 0) FROM instore.ticket_line WHERE ticket_id = :id")
 			.param("id", ticketId)

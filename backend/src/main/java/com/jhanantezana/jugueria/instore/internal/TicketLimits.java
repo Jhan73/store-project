@@ -11,6 +11,8 @@ public final class TicketLimits {
 
 	public static final int MAX_QUANTITY = 99;
 
+	public static final int MAX_LINES = 100;
+
 	public static final int MAX_OPTIONS = 30;
 
 	public static final int MAX_REPEATED_LINES = 50;
