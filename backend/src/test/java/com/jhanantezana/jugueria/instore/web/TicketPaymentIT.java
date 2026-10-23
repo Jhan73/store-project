@@ -501,22 +501,60 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void anAdminVoidsWithNoDrawerOnceThePaymentsShiftIsClosed() {
+	void anAdminPaysTheCashOfAClosedShiftBackOutOfTheirOwnOpenShift() {
 		sentLine(juice.small());
 		sentLine(juice.small());
 		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		closeCashiersShift();
+		var admin = UUID.randomUUID();
+		var adminShift = openShift(admin, "10.00");
+
+		assertThat(voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidShift(payment)).isEqualTo(UUID.fromString(adminShift));
+		var closed = mvc.post()
+			.uri(SHIFTS + "/" + adminShift + "/close")
+			.with(AuthenticatedAs.user(admin, Role.ADMIN))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"5.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+		assertThat(closed).bodyJson().extractingPath("$.expectedCash.amount").isEqualTo("5.00");
+		assertThat(closed).bodyJson().extractingPath("$.totals.voidedCash.amount").isEqualTo("5.00");
+	}
+
+	@Test
+	void anAdminWithNoOpenShiftCannotPayBackTheCashOfAClosedShift() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		closeCashiersShift();
+
+		var result = voidPayment(payment, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN);
+
+		assertProblem(result, HttpStatus.CONFLICT, "instore.no-open-shift");
+		assertThat(voidCount(payment)).isZero();
+		assertThat(events.stream(PaymentVoided.class)).isEmpty();
+	}
+
+	@Test
+	void anAdminVoidsANonCashPaymentOfAClosedShiftWithNoDrawer() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CARD", "5.00", null), 0);
+		closeCashiersShift();
+
+		assertThat(voidPayment(payment, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidShift(payment)).isNull();
+	}
+
+	private void closeCashiersShift() {
 		mvc.post()
 			.uri(SHIFTS + "/" + shift + "/close")
 			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"countedCash\":{\"amount\":\"105.00\",\"currency\":\"PEN\"}}")
 			.exchange();
-		var admin = UUID.randomUUID();
-		openShift(admin, "10.00");
-
-		assertThat(voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN)).hasStatusOk();
-
-		assertThat(voidShift(payment)).isNull();
 	}
 
 	@Test
