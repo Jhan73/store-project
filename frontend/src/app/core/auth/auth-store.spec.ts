@@ -258,13 +258,48 @@ describe('AuthStore', () => {
       expect(store.isAuthenticated()).toBe(false);
     });
 
-    it('clears the session even when the server cannot be reached', async () => {
+    it('keeps the session and reports it when the server cannot be reached', async () => {
       await signIn();
 
       const done = store.logout();
       http.expectOne(LOGOUT).error(new ProgressEvent('error'));
-      await done;
 
+      expect(await done).toBe(false);
+      expect(store.isAuthenticated()).toBe(true);
+      expect(store.hasEnded()).toBe(false);
+    });
+
+    it('keeps the session when the server fails the sign out', async () => {
+      await signIn();
+
+      const done = store.logout();
+      http.expectOne(LOGOUT).flush(null, { status: 503, statusText: 'Unavailable' });
+
+      expect(await done).toBe(false);
+      expect(store.isAuthenticated()).toBe(true);
+    });
+
+    it('signs out for good on a retry after a failure', async () => {
+      await signIn();
+      const failed = store.logout();
+      http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+      await failed;
+
+      const retry = store.logout();
+      http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+
+      expect(await retry).toBe(true);
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.hasEnded()).toBe(true);
+    });
+
+    it('counts a rejected cookie as signed out', async () => {
+      await signIn();
+
+      const done = store.logout();
+      http.expectOne(LOGOUT).flush(null, UNAUTHORIZED);
+
+      expect(await done).toBe(true);
       expect(store.isAuthenticated()).toBe(false);
     });
   });

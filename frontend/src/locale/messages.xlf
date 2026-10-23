@@ -8053,6 +8053,14 @@
         <source>Anular este pago con el motivo elegido</source>
       </segment>
     </unit>
+    <unit id="shell.logout.failed">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-layout.ts:48</note>
+      </notes>
+      <segment>
+        <source>No se pudo cerrar la sesión. Inténtalo de nuevo.</source>
+      </segment>
+    </unit>
     <unit id="workspace.nav.staff">
       <notes>
         <note category="location">src/app/features/workspace/workspace-nav.ts:28</note>

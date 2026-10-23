@@ -84,17 +84,21 @@ export class AuthStore {
     return this.inFlight;
   }
 
-  async logout(): Promise<void> {
+  // False when the server could not revoke the cookie: the session stays, because dropping it locally
+  // would let the next restore reopen it on a shared device.
+  async logout(): Promise<boolean> {
     this.generation++;
-    this.ended = true;
-    this.restoration = Promise.resolve();
     try {
       await firstValueFrom(this.api.logout());
-    } catch {
-      // The local session ends either way; the refresh cookie expires on its own.
-    } finally {
-      this.state.set(null);
+    } catch (error) {
+      if (!isRejection(error)) {
+        return false;
+      }
     }
+    this.ended = true;
+    this.restoration = Promise.resolve();
+    this.state.set(null);
+    return true;
   }
 
   private async requestRefresh(): Promise<RefreshOutcome> {

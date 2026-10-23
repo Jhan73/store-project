@@ -521,4 +521,18 @@ describe('staff and admin area', () => {
     expect(TestBed.inject(AuthStore).isAuthenticated()).toBe(false);
     expect(url()).toBe('/login');
   });
+
+  it('stays signed in and says so when the sign out cannot reach the server', async () => {
+    await signInAs('ADMIN');
+    await harness.navigateByUrl('/admin');
+    const added = vi.spyOn(TestBed.inject(MessageService), 'add');
+
+    page().querySelector<HTMLButtonElement>('button[data-testid="logout"]')!.click();
+    http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(AuthStore).isAuthenticated()).toBe(true);
+    expect(url()).not.toBe('/login');
+    expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+  });
 });

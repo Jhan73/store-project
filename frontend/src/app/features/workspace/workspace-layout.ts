@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { AuthStore } from '../../core/auth/auth-store';
 import { roleLabel } from '../../core/auth/role-label';
@@ -33,6 +34,7 @@ import { navFor } from './workspace-nav';
 export class WorkspaceLayout {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
+  private readonly messages = inject(MessageService);
   protected readonly theme = inject(ThemeStore);
   protected readonly sidebar = inject(SidebarStore);
 
@@ -40,7 +42,13 @@ export class WorkspaceLayout {
   protected readonly role = computed(() => roleLabel(this.auth.role()));
 
   protected async signOut(): Promise<void> {
-    await this.auth.logout();
+    if (!(await this.auth.logout())) {
+      this.messages.add({
+        severity: 'error',
+        summary: $localize`:@@shell.logout.failed:No se pudo cerrar la sesión. Inténtalo de nuevo.`,
+      });
+      return;
+    }
     await this.router.navigateByUrl('/login');
   }
 }
