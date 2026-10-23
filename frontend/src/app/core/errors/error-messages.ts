@@ -104,6 +104,7 @@ export const ERROR_MESSAGES = {
   'inventory.stock-reserved': $localize`:@@error.inventory.stock-reserved:Hay unidades reservadas por pedidos en curso. Espera a que se confirmen o venzan para quitar el control de stock.`,
   'preparation.line-already-flagged': $localize`:@@error.preparation.line-already-flagged:Esa línea ya está marcada como agotada.`,
   'preparation.line-already-ready': $localize`:@@error.preparation.line-already-ready:La línea ya está lista. Pide a un cajero que la anule.`,
+  'preparation.line-comped': $localize`:@@error.preparation.line-comped:La línea es una cortesía y no se puede marcar como agotada.`,
   'preparation.line-flagged-unavailable': $localize`:@@error.preparation.line-flagged-unavailable:Hay una línea agotada sin resolver. Anúlala o sustitúyela antes de continuar.`,
   'preparation.line-not-found': $localize`:@@error.preparation.line-not-found:La línea no existe.`,
   'preparation.line-not-pending': $localize`:@@error.preparation.line-not-pending:La línea ya no está pendiente.`,

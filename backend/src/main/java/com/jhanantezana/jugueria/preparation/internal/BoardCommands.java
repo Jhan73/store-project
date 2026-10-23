@@ -196,10 +196,13 @@ public class BoardCommands {
 			.orElseThrow(() -> store.rejection(orderId, status -> PreparationError.LINE_NOT_PENDING));
 		var sourceLine = jdbc.sql("""
 				UPDATE preparation.board_line SET flagged_unavailable = true, version = version + 1, updated_at = :now
-				WHERE id = :id AND state = 'PENDING' AND NOT flagged_unavailable
+				WHERE id = :id AND state = 'PENDING' AND NOT flagged_unavailable AND NOT comped
 				RETURNING source_line_id
 				""").param("now", utc(now)).param("id", lineId).query(UUID.class).optional();
 		if (sourceLine.isEmpty()) {
+			if (isComped(lineId)) {
+				throw new BusinessException(PreparationError.LINE_COMPED, "Board line " + lineId + " is comped");
+			}
 			throw lineRejection(lineId, PreparationError.LINE_ALREADY_FLAGGED);
 		}
 		events.publishEvent(new LineFlaggedUnavailable(orderId, lineId, sourceLine.get(), order.source(),
@@ -244,6 +247,13 @@ public class BoardCommands {
 				""").param("id", lineId).query(Boolean.class).single();
 		return pendingAndFlagged ? new BusinessException(whenFlagged, "Board line " + lineId + " is flagged unavailable")
 				: new BusinessException(PreparationError.LINE_NOT_PENDING, "Board line " + lineId + " is not pending");
+	}
+
+	private boolean isComped(UUID lineId) {
+		return jdbc.sql("SELECT comped FROM preparation.board_line WHERE id = :id")
+			.param("id", lineId)
+			.query(Boolean.class)
+			.single();
 	}
 
 	private record LineIds(UUID id, UUID sourceId) {

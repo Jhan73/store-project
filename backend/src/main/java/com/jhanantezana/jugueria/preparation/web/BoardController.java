@@ -101,7 +101,7 @@ class BoardController {
 	@PostMapping("/lines/{id}/flag")
 	@PreAuthorize(STAFF)
 	@ApiErrors({ "preparation.line-not-found", "preparation.order-cancelled", "preparation.line-not-pending",
-			"preparation.line-already-flagged" })
+			"preparation.line-already-flagged", "preparation.line-comped" })
 	BoardOrderResponse flagLine(@PathVariable UUID id) {
 		return BoardOrderResponse.from(commands.flagLine(id));
 	}
