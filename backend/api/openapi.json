@@ -12910,6 +12910,9 @@
           "allergy" : {
             "type" : "boolean"
           },
+          "comped" : {
+            "type" : "boolean"
+          },
           "displayName" : {
             "type" : "string"
           },
@@ -12944,7 +12947,7 @@
           },
           "state" : {
             "type" : "string",
-            "enum" : [ "PENDING", "READY", "VOIDED", "COMPED" ]
+            "enum" : [ "PENDING", "READY", "VOIDED" ]
           },
           "stationId" : {
             "type" : [ "string", "null" ],
@@ -12954,7 +12957,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "allergy", "displayName", "flaggedUnavailable", "id", "modifiersText", "note", "productId", "quantity", "readyAt", "sourceLineId", "state", "stationId", "waste" ]
+        "required" : [ "allergy", "comped", "displayName", "flaggedUnavailable", "id", "modifiersText", "note", "productId", "quantity", "readyAt", "sourceLineId", "state", "stationId", "waste" ]
       },
       "BoardOrderResponse" : {
         "type" : "object",

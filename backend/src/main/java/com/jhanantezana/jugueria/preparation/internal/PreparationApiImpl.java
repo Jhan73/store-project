@@ -185,38 +185,42 @@ class PreparationApiImpl implements PreparationApi {
 	public void compLine(BoardSource source, UUID sourceId, UUID sourceLineId) {
 		var now = Instant.now(clock);
 		var order = requireOrder(source, sourceId);
-		var line = jdbc.sql("""
-				SELECT id, state, waste FROM preparation.board_line
-				WHERE board_order_id = :order AND source_line_id = :sourceLine
+		var lineId = jdbc.sql("""
+				SELECT id FROM preparation.board_line WHERE board_order_id = :order AND source_line_id = :sourceLine
 				""")
 			.param("order", order.id())
 			.param("sourceLine", sourceLineId)
-			.query((rs, row) -> new LineRef(rs.getObject("id", UUID.class), rs.getString("state"), rs.getBoolean("waste")))
+			.query(UUID.class)
 			.optional()
 			.orElseThrow(() -> new BusinessException(PreparationError.LINE_NOT_FOUND, "The board line does not exist"));
-		if ("COMPED".equals(line.state())) {
+		if (isComped(lineId)) {
 			return;
 		}
-		var locked = store.lock(order.id(), now, WAITING, PREPARING, READY, HANDED_OVER).orElse(null);
-		if (locked == null) {
-			if ("COMPED".equals(lineRef(line.id()).state())) {
+		if (store.lock(order.id(), now, WAITING, PREPARING, READY, HANDED_OVER).isEmpty()) {
+			if (isComped(lineId)) {
 				return;
 			}
 			throw store.rejection(order.id(), status -> PreparationError.ORDER_CLOSED);
 		}
 		var comped = jdbc.sql("""
-				UPDATE preparation.board_line SET state = 'COMPED', waste = true, version = version + 1, updated_at = :now
-				WHERE id = :id AND state IN ('PENDING', 'READY')
-				""").param("now", utc(now)).param("id", line.id()).update();
+				UPDATE preparation.board_line SET comped = true, waste = true, version = version + 1, updated_at = :now
+				WHERE id = :id AND NOT comped AND state IN ('PENDING', 'READY')
+				""").param("now", utc(now)).param("id", lineId).update();
 		if (comped == 0) {
-			var current = lineRef(line.id());
-			if ("COMPED".equals(current.state())) {
+			if (isComped(lineId)) {
 				return;
 			}
-			throw new BusinessException(PreparationError.LINE_NOT_PENDING, "Board line " + line.id() + " is " + current.state());
+			throw new BusinessException(PreparationError.LINE_NOT_PENDING,
+					"Board line " + lineId + " is " + lineRef(lineId).state());
 		}
-		boardEvents.changed("LINE_COMPED", order.id(), line.id(), now);
-		settle(order.id(), source, sourceId, locked.status(), now);
+		boardEvents.changed("LINE_COMPED", order.id(), lineId, now);
+	}
+
+	private boolean isComped(UUID lineId) {
+		return jdbc.sql("SELECT comped FROM preparation.board_line WHERE id = :id")
+			.param("id", lineId)
+			.query(Boolean.class)
+			.single();
 	}
 
 	@Override

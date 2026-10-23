@@ -10,12 +10,12 @@ import com.jhanantezana.jugueria.preparation.internal.BoardLineView;
 
 record BoardLineResponse(UUID id, UUID sourceLineId, UUID productId, String displayName, int quantity, @Nullable String modifiersText,
 		@Nullable String note, boolean allergy, @Nullable UUID stationId, BoardLineState state, boolean waste,
-		boolean flaggedUnavailable, @Nullable Instant readyAt) {
+		boolean comped, boolean flaggedUnavailable, @Nullable Instant readyAt) {
 
 	static BoardLineResponse from(BoardLineView line) {
 		return new BoardLineResponse(line.id(), line.sourceLineId(), line.productId(), line.displayName(), line.quantity(),
 				line.modifiersText(), line.note(), line.allergy(), line.stationId(), line.state(), line.waste(),
-				line.flaggedUnavailable(), line.readyAt());
+				line.comped(), line.flaggedUnavailable(), line.readyAt());
 	}
 
 }

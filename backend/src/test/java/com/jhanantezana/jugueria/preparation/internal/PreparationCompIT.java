@@ -16,6 +16,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.preparation.BoardChanged;
+import com.jhanantezana.jugueria.preparation.BoardLineState;
 import com.jhanantezana.jugueria.preparation.OrderReady;
 import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.preparation.PreparationError;
@@ -33,6 +34,9 @@ class PreparationCompIT {
 
 	@Autowired
 	BoardCommands commands;
+
+	@Autowired
+	BoardQueries queries;
 
 	@Autowired
 	JdbcClient jdbc;
@@ -56,14 +60,15 @@ class PreparationCompIT {
 
 		preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId());
 
-		assertThat(PreparationTables.lineState(jdbc, line)).isEqualTo("COMPED");
+		assertThat(PreparationTables.lineState(jdbc, line)).isEqualTo("READY");
+		assertThat(comped(line)).isTrue();
 		assertThat(waste(line)).isTrue();
 		assertThat(PreparationTables.markers(jdbc, order)).containsExactly("NEW*");
 		assertThat(events.stream(BoardChanged.class).map(BoardChanged::type)).contains("LINE_COMPED");
 	}
 
 	@Test
-	void compingAPendingLineIsAllowedAndCountsAsWaste() {
+	void compingAPendingLineKeepsItPendingAndCountsAsWaste() {
 		var first = aLine();
 		var intake = anOrder(first, aLine());
 		var order = preparation.accept(intake);
@@ -71,12 +76,32 @@ class PreparationCompIT {
 		preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId());
 
 		var line = PreparationTables.lineIdOf(jdbc, order, first.sourceLineId());
-		assertThat(PreparationTables.lineState(jdbc, line)).isEqualTo("COMPED");
+		assertThat(PreparationTables.lineState(jdbc, line)).isEqualTo("PENDING");
+		assertThat(comped(line)).isTrue();
 		assertThat(waste(line)).isTrue();
 	}
 
 	@Test
-	void compingTheLastPendingLineOfAPreparingOrderMakesItReady() {
+	void aCompedPendingLineIsStillPreparedAndCountedAllDay() {
+		var first = aLine();
+		var intake = anOrder(first);
+		var order = preparation.accept(intake);
+		preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId());
+
+		assertThat(queries.allDay(null).groups()).extracting(group -> group.quantity()).containsExactly(first.quantity());
+		assertThat(queries.card(order).lines()).singleElement().satisfies(line -> {
+			assertThat(line.comped()).isTrue();
+			assertThat(line.state()).isEqualTo(BoardLineState.PENDING);
+		});
+		commands.start(order);
+		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, first.sourceLineId()));
+
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("READY");
+		assertThat(queries.allDay(null).groups()).isEmpty();
+	}
+
+	@Test
+	void compingTheLastPendingLineDoesNotReadyTheOrder() {
 		var pending = aLine();
 		var done = aLine();
 		var intake = anOrder(done, pending);
@@ -86,19 +111,21 @@ class PreparationCompIT {
 
 		preparation.compLine(intake.source(), intake.sourceId(), pending.sourceLineId());
 
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
+		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, pending.sourceLineId()));
 		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("READY");
 		assertThat(events.stream(OrderReady.class)).hasSize(1);
 	}
 
 	@Test
-	void compingTheOnlyLiveLineCancelsTheOrder() {
+	void compingTheOnlyLineKeepsTheOrderToPrepare() {
 		var only = aLine();
 		var intake = anOrder(only);
 		var order = preparation.accept(intake);
 
 		preparation.compLine(intake.source(), intake.sourceId(), only.sourceLineId());
 
-		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("CANCELLED");
+		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("WAITING");
 	}
 
 	@Test
@@ -113,8 +140,7 @@ class PreparationCompIT {
 
 		assertThat(events.stream(BoardChanged.class).filter(change -> change.type().equals("LINE_COMPED")).count())
 			.isEqualTo(changes);
-		assertThat(PreparationTables.lineState(jdbc, PreparationTables.lineIdOf(jdbc, order, first.sourceLineId())))
-			.isEqualTo("COMPED");
+		assertThat(comped(PreparationTables.lineIdOf(jdbc, order, first.sourceLineId()))).isTrue();
 	}
 
 	@Test
@@ -128,8 +154,7 @@ class PreparationCompIT {
 
 		preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId());
 
-		assertThat(PreparationTables.lineState(jdbc, PreparationTables.lineIdOf(jdbc, order, first.sourceLineId())))
-			.isEqualTo("COMPED");
+		assertThat(comped(PreparationTables.lineIdOf(jdbc, order, first.sourceLineId()))).isTrue();
 		assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("HANDED_OVER");
 	}
 
@@ -165,6 +190,13 @@ class PreparationCompIT {
 		assertThatThrownBy(() -> preparation.compLine(intake.source(), intake.sourceId(), java.util.UUID.randomUUID()))
 			.isInstanceOfSatisfying(BusinessException.class,
 					e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_NOT_FOUND));
+	}
+
+	private boolean comped(java.util.UUID line) {
+		return jdbc.sql("select comped from preparation.board_line where id = ?")
+			.param(line)
+			.query(Boolean.class)
+			.single();
 	}
 
 	private boolean waste(java.util.UUID line) {

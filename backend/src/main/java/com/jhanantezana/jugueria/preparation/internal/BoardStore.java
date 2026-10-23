@@ -226,7 +226,7 @@ class BoardStore {
 	private Map<UUID, List<BoardLineView>> lines(Collection<UUID> orderIds, @Nullable UUID station) {
 		var sql = """
 				SELECT id, board_order_id, source_line_id, product_id, display_name, quantity, modifiers_text, note, allergy, station_id,
-					state, waste, flagged_unavailable, ready_at
+					state, waste, comped, flagged_unavailable, ready_at
 				FROM preparation.board_line WHERE board_order_id IN (:ids)
 				""" + (station == null ? "" : " AND station_id = :station") + " ORDER BY board_order_id, position";
 		var query = jdbc.sql(sql).param("ids", orderIds);
@@ -277,7 +277,7 @@ class BoardStore {
 				rs.getString("display_name"), rs.getInt("quantity"), rs.getString("modifiers_text"),
 				rs.getString("note"), rs.getBoolean("allergy"), rs.getObject("station_id", UUID.class),
 				BoardLineState.valueOf(rs.getString("state")), rs.getBoolean("waste"),
-				rs.getBoolean("flagged_unavailable"), instant(rs, "ready_at"));
+				rs.getBoolean("comped"), rs.getBoolean("flagged_unavailable"), instant(rs, "ready_at"));
 	}
 
 	private static MarkerView marker(ResultSet rs) throws SQLException {

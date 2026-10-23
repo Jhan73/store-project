@@ -1504,6 +1504,7 @@ export interface components {
         };
         BoardLineResponse: {
             allergy: boolean;
+            comped: boolean;
             displayName: string;
             flaggedUnavailable: boolean;
             /** Format: uuid */
@@ -1519,7 +1520,7 @@ export interface components {
             /** Format: uuid */
             sourceLineId: string;
             /** @enum {string} */
-            state: "PENDING" | "READY" | "VOIDED" | "COMPED";
+            state: "PENDING" | "READY" | "VOIDED";
             /** Format: uuid */
             stationId: string | null;
             waste: boolean;

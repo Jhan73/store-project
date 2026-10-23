@@ -97,7 +97,11 @@ class TicketCompIT {
 			.containsExactly("Staff meal");
 		assertThat(result).bodyJson().extractingPath("$.lines[?(@.id=='" + line + "')].compNote").asList()
 			.containsExactly("Cook's lunch");
-		assertThat(PreparationTables.lineState(jdbc, boardLine(line))).isEqualTo("COMPED");
+		assertThat(PreparationTables.lineState(jdbc, boardLine(line))).isEqualTo("PENDING");
+		assertThat(jdbc.sql("select comped from preparation.board_line where id = ?")
+			.param(boardLine(line))
+			.query(Boolean.class)
+			.single()).isTrue();
 		assertThat(PreparationTables.lineState(jdbc, boardLine(kept))).isEqualTo("PENDING");
 		assertThat(events.stream(TicketLineComped.class)).singleElement().satisfies(comped -> {
 			assertThat(comped.ticketId()).isEqualTo(ticket);
@@ -158,7 +162,7 @@ class TicketCompIT {
 
 		assertThat(comp(line, STAFF_MEAL, Role.CASHIER)).hasStatusOk();
 
-		assertThat(PreparationTables.lineState(jdbc, boardLine(line))).isEqualTo("COMPED");
+		assertThat(PreparationTables.lineState(jdbc, boardLine(line))).isEqualTo("READY");
 	}
 
 	@Test
