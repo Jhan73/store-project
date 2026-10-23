@@ -204,16 +204,27 @@ class PreparationApiImpl implements PreparationApi {
 		}
 		var comped = jdbc.sql("""
 				UPDATE preparation.board_line SET comped = true, waste = true, version = version + 1, updated_at = :now
-				WHERE id = :id AND NOT comped AND state IN ('PENDING', 'READY')
+				WHERE id = :id AND NOT comped AND NOT flagged_unavailable AND state IN ('PENDING', 'READY')
 				""").param("now", utc(now)).param("id", lineId).update();
 		if (comped == 0) {
 			if (isComped(lineId)) {
 				return;
 			}
+			if (isFlagged(lineId)) {
+				throw new BusinessException(PreparationError.LINE_FLAGGED_UNAVAILABLE,
+						"Board line " + lineId + " is flagged unavailable");
+			}
 			throw new BusinessException(PreparationError.LINE_NOT_PENDING,
 					"Board line " + lineId + " is " + lineRef(lineId).state());
 		}
 		boardEvents.changed("LINE_COMPED", order.id(), lineId, now);
+	}
+
+	private boolean isFlagged(UUID lineId) {
+		return jdbc.sql("SELECT flagged_unavailable AND state = 'PENDING' FROM preparation.board_line WHERE id = :id")
+			.param("id", lineId)
+			.query(Boolean.class)
+			.single();
 	}
 
 	private boolean isComped(UUID lineId) {

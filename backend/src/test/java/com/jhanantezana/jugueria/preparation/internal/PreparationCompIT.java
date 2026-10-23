@@ -171,6 +171,24 @@ class PreparationCompIT {
 	}
 
 	@Test
+	void aFlaggedLineCannotBeCompedButCanStillBeVoided() {
+		var first = aLine();
+		var intake = anOrder(first, aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		var line = PreparationTables.lineIdOf(jdbc, order, first.sourceLineId());
+		commands.flagLine(line);
+
+		assertThatThrownBy(() -> preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId()))
+			.isInstanceOfSatisfying(BusinessException.class,
+					e -> assertThat(e.errorCode()).isEqualTo(PreparationError.LINE_FLAGGED_UNAVAILABLE));
+		assertThat(comped(line)).isFalse();
+
+		preparation.voidLine(intake.source(), intake.sourceId(), first.sourceLineId(), VoidMode.PENDING_ONLY);
+		assertThat(PreparationTables.lineState(jdbc, line)).isEqualTo("VOIDED");
+	}
+
+	@Test
 	void aCancelledCardRejectsAComp() {
 		var first = aLine();
 		var intake = anOrder(first);

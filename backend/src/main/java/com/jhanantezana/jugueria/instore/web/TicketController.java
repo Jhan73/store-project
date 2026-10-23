@@ -201,7 +201,8 @@ class TicketController {
 	@PreAuthorize(REGISTER_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
 			"instore.line-voided", "instore.line-covered-by-payment", "instore.invalid-reason",
-			"preparation.line-not-found", "preparation.line-not-pending", "preparation.order-closed",
+			"preparation.line-not-found", "preparation.line-not-pending", "preparation.line-flagged-unavailable",
+				"preparation.order-closed",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> compLine(@PathVariable UUID id, @PathVariable UUID lineId,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,

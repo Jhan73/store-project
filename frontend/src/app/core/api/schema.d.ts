@@ -10875,7 +10875,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: common.idempotency-in-progress, instore.line-covered-by-payment, instore.ticket-closed, preparation.line-not-pending, preparation.order-closed */
+            /** @description Conflict. Error codes: common.idempotency-in-progress, instore.line-covered-by-payment, instore.ticket-closed, preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.order-closed */
             409: {
                 headers: {
                     [name: string]: unknown;
