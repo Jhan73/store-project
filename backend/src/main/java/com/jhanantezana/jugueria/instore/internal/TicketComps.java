@@ -91,7 +91,8 @@ public class TicketComps {
 		inventory.recordWaste(lineId, List.of(new StockLine(line.productId(), line.quantity())));
 		var closed = settlement.isSettled(ticket);
 		events.publishEvent(new TicketLineComped(ticketId, lineId, line.productId(), line.quantity(), reason, text, actor,
-				role, now, line.lineTotal(), closed));
+				role, now, line.lineTotal(), closed, ticket.type(), ticket.quickSale(), line.productName(), line.unitPrice(),
+				line.modifiers().stream().map(ChosenOption::name).toList()));
 		if (closed) {
 			settlement.close(ticket, now);
 		}

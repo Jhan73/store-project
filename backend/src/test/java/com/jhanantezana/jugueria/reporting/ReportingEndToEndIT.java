@@ -70,6 +70,43 @@ class ReportingEndToEndIT {
 		});
 	}
 
+	@Test
+	void aCompedLineLeavesAZeroValueSalesLineAndAnExceptionAndTheRestIsSold() throws Exception {
+		InstoreTables.aCompReason(jdbc, "Staff meal");
+		var juice = InstoreTables.aSizedProduct(jdbc);
+		post("/api/v1/shifts", "{\"openingFloat\":{\"amount\":\"100.00\",\"currency\":\"PEN\"}}");
+		var ticket = id(post("/api/v1/tickets", "{\"counterName\":\"Ana\"}"));
+		var line = "{\"productId\":\"%s\",\"modifierOptionIds\":[\"%s\"],\"quantity\":1,\"note\":null,\"allergy\":false}"
+			.formatted(juice.productId(), juice.small());
+		post("/api/v1/tickets/" + ticket + "/lines", line);
+		post("/api/v1/tickets/" + ticket + "/lines", line);
+		post("/api/v1/tickets/" + ticket + "/send", "");
+		var comped = jdbc.sql("select id from instore.ticket_line where ticket_id = ? order by position limit 1")
+			.param(UUID.fromString(ticket))
+			.query(UUID.class)
+			.single();
+		post("/api/v1/tickets/" + ticket + "/lines/" + comped + "/comp", "{\"reason\":\"Staff meal\"}");
+		post("/api/v1/tickets/" + ticket + "/payments",
+				"{\"method\":\"CARD\",\"amount\":{\"amount\":\"5.00\",\"currency\":\"PEN\"}}");
+
+		await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+			assertThat(jdbc.sql("select line_total_amount from reporting.sales_line where ticket_id = ? order by line_total_amount")
+				.param(UUID.fromString(ticket))
+				.query(java.math.BigDecimal.class)
+				.list()).usingElementComparator(java.math.BigDecimal::compareTo)
+				.containsExactly(new java.math.BigDecimal("0.00"), new java.math.BigDecimal("5.00"));
+			assertThat(jdbc.sql("select comped from reporting.sales_line where ticket_id = ? and line_id = ?")
+				.param(UUID.fromString(ticket))
+				.param(comped)
+				.query(Boolean.class)
+				.single()).isTrue();
+			assertThat(jdbc.sql("select type from reporting.exception_event where ticket_id = ?")
+				.param(UUID.fromString(ticket))
+				.query(String.class)
+				.list()).containsExactly("COMP");
+		});
+	}
+
 	private String post(String uri, String body) throws Exception {
 		var result = mvc.post()
 			.uri(uri)

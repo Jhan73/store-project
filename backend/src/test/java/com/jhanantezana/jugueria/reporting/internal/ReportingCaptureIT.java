@@ -30,6 +30,7 @@ import com.jhanantezana.jugueria.instore.ShiftClosed;
 import com.jhanantezana.jugueria.instore.ShiftOpened;
 import com.jhanantezana.jugueria.instore.ShiftTotals;
 import com.jhanantezana.jugueria.instore.SoldLine;
+import com.jhanantezana.jugueria.instore.TicketLineComped;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.shared.Money;
@@ -159,6 +160,62 @@ class ReportingCaptureIT {
 	}
 
 	@Test
+	void aCompedLineIsAZeroValueSalesLineFlaggedCompedAndWaste() {
+		var product = InventoryTables.aProduct(jdbc);
+		var ticket = UUID.randomUUID();
+		var line = UUID.randomUUID();
+
+		publish(comped(ticket, line, product, 2, "Staff meal"));
+
+		await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
+			var rows = jdbc.sql("select * from reporting.sales_line where ticket_id = ?").param(ticket).query().listOfRows();
+			assertThat(rows).singleElement().satisfies(row -> {
+				assertThat(row).containsEntry("line_id", line)
+					.containsEntry("source_id", ticket)
+					.containsEntry("product_id", product)
+					.containsEntry("quantity", 2)
+					.containsEntry("comped", true)
+					.containsEntry("waste", true)
+					.containsEntry("voided", false)
+					.containsEntry("ticket_type", "TABLE")
+					.containsEntry("employee_id", cashier);
+				assertThat(row.get("line_total_amount")).isEqualTo(new BigDecimal("0.00"));
+				assertThat(row.get("unit_price_amount")).isEqualTo(new BigDecimal("5.00"));
+				assertThat(row.get("category_id")).isNotNull();
+				assertThat(row.get("business_date").toString()).isEqualTo("2026-10-12");
+			});
+		});
+	}
+
+	@Test
+	void aCompIsAnExceptionWithItsReasonEmployeeAndAmount() {
+		var line = UUID.randomUUID();
+
+		publish(comped(UUID.randomUUID(), line, UUID.randomUUID(), 2, "Staff meal"));
+
+		await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> assertThat(exceptionTypes(line)).containsExactly("COMP"));
+		var row = jdbc.sql("select * from reporting.exception_event where source_id = ?").param(line).query().singleRow();
+		assertThat(row).containsEntry("employee_id", cashier).containsEntry("reason_code", "Staff meal");
+		assertThat(row.get("amount_amount")).isEqualTo(new BigDecimal("10.00"));
+		assertThat(row).containsEntry("currency", "PEN");
+	}
+
+	@Test
+	void aRedeliveredCompAddsNoSecondRow() {
+		var ticket = UUID.randomUUID();
+		var line = UUID.randomUUID();
+		var comp = comped(ticket, line, UUID.randomUUID(), 1, "Staff meal");
+
+		publish(comp);
+		publish(comp);
+
+		await().during(Duration.ofSeconds(3)).atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
+			assertThat(count("sales_line", "ticket_id", ticket)).isEqualTo(1);
+			assertThat(exceptionTypes(line)).containsExactly("COMP");
+		});
+	}
+
+	@Test
 	void aSaleVoidCountsOnceAndItsPaymentVoidsAreNotCountedAgain() {
 		var saleVoid = UUID.randomUUID();
 		var inSale = UUID.randomUUID();
@@ -249,6 +306,12 @@ class ReportingCaptureIT {
 			.singleRow();
 		assertThat(row).containsEntry("employee_id", cashier).containsEntry("shift_id", short_);
 		assertThat(row.get("amount_amount")).isEqualTo(new BigDecimal("-5.00"));
+	}
+
+	TicketLineComped comped(UUID ticket, UUID line, UUID product, int quantity, String reason) {
+		var unit = Money.of("5.00", PEN);
+		return new TicketLineComped(ticket, line, product, quantity, reason, null, cashier, Role.CASHIER, NOW,
+				unit.times(quantity), false, TicketType.TABLE, false, "Orange juice", unit, List.of("Large"));
 	}
 
 	ShiftClosed counted(UUID shift, String opening, String counted, String difference, String note) {

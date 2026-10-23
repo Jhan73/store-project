@@ -191,7 +191,8 @@ class RecordAuditOnInstoreEventsIT {
 		var actorId = UUID.randomUUID();
 
 		publish(new TicketLineComped(ticketId, lineId, product, 2, "Staff meal", "Cook's lunch", actorId, Role.CASHIER, NOW,
-				new Money(new BigDecimal("16.00"), PEN), false));
+				new Money(new BigDecimal("16.00"), PEN), false, TicketType.TABLE, false, "Juice", Money.of("8.00", PEN),
+				List.of()));
 
 		var entry = findByEntityId(lineId);
 		assertThat(entry.getAction()).isEqualTo("TICKET_LINE_COMPED");
@@ -215,7 +216,8 @@ class RecordAuditOnInstoreEventsIT {
 		var lineId = UUID.randomUUID();
 
 		publish(new TicketLineComped(UUID.randomUUID(), lineId, UUID.randomUUID(), 1, "Staff meal", null, UUID.randomUUID(),
-				Role.ADMIN, NOW, Money.of("5.00", PEN), true));
+				Role.ADMIN, NOW, Money.of("5.00", PEN), true, TicketType.COUNTER, false, "Juice", Money.of("5.00", PEN),
+				List.of()));
 
 		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Staff meal");
 	}
