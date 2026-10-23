@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.audit.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
@@ -32,6 +33,7 @@ import com.jhanantezana.jugueria.instore.TableCreated;
 import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
+import com.jhanantezana.jugueria.instore.TicketCancelled;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
@@ -153,7 +155,7 @@ class RecordAuditOnInstoreEventsIT {
 		var product = UUID.randomUUID();
 
 		publish(new TicketLineVoided(ticketId, lineId, product, 2, true, "Changed mind", "Wanted strawberry",
-				UUID.randomUUID(), Role.CASHIER, NOW));
+				UUID.randomUUID(), Role.CASHIER, NOW, new Money(new BigDecimal("16.00"), Currency.getInstance("PEN")), true));
 
 		var entry = findByEntityId(lineId);
 		assertThat(entry.getAction()).isEqualTo("TICKET_LINE_VOIDED");
@@ -164,7 +166,10 @@ class RecordAuditOnInstoreEventsIT {
 			.containsEntry("waste", true)
 			.containsEntry("ticketId", ticketId.toString())
 			.containsEntry("productId", product.toString())
-			.containsEntry("quantity", 2);
+			.containsEntry("quantity", 2)
+			.containsEntry("amount", "16.00")
+			.containsEntry("currency", "PEN")
+			.containsEntry("ticketClosed", true);
 	}
 
 	@Test
@@ -172,7 +177,7 @@ class RecordAuditOnInstoreEventsIT {
 		var lineId = UUID.randomUUID();
 
 		publish(new TicketLineVoided(UUID.randomUUID(), lineId, UUID.randomUUID(), 1, false, "Changed mind", null,
-				UUID.randomUUID(), Role.SERVER, NOW));
+				UUID.randomUUID(), Role.SERVER, NOW, null, false));
 
 		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Changed mind");
 	}
@@ -190,6 +195,22 @@ class RecordAuditOnInstoreEventsIT {
 		assertThat(entry.getEntityType()).isEqualTo("TICKET");
 		assertThat(entry.getBefore()).containsEntry("tableId", from.toString());
 		assertThat(entry.getAfter()).containsEntry("tableId", to.toString());
+	}
+
+	@Test
+	void recordsATicketCancellation() {
+		var ticketId = UUID.randomUUID();
+		var table = UUID.randomUUID();
+
+		var product = UUID.randomUUID();
+		publish(new TicketCancelled(ticketId, 12, TicketType.TABLE, table, 2, List.of(product, product), UUID.randomUUID(),
+				Role.SERVER, NOW));
+
+		var entry = findByEntityId(ticketId);
+		assertThat(entry.getAction()).isEqualTo("TICKET_CANCELLED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET");
+		assertThat(entry.getBefore()).containsEntry("number", "12").containsEntry("tableId", table.toString());
+		assertThat(entry.getAfter()).containsEntry("status", "CANCELLED");
 	}
 
 	@Test

@@ -233,7 +233,7 @@ class RegisterAuditRollbackIT {
 	}
 
 	private UUID trackedProduct(int quantity) {
-		var product = InventoryTables.aProduct(jdbc);
+		var product = InstoreTables.pinnedForQuickSale(jdbc, InventoryTables.aProduct(jdbc));
 		stock.track(product, true, 0);
 		stock.recordEntry(product, quantity, null);
 		return product;

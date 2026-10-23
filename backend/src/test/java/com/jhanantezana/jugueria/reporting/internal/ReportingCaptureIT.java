@@ -136,9 +136,9 @@ class ReportingCaptureIT {
 		var waste = UUID.randomUUID();
 
 		publish(new TicketLineVoided(UUID.randomUUID(), plain, UUID.randomUUID(), 1, false, "Changed mind", "oops",
-				cashier, Role.CASHIER, NOW));
+				cashier, Role.CASHIER, NOW, new Money(new BigDecimal("8.00"), Currency.getInstance("PEN")), false));
 		publish(new TicketLineVoided(UUID.randomUUID(), waste, UUID.randomUUID(), 1, true, "Spilled", null, cashier,
-				Role.CASHIER, NOW));
+				Role.CASHIER, NOW, new Money(new BigDecimal("5.00"), Currency.getInstance("PEN")), false));
 
 		await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
 			assertThat(exceptionTypes(plain)).containsExactly("LINE_VOID");
@@ -149,6 +149,12 @@ class ReportingCaptureIT {
 			.query()
 			.singleRow();
 		assertThat(row).containsEntry("employee_id", cashier).containsEntry("reason_code", "Changed mind");
+		assertThat(row.get("amount_amount")).isEqualTo(new BigDecimal("8.00"));
+		assertThat(row).containsEntry("currency", "PEN");
+		assertThat(jdbc.sql("select amount_amount from reporting.exception_event where source_id = ?")
+			.param(waste)
+			.query(BigDecimal.class)
+			.single()).isEqualByComparingTo("5.00");
 		assertThat(row.get("business_date").toString()).isEqualTo("2026-10-12");
 	}
 

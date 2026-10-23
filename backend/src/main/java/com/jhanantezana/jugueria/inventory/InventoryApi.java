@@ -43,9 +43,17 @@ public interface InventoryApi {
 	void returnUnits(UUID referenceId, List<StockLine> lines);
 
 	/**
-	 * Like {@link #deduct}, for a store that sells what the shelf cannot cover: on hand may go below zero, with a normal
-	 * SALE ledger row, once per reference and product. Reserved units are still never sold, so a shortage that would eat
-	 * them is {@code inventory.insufficient-stock}. The product stays unavailable while nothing is left to sell.
+	 * Takes units that were prepared and thrown away off the shelf, as a WASTE movement once per reference and
+	 * product. The units already exist, so on hand may go below zero and a {@link StockDeficit} says by how much;
+	 * only units reserved by an online order can still make it {@code inventory.insufficient-stock}.
+	 */
+	void recordWaste(UUID referenceId, List<StockLine> lines);
+
+	/**
+	 * Like {@link #deduct}, for a sale whose money is already taken: on hand may go below zero, with a normal SALE
+	 * ledger row, once per reference and product, and a {@link StockDeficit} says how many units the shelf did not
+	 * have. Reserved units are still never sold, so a shortage that would eat them is
+	 * {@code inventory.insufficient-stock}. The product stays unavailable while nothing is left to sell.
 	 */
 	void deductAllowingShortfall(UUID referenceId, List<StockLine> lines);
 

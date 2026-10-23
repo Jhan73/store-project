@@ -34,7 +34,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
             return next(withBearer(request, store.accessToken()));
           }
           if (outcome === 'rejected') {
-            redirectToLogin(router);
+            if (!store.identityChanged()) {
+              redirectToLogin(router);
+            }
             return throwError(() => error);
           }
           // An outage says nothing about the session: keep it and report the outage instead of "expired".

@@ -2,7 +2,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal, type WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Observable, of, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
@@ -204,7 +204,7 @@ describe('TicketEditor', () => {
         TicketsApi,
         RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
-        { provide: AuthStore, useValue: { role } },
+        { provide: AuthStore, useValue: { role, session: () => null } },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
       ],
@@ -554,6 +554,131 @@ describe('TicketEditor', () => {
 
     expect(text(fixture, 'ticket-title')).toContain('Mesa 4');
     expect(inDialog('[data-testid="transfer-confirm"]')).toBeNull();
+  });
+
+  describe('cancelling a ticket with nothing billed', () => {
+    const cancelButton = (fixture: ComponentFixture<TicketEditor>) => find(fixture, 'cancel-open');
+
+    it.each([
+      ['an empty ticket', ticket([])],
+      ['only unsent lines', ticket([line('l1'), line('l2')])],
+      [
+        'lines that were all voided',
+        ticket([line('l1', { state: 'VOIDED', sentAt: SENT_AT })]),
+      ],
+      [
+        'a payment that was voided',
+        ticket([line('l1', { state: 'VOIDED', sentAt: SENT_AT })], {
+          payments: [payment('pay1', { voided: true })],
+        }),
+      ],
+    ])('offers it for %s', async (_label, current) => {
+      const fixture = await ready(current);
+
+      expect(cancelButton(fixture)).not.toBeNull();
+    });
+
+    it.each([
+      ['a sent line', ticket([line('l1', { state: 'SENT', sentAt: SENT_AT })])],
+      ['a live payment', ticket([line('l1')], { payments: [payment('pay1')] })],
+      ['a closed ticket', ticket([line('l1')], { status: 'CLOSED' })],
+    ])('does not offer it with %s', async (_label, current) => {
+      const fixture = await ready(current);
+
+      expect(cancelButton(fixture)).toBeNull();
+    });
+
+    it('asks first and says what will happen, then cancels and goes back to the tables', async () => {
+      const navigated = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const fixture = await ready(ticket([line('l1')]));
+
+      await press(fixture, 'cancel-open');
+
+      expect(inDialog('[data-testid="cancel-explain"]')?.textContent).toContain('sin enviar');
+      expect(inDialog('[data-testid="cancel-explain"]')?.textContent).toContain('mesa');
+      http.expectNone(`${TICKET}/cancel`);
+
+      inDialog<HTMLButtonElement>('[data-testid="cancel-confirm"]')!.click();
+      await fixture.whenStable();
+      const request = http.expectOne(`${TICKET}/cancel`);
+      expect(request.request.method).toBe('POST');
+      request.flush(ticket([], { status: 'CANCELLED' }));
+      await fixture.whenStable();
+
+      expect(navigated).toHaveBeenCalledWith('/staff/tables');
+    });
+
+    it('keeps the ticket when the question is dismissed', async () => {
+      const fixture = await ready(ticket([line('l1')]));
+
+      await press(fixture, 'cancel-open');
+      inDialog<HTMLButtonElement>('[data-testid="cancel-back"]')!.click();
+      await fixture.whenStable();
+
+      http.expectNone(`${TICKET}/cancel`);
+      expect(inDialog('[data-testid="cancel-confirm"]')).toBeNull();
+    });
+
+    it('says a cancelled ticket was cancelled, not closed', async () => {
+      const fixture = await ready(ticket([], { status: 'CANCELLED' }));
+
+      expect(text(fixture, 'cancelled-notice')).toContain('cancelada');
+      expect(find(fixture, 'closed-notice')).toBeNull();
+    });
+  });
+
+  describe('the ticket note', () => {
+    const field = (fixture: ComponentFixture<TicketEditor>) => find<HTMLTextAreaElement>(fixture, 'ticket-note')!;
+
+    async function typeNote(fixture: ComponentFixture<TicketEditor>, value: string) {
+      field(fixture).value = value;
+      field(fixture).dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+    }
+
+    it('shows the note the ticket has', async () => {
+      const fixture = await ready(ticket([line('l1')], { note: 'Cumpleaños' }));
+
+      expect(field(fixture).value).toBe('Cumpleaños');
+    });
+
+    it('saves a new note', async () => {
+      const fixture = await ready(ticket([line('l1')]));
+
+      await typeNote(fixture, '  Sin hielo ');
+      await press(fixture, 'ticket-note-save');
+
+      const request = http.expectOne(`${TICKET}/note`);
+      expect(request.request.method).toBe('PUT');
+      expect(request.request.body).toEqual({ note: 'Sin hielo' });
+      request.flush(ticket([line('l1')], { note: 'Sin hielo' }));
+      await fixture.whenStable();
+
+      expect(field(fixture).value).toBe('Sin hielo');
+    });
+
+    it('clears the note with an empty text', async () => {
+      const fixture = await ready(ticket([line('l1')], { note: 'Cumpleaños' }));
+
+      await typeNote(fixture, '');
+      await press(fixture, 'ticket-note-save');
+
+      expect(http.expectOne(`${TICKET}/note`).request.body).toEqual({ note: null });
+    });
+
+    it('offers no save while the text matches the saved note', async () => {
+      const fixture = await ready(ticket([line('l1')], { note: 'Cumpleaños' }));
+
+      expect(find<HTMLButtonElement>(fixture, 'ticket-note-save')!.disabled).toBe(true);
+      await typeNote(fixture, 'Otra');
+      expect(find<HTMLButtonElement>(fixture, 'ticket-note-save')!.disabled).toBe(false);
+    });
+
+    it('does not show the note editor on a closed ticket', async () => {
+      const fixture = await ready(ticket([line('l1')], { status: 'CLOSED' }));
+
+      expect(find(fixture, 'ticket-note')).toBeNull();
+    });
   });
 
   describe('voiding a sent line', () => {

@@ -47,13 +47,29 @@ describe('TicketsApi', () => {
 
   it('reads the open tickets, one ticket, the menu and the board', () => {
     api.openTickets().subscribe();
-    http.expectOne(`${BASE}/tickets`).flush([]);
+    http
+      .expectOne(`${BASE}/tickets?page=0&size=100`)
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     api.ticket('k1').subscribe();
     http.expectOne(`${BASE}/tickets/k1`).flush({});
     api.menu().subscribe();
     http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
     api.board().subscribe();
     http.expectOne(`${BASE}/board/tickets`).flush([]);
+  });
+
+  it('reads every page of open tickets', () => {
+    let tickets: unknown[] = [];
+    api.openTickets().subscribe((result) => (tickets = result));
+
+    http
+      .expectOne(`${BASE}/tickets?page=0&size=100`)
+      .flush({ content: [{ id: 'a' }], page: 0, size: 100, totalElements: 2, totalPages: 2 });
+    http
+      .expectOne(`${BASE}/tickets?page=1&size=100`)
+      .flush({ content: [{ id: 'b' }], page: 1, size: 100, totalElements: 2, totalPages: 2 });
+
+    expect(tickets).toEqual([{ id: 'a' }, { id: 'b' }]);
   });
 
   it('opens a ticket with the idempotency key of the intent', () => {
@@ -132,5 +148,25 @@ describe('TicketsApi', () => {
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ requested: true });
     request.flush({});
+  });
+
+  it('cancels the ticket with nothing billed on it', () => {
+    api.cancel('k1').subscribe();
+
+    const request = http.expectOne(`${BASE}/tickets/k1/cancel`);
+    expect(request.request.method).toBe('POST');
+    request.flush({});
+  });
+
+  it('replaces the ticket note and clears it with null', () => {
+    api.changeNote('k1', 'Sin hielo').subscribe();
+    api.changeNote('k1', null).subscribe();
+
+    const [first, second] = http.match(`${BASE}/tickets/k1/note`);
+    expect(first.request.method).toBe('PUT');
+    expect(first.request.body).toEqual({ note: 'Sin hielo' });
+    expect(second.request.body).toEqual({ note: null });
+    first.flush({});
+    second.flush({});
   });
 });

@@ -206,6 +206,18 @@ class InstoreAuditRollbackIT {
 			.isNotEqualTo("Elsewhere");
 	}
 
+	@Test
+	void anAuditWriteFailureRollsBackACancellation() {
+		var ticket = openTicketWithALine();
+		auditWritesNowFail();
+
+		var result = mvc.post().uri(TICKETS + "/" + ticket + "/cancel").with(floorStaff()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(InstoreTables.ticketStatus(jdbc, ticket)).isEqualTo("OPEN");
+		assertThat(count("select count(*) from instore.ticket_line where ticket_id = ?", ticket)).isEqualTo(1);
+	}
+
 	private UUID openTicketWithALine() {
 		InstoreTables.aVoidReason(jdbc, "Changed mind");
 		var juice = InstoreTables.aSizedProduct(jdbc);

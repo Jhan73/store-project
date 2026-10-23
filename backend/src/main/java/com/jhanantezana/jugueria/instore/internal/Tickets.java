@@ -112,6 +112,23 @@ class Tickets {
 		}
 	}
 
+	/** Ends a ticket this transaction holds the lock of without a sale; the table is free again from here on. */
+	void cancel(UUID id, Instant now) {
+		var cancelled = jdbc.sql("UPDATE instore.ticket SET status = 'CANCELLED', closed_at = :now WHERE id = :id AND status = 'OPEN'")
+			.param("now", utc(now))
+			.param("id", id)
+			.update();
+		if (cancelled != 1) {
+			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
+		}
+	}
+
+	void deleteUnsentLines(UUID ticketId) {
+		jdbc.sql("DELETE FROM instore.ticket_line WHERE ticket_id = :ticket AND state = 'UNSENT'")
+			.param("ticket", ticketId)
+			.update();
+	}
+
 	/** @return false when the table already has an open ticket */
 	boolean insert(UUID id, TicketType type, @Nullable UUID tableId, @Nullable String counterName, @Nullable String note,
 			Currency currency, UUID openedBy, Instant now) {
@@ -179,6 +196,14 @@ class Tickets {
 				""").param("id", ticketId).query(UUID.class).list();
 	}
 
+	/** Takes the lock every ticket command starts with on the table's open ticket, if it has one. */
+	Optional<UUID> lockOpenTicketOn(UUID tableId, Instant now) {
+		return jdbc.sql("""
+				UPDATE instore.ticket SET version = version + 1, updated_at = :now
+				WHERE table_id = :table AND status = 'OPEN' RETURNING id
+				""").param("now", utc(now)).param("table", tableId).query(UUID.class).optional();
+	}
+
 	/** Blocks tickets opening or moving onto the table until this transaction ends. */
 	void lockTable(UUID tableId) {
 		jdbc.sql("SELECT 1 FROM instore.dining_table WHERE id = :id FOR UPDATE").param("id", tableId).query().listOfRows();
@@ -191,15 +216,67 @@ class Tickets {
 			.single();
 	}
 
-	List<TicketSummary> open() {
+	List<TicketSummary> open(int limit, long offset) {
 		return jdbc.sql("""
 				SELECT k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.bill_requested,
 					k.currency, k.created_at,
 					coalesce((SELECT sum(l.unit_price_amount * l.quantity) FROM instore.ticket_line l
 						WHERE l.ticket_id = k.id AND l.state IN ('UNSENT', 'SENT')), 0) AS total
 				FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
-				WHERE k.status = 'OPEN' ORDER BY k.created_at, k.id
-				""").query((rs, row) -> summary(rs)).list();
+				WHERE k.status = 'OPEN' ORDER BY k.created_at, k.id LIMIT :limit OFFSET :offset
+				""").param("limit", limit).param("offset", offset).query((rs, row) -> summary(rs)).list();
+	}
+
+	long countOpen() {
+		return jdbc.sql("SELECT count(*) FROM instore.ticket WHERE status = 'OPEN'").query(Long.class).single();
+	}
+
+	private static final String CLOSED_FILTER = """
+			WHERE k.status = 'CLOSED'
+				AND (CAST(:from AS timestamptz) IS NULL OR k.closed_at >= CAST(:from AS timestamptz))
+				AND (CAST(:to AS timestamptz) IS NULL OR k.closed_at < CAST(:to AS timestamptz))
+				AND (CAST(:table AS uuid) IS NULL OR k.table_id = CAST(:table AS uuid))
+				AND (CAST(:type AS varchar) IS NULL OR k.type = CAST(:type AS varchar))
+				AND (CAST(:cashier AS uuid) IS NULL OR EXISTS (SELECT 1 FROM instore.in_store_payment p
+					WHERE p.ticket_id = k.id AND p.recorded_by = CAST(:cashier AS uuid)
+						AND NOT EXISTS (SELECT 1 FROM instore.payment_void v WHERE v.payment_id = p.id)))
+			""";
+
+	List<ClosedTicketSummary> closed(ClosedTicketFilter filter, DayRange range, int limit, long offset) {
+		return closedParams(jdbc.sql("""
+				SELECT k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.quick_sale, k.currency,
+					k.closed_at,
+					coalesce((SELECT sum(l.unit_price_amount * l.quantity) FROM instore.ticket_line l
+						WHERE l.ticket_id = k.id AND l.state IN ('UNSENT', 'SENT')), 0) AS total,
+					EXISTS (SELECT 1 FROM instore.sale_void v WHERE v.ticket_id = k.id) AS voided,
+					(SELECT p.recorded_by FROM instore.in_store_payment p WHERE p.ticket_id = k.id
+							AND NOT EXISTS (SELECT 1 FROM instore.payment_void v WHERE v.payment_id = p.id)
+						ORDER BY p.recorded_at DESC, p.id DESC LIMIT 1) AS cashier_id
+				FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
+				""" + CLOSED_FILTER + " ORDER BY k.closed_at DESC, k.id DESC LIMIT :limit OFFSET :offset"), filter, range)
+			.param("limit", limit)
+			.param("offset", offset)
+			.query((rs, row) -> closedSummary(rs))
+			.list();
+	}
+
+	long countClosed(ClosedTicketFilter filter, DayRange range) {
+		return closedParams(jdbc.sql("SELECT count(*) FROM instore.ticket k " + CLOSED_FILTER), filter, range)
+			.query(Long.class)
+			.single();
+	}
+
+	private static JdbcClient.StatementSpec closedParams(JdbcClient.StatementSpec spec, ClosedTicketFilter filter,
+			DayRange range) {
+		return spec.param("from", range.from() == null ? null : utc(range.from()))
+			.param("to", range.to() == null ? null : utc(range.to()))
+			.param("table", filter.tableId())
+			.param("type", filter.type() == null ? null : filter.type().name())
+			.param("cashier", filter.cashierId());
+	}
+
+	void setNote(UUID ticketId, @Nullable String note) {
+		jdbc.sql("UPDATE instore.ticket SET note = :note WHERE id = :id").param("note", note).param("id", ticketId).update();
 	}
 
 	/** The unsent lines in the order they were added, as the board takes them. */
@@ -280,6 +357,14 @@ class Tickets {
 	TicketLineView requireLine(UUID ticketId, UUID lineId) {
 		return line(ticketId, lineId)
 			.orElseThrow(() -> new BusinessException(InstoreError.LINE_NOT_FOUND, "The ticket has no such line"));
+	}
+
+	/** The lines that still count on the bill or the board: everything but the voided ones. */
+	int liveLineCount(UUID ticketId) {
+		return jdbc.sql("SELECT count(*) FROM instore.ticket_line WHERE ticket_id = :id AND state <> 'VOIDED'")
+			.param("id", ticketId)
+			.query(Integer.class)
+			.single();
 	}
 
 	int nextPosition(UUID ticketId) {
@@ -368,6 +453,15 @@ class Tickets {
 				TicketType.valueOf(rs.getString("type")), rs.getObject("table_id", UUID.class), rs.getString("table_name"),
 				rs.getString("counter_name"), rs.getBoolean("bill_requested"),
 				new Money(rs.getBigDecimal("total"), currency), rs.getObject("created_at", OffsetDateTime.class).toInstant());
+	}
+
+	private ClosedTicketSummary closedSummary(ResultSet rs) throws SQLException {
+		var currency = Currency.getInstance(rs.getString("currency").trim());
+		return new ClosedTicketSummary(rs.getObject("id", UUID.class), rs.getLong("number"),
+				TicketType.valueOf(rs.getString("type")), rs.getObject("table_id", UUID.class), rs.getString("table_name"),
+				rs.getString("counter_name"), rs.getBoolean("quick_sale"), new Money(rs.getBigDecimal("total"), currency),
+				rs.getObject("closed_at", OffsetDateTime.class).toInstant(), rs.getBoolean("voided"),
+				rs.getObject("cashier_id", UUID.class));
 	}
 
 	private TicketLineView line(ResultSet rs) throws SQLException {

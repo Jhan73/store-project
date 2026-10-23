@@ -199,16 +199,33 @@ class SaleVoidIT {
 	}
 
 	@Test
-	void anAdminVoidsWithNoDrawerOnceTheShiftThatTookThePaymentsIsClosed() {
+	void anAdminPaysTheCashBackOutOfTheirOpenShiftOnceTheShiftThatTookItIsClosed() {
+		closeCashiersShift();
+		var admin = UUID.randomUUID();
+		var adminShift = openShift(admin, Role.ADMIN);
+
+		var result = voidSale(ticket, WRONG_ORDER, admin, Role.ADMIN);
+
+		assertThat(result).hasStatusOk();
+		assertThat(jdbc.sql("select count(*) from instore.payment_void where ticket_id = ? and shift_id = ?")
+			.param(ticket)
+			.param(UUID.fromString(adminShift))
+			.query(Long.class)
+			.single()).isEqualTo(1);
+		assertThat(jdbc.sql("select count(*) from instore.payment_void where ticket_id = ? and shift_id is null")
+			.param(ticket)
+			.query(Long.class)
+			.single()).isEqualTo(1);
+	}
+
+	@Test
+	void anAdminWithNoOpenShiftCannotVoidASaleWhoseCashShiftIsClosed() {
 		closeCashiersShift();
 
 		var result = voidSale(ticket, WRONG_ORDER, UUID.randomUUID(), Role.ADMIN);
 
-		assertThat(result).hasStatusOk();
-		assertThat(jdbc.sql("select count(*) from instore.payment_void where ticket_id = ? and shift_id is null")
-			.param(ticket)
-			.query(Long.class)
-			.single()).isEqualTo(2);
+		assertProblem(result, HttpStatus.CONFLICT, "instore.no-open-shift");
+		assertThat(saleVoids()).isZero();
 	}
 
 	@Test

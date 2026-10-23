@@ -54,6 +54,12 @@ public final class InstoreTables {
 		return InventoryTables.aProduct(jdbc);
 	}
 
+	/** Pins the product as a frequent item, the only kind a quick sale accepts. */
+	public static UUID pinnedForQuickSale(JdbcClient jdbc, UUID productId) {
+		jdbc.sql("update catalog.product set quick_sale_pinned = true where id = ?").param(productId).update();
+		return productId;
+	}
+
 	public static SizedProduct aSizedProduct(JdbcClient jdbc) {
 		var product = InventoryTables.aProduct(jdbc);
 		var now = OffsetDateTime.now(ZoneOffset.UTC);

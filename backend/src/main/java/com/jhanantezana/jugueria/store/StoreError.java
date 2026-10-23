@@ -9,6 +9,7 @@ public enum StoreError implements ErrorCode {
 	INVALID_OPENING_HOURS("store.invalid-opening-hours", HttpStatus.UNPROCESSABLE_CONTENT),
 	INVALID_BOARD_THRESHOLDS("store.invalid-board-thresholds", HttpStatus.UNPROCESSABLE_CONTENT),
 	INVALID_SETTINGS_VALUE("store.invalid-settings-value", HttpStatus.UNPROCESSABLE_CONTENT),
+	CURRENCY_LOCKED("store.currency-locked", HttpStatus.CONFLICT),
 	INVALID_DELIVERY_ZONE("store.invalid-delivery-zone", HttpStatus.UNPROCESSABLE_CONTENT),
 	DELIVERY_ZONE_NOT_FOUND("store.delivery-zone-not-found", HttpStatus.NOT_FOUND),
 	DELIVERY_ZONE_NAME_ALREADY_USED("store.delivery-zone-name-already-used", HttpStatus.CONFLICT),

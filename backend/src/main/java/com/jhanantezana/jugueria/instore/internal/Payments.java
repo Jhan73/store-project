@@ -81,6 +81,15 @@ class Payments {
 				""").param("ticket", ticketId).query(BigDecimal.class).single();
 	}
 
+	/** Who took the most recent payment that is still live; empty when the ticket has none. */
+	Optional<UUID> lastLivePayer(UUID ticketId) {
+		return jdbc.sql("""
+				SELECT p.recorded_by FROM instore.in_store_payment p
+				WHERE p.ticket_id = :ticket AND NOT EXISTS (SELECT 1 FROM instore.payment_void v WHERE v.payment_id = p.id)
+				ORDER BY p.recorded_at DESC, p.id DESC LIMIT 1
+				""").param("ticket", ticketId).query(UUID.class).optional();
+	}
+
 	/** The lines a live payment already settles. */
 	Set<UUID> coveredLines(UUID ticketId) {
 		return new HashSet<>(jdbc.sql("""

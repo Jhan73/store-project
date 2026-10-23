@@ -62,14 +62,14 @@ class StaffController {
 
 	@PatchMapping("/{id}/role")
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "common.not-found", "identity.invalid-staff-role", "identity.cannot-modify-own-account", "identity.last-active-admin-required" })
+	@ApiErrors({ "common.not-found", "identity.invalid-staff-role", "identity.cannot-modify-own-account", "identity.last-active-admin-required", "instore.user-has-open-shift" })
 	StaffResponse changeRole(@PathVariable UUID id, @Valid @RequestBody ChangeStaffRoleRequest request) {
 		return StaffResponse.from(staffAccounts.changeRole(id, request.role()));
 	}
 
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "common.not-found", "identity.cannot-modify-own-account", "identity.last-active-admin-required" })
+	@ApiErrors({ "common.not-found", "identity.cannot-modify-own-account", "identity.last-active-admin-required", "instore.user-has-open-shift" })
 	StaffResponse deactivate(@PathVariable UUID id) {
 		return StaffResponse.from(staffAccounts.deactivate(id));
 	}

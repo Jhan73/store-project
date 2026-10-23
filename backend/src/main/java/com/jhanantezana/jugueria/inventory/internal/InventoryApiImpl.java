@@ -117,6 +117,14 @@ class InventoryApiImpl implements InventoryApi {
 
 	@Override
 	@Transactional
+	public void recordWaste(UUID referenceId, List<StockLine> lines) {
+		for (var line : trackedLines(lines, true)) {
+			changes.apply(line.productId(), StockMovementType.WASTE, -line.quantity(), 0, referenceId, null, null, true);
+		}
+	}
+
+	@Override
+	@Transactional
 	public void returnUnits(UUID referenceId, List<StockLine> lines) {
 		var sold = soldUnits(referenceId);
 		for (var line : trackedLines(lines, true)) {

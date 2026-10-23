@@ -15,6 +15,15 @@ import { TableGrid } from './table-grid';
 const BASE = 'http://api.test/api/v1';
 const TABLES = `${BASE}/tables`;
 const TICKETS = `${BASE}/tickets`;
+const TICKET_PAGE = `${BASE}/tickets?page=0&size=100`;
+
+const pageOf = (content: TicketSummary[]) => ({
+  content,
+  page: 0,
+  size: 100,
+  totalElements: content.length,
+  totalPages: 1,
+});
 
 @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
 class Blank {}
@@ -99,7 +108,7 @@ describe('TableGrid', () => {
 
   function answerReads(tables: TableGridEntry[] = grid(), counters: TicketSummary[] = []) {
     http.expectOne(TABLES).flush(tables);
-    http.expectOne(TICKETS).flush(counters);
+    http.expectOne(TICKET_PAGE).flush(pageOf(counters));
   }
 
   async function open(tables: TableGridEntry[] = grid(), counters: TicketSummary[] = []) {
@@ -186,7 +195,7 @@ describe('TableGrid', () => {
     first.flush(failure, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
     http.expectOne(TABLES).flush(grid());
-    http.expectOne(TICKETS).flush([]);
+    http.expectOne(TICKET_PAGE).flush(pageOf([]));
     await fixture.whenStable();
 
     expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
@@ -231,7 +240,7 @@ describe('TableGrid', () => {
 
     realtime.signals.next();
     http.expectOne(TABLES).flush([table({ id: 't7', name: 'Mesa 7' })]);
-    http.expectOne(TICKETS).flush([]);
+    http.expectOne(TICKET_PAGE).flush(pageOf([]));
     await fixture.whenStable();
 
     expect(text(fixture, 'table-t7')).toContain('Mesa 7');
@@ -241,7 +250,7 @@ describe('TableGrid', () => {
     const fixture = TestBed.createComponent(TableGrid);
     await fixture.whenStable();
     http.expectOne(TABLES).flush(failure, { status: 500, statusText: 'Server Error' });
-    http.expectOne(TICKETS).flush([]);
+    http.expectOne(TICKET_PAGE).flush(pageOf([]));
     await fixture.whenStable();
 
     expect(text(fixture, 'offline-banner')).toContain('No se pudieron cargar las mesas');

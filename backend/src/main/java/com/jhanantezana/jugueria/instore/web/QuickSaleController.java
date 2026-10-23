@@ -50,7 +50,7 @@ class QuickSaleController {
 	@PostMapping
 	@PreAuthorize(REGISTER_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.no-open-shift", "instore.shift-closing", "instore.invalid-amount", "instore.invalid-payment",
+	@ApiErrors({ "instore.no-open-shift", "instore.shift-closing", "instore.product-not-quick-sale", "instore.invalid-amount", "instore.invalid-payment",
 			"catalog.product-not-found", "catalog.product-unavailable", "catalog.modifier-option-unavailable",
 			"catalog.invalid-modifier-selection", "catalog.price-currency-mismatch", "inventory.insufficient-stock",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })

@@ -59,6 +59,7 @@ class QuickSaleIT {
 	@BeforeEach
 	void anOpenShiftAndAProduct() {
 		juice = InstoreTables.aSizedProduct(jdbc);
+		InstoreTables.pinnedForQuickSale(jdbc, juice.productId());
 		openShift(cashier);
 	}
 
@@ -140,18 +141,17 @@ class QuickSaleIT {
 	}
 
 	@Test
-	void aSaleTheShelfCannotCoverIsRejectedAsAWholeAndLeavesNoCardOnTheBoard() {
-		var bottle = InventoryTables.aProduct(jdbc);
+	void aSaleTheShelfCannotCoverStillClosesAndTakesStockBelowZero() {
+		var bottle = InstoreTables.pinnedForQuickSale(jdbc, InventoryTables.aProduct(jdbc));
 		stock.track(bottle, true, 0);
 		stock.recordEntry(bottle, 1, null);
 
 		var result = quickSale(cashier, Role.CASHIER, UUID.randomUUID(),
 				body(null, "{\"productId\":\"%s\",\"modifierOptionIds\":[],\"quantity\":2,\"note\":null,\"allergy\":false}".formatted(bottle), "CARD", null));
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(ticketCount()).isZero();
-		assertThat(PreparationTables.count(jdbc, "board_order")).isZero();
-		assertThat(stock.get(bottle).onHand()).isEqualTo(1);
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(ticketCount()).isEqualTo(1);
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
 	}
 
 	@Test
@@ -215,7 +215,21 @@ class QuickSaleIT {
 	}
 
 	@Test
+	void refusesAProductTheAdminDidNotPinAndLeavesNothingBehind() {
+		var unpinned = InventoryTables.aProduct(jdbc);
+		var line = "{\"productId\":\"%s\",\"modifierOptionIds\":[],\"quantity\":1,\"note\":null,\"allergy\":false}"
+			.formatted(unpinned);
+
+		var result = quickSale(cashier, Role.CASHIER, UUID.randomUUID(), body(null, line, "CARD", null));
+
+		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("instore.product-not-quick-sale");
+		assertThat(InstoreTables.count(jdbc, "ticket")).isZero();
+	}
+
+	@Test
 	void theFrequentItemsAreTheOnesTheAdminPinnedThatAreOnSale() {
+		jdbc.sql("update catalog.product set quick_sale_pinned = false where id = ?").param(juice.productId()).update();
 		var pinned = InventoryTables.aProduct(jdbc);
 		var unpinned = InventoryTables.aProduct(jdbc);
 		var hidden = InventoryTables.aProduct(jdbc);

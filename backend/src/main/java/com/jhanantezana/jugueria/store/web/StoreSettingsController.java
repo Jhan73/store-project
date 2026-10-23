@@ -39,7 +39,7 @@ class StoreSettingsController {
 
 	@PutMapping
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "store.invalid-board-thresholds", "store.invalid-settings-value" })
+	@ApiErrors({ "store.invalid-board-thresholds", "store.invalid-settings-value", "store.currency-locked" })
 	ResponseEntity<StoreSettingsResponse> update(
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody UpdateStoreSettingsRequest request) {

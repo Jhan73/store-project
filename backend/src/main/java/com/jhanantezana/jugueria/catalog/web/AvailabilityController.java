@@ -26,9 +26,9 @@ class AvailabilityController {
 
 	@PutMapping("/products/{id}/availability")
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
-	@ApiErrors({ "catalog.product-not-found" })
+	@ApiErrors({ "catalog.product-not-found", "inventory.product-out-of-stock" })
 	AvailabilityResponse setProductAvailability(@PathVariable UUID id, @Valid @RequestBody AvailabilityRequest request) {
-		availability.setProductAvailability(id, request.available());
+		availability.markProductAvailability(id, request.available());
 		return new AvailabilityResponse(id, request.available());
 	}
 

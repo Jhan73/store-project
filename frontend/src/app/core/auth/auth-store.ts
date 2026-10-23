@@ -17,6 +17,18 @@ export type RefreshOutcome = 'refreshed' | 'rejected' | 'unavailable';
 const REFRESH_LOCK = 'auth-refresh';
 // A hung refresh would otherwise hold the cross-tab lock, and every tab's refresh, forever.
 const REFRESH_TIMEOUT_MS = 10_000;
+// A sign-out hook (flushing queued commands) that never answers must not keep the employee signed in.
+const SIGN_OUT_HOOK_TIMEOUT_MS = 5_000;
+
+function expiryOf(token: string): number | null {
+  try {
+    const payload = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+    const exp = payload === undefined ? undefined : (JSON.parse(atob(payload)) as { exp?: unknown }).exp;
+    return typeof exp === 'number' ? exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
 
 function toSession({ accessToken, userId, role }: LoginResponse): Session {
   return { accessToken, userId, role };
@@ -32,17 +44,21 @@ export class AuthStore {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly state = signal<Session | null>(null);
   private readonly failure = signal<unknown>(null);
+  private readonly identityShift = signal(false);
   private restoration: Promise<void> | null = null;
   private inFlight: Promise<RefreshOutcome> | null = null;
   // Bumped by login and logout so a refresh that started before them cannot change the session afterwards.
   private generation = 0;
   private ended = false;
+  private readonly signOutHooks = new Set<() => Promise<void> | void>();
 
   readonly session = this.state.asReadonly();
   readonly isAuthenticated = computed(() => this.state() !== null);
   readonly role = computed(() => this.state()?.role ?? null);
   // The last refresh failure that was not a rejection (network, 5xx, timeout); cleared by the next success.
   readonly refreshError = this.failure.asReadonly();
+  // True when a refresh brought another user's session (the cookie is shared between tabs); until the next login.
+  readonly identityChanged = this.identityShift.asReadonly();
 
   accessToken(): string | null {
     return this.state()?.accessToken ?? null;
@@ -57,6 +73,7 @@ export class AuthStore {
     const response = await firstValueFrom(this.api.login(credentials));
     this.generation++;
     this.ended = false;
+    this.identityShift.set(false);
     this.failure.set(null);
     this.state.set(toSession(response));
     this.restoration ??= Promise.resolve();
@@ -76,6 +93,22 @@ export class AuthStore {
     return this.restoration;
   }
 
+  // Renews the token when it would expire within `windowMs`, so work that must still be authorized then
+  // (a command flushed as the page closes) does not depend on a refresh that cannot finish by then.
+  async ensureFresh(windowMs: number): Promise<void> {
+    const token = this.accessToken();
+    const expiry = token === null ? null : expiryOf(token);
+    if (expiry !== null && expiry - Date.now() < windowMs) {
+      await this.refresh();
+    }
+  }
+
+  // Runs before the server is told to end the session, while the token still works. Returns how to remove it.
+  onSignOut(hook: () => Promise<void> | void): () => void {
+    this.signOutHooks.add(hook);
+    return () => this.signOutHooks.delete(hook);
+  }
+
   // Concurrent callers in this tab share one request; the lock serializes it across tabs.
   refresh(): Promise<RefreshOutcome> {
     this.inFlight ??= runExclusive(REFRESH_LOCK, () => this.requestRefresh()).finally(() => {
@@ -84,17 +117,32 @@ export class AuthStore {
     return this.inFlight;
   }
 
-  async logout(): Promise<void> {
+  // False when the server could not revoke the cookie: the session stays, because dropping it locally
+  // would let the next restore reopen it on a shared device.
+  async logout(): Promise<boolean> {
+    if (this.signOutHooks.size > 0) {
+      await this.runSignOutHooks();
+    }
+    try {
+      await firstValueFrom(this.api.logout());
+    } catch (error) {
+      if (!isRejection(error)) {
+        return false;
+      }
+    }
     this.generation++;
     this.ended = true;
     this.restoration = Promise.resolve();
-    try {
-      await firstValueFrom(this.api.logout());
-    } catch {
-      // The local session ends either way; the refresh cookie expires on its own.
-    } finally {
-      this.state.set(null);
-    }
+    this.state.set(null);
+    return true;
+  }
+
+  private async runSignOutHooks(): Promise<void> {
+    const running = Promise.allSettled([...this.signOutHooks].map(async (hook) => hook()));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const gaveUp = new Promise<void>((resolve) => (timer = setTimeout(resolve, SIGN_OUT_HOOK_TIMEOUT_MS)));
+    await Promise.race([running, gaveUp]);
+    clearTimeout(timer);
   }
 
   private async requestRefresh(): Promise<RefreshOutcome> {
@@ -102,6 +150,15 @@ export class AuthStore {
     try {
       const response = await firstValueFrom(this.api.refresh().pipe(timeout(REFRESH_TIMEOUT_MS)));
       if (generation !== this.generation) {
+        return 'rejected';
+      }
+      const previous = this.state();
+      if (previous !== null && previous.userId !== response.userId) {
+        // Not a logout: the cookie now belongs to the other user, and revoking it would sign them out.
+        this.state.set(null);
+        this.ended = true;
+        this.identityShift.set(true);
+        this.failure.set(null);
         return 'rejected';
       }
       this.state.set(toSession(response));

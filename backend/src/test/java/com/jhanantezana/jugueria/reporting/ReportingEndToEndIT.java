@@ -48,6 +48,7 @@ class ReportingEndToEndIT {
 	void aShiftWithASaleAndItsVoidLeavesSalesLinesExceptionsAndASummary() throws Exception {
 		InstoreTables.aVoidReason(jdbc, "Changed mind");
 		var juice = InstoreTables.aSizedProduct(jdbc);
+		InstoreTables.pinnedForQuickSale(jdbc, juice.productId());
 		var shift = id(post("/api/v1/shifts", "{\"openingFloat\":{\"amount\":\"100.00\",\"currency\":\"PEN\"}}"));
 		var sale = id(post("/api/v1/quick-sales", """
 				{"lines":[{"productId":"%s","modifierOptionIds":["%s"],"quantity":2,"note":null,"allergy":false}],

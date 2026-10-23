@@ -98,38 +98,27 @@ describe('SettingsForm', () => {
     expect(numberText(host, 'settings-exceptionThreshold')).toBe('3');
   });
 
-  it('shows whether sales may close without stock as the server holds it', async () => {
+  it('has no control for selling without enough stock', async () => {
     const { host } = await render();
 
-    expect(host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.checked)
-      .toBe(false);
+    expect(host.querySelector('#settings-allowNegativeStockOnSale')).toBeNull();
+    expect(host.textContent).not.toContain('Permitir ventas sin stock suficiente');
   });
 
-  it('sends the allow-negative-stock choice with the rest and keeps it on the next edit', async () => {
+  it('sends the stored allow-negative-stock value back unchanged, also on the next edit', async () => {
     const { fixture, host, http } = await render();
+    http.verify();
 
-    host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.click();
-    await fixture.whenStable();
     submit(host);
     const first = http.expectOne(URL);
-    expect(first.request.body.allowNegativeStockOnSale).toBe(true);
+    expect(first.request.body.allowNegativeStockOnSale).toBe(false);
     first.flush({ ...settings, allowNegativeStockOnSale: true }, { headers: { ETag: '"5"' } });
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('p-checkbox #settings-allowNegativeStockOnSale')!.checked)
-      .toBe(true);
     typeNumber(host, 'settings-basePrepMinutes', '12');
     await fixture.whenStable();
     submit(host);
     expect(http.expectOne(URL).request.body.allowNegativeStockOnSale).toBe(true);
-  });
-
-  it('explains what the setting does', async () => {
-    const { host } = await render();
-
-    expect(host.querySelector('#settings-allowNegativeStockOnSale-hint')?.textContent).toContain(
-      'quedará en negativo',
-    );
   });
 
   it('searches the time zones and picks one of the matches', async () => {

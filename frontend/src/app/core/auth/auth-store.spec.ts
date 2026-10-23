@@ -14,6 +14,14 @@ function session(accessToken: string, role: 'ADMIN' | 'CASHIER' = 'CASHIER') {
   return { accessToken, tokenType: 'Bearer', userId: 'u1', role };
 }
 
+function tokenExpiring(inSeconds: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + inSeconds }))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  return `header.${payload}.signature`;
+}
+
 describe('AuthStore', () => {
   let store: AuthStore;
   let http: HttpTestingController;
@@ -215,11 +223,24 @@ describe('AuthStore', () => {
       const refresh = store.refresh();
       const logout = store.logout();
       http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+      await logout;
       http.expectOne(REFRESH).flush(session('late'));
 
       expect(await refresh).toBe('rejected');
-      await logout;
       expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it('keeps a refresh valid when the logout request could not reach the server', async () => {
+      await signIn();
+
+      const refresh = store.refresh();
+      const logout = store.logout();
+      http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+      await logout;
+      http.expectOne(REFRESH).flush(session('renewed'));
+
+      expect(await refresh).toBe('refreshed');
+      expect(store.isAuthenticated()).toBe(true);
     });
 
     it('remembers that the session ended until the next login', async () => {
@@ -233,6 +254,63 @@ describe('AuthStore', () => {
 
       await signIn('jwt-9');
       expect(store.hasEnded()).toBe(false);
+    });
+
+    it('ends the session when another tab signed in as someone else', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+
+      expect(await done).toBe('rejected');
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.accessToken()).toBeNull();
+      expect(store.hasEnded()).toBe(true);
+      expect(store.identityChanged()).toBe(true);
+    });
+
+    it('does not sign the other user out on the server when it drops their identity', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      http.expectNone(LOGOUT);
+    });
+
+    it('does not restore the other identity by itself afterwards', async () => {
+      await signIn();
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      await store.restore();
+
+      http.expectNone(REFRESH);
+      expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it('keeps the session when the refresh brings the same user', async () => {
+      await signIn();
+
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush(session('jwt-2'));
+
+      expect(await done).toBe('refreshed');
+      expect(store.accessToken()).toBe('jwt-2');
+      expect(store.identityChanged()).toBe(false);
+    });
+
+    it('forgets the identity change once someone signs in again', async () => {
+      await signIn();
+      const done = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-b'), userId: 'u2' });
+      await done;
+
+      await signIn('jwt-c');
+
+      expect(store.identityChanged()).toBe(false);
     });
 
     it('serializes refreshes across tabs with the Web Locks API', async () => {
@@ -258,14 +336,135 @@ describe('AuthStore', () => {
       expect(store.isAuthenticated()).toBe(false);
     });
 
-    it('clears the session even when the server cannot be reached', async () => {
+    it('keeps the session and reports it when the server cannot be reached', async () => {
       await signIn();
 
       const done = store.logout();
       http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+
+      expect(await done).toBe(false);
+      expect(store.isAuthenticated()).toBe(true);
+      expect(store.hasEnded()).toBe(false);
+    });
+
+    it('keeps the session when the server fails the sign out', async () => {
+      await signIn();
+
+      const done = store.logout();
+      http.expectOne(LOGOUT).flush(null, { status: 503, statusText: 'Unavailable' });
+
+      expect(await done).toBe(false);
+      expect(store.isAuthenticated()).toBe(true);
+    });
+
+    it('signs out for good on a retry after a failure', async () => {
+      await signIn();
+      const failed = store.logout();
+      http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+      await failed;
+
+      const retry = store.logout();
+      http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+
+      expect(await retry).toBe(true);
+      expect(store.isAuthenticated()).toBe(false);
+      expect(store.hasEnded()).toBe(true);
+    });
+
+    it('counts a rejected cookie as signed out', async () => {
+      await signIn();
+
+      const done = store.logout();
+      http.expectOne(LOGOUT).flush(null, UNAUTHORIZED);
+
+      expect(await done).toBe(true);
+      expect(store.isAuthenticated()).toBe(false);
+    });
+  });
+
+  describe('ensureFresh', () => {
+    it('refreshes a token that expires inside the window', async () => {
+      await signIn(tokenExpiring(10));
+
+      const done = store.ensureFresh(30_000);
+      http.expectOne(REFRESH).flush(session('jwt-new'));
       await done;
 
-      expect(store.isAuthenticated()).toBe(false);
+      expect(store.accessToken()).toBe('jwt-new');
+    });
+
+    it('leaves a token that stays valid through the window', async () => {
+      await signIn(tokenExpiring(600));
+
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
+    });
+
+    it('leaves a token it cannot read alone', async () => {
+      await signIn('opaque');
+
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
+    });
+
+    it('does nothing without a session', async () => {
+      await store.ensureFresh(30_000);
+
+      http.expectNone(REFRESH);
+    });
+  });
+
+  describe('sign-out hooks', () => {
+    it('runs before the server is called and waits for them', async () => {
+      await signIn();
+      let release!: () => void;
+      const hook = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+      store.onSignOut(hook);
+
+      const done = store.logout();
+      expect(hook).toHaveBeenCalled();
+      http.expectNone(LOGOUT);
+
+      release();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+      expect(await done).toBe(true);
+    });
+
+    it('does not let a failing hook stop the sign out', async () => {
+      await signIn();
+      store.onSignOut(() => Promise.reject(new Error('boom')));
+
+      const done = store.logout();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+
+      expect(await done).toBe(true);
+    });
+
+    it('stops waiting for a hook that never answers', async () => {
+      vi.useFakeTimers();
+      await signIn();
+      store.onSignOut(() => new Promise<void>(() => undefined));
+
+      const done = store.logout();
+      await vi.advanceTimersByTimeAsync(10_000);
+      http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+
+      expect(await done).toBe(true);
+      vi.useRealTimers();
+    });
+
+    it('forgets a hook that was removed', async () => {
+      await signIn();
+      const hook = vi.fn();
+      store.onSignOut(hook)();
+
+      const done = store.logout();
+      await vi.waitFor(() => http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' }));
+      await done;
+
+      expect(hook).not.toHaveBeenCalled();
     });
   });
 });

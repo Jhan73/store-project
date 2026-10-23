@@ -383,6 +383,41 @@ class InventoryApiIT {
 	}
 
 	@Test
+	void aShortfallSalePublishesADeficitWithTheUnitsTheShelfCouldNotCover() {
+		var product = trackedWithStock(1);
+		var sale = UUID.randomUUID();
+
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+
+		assertThat(events.stream(StockDeficit.class)).singleElement().satisfies(event -> {
+			assertThat(event.productId()).isEqualTo(product);
+			assertThat(event.referenceId()).isEqualTo(sale);
+			assertThat(event.shortBy()).isEqualTo(2);
+			assertThat(event.onHand()).isEqualTo(-2);
+		});
+	}
+
+	@Test
+	void aSaleTheShelfCoversPublishesNoDeficit() {
+		var product = trackedWithStock(3);
+
+		inventory.deductAllowingShortfall(UUID.randomUUID(), List.of(new StockLine(product, 3)));
+
+		assertThat(events.stream(StockDeficit.class)).isEmpty();
+	}
+
+	@Test
+	void aRepeatedShortfallSalePublishesTheDeficitOnce() {
+		var product = trackedWithStock(1);
+		var sale = UUID.randomUUID();
+
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+		inventory.deductAllowingShortfall(sale, List.of(new StockLine(product, 3)));
+
+		assertThat(events.stream(StockDeficit.class)).hasSize(1);
+	}
+
+	@Test
 	void aShortfallSaleNeverEatsReservedUnits() {
 		var product = trackedWithStock(3);
 		inventory.reserve(UUID.randomUUID(), List.of(new StockLine(product, 2)), TTL);

@@ -11,7 +11,7 @@
     </unit>
     <unit id="display.pageTitle">
       <notes>
-        <note category="location">src/app/app.routes.ts:30</note>
+        <note category="location">src/app/app.routes.ts:35</note>
       </notes>
       <segment>
         <source>Pedidos</source>
@@ -433,9 +433,17 @@
         <source>Debe quedar al menos un administrador activo.</source>
       </segment>
     </unit>
-    <unit id="error.instore.invalid-reason">
+    <unit id="error.instore.invalid-date-range">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:54</note>
+      </notes>
+      <segment>
+        <source>La fecha final es anterior a la inicial.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.invalid-reason">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
       </notes>
       <segment>
         <source>El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.</source>
@@ -443,7 +451,7 @@
     </unit>
     <unit id="error.instore.invalid-ticket">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:55</note>
+        <note category="location">src/app/core/errors/error-messages.ts:56</note>
       </notes>
       <segment>
         <source>La cuenta debe ser de una mesa o del mostrador con el nombre del cliente.</source>
@@ -451,7 +459,7 @@
     </unit>
     <unit id="error.instore.line-already-sent">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:56</note>
+        <note category="location">src/app/core/errors/error-messages.ts:57</note>
       </notes>
       <segment>
         <source>La línea ya se envió a cocina. Anúlala y agrega una nueva.</source>
@@ -459,7 +467,7 @@
     </unit>
     <unit id="error.instore.line-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:57</note>
+        <note category="location">src/app/core/errors/error-messages.ts:58</note>
       </notes>
       <segment>
         <source>La línea no existe en esta cuenta.</source>
@@ -467,7 +475,7 @@
     </unit>
     <unit id="error.instore.line-not-sent">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:58</note>
+        <note category="location">src/app/core/errors/error-messages.ts:59</note>
       </notes>
       <segment>
         <source>La línea aún no se envió a cocina. Elimínala en lugar de anularla.</source>
@@ -475,7 +483,7 @@
     </unit>
     <unit id="error.instore.table-has-open-ticket">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:59</note>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
       </notes>
       <segment>
         <source>La mesa tiene una cuenta abierta y no se puede desactivar.</source>
@@ -483,7 +491,7 @@
     </unit>
     <unit id="error.instore.table-inactive">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:60</note>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
       </notes>
       <segment>
         <source>La mesa está desactivada.</source>
@@ -491,7 +499,7 @@
     </unit>
     <unit id="error.instore.table-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+        <note category="location">src/app/core/errors/error-messages.ts:62</note>
       </notes>
       <segment>
         <source>Ya existe una mesa con ese nombre.</source>
@@ -499,7 +507,7 @@
     </unit>
     <unit id="error.instore.table-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:62</note>
+        <note category="location">src/app/core/errors/error-messages.ts:63</note>
       </notes>
       <segment>
         <source>La mesa no existe.</source>
@@ -507,7 +515,7 @@
     </unit>
     <unit id="error.instore.table-occupied">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:63</note>
+        <note category="location">src/app/core/errors/error-messages.ts:64</note>
       </notes>
       <segment>
         <source>La mesa ya tiene una cuenta abierta.</source>
@@ -515,7 +523,7 @@
     </unit>
     <unit id="error.instore.ticket-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:64</note>
+        <note category="location">src/app/core/errors/error-messages.ts:65</note>
       </notes>
       <segment>
         <source>La cuenta ya está cerrada.</source>
@@ -523,7 +531,7 @@
     </unit>
     <unit id="error.instore.ticket-has-no-table">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:65</note>
+        <note category="location">src/app/core/errors/error-messages.ts:66</note>
       </notes>
       <segment>
         <source>Solo se pueden mover las cuentas de una mesa.</source>
@@ -531,7 +539,7 @@
     </unit>
     <unit id="error.instore.ticket-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:66</note>
+        <note category="location">src/app/core/errors/error-messages.ts:67</note>
       </notes>
       <segment>
         <source>La cuenta no existe.</source>
@@ -539,7 +547,7 @@
     </unit>
     <unit id="error.instore.cash-movement-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:67</note>
+        <note category="location">src/app/core/errors/error-messages.ts:68</note>
       </notes>
       <segment>
         <source>El movimiento de caja no existe.</source>
@@ -547,7 +555,7 @@
     </unit>
     <unit id="error.instore.counted-cash-locked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:68</note>
+        <note category="location">src/app/core/errors/error-messages.ts:69</note>
       </notes>
       <segment>
         <source>El efectivo contado ya se mostró y no puede cambiar. Cierra el turno con el mismo monto.</source>
@@ -555,7 +563,7 @@
     </unit>
     <unit id="error.instore.difference-note-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:69</note>
+        <note category="location">src/app/core/errors/error-messages.ts:70</note>
       </notes>
       <segment>
         <source>La diferencia supera el umbral permitido. Cierra el turno de nuevo con una nota.</source>
@@ -563,7 +571,7 @@
     </unit>
     <unit id="error.instore.invalid-amount">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:70</note>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
       </notes>
       <segment>
         <source>El monto no es válido.</source>
@@ -571,7 +579,7 @@
     </unit>
     <unit id="error.instore.invalid-cash-movement">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
       </notes>
       <segment>
         <source>El movimiento de caja no es válido. La entrada lleva una nota y la salida un motivo.</source>
@@ -579,7 +587,7 @@
     </unit>
     <unit id="error.instore.invalid-payment">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
       </notes>
       <segment>
         <source>El pago no es válido. Revisa el método, el monto y el efectivo recibido.</source>
@@ -587,7 +595,7 @@
     </unit>
     <unit id="error.instore.line-already-paid">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
       </notes>
       <segment>
         <source>La línea ya está pagada.</source>
@@ -595,7 +603,7 @@
     </unit>
     <unit id="error.instore.line-covered-by-payment">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
       </notes>
       <segment>
         <source>Un pago cubre esta línea. Anula primero el pago.</source>
@@ -603,7 +611,7 @@
     </unit>
     <unit id="error.instore.no-open-shift">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+        <note category="location">src/app/core/errors/error-messages.ts:76</note>
       </notes>
       <segment>
         <source>Necesitas un turno de caja abierto para hacer esto.</source>
@@ -611,7 +619,7 @@
     </unit>
     <unit id="error.instore.payment-exceeds-balance">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:76</note>
+        <note category="location">src/app/core/errors/error-messages.ts:77</note>
       </notes>
       <segment>
         <source>El pago es mayor que lo que falta por cobrar.</source>
@@ -619,7 +627,7 @@
     </unit>
     <unit id="error.instore.payment-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:77</note>
+        <note category="location">src/app/core/errors/error-messages.ts:78</note>
       </notes>
       <segment>
         <source>El pago no existe en esta cuenta.</source>
@@ -627,7 +635,7 @@
     </unit>
     <unit id="error.instore.sale-void-not-permitted">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:78</note>
+        <note category="location">src/app/core/errors/error-messages.ts:79</note>
       </notes>
       <segment>
         <source>Solo puedes anular lo cobrado en tu propio turno abierto.</source>
@@ -635,7 +643,7 @@
     </unit>
     <unit id="error.instore.shift-already-open">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:79</note>
+        <note category="location">src/app/core/errors/error-messages.ts:80</note>
       </notes>
       <segment>
         <source>Ya tienes un turno de caja abierto.</source>
@@ -643,7 +651,7 @@
     </unit>
     <unit id="error.instore.shift-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:80</note>
+        <note category="location">src/app/core/errors/error-messages.ts:81</note>
       </notes>
       <segment>
         <source>El turno de caja ya está cerrado.</source>
@@ -651,7 +659,7 @@
     </unit>
     <unit id="error.instore.shift-closing">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:81</note>
+        <note category="location">src/app/core/errors/error-messages.ts:82</note>
       </notes>
       <segment>
         <source>El turno se está cerrando y no admite más cambios.</source>
@@ -659,7 +667,7 @@
     </unit>
     <unit id="error.instore.shift-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:82</note>
+        <note category="location">src/app/core/errors/error-messages.ts:83</note>
       </notes>
       <segment>
         <source>El turno de caja no existe.</source>
@@ -667,15 +675,63 @@
     </unit>
     <unit id="error.instore.ticket-has-unsent-lines">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:83</note>
+        <note category="location">src/app/core/errors/error-messages.ts:84</note>
       </notes>
       <segment>
         <source>Envía o elimina las líneas pendientes antes de cobrar.</source>
       </segment>
     </unit>
+    <unit id="error.instore.cash-out-exceeds-drawer">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:85</note>
+      </notes>
+      <segment>
+        <source>La salida es mayor que el efectivo que debería haber en caja. Explica el motivo en la nota.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.line-product-unavailable">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:86</note>
+      </notes>
+      <segment>
+        <source>Un producto de la cuenta ya no está disponible. Elimina esa línea antes de enviar.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.product-not-quick-sale">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:87</note>
+      </notes>
+      <segment>
+        <source>Este producto no está en los frecuentes de venta rápida. Agrégalo a una cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.too-many-lines">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:88</note>
+      </notes>
+      <segment>
+        <source>La cuenta alcanzó el máximo de 100 líneas. Cóbrala o divídela en otra cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.ticket-not-empty">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:89</note>
+      </notes>
+      <segment>
+        <source>La cuenta tiene líneas cobradas o pagos. Anúlalos antes de cancelarla.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.user-has-open-shift">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:90</note>
+      </notes>
+      <segment>
+        <source>Esta persona tiene un turno de caja abierto. Ciérralo antes de desactivarla o cambiar su rol.</source>
+      </segment>
+    </unit>
     <unit id="error.instore.ticket-not-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:84</note>
+        <note category="location">src/app/core/errors/error-messages.ts:91</note>
       </notes>
       <segment>
         <source>La cuenta sigue abierta. Anula sus líneas o sus pagos.</source>
@@ -683,7 +739,7 @@
     </unit>
     <unit id="error.inventory.insufficient-stock">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:85</note>
+        <note category="location">src/app/core/errors/error-messages.ts:92</note>
       </notes>
       <segment>
         <source>No hay suficiente stock disponible.</source>
@@ -691,7 +747,7 @@
     </unit>
     <unit id="error.inventory.invalid-quantity">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:86</note>
+        <note category="location">src/app/core/errors/error-messages.ts:93</note>
       </notes>
       <segment>
         <source>La cantidad no es válida.</source>
@@ -699,15 +755,23 @@
     </unit>
     <unit id="error.inventory.invalid-reason">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:87</note>
+        <note category="location">src/app/core/errors/error-messages.ts:94</note>
       </notes>
       <segment>
         <source>El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.</source>
       </segment>
     </unit>
+    <unit id="error.inventory.product-out-of-stock">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+      </notes>
+      <segment>
+        <source>El producto no tiene stock. Registra una entrada antes de marcarlo disponible.</source>
+      </segment>
+    </unit>
     <unit id="error.inventory.product-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:88</note>
+        <note category="location">src/app/core/errors/error-messages.ts:96</note>
       </notes>
       <segment>
         <source>El producto no existe.</source>
@@ -715,7 +779,7 @@
     </unit>
     <unit id="error.inventory.product-not-tracked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:89</note>
+        <note category="location">src/app/core/errors/error-messages.ts:97</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -723,7 +787,7 @@
     </unit>
     <unit id="error.inventory.reservation-not-active">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:90</note>
+        <note category="location">src/app/core/errors/error-messages.ts:98</note>
       </notes>
       <segment>
         <source>La reserva de stock ya venció o fue liberada.</source>
@@ -731,7 +795,7 @@
     </unit>
     <unit id="error.inventory.stock-item-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:91</note>
+        <note category="location">src/app/core/errors/error-messages.ts:99</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -739,7 +803,7 @@
     </unit>
     <unit id="error.inventory.stock-reserved">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:92</note>
+        <note category="location">src/app/core/errors/error-messages.ts:100</note>
       </notes>
       <segment>
         <source>Hay unidades reservadas por pedidos en curso. Espera a que se confirmen o venzan para quitar el control de stock.</source>
@@ -747,7 +811,7 @@
     </unit>
     <unit id="error.preparation.line-already-flagged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:93</note>
+        <note category="location">src/app/core/errors/error-messages.ts:101</note>
       </notes>
       <segment>
         <source>Esa línea ya está marcada como agotada.</source>
@@ -755,7 +819,7 @@
     </unit>
     <unit id="error.preparation.line-already-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:94</note>
+        <note category="location">src/app/core/errors/error-messages.ts:102</note>
       </notes>
       <segment>
         <source>La línea ya está lista. Pide a un cajero que la anule.</source>
@@ -763,7 +827,7 @@
     </unit>
     <unit id="error.preparation.line-flagged-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+        <note category="location">src/app/core/errors/error-messages.ts:103</note>
       </notes>
       <segment>
         <source>Hay una línea agotada sin resolver. Anúlala o sustitúyela antes de continuar.</source>
@@ -771,7 +835,7 @@
     </unit>
     <unit id="error.preparation.line-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:96</note>
+        <note category="location">src/app/core/errors/error-messages.ts:104</note>
       </notes>
       <segment>
         <source>La línea no existe.</source>
@@ -779,7 +843,7 @@
     </unit>
     <unit id="error.preparation.line-not-pending">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:97</note>
+        <note category="location">src/app/core/errors/error-messages.ts:105</note>
       </notes>
       <segment>
         <source>La línea ya no está pendiente.</source>
@@ -787,7 +851,7 @@
     </unit>
     <unit id="error.preparation.lines-not-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:98</note>
+        <note category="location">src/app/core/errors/error-messages.ts:106</note>
       </notes>
       <segment>
         <source>Llegaron líneas nuevas que aún no confirmas. Confírmalas antes de marcar el pedido como listo.</source>
@@ -795,7 +859,7 @@
     </unit>
     <unit id="error.preparation.marker-already-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:99</note>
+        <note category="location">src/app/core/errors/error-messages.ts:107</note>
       </notes>
       <segment>
         <source>Otra persona ya confirmó este aviso.</source>
@@ -803,7 +867,7 @@
     </unit>
     <unit id="error.preparation.marker-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:100</note>
+        <note category="location">src/app/core/errors/error-messages.ts:108</note>
       </notes>
       <segment>
         <source>El aviso no existe.</source>
@@ -811,7 +875,7 @@
     </unit>
     <unit id="error.preparation.order-already-started">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:101</note>
+        <note category="location">src/app/core/errors/error-messages.ts:109</note>
       </notes>
       <segment>
         <source>La preparación del pedido ya comenzó.</source>
@@ -819,7 +883,7 @@
     </unit>
     <unit id="error.preparation.order-cancelled">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:102</note>
+        <note category="location">src/app/core/errors/error-messages.ts:110</note>
       </notes>
       <segment>
         <source>El pedido fue cancelado.</source>
@@ -827,7 +891,7 @@
     </unit>
     <unit id="error.preparation.order-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:103</note>
+        <note category="location">src/app/core/errors/error-messages.ts:111</note>
       </notes>
       <segment>
         <source>El pedido ya fue entregado y no admite cambios.</source>
@@ -835,7 +899,7 @@
     </unit>
     <unit id="error.preparation.order-not-completed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:104</note>
+        <note category="location">src/app/core/errors/error-messages.ts:112</note>
       </notes>
       <segment>
         <source>El pedido aún no está terminado.</source>
@@ -843,7 +907,7 @@
     </unit>
     <unit id="error.preparation.order-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:105</note>
+        <note category="location">src/app/core/errors/error-messages.ts:113</note>
       </notes>
       <segment>
         <source>El pedido no existe en el tablero.</source>
@@ -851,7 +915,7 @@
     </unit>
     <unit id="error.preparation.order-not-preparing">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:106</note>
+        <note category="location">src/app/core/errors/error-messages.ts:114</note>
       </notes>
       <segment>
         <source>El pedido no está en preparación.</source>
@@ -859,7 +923,7 @@
     </unit>
     <unit id="error.preparation.order-not-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:107</note>
+        <note category="location">src/app/core/errors/error-messages.ts:115</note>
       </notes>
       <segment>
         <source>El pedido no está listo para entregar.</source>
@@ -867,7 +931,7 @@
     </unit>
     <unit id="error.preparation.recall-window-expired">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:108</note>
+        <note category="location">src/app/core/errors/error-messages.ts:116</note>
       </notes>
       <segment>
         <source>Pasó demasiado tiempo para reabrir este pedido.</source>
@@ -875,7 +939,7 @@
     </unit>
     <unit id="error.store.delivery-zone-currency-mismatch">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:109</note>
+        <note category="location">src/app/core/errors/error-messages.ts:117</note>
       </notes>
       <segment>
         <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
@@ -883,7 +947,7 @@
     </unit>
     <unit id="error.store.delivery-zone-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:110</note>
+        <note category="location">src/app/core/errors/error-messages.ts:118</note>
       </notes>
       <segment>
         <source>Ya existe una zona de reparto con ese nombre.</source>
@@ -891,7 +955,7 @@
     </unit>
     <unit id="error.store.delivery-zone-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:111</note>
+        <note category="location">src/app/core/errors/error-messages.ts:119</note>
       </notes>
       <segment>
         <source>La zona de reparto no existe.</source>
@@ -899,7 +963,7 @@
     </unit>
     <unit id="error.store.invalid-board-thresholds">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:112</note>
+        <note category="location">src/app/core/errors/error-messages.ts:120</note>
       </notes>
       <segment>
         <source>Los tiempos del tablero no son válidos.</source>
@@ -907,7 +971,7 @@
     </unit>
     <unit id="error.store.invalid-delivery-zone">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:113</note>
+        <note category="location">src/app/core/errors/error-messages.ts:121</note>
       </notes>
       <segment>
         <source>Los datos de la zona de reparto no son válidos.</source>
@@ -915,15 +979,23 @@
     </unit>
     <unit id="error.store.invalid-opening-hours">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:114</note>
+        <note category="location">src/app/core/errors/error-messages.ts:122</note>
       </notes>
       <segment>
         <source>El horario de atención no es válido.</source>
       </segment>
     </unit>
+    <unit id="error.store.currency-locked">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:123</note>
+      </notes>
+      <segment>
+        <source>La moneda no se puede cambiar mientras haya un turno de caja o una cuenta abiertos.</source>
+      </segment>
+    </unit>
     <unit id="error.store.invalid-settings-value">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:115</note>
+        <note category="location">src/app/core/errors/error-messages.ts:124</note>
       </notes>
       <segment>
         <source>Uno de los valores de la configuración no es válido.</source>
@@ -931,7 +1003,7 @@
     </unit>
     <unit id="error.store.reason-code-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:116</note>
+        <note category="location">src/app/core/errors/error-messages.ts:125</note>
       </notes>
       <segment>
         <source>Ya existe un motivo con ese código.</source>
@@ -939,7 +1011,7 @@
     </unit>
     <unit id="error.store.reason-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:117</note>
+        <note category="location">src/app/core/errors/error-messages.ts:126</note>
       </notes>
       <segment>
         <source>El motivo no existe.</source>
@@ -947,7 +1019,7 @@
     </unit>
     <unit id="error.generic">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:120</note>
+        <note category="location">src/app/core/errors/error-messages.ts:129</note>
       </notes>
       <segment>
         <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
@@ -955,7 +1027,7 @@
     </unit>
     <unit id="error.status.0">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:123</note>
+        <note category="location">src/app/core/errors/error-messages.ts:132</note>
       </notes>
       <segment>
         <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
@@ -963,7 +1035,7 @@
     </unit>
     <unit id="error.status.400">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:124</note>
+        <note category="location">src/app/core/errors/error-messages.ts:133</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -971,7 +1043,7 @@
     </unit>
     <unit id="error.status.401">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:125</note>
+        <note category="location">src/app/core/errors/error-messages.ts:134</note>
       </notes>
       <segment>
         <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
@@ -979,7 +1051,7 @@
     </unit>
     <unit id="error.status.403">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:126</note>
+        <note category="location">src/app/core/errors/error-messages.ts:135</note>
       </notes>
       <segment>
         <source>No tienes permiso para realizar esta acción.</source>
@@ -987,7 +1059,7 @@
     </unit>
     <unit id="error.status.404">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:127</note>
+        <note category="location">src/app/core/errors/error-messages.ts:136</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -995,7 +1067,7 @@
     </unit>
     <unit id="error.status.409">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:128</note>
+        <note category="location">src/app/core/errors/error-messages.ts:137</note>
       </notes>
       <segment>
         <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
@@ -1003,7 +1075,7 @@
     </unit>
     <unit id="error.status.422">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:129</note>
+        <note category="location">src/app/core/errors/error-messages.ts:138</note>
       </notes>
       <segment>
         <source>Los datos no cumplen las reglas de la operación.</source>
@@ -1011,7 +1083,7 @@
     </unit>
     <unit id="error.status.429">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:130</note>
+        <note category="location">src/app/core/errors/error-messages.ts:139</note>
       </notes>
       <segment>
         <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
@@ -1019,7 +1091,7 @@
     </unit>
     <unit id="error.status.500">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:131</note>
+        <note category="location">src/app/core/errors/error-messages.ts:140</note>
       </notes>
       <segment>
         <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
@@ -1027,7 +1099,7 @@
     </unit>
     <unit id="error.supportCode">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:151</note>
+        <note category="location">src/app/core/errors/error-messages.ts:160</note>
       </notes>
       <segment>
         <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
@@ -1422,8 +1494,8 @@
         <note category="location">src/app/features/staff/register/cash-movements.ts:114</note>
         <note category="location">src/app/features/staff/tickets/payment-panel.ts:97</note>
         <note category="location">src/app/features/staff/tickets/payment-panel.ts:185</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:481</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:578</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:529</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:673</note>
         <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:71</note>
       </notes>
       <segment>
@@ -3509,33 +3581,9 @@
         <source>Escribe un monto, como 5.00.</source>
       </segment>
     </unit>
-    <unit id="admin.settings.general.stock">
-      <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:235,237</note>
-      </notes>
-      <segment>
-        <source>Venta en tienda y stock</source>
-      </segment>
-    </unit>
-    <unit id="admin.settings.general.allowNegativeStockOnSale">
-      <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:246,249</note>
-      </notes>
-      <segment>
-        <source>Permitir ventas sin stock suficiente</source>
-      </segment>
-    </unit>
-    <unit id="admin.settings.general.allowNegativeStockOnSaleHint">
-      <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:250,254</note>
-      </notes>
-      <segment>
-        <source>La venta se cierra aunque no haya stock y el stock del producto quedará en negativo.</source>
-      </segment>
-    </unit>
     <unit id="admin.settings.general.save.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:259,260</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:239,240</note>
       </notes>
       <segment>
         <source>Guardar los cambios de la configuración</source>
@@ -3543,7 +3591,7 @@
     </unit>
     <unit id="admin.settings.general.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:266,269</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:246,249</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -3551,7 +3599,7 @@
     </unit>
     <unit id="admin.settings.general.saved">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:270,275</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:250,255</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -3559,7 +3607,7 @@
     </unit>
     <unit id="admin.settings.general.numberInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:335</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:316</note>
       </notes>
       <segment>
         <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
@@ -4055,7 +4103,7 @@
     </unit>
     <unit id="admin.stock.entry.quantity.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:81,84</note>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:81,83</note>
       </notes>
       <segment>
         <source> Escribe un número entero entre 1 y 1000000. </source>
@@ -4133,9 +4181,17 @@
         <source>Devolución</source>
       </segment>
     </unit>
-    <unit id="admin.stock.movement.reserve">
+    <unit id="admin.stock.movement.waste">
       <notes>
         <note category="location">src/app/features/admin/stock/stock-labels.ts:14</note>
+      </notes>
+      <segment>
+        <source>Merma</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.movement.reserve">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:16</note>
       </notes>
       <segment>
         <source>Reserva</source>
@@ -4143,7 +4199,7 @@
     </unit>
     <unit id="admin.stock.movement.commit">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:16</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:18</note>
       </notes>
       <segment>
         <source>Confirmación</source>
@@ -4151,7 +4207,7 @@
     </unit>
     <unit id="admin.stock.movement.release">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:18</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:20</note>
       </notes>
       <segment>
         <source>Liberación</source>
@@ -4159,7 +4215,7 @@
     </unit>
     <unit id="admin.stock.movement.expire">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-labels.ts:20</note>
+        <note category="location">src/app/features/admin/stock/stock-labels.ts:22</note>
       </notes>
       <segment>
         <source>Vencimiento</source>
@@ -4191,7 +4247,7 @@
     </unit>
     <unit id="admin.stock.track.new">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:77,81</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:77,79</note>
       </notes>
       <segment>
         <source>Controlar un producto</source>
@@ -4199,7 +4255,7 @@
     </unit>
     <unit id="admin.stock.catalogFailed">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:83,86</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:83,85</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los nombres de los productos.</source>
@@ -4215,7 +4271,7 @@
     </unit>
     <unit id="admin.stock.catalogRetry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:95,98</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:95,97</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4351,7 +4407,7 @@
     </unit>
     <unit id="admin.stock.normal">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:163,165</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:163,164</note>
       </notes>
       <segment>
         <source>Normal</source>
@@ -4663,7 +4719,7 @@
     </unit>
     <unit id="admin.stock.track.productLabel">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:126,129</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:126,128</note>
       </notes>
       <segment>
         <source>Producto</source>
@@ -4703,7 +4759,7 @@
     </unit>
     <unit id="admin.stock.track.threshold.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:167,170</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:167,169</note>
       </notes>
       <segment>
         <source> Escribe un número entero entre 0 y 1000000. </source>
@@ -5374,6 +5430,46 @@
         <source>Entrar</source>
       </segment>
     </unit>
+    <unit id="serviceUnavailable.title">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:30,31</note>
+      </notes>
+      <segment>
+        <source>El servicio no está disponible</source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.hint">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:32,34</note>
+      </notes>
+      <segment>
+        <source> No se pudo comprobar tu sesión. Tu trabajo no se perdió: vuelve a intentarlo en unos segundos. </source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.stillDown">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:36,39</note>
+      </notes>
+      <segment>
+        <source> El servicio sigue sin responder. </source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:45,46</note>
+      </notes>
+      <segment>
+        <source>Volver a comprobar la sesión</source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.retry">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:53,56</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
     <unit id="setPassword.title">
       <notes>
         <note category="location">src/app/features/set-password/set-password.ts:73,74</note>
@@ -5867,6 +5963,14 @@
       </notes>
       <segment>
         <source>Todas las estaciones</source>
+      </segment>
+    </unit>
+    <unit id="staff.quickSale.registered">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:178</note>
+      </notes>
+      <segment>
+        <source>Se registró la venta del ticket <ph id="0" equiv="number" disp="ticket.number"/>.</source>
       </segment>
     </unit>
     <unit id="staff.quickSale.title">
@@ -6829,9 +6933,33 @@
         <source>Escribe un monto, como 50 o 50.00.</source>
       </segment>
     </unit>
+    <unit id="staff.register.none.currencyFailed">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:129,131</note>
+      </notes>
+      <segment>
+        <source>No se pudo leer la moneda de la tienda, así que todavía no se puede abrir un turno.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.none.currencyRetry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:137,138</note>
+      </notes>
+      <segment>
+        <source>Volver a leer la moneda de la tienda</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.none.currencyRetry">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:142,144</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
     <unit id="staff.register.none.noCurrency">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:128,131</note>
+        <note category="location">src/app/features/staff/register/register.ts:147,150</note>
       </notes>
       <segment>
         <source> Todavía no hay productos en el menú, así que no se puede abrir un turno. </source>
@@ -6839,7 +6967,7 @@
     </unit>
     <unit id="staff.register.none.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:137,138</note>
+        <note category="location">src/app/features/staff/register/register.ts:156,157</note>
       </notes>
       <segment>
         <source>Abrir el turno con este fondo inicial</source>
@@ -6847,7 +6975,7 @@
     </unit>
     <unit id="staff.register.none.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:144,146</note>
+        <note category="location">src/app/features/staff/register/register.ts:163,165</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -7011,6 +7139,14 @@
       </notes>
       <segment>
         <source>Neto</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.close.registered">
+      <notes>
+        <note category="location">src/app/features/staff/register/shift-store.ts:239</note>
+      </notes>
+      <segment>
+        <source>El turno quedó cerrado.</source>
       </segment>
     </unit>
     <unit id="staff.home.title">
@@ -7333,9 +7469,17 @@
         <source>Usar esta parte como el monto a cobrar</source>
       </segment>
     </unit>
+    <unit id="staff.ticket.moneyRegistered">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:406</note>
+      </notes>
+      <segment>
+        <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.back.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:64,65</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:66,67</note>
       </notes>
       <segment>
         <source>Volver al salón</source>
@@ -7343,7 +7487,7 @@
     </unit>
     <unit id="staff.tickets.back">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:69,71</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:71,73</note>
       </notes>
       <segment>
         <source>Salón</source>
@@ -7351,7 +7495,7 @@
     </unit>
     <unit id="staff.tickets.counterTitle">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:76,77</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:78,79</note>
       </notes>
       <segment>
         <source>Mostrador: <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.counterName }}"/></source>
@@ -7359,7 +7503,7 @@
     </unit>
     <unit id="staff.tickets.number">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:79,81</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:81,83</note>
       </notes>
       <segment>
         <source>Cuenta <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.number }}"/></source>
@@ -7367,7 +7511,7 @@
     </unit>
     <unit id="staff.tickets.failed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:86,88</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:88,90</note>
       </notes>
       <segment>
         <source>No se pudo cargar la cuenta. Los cambios están deshabilitados.</source>
@@ -7375,7 +7519,7 @@
     </unit>
     <unit id="staff.tickets.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:94,95</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:96,97</note>
       </notes>
       <segment>
         <source>Volver a cargar la cuenta</source>
@@ -7383,7 +7527,7 @@
     </unit>
     <unit id="staff.tickets.retry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:99,101</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:101,103</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7391,7 +7535,7 @@
     </unit>
     <unit id="staff.tickets.offline">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:105,107</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:107,109</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
@@ -7399,7 +7543,7 @@
     </unit>
     <unit id="staff.tickets.updating">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:111,113</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:113,115</note>
       </notes>
       <segment>
         <source>Actualizando la cuenta. Los cambios se habilitan en unos segundos.</source>
@@ -7407,15 +7551,23 @@
     </unit>
     <unit id="staff.tickets.missing">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:117,118</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:119,120</note>
       </notes>
       <segment>
         <source>La cuenta no existe.</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.cancelled">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:123,125</note>
+      </notes>
+      <segment>
+        <source> La cuenta fue cancelada y ya no se puede modificar. </source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.closed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:121,124</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:127,130</note>
       </notes>
       <segment>
         <source> La cuenta está cerrada y ya no se puede modificar. </source>
@@ -7423,7 +7575,7 @@
     </unit>
     <unit id="staff.tickets.menu">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:128,129</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:134,135</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -7431,7 +7583,7 @@
     </unit>
     <unit id="staff.tickets.product.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:141,142</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:147,148</note>
       </notes>
       <segment>
         <source>Elegir las opciones de este producto</source>
@@ -7439,7 +7591,7 @@
     </unit>
     <unit id="staff.tickets.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:152,154</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:158,160</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -7447,7 +7599,7 @@
     </unit>
     <unit id="staff.tickets.lines">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:164,165</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:170,171</note>
       </notes>
       <segment>
         <source>Cuenta</source>
@@ -7455,7 +7607,7 @@
     </unit>
     <unit id="staff.tickets.allergy">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:180,182</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:186,188</note>
       </notes>
       <segment>
         <source>Alergia</source>
@@ -7463,7 +7615,7 @@
     </unit>
     <unit id="staff.tickets.state.unsent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:186,187</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:192,193</note>
       </notes>
       <segment>
         <source>Sin enviar</source>
@@ -7471,7 +7623,7 @@
     </unit>
     <unit id="staff.tickets.state.sent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:189,190</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:195,196</note>
       </notes>
       <segment>
         <source>Enviada</source>
@@ -7479,7 +7631,7 @@
     </unit>
     <unit id="staff.tickets.state.ready">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:192,193</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:198,199</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -7487,7 +7639,7 @@
     </unit>
     <unit id="staff.tickets.state.voided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:195,196</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:201,202</note>
       </notes>
       <segment>
         <source>Anulada</source>
@@ -7495,7 +7647,7 @@
     </unit>
     <unit id="staff.tickets.void.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:209,210</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:215,216</note>
       </notes>
       <segment>
         <source>Anular esta línea con un motivo</source>
@@ -7503,7 +7655,7 @@
     </unit>
     <unit id="staff.tickets.void">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:215,216</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:221,222</note>
       </notes>
       <segment>
         <source>Anular</source>
@@ -7511,7 +7663,7 @@
     </unit>
     <unit id="staff.tickets.void.blocked">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:219,221</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:225,227</note>
       </notes>
       <segment>
         <source>Ya está lista: pide a un cajero que la anule.</source>
@@ -7519,7 +7671,7 @@
     </unit>
     <unit id="staff.tickets.quantity.downLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:230,231</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:236,237</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -7527,7 +7679,7 @@
     </unit>
     <unit id="staff.tickets.quantity.down">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:232,233</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:238,239</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -7535,7 +7687,7 @@
     </unit>
     <unit id="staff.tickets.quantity.upLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:245,246</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:251,252</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -7543,7 +7695,7 @@
     </unit>
     <unit id="staff.tickets.quantity.up">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:247,248</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:253,254</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -7551,7 +7703,7 @@
     </unit>
     <unit id="staff.tickets.remove.label">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:260,261</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:266,267</note>
       </notes>
       <segment>
         <source>Quitar la línea</source>
@@ -7559,7 +7711,7 @@
     </unit>
     <unit id="staff.tickets.remove.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:262,263</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:268,269</note>
       </notes>
       <segment>
         <source>Quitar la línea de la cuenta</source>
@@ -7567,7 +7719,7 @@
     </unit>
     <unit id="staff.tickets.empty">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:274,276</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:280,282</note>
       </notes>
       <segment>
         <source>La cuenta todavía no tiene líneas.</source>
@@ -7575,7 +7727,7 @@
     </unit>
     <unit id="staff.tickets.total">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:279,280</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:285,286</note>
       </notes>
       <segment>
         <source>Total</source>
@@ -7583,7 +7735,7 @@
     </unit>
     <unit id="staff.tickets.paid">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:285,286</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:291,292</note>
       </notes>
       <segment>
         <source>Pagado</source>
@@ -7591,7 +7743,7 @@
     </unit>
     <unit id="staff.tickets.balance">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:289,290</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:295,296</note>
       </notes>
       <segment>
         <source>Falta cobrar</source>
@@ -7599,7 +7751,7 @@
     </unit>
     <unit id="staff.tickets.payment.received">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:299,300</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:305,306</note>
       </notes>
       <segment>
         <source>Recibido</source>
@@ -7607,7 +7759,7 @@
     </unit>
     <unit id="staff.tickets.payment.change">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:301,302</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:307,308</note>
       </notes>
       <segment>
         <source>Vuelto</source>
@@ -7615,7 +7767,7 @@
     </unit>
     <unit id="staff.tickets.payment.voided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:306,307</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:312,313</note>
       </notes>
       <segment>
         <source>Anulado</source>
@@ -7623,7 +7775,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:314,315</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:320,321</note>
       </notes>
       <segment>
         <source>Anular este pago con un motivo</source>
@@ -7631,15 +7783,39 @@
     </unit>
     <unit id="staff.tickets.voidPayment">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:320,322</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:326,328</note>
       </notes>
       <segment>
         <source>Anular pago</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.note">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:336,337</note>
+      </notes>
+      <segment>
+        <source>Nota de la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.note.save.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:352,353</note>
+      </notes>
+      <segment>
+        <source>Guardar la nota de la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.note.save">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:358,360</note>
+      </notes>
+      <segment>
+        <source>Guardar nota</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.send.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:335,336</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:367,368</note>
       </notes>
       <segment>
         <source>Enviar las líneas nuevas a cocina</source>
@@ -7647,7 +7823,7 @@
     </unit>
     <unit id="staff.tickets.send">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:341,342</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:373,374</note>
       </notes>
       <segment>
         <source>Enviar a cocina</source>
@@ -7655,7 +7831,7 @@
     </unit>
     <unit id="staff.tickets.repeat.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:349,350</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:381,382</note>
       </notes>
       <segment>
         <source>Agregar de nuevo las líneas de la última ronda enviada</source>
@@ -7663,7 +7839,7 @@
     </unit>
     <unit id="staff.tickets.repeat">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:355,357</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:387,389</note>
       </notes>
       <segment>
         <source>Repetir última ronda</source>
@@ -7671,7 +7847,7 @@
     </unit>
     <unit id="staff.tickets.billOff">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:370,371</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:402,403</note>
       </notes>
       <segment>
         <source>Quitar el pedido de cuenta</source>
@@ -7679,7 +7855,7 @@
     </unit>
     <unit id="staff.tickets.billOn">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:372,374</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:404,406</note>
       </notes>
       <segment>
         <source>Pedir la cuenta</source>
@@ -7687,7 +7863,7 @@
     </unit>
     <unit id="staff.tickets.transfer.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:381,382</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:413,414</note>
       </notes>
       <segment>
         <source>Mover la cuenta a una mesa libre</source>
@@ -7695,15 +7871,31 @@
     </unit>
     <unit id="staff.tickets.transfer">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:387,389</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:419,421</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.cancel.open.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:429,430</note>
+      </notes>
+      <segment>
+        <source>Descartar la cuenta si todavía no se cobró nada</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.open">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:435,437</note>
+      </notes>
+      <segment>
+        <source>Cancelar cuenta</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.pay.open.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:396,397</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:444,445</note>
       </notes>
       <segment>
         <source>Mostrar u ocultar el cobro de esta cuenta</source>
@@ -7711,7 +7903,7 @@
     </unit>
     <unit id="staff.tickets.pay.open">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:402,404</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:450,452</note>
       </notes>
       <segment>
         <source>Cobrar</source>
@@ -7719,7 +7911,7 @@
     </unit>
     <unit id="staff.tickets.saleVoided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:412,413</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:460,461</note>
       </notes>
       <segment>
         <source>Venta anulada:</source>
@@ -7727,7 +7919,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:423,424</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:471,472</note>
       </notes>
       <segment>
         <source>Anular toda la venta con un motivo</source>
@@ -7735,7 +7927,7 @@
     </unit>
     <unit id="staff.tickets.voidSale">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:429,431</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:477,479</note>
       </notes>
       <segment>
         <source>Anular venta</source>
@@ -7743,7 +7935,7 @@
     </unit>
     <unit id="staff.tickets.add.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:439,440</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:487,488</note>
       </notes>
       <segment>
         <source>Agregar producto</source>
@@ -7751,7 +7943,7 @@
     </unit>
     <unit id="staff.tickets.transfer.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:458,459</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:506,507</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
@@ -7759,7 +7951,7 @@
     </unit>
     <unit id="staff.tickets.transfer.table">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:468,471</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:516,519</note>
       </notes>
       <segment>
         <source>Mesa de destino</source>
@@ -7767,7 +7959,7 @@
     </unit>
     <unit id="staff.tickets.transfer.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:482,483</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:530,531</note>
       </notes>
       <segment>
         <source>Elige una mesa libre</source>
@@ -7775,7 +7967,7 @@
     </unit>
     <unit id="staff.tickets.transfer.cancel.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:494,495</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:542,543</note>
       </notes>
       <segment>
         <source>Cerrar sin mover la cuenta</source>
@@ -7783,7 +7975,7 @@
     </unit>
     <unit id="staff.tickets.transfer.cancel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:500,502</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:548,550</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -7791,7 +7983,7 @@
     </unit>
     <unit id="staff.tickets.transfer.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:507,508</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:555,556</note>
       </notes>
       <segment>
         <source>Mover la cuenta a la mesa elegida</source>
@@ -7799,15 +7991,63 @@
     </unit>
     <unit id="staff.tickets.transfer.confirm">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:513,515</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:561,563</note>
       </notes>
       <segment>
         <source>Mover</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.cancel.title">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:567,568</note>
+      </notes>
+      <segment>
+        <source>Cancelar cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.explain">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:576,579</note>
+      </notes>
+      <segment>
+        <source> Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar libre y esto no se puede deshacer. </source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.back.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:585,586</note>
+      </notes>
+      <segment>
+        <source>Volver sin cancelar la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.back">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:591,593</note>
+      </notes>
+      <segment>
+        <source>Volver</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:600,601</note>
+      </notes>
+      <segment>
+        <source>Cancelar la cuenta definitivamente</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:608,610</note>
+      </notes>
+      <segment>
+        <source>Cancelar cuenta</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.void.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:532,533</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:627,628</note>
       </notes>
       <segment>
         <source>Anular línea</source>
@@ -7815,7 +8055,7 @@
     </unit>
     <unit id="staff.tickets.void.failed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:544,546</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:639,641</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los motivos.</source>
@@ -7823,7 +8063,7 @@
     </unit>
     <unit id="staff.tickets.void.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:550,551</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:645,646</note>
       </notes>
       <segment>
         <source>Volver a cargar los motivos de anulación</source>
@@ -7831,7 +8071,7 @@
     </unit>
     <unit id="staff.tickets.void.retry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:556,558</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:651,653</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7839,7 +8079,7 @@
     </unit>
     <unit id="staff.tickets.void.noReasons">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:562,564</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:657,659</note>
       </notes>
       <segment>
         <source> No hay motivos de anulación configurados. Pide a un administrador que los agregue. </source>
@@ -7847,7 +8087,7 @@
     </unit>
     <unit id="staff.tickets.void.reason">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:566,568</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:661,663</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -7855,7 +8095,7 @@
     </unit>
     <unit id="staff.tickets.void.reason.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:579,580</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:674,675</note>
       </notes>
       <segment>
         <source>Elige un motivo</source>
@@ -7863,7 +8103,7 @@
     </unit>
     <unit id="staff.tickets.void.note">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:586,588</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:681,683</note>
       </notes>
       <segment>
         <source>Nota</source>
@@ -7871,7 +8111,7 @@
     </unit>
     <unit id="staff.tickets.void.noteRequired">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:597,600</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:692,695</note>
       </notes>
       <segment>
         <source>Para el motivo «Otro» la nota es obligatoria.</source>
@@ -7879,7 +8119,7 @@
     </unit>
     <unit id="staff.tickets.void.loading">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:601,604</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:696,699</note>
       </notes>
       <segment>
         <source>Cargando los motivos…</source>
@@ -7887,7 +8127,7 @@
     </unit>
     <unit id="staff.tickets.void.cancel.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:610,611</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:705,706</note>
       </notes>
       <segment>
         <source>Cerrar sin anular la línea</source>
@@ -7895,7 +8135,7 @@
     </unit>
     <unit id="staff.tickets.void.cancel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:616,618</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:711,713</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -7903,7 +8143,7 @@
     </unit>
     <unit id="staff.tickets.void.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:624,625</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:719,720</note>
       </notes>
       <segment>
         <source>Anular la línea con este motivo</source>
@@ -7911,7 +8151,7 @@
     </unit>
     <unit id="staff.tickets.void.confirm">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:630,632</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:725,727</note>
       </notes>
       <segment>
         <source>Anular línea</source>
@@ -7919,7 +8159,7 @@
     </unit>
     <unit id="staff.tickets.billOn.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:655</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:752</note>
       </notes>
       <segment>
         <source>Avisar que la mesa pidió la cuenta</source>
@@ -7927,7 +8167,7 @@
     </unit>
     <unit id="staff.tickets.billOff.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:656</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:753</note>
       </notes>
       <segment>
         <source>Quitar el aviso de que la mesa pidió la cuenta</source>
@@ -7935,7 +8175,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:677</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:792</note>
       </notes>
       <segment>
         <source>Anular venta</source>
@@ -7943,7 +8183,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:678</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:793</note>
       </notes>
       <segment>
         <source>Anular pago</source>
@@ -7951,7 +8191,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:682</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:797</note>
       </notes>
       <segment>
         <source>Anular toda la venta con el motivo elegido</source>
@@ -7959,10 +8199,18 @@
     </unit>
     <unit id="staff.tickets.voidPayment.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:683</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:798</note>
       </notes>
       <segment>
         <source>Anular este pago con el motivo elegido</source>
+      </segment>
+    </unit>
+    <unit id="shell.logout.failed">
+      <notes>
+        <note category="location">src/app/features/workspace/workspace-layout.ts:48</note>
+      </notes>
+      <segment>
+        <source>No se pudo cerrar la sesión. Inténtalo de nuevo.</source>
       </segment>
     </unit>
     <unit id="workspace.nav.staff">

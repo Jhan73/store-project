@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, expand, map, Observable, of, reduce, throwError } from 'rxjs';
+import { catchError, expand, map, Observable, of, reduce, switchMap, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
   BoardThresholds,
@@ -136,10 +136,17 @@ export class RegisterApi {
     return this.http.get<Menu>(`${this.base}/catalog/menu`);
   }
 
-  // Floor staff cannot read the store settings; every price carries the store currency.
+  // Floor staff cannot read the store settings; every price carries the store currency. The pinned items
+  // answer when the menu cannot be read; an empty menu is an answer (no products), not a failure.
   currency(): Observable<string | null> {
     return this.menu().pipe(
       map((menu) => menu.categories.flatMap((category) => category.products)[0]?.price.currency ?? null),
+      catchError((menuError: unknown) =>
+        this.quickSaleItems().pipe(
+          map((items) => items[0]?.price.currency),
+          switchMap((currency) => (currency ? of(currency) : throwError(() => menuError))),
+        ),
+      ),
     );
   }
 

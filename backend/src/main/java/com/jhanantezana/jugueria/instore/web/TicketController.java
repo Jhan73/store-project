@@ -1,10 +1,11 @@
 package com.jhanantezana.jugueria.instore.web;
 
 import java.net.URI;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +18,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.instore.TicketType;
+import com.jhanantezana.jugueria.instore.internal.ClosedTicketFilter;
+import com.jhanantezana.jugueria.instore.internal.TicketCancellation;
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
 import com.jhanantezana.jugueria.instore.internal.TicketPlacement;
@@ -28,6 +33,8 @@ import com.jhanantezana.jugueria.instore.internal.TicketService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.shared.IdempotencyKeyHeader;
+import com.jhanantezana.jugueria.shared.PageRequests;
+import com.jhanantezana.jugueria.shared.PageResponse;
 import com.jhanantezana.jugueria.shared.RequestHash;
 
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,6 +50,8 @@ class TicketController {
 
 	private static final String FLOOR_STAFF = "hasAnyRole('SERVER', 'CASHIER', 'ADMIN')";
 
+	private static final String REGISTER_STAFF = "hasAnyRole('CASHIER', 'ADMIN')";
+
 	private final TicketService tickets;
 
 	private final TicketCommands commands;
@@ -53,22 +62,41 @@ class TicketController {
 
 	private final TicketPlacement placement;
 
+	private final TicketCancellation cancellation;
+
 	private final CurrentActor currentActor;
 
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
-			TicketPlacement placement, CurrentActor currentActor) {
+			TicketPlacement placement, TicketCancellation cancellation, CurrentActor currentActor) {
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
 		this.placement = placement;
+		this.cancellation = cancellation;
 		this.commands = commands;
 		this.currentActor = currentActor;
 	}
 
 	@GetMapping
 	@PreAuthorize(FLOOR_STAFF)
-	List<TicketSummaryResponse> listOpen() {
-		return tickets.listOpen().stream().map(TicketSummaryResponse::from).toList();
+	PageResponse<TicketSummaryResponse> listOpen(@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "" + PageRequests.MAX_PAGE_SIZE) int size) {
+		return PageResponse.from(tickets.listOpen(PageRequests.of(page, size)), TicketSummaryResponse::from);
+	}
+
+	@GetMapping("/closed")
+	@PreAuthorize(REGISTER_STAFF)
+	@ApiErrors({ "instore.invalid-date-range" })
+	PageResponse<ClosedTicketSummaryResponse> listClosed(
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+			@RequestParam(required = false) @Nullable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+			@RequestParam(required = false) @Nullable UUID cashierId,
+			@RequestParam(required = false) @Nullable UUID tableId,
+			@RequestParam(required = false) @Nullable TicketType type, @RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "20") int size) {
+		var filter = new ClosedTicketFilter(from, to, cashierId, tableId, type);
+		return PageResponse.from(tickets.listClosed(filter, PageRequests.of(page, size)),
+				ClosedTicketSummaryResponse::from);
 	}
 
 	@GetMapping("/{id}")
@@ -96,7 +124,7 @@ class TicketController {
 	@PostMapping("/{id}/lines")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "catalog.product-not-found",
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.too-many-lines", "catalog.product-not-found",
 			"catalog.product-unavailable", "catalog.modifier-option-unavailable", "catalog.invalid-modifier-selection",
 			"catalog.price-currency-mismatch", "common.idempotency-key-required", "common.idempotency-key-reused",
 			"common.idempotency-in-progress" })
@@ -131,7 +159,7 @@ class TicketController {
 	@PostMapping("/{id}/repeat")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found",
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.too-many-lines",
 			"catalog.product-not-found", "catalog.product-unavailable", "catalog.modifier-option-unavailable",
 			"catalog.invalid-modifier-selection", "catalog.price-currency-mismatch", "common.idempotency-key-required",
 			"common.idempotency-key-reused", "common.idempotency-in-progress" })
@@ -165,7 +193,7 @@ class TicketController {
 
 	@PostMapping("/{id}/send")
 	@PreAuthorize(FLOOR_STAFF)
-	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-product-unavailable" })
 	TicketResponse send(@PathVariable UUID id) {
 		return TicketResponse.from(sending.send(id));
 	}
@@ -183,6 +211,20 @@ class TicketController {
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
 	TicketResponse billRequested(@PathVariable UUID id, @Valid @RequestBody BillRequestedRequest request) {
 		return TicketResponse.from(placement.setBillRequested(id, request.requested()));
+	}
+
+	@PutMapping("/{id}/note")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed" })
+	TicketResponse changeNote(@PathVariable UUID id, @Valid @RequestBody ChangeNoteRequest request) {
+		return TicketResponse.from(tickets.changeNote(id, request.note()));
+	}
+
+	@PostMapping("/{id}/cancel")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.ticket-not-empty" })
+	TicketResponse cancel(@PathVariable UUID id) {
+		return TicketResponse.from(cancellation.cancel(id));
 	}
 
 	private static ResponseEntity<TicketResponse> created(TicketCommands.Outcome outcome) {

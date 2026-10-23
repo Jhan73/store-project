@@ -21,6 +21,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/forbidden/forbidden').then((m) => m.Forbidden),
   },
   {
+    path: 'service-unavailable',
+    loadComponent: () =>
+      import('./features/service-unavailable/service-unavailable').then((m) => m.ServiceUnavailable),
+  },
+  {
     path: 'staff',
     canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
     loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES),

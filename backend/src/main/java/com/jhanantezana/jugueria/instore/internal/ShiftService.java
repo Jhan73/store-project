@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.instore.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -76,9 +77,14 @@ public class ShiftService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<ShiftView> list(@Nullable ShiftStatus status, Pageable pageable) {
-		var rows = shifts.page(status, pageable.getPageSize(), pageable.getOffset()).stream().map(ShiftService::view).toList();
-		return new PageImpl<>(rows, pageable, shifts.count(status));
+	public Page<ShiftView> list(@Nullable ShiftStatus status, @Nullable UUID cashierId, @Nullable LocalDate from,
+			@Nullable LocalDate to, Pageable pageable) {
+		var range = DayRange.of(from, to, store.timeZone());
+		var rows = shifts.page(status, cashierId, range, pageable.getPageSize(), pageable.getOffset())
+			.stream()
+			.map(ShiftService::view)
+			.toList();
+		return new PageImpl<>(rows, pageable, shifts.count(status, cashierId, range));
 	}
 
 	static ShiftView view(Shifts.ShiftRow shift) {

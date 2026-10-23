@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.catalog.CatalogApi;
 import com.jhanantezana.jugueria.inventory.InventoryError;
+import com.jhanantezana.jugueria.inventory.StockDeficit;
 import com.jhanantezana.jugueria.inventory.StockDepleted;
 import com.jhanantezana.jugueria.inventory.StockLow;
 import com.jhanantezana.jugueria.shared.BusinessException;
@@ -73,7 +74,7 @@ class StockChanges {
 
 	/**
 	 * Applies the deltas when the product is tracked and the result keeps {@code reserved <= on_hand}; anything else
-	 * is a rejection. A SALE or RETURN already recorded for the same reference and product is skipped.
+	 * is a rejection. A SALE, RETURN or WASTE already recorded for the same reference and product is skipped.
 	 *
 	 * @return false when the movement was already recorded
 	 */
@@ -125,6 +126,10 @@ class StockChanges {
 			.optional()
 			.orElseThrow(() -> rejection(productId));
 		reconcileAvailability(productId, balance, onHandDelta - reservedDelta, now);
+		if ((type == StockMovementType.SALE || type == StockMovementType.WASTE) && balance.onHand() < 0 && referenceId != null) {
+			events.publishEvent(new StockDeficit(productId, referenceId, Math.min(-onHandDelta, -balance.onHand()),
+					balance.onHand(), currentActor.id(), currentActor.role(), now));
+		}
 		return true;
 	}
 

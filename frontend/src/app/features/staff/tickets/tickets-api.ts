@@ -1,6 +1,6 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { expand, map, Observable, reduce } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
   BoardOrder,
@@ -10,6 +10,7 @@ import type {
   TableGridEntry,
   Ticket,
   TicketSummary,
+  TicketSummaryPage,
   VoidLineRequest,
 } from '../../../core/api/api-types';
 
@@ -18,6 +19,8 @@ export interface TableGridRead {
   // The server's `Date` header, to correct elapsed times for a wrong device clock.
   readonly serverDate: string | null;
 }
+
+const PAGE_SIZE = 100;
 
 const idempotencyKey = (key: string) => ({ headers: new HttpHeaders({ 'Idempotency-Key': key }) });
 
@@ -33,7 +36,14 @@ export class TicketsApi {
   }
 
   openTickets(): Observable<TicketSummary[]> {
-    return this.http.get<TicketSummary[]>(`${this.base}/tickets`);
+    const read = (page: number) =>
+      this.http.get<TicketSummaryPage>(`${this.base}/tickets`, {
+        params: new HttpParams().set('page', page).set('size', PAGE_SIZE),
+      });
+    return read(0).pipe(
+      expand((result) => (result.page + 1 < result.totalPages ? read(result.page + 1) : [])),
+      reduce<TicketSummaryPage, TicketSummary[]>((all, result) => [...all, ...result.content], []),
+    );
   }
 
   ticket(id: string): Observable<Ticket> {
@@ -86,6 +96,14 @@ export class TicketsApi {
       request,
       idempotencyKey(key),
     );
+  }
+
+  cancel(id: string): Observable<Ticket> {
+    return this.http.post<Ticket>(`${this.base}/tickets/${id}/cancel`, null);
+  }
+
+  changeNote(id: string, note: string | null): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.base}/tickets/${id}/note`, { note });
   }
 
   setBillRequested(id: string, requested: boolean): Observable<Ticket> {

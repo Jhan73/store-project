@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
+import com.jhanantezana.jugueria.instore.PaymentMethod;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -16,19 +17,26 @@ final class Voiding {
 
 	/**
 	 * A cashier voids only a payment taken in their own current open shift. An ADMIN's void goes to the shift that took
-	 * the payment while it is open, and to no drawer ({@code null}) once it is closed. The shift row is shared until
-	 * the transaction ends; a shift whose count was already shown takes no more changes.
+	 * the payment while it is open. Once that shift is closed the cash is paid back out of the admin's own open shift,
+	 * which a cash payment therefore requires; a payment that moved no cash has no drawer ({@code null}). The shift
+	 * row is shared until the transaction ends; a shift whose count was already shown takes no more changes.
 	 */
 	static @Nullable UUID shiftFor(Shifts shifts, UUID actor, @Nullable Role role, Payments.PaymentRow payment) {
 		if (role == Role.ADMIN) {
 			var taken = shifts.share(payment.shiftId());
-			if (taken.isEmpty() || taken.get().status() != ShiftStatus.OPEN) {
+			if (taken.isPresent() && taken.get().status() == ShiftStatus.OPEN) {
+				if (taken.get().countRevealed()) {
+					throw new BusinessException(InstoreError.SHIFT_CLOSING, "The shift that took the payment is being closed");
+				}
+				return taken.get().id();
+			}
+			if (payment.method() != PaymentMethod.CASH) {
 				return null;
 			}
-			if (taken.get().countRevealed()) {
-				throw new BusinessException(InstoreError.SHIFT_CLOSING, "The shift that took the payment is being closed");
-			}
-			return taken.get().id();
+			return shifts.writableOf(actor)
+				.orElseThrow(() -> new BusinessException(InstoreError.NO_OPEN_SHIFT,
+						"Paying back cash from a closed shift needs the admin's open shift"))
+				.id();
 		}
 		var own = shifts.writableOf(actor)
 			.orElseThrow(() -> new BusinessException(InstoreError.NO_OPEN_SHIFT, "A void needs the cashier's open shift"));

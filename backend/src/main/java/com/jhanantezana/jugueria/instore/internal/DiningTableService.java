@@ -3,6 +3,7 @@ package com.jhanantezana.jugueria.instore.internal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -16,6 +17,8 @@ import com.jhanantezana.jugueria.instore.TableCreated;
 import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
+import com.jhanantezana.jugueria.preparation.BoardSource;
+import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
@@ -32,10 +35,13 @@ public class DiningTableService {
 
 	private final Tickets tickets;
 
+	private final PreparationApi preparation;
+
 	DiningTableService(DiningTableRepository tables, ApplicationEventPublisher events, CurrentActor currentActor,
-			Clock clock, Tickets tickets) {
+			Clock clock, Tickets tickets, PreparationApi preparation) {
 		this.tables = tables;
 		this.tickets = tickets;
+		this.preparation = preparation;
 		this.events = events;
 		this.currentActor = currentActor;
 		this.clock = clock;
@@ -67,6 +73,10 @@ public class DiningTableService {
 		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
 		var before = snapshot(table);
 		var now = Instant.now(clock);
+		var renamed = !table.getName().equals(name);
+		// The ticket is locked before the table row changes, as every ticket command does, so a send waits for the
+		// new name and a rename cannot deadlock with a transfer.
+		var openTicket = renamed ? tickets.lockOpenTicketOn(id, now) : Optional.<UUID>empty();
 		table.change(name, area, displayOrder, now);
 		try {
 			tables.flush();
@@ -74,6 +84,8 @@ public class DiningTableService {
 		catch (DataIntegrityViolationException e) {
 			throw translateName(e);
 		}
+		openTicket.ifPresent(ticket -> tickets.boardSources(ticket)
+			.forEach(source -> preparation.relabel(BoardSource.TICKET, source, table.getName())));
 		events.publishEvent(new TableUpdated(table.getId(), before, snapshot(table), currentActor.id(),
 				currentActor.role(), now));
 		return table;

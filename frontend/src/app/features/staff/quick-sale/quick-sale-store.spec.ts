@@ -1,5 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { createEnvironmentInjector, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
@@ -211,6 +212,44 @@ describe('QuickSaleStore', () => {
 
       expect(store.sold()?.number).toBe(7);
       expect(store.cart()).toEqual([]);
+    });
+
+    describe('when the screen is destroyed meanwhile', () => {
+      let screen: EnvironmentInjector;
+      let own: QuickSaleStore;
+
+      beforeEach(() => {
+        screen = createEnvironmentInjector([QuickSaleStore], TestBed.inject(EnvironmentInjector));
+        own = screen.get(QuickSaleStore);
+        own.load();
+        http.expectOne(`${BASE}/quick-sales/items`).flush(items);
+        http.expectOne(`${BASE}/catalog/menu`).flush(menu);
+        http.expectOne(`${BASE}/shifts/current`).flush(shift());
+        own.addPlain(items[0]);
+      });
+
+      it('lets the sale finish and says it was registered', () => {
+        const added = vi.spyOn(messages, 'add');
+        own.sell({ customerName: '', method: 'CARD', received: null });
+        const request = http.expectOne(`${BASE}/quick-sales`);
+
+        screen.destroy();
+        expect(request.cancelled).toBe(false);
+        request.flush({ id: 'k1', number: 7, quickSale: true }, { status: 201, statusText: 'Created' });
+
+        expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
+      });
+
+      it('reports a refused sale without reading the shift again', () => {
+        const added = vi.spyOn(messages, 'add');
+        own.sell({ customerName: '', method: 'CARD', received: null });
+        const request = http.expectOne(`${BASE}/quick-sales`);
+
+        screen.destroy();
+        request.flush(problem(409, 'instore.shift-closed'), { status: 409, statusText: 'Conflict' });
+
+        expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      });
     });
 
     it('sends no received amount and no name for a card sale', () => {

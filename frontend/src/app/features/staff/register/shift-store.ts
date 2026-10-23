@@ -1,5 +1,6 @@
 import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MessageService } from 'primeng/api';
 import type {
   ActiveReason,
   CashMovement,
@@ -8,11 +9,13 @@ import type {
   Shift,
 } from '../../../core/api/api-types';
 import { ApiError } from '../../../core/errors/api-error';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { ClosedShiftHandoff } from './closed-shift-handoff';
 import { RegisterApi } from './register-api';
 
 const SHIFT_STATE_CODES = ['instore.shift-closing', 'instore.shift-closed', 'instore.no-open-shift'];
@@ -27,6 +30,9 @@ export class ShiftStore {
   private readonly api = inject(RegisterApi);
   private readonly reasonsApi = inject(ReasonsApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly messages = inject(MessageService);
+  private readonly handoff = inject(ClosedShiftHandoff);
+  private readonly auth = inject(AuthStore);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
@@ -34,6 +40,7 @@ export class ShiftStore {
   private readonly isLoaded = signal(false);
   private readonly loadFailed = signal(false);
   private readonly storeCurrency = signal<string | null>(null);
+  private readonly currencyUnreadable = signal(false);
   private readonly zone = signal<string | null>(null);
   private readonly movementList = signal<readonly CashMovement[]>([]);
   private readonly reasonList = signal<ActiveReason[] | null>(null);
@@ -41,6 +48,7 @@ export class ShiftStore {
   private readonly closed = signal<Shift | null>(null);
   private readonly noteRequired = signal<{ count: string; difference: Money } | null>(null);
   private readonly locked = signal(false);
+  private destroyed = false;
   private lastShiftRequest = 0;
   private lastMovementsRequest = 0;
 
@@ -55,8 +63,14 @@ export class ShiftStore {
   readonly loaded = this.isLoaded.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
   readonly currency = this.storeCurrency.asReadonly();
+  // True when the currency could not be read at all, as opposed to the store having no products.
+  readonly currencyFailed = this.currencyUnreadable.asReadonly();
   readonly timeZone = this.zone.asReadonly();
   readonly pending = new PendingIds();
+
+  constructor() {
+    this.destroyRef.onDestroy(() => (this.destroyed = true));
+  }
 
   // `shift` reads only the current shift, for screens that need to know whether one is open and nothing else.
   load(scope: 'full' | 'shift' = 'full'): void {
@@ -73,9 +87,13 @@ export class ShiftStore {
           this.isLoaded.set(true);
           this.loadFailed.set(false);
           if (shift) {
+            this.handoff.shift.set(null);
             this.storeCurrency.set(shift.openingFloat.currency);
-          } else if (scope === 'full' && this.storeCurrency() === null) {
-            this.loadCurrency();
+          } else {
+            this.closed.update((closed) => closed ?? this.keptSummary());
+            if (scope === 'full' && this.storeCurrency() === null) {
+              this.loadCurrency();
+            }
           }
         },
         error: (error: unknown) => {
@@ -89,7 +107,11 @@ export class ShiftStore {
       this.api
         .timeZone()
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({ next: (zone) => this.zone.set(zone), error: () => undefined });
+        .subscribe({
+          next: (zone) => this.zone.set(zone),
+          // Hours must not render blank: the device zone covers a failed read until the next one succeeds.
+          error: () => this.zone.update((zone) => zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
+        });
     }
   }
 
@@ -102,12 +124,15 @@ export class ShiftStore {
     this.pending.add('open');
     this.api
       .openShift({ openingFloat: { amount, currency } }, this.keys.keyFor(intent))
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (shift) => {
           this.pending.delete('open');
           this.keys.release(intent);
+          if (this.destroyed) {
+            return;
+          }
           this.lastShiftRequest++;
+          this.handoff.shift.set(null);
           this.current.set(shift);
           this.isLoaded.set(true);
           opened?.();
@@ -115,7 +140,7 @@ export class ShiftStore {
         error: (error: unknown) => {
           this.pending.delete('open');
           this.notifier.show(error);
-          this.load();
+          this.reload();
         },
       });
   }
@@ -168,17 +193,21 @@ export class ShiftStore {
     this.pending.add('movement');
     this.api
       .recordMovement(shift.id, movement, this.keys.keyFor(intent))
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
           this.pending.delete('movement');
           this.keys.release(intent);
-          this.loadMovements();
-          recorded();
+          if (!this.destroyed) {
+            this.loadMovements();
+            recorded();
+          }
         },
         error: (error: unknown) => {
           this.pending.delete('movement');
           this.notifier.show(error);
+          if (this.destroyed) {
+            return;
+          }
           this.loadMovements();
           if (isShiftStateError(error)) {
             this.load();
@@ -197,10 +226,21 @@ export class ShiftStore {
     this.pending.add('close');
     this.api
       .closeShift(shift.id, { countedCash: { amount: count, currency }, note })
-      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (outcome) => {
           this.pending.delete('close');
+          if (outcome.kind === 'closed') {
+            this.handoff.shift.set(outcome.shift);
+          }
+          if (this.destroyed) {
+            if (outcome.kind === 'closed') {
+              this.messages.add({
+                severity: 'success',
+                summary: $localize`:@@staff.register.close.registered:El turno quedó cerrado.`,
+              });
+            }
+            return;
+          }
           if (outcome.kind === 'closed') {
             this.lastShiftRequest++;
             this.current.set(null);
@@ -218,20 +258,64 @@ export class ShiftStore {
         error: (error: unknown) => {
           this.pending.delete('close');
           this.notifier.show(error);
-          this.load();
+          this.recoverClose(shift.id);
         },
       });
   }
 
   dismissClosed(): void {
     this.closed.set(null);
+    this.handoff.shift.set(null);
+  }
+
+  // The answer to a close can be lost after the server closed the shift: ask before claiming there is none.
+  private recoverClose(id: string): void {
+    this.api.shift(id).subscribe({
+      next: (shift) => {
+        if (shift.status !== 'CLOSED') {
+          this.reload();
+          return;
+        }
+        this.handoff.shift.set(shift);
+        if (!this.destroyed) {
+          this.lastShiftRequest++;
+          this.current.set(null);
+          this.closed.set(shift);
+          this.noteRequired.set(null);
+          this.locked.set(false);
+          this.movementList.set([]);
+        }
+      },
+      error: () => this.reload(),
+    });
+  }
+
+  // A summary left by another cashier on this device is not this cashier's to see.
+  private keptSummary(): Shift | null {
+    const kept = this.handoff.shift();
+    const user = this.auth.session()?.userId;
+    return kept !== null && user !== undefined && kept.cashierId !== user ? null : kept;
+  }
+
+  private reload(): void {
+    if (!this.destroyed) {
+      this.load();
+    }
+  }
+
+  retryCurrency(): void {
+    this.loadCurrency();
   }
 
   private loadCurrency(): void {
+    this.currencyUnreadable.set(false);
     this.api
       .currency()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (currency) => this.storeCurrency.set(currency), error: () => undefined });
+      .subscribe({
+        next: (currency) => this.storeCurrency.set(currency),
+        error: () => this.currencyUnreadable.set(true),
+      });
   }
 
   formatTime(instant: string): string {

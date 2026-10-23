@@ -182,6 +182,21 @@ class BoardCommandsIT {
 	}
 
 	@Test
+	void aLineAddedAfterTheScreenLoadedCannotBeReadyUntilItsLabelIsAcknowledged() {
+		var intake = anOrder(aLine());
+		var order = preparation.accept(intake);
+		commands.start(order);
+		var extra = aLine();
+		preparation.addLines(intake.source(), intake.sourceId(), java.util.List.of(extra));
+		var extraLine = PreparationTables.lineIdOf(jdbc, order, extra.sourceLineId());
+
+		assertRejected(() -> commands.readyLine(extraLine), PreparationError.LINES_NOT_ACKNOWLEDGED);
+
+		assertThat(PreparationTables.lineState(jdbc, extraLine)).isEqualTo("PENDING");
+		assertThat(events.stream(LineReady.class)).isEmpty();
+	}
+
+	@Test
 	void theWholeOrderCannotBeReadyWhileALineAddedAfterItWasShownIsUnacknowledged() {
 		var intake = anOrder(aLine());
 		var order = preparation.accept(intake);
@@ -218,6 +233,7 @@ class BoardCommandsIT {
 		commands.start(order);
 		var extra = aLine();
 		preparation.addLines(intake.source(), intake.sourceId(), java.util.List.of(extra));
+		commands.acknowledge(PreparationTables.markerId(jdbc, order, "MODIFIED"), UUID.randomUUID());
 		commands.readyLine(PreparationTables.lineIdOf(jdbc, order, extra.sourceLineId()));
 
 		var card = commands.readyOrder(order);

@@ -22,6 +22,8 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
+import com.jhanantezana.jugueria.inventory.StockDeficit;
+import com.jhanantezana.jugueria.inventory.internal.StockService;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
@@ -45,6 +47,9 @@ class TicketVoidIT {
 
 	@Autowired
 	ApplicationEvents events;
+
+	@Autowired
+	StockService stock;
 
 	UUID ticket;
 
@@ -138,6 +143,57 @@ class TicketVoidIT {
 			assertThat(InstoreTables.lineState(jdbc, line)).isEqualTo("VOIDED");
 		}
 		assertThat(events.stream(TicketLineVoided.class)).allSatisfy(voided -> assertThat(voided.waste()).isTrue());
+	}
+
+	@Test
+	void aWasteVoidTakesTheWastedUnitsOffTheShelfAgainstTheLine() {
+		stock.track(juice.productId(), true, 0);
+		stock.recordEntry(juice.productId(), 10, null);
+		var kept = sentLine();
+		var line = sentLine();
+		markReady(line);
+
+		assertThat(voidLine(line, CHANGED_MIND, Role.CASHIER)).hasStatusOk();
+
+		var waste = jdbc.sql("select on_hand_delta, reference_id from inventory.stock_movement where type = 'WASTE' and product_id = ?")
+			.param(juice.productId())
+			.query()
+			.listOfRows();
+		assertThat(waste).singleElement()
+			.satisfies(row -> assertThat(row).containsEntry("on_hand_delta", -1).containsEntry("reference_id", line));
+		assertThat(onHand(juice.productId())).isEqualTo(9);
+		assertThat(kept).isNotEqualTo(line);
+	}
+
+	@Test
+	void aWasteVoidOfAProductThePantryCannotCoverStillSucceedsAndRaisesADeficit() {
+		stock.track(juice.productId(), true, 0);
+		stock.recordEntry(juice.productId(), 1, null);
+		var line = sentLine();
+		jdbc.sql("update inventory.stock_item set on_hand = 0 where product_id = ?").param(juice.productId()).update();
+		markReady(line);
+
+		assertThat(voidLine(line, CHANGED_MIND, Role.ADMIN)).hasStatusOk();
+
+		assertThat(onHand(juice.productId())).isEqualTo(-1);
+		assertThat(events.stream(StockDeficit.class)).singleElement()
+			.satisfies(deficit -> assertThat(deficit.shortBy()).isEqualTo(1));
+	}
+
+	@Test
+	void aVoidBeforeTheLineWasReadyMovesNoStock() {
+		stock.track(juice.productId(), true, 0);
+		stock.recordEntry(juice.productId(), 10, null);
+		var line = sentLine();
+
+		assertThat(voidLine(line, CHANGED_MIND, Role.SERVER)).hasStatusOk();
+
+		assertThat(jdbc.sql("select count(*) from inventory.stock_movement where type = 'WASTE' and product_id = ?")
+			.param(juice.productId())
+			.query(Integer.class)
+			.single())
+			.isZero();
+		assertThat(onHand(juice.productId())).isEqualTo(10);
 	}
 
 	@Test
@@ -361,6 +417,13 @@ class TicketVoidIT {
 	}
 
 	// helpers
+
+	private int onHand(UUID product) {
+		return jdbc.sql("select on_hand from inventory.stock_item where product_id = ?")
+			.param(product)
+			.query(Integer.class)
+			.single();
+	}
 
 	private UUID addLine() {
 		var result = mvc.post()

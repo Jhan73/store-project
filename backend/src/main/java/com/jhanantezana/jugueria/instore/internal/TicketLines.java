@@ -37,6 +37,7 @@ public class TicketLines {
 	public TicketView add(UUID ticketId, LineDraft draft) {
 		var now = Instant.now(clock);
 		var ticket = tickets.lockOpen(ticketId, now);
+		requireRoomFor(ticketId, 1);
 		tickets.insertLine(ticketId, tickets.nextPosition(ticketId), price(draft, ticket.currency()), draft, now);
 		return ticketService.view(ticket);
 	}
@@ -68,6 +69,7 @@ public class TicketLines {
 	public TicketView repeat(UUID ticketId, List<UUID> lineIds) {
 		var now = Instant.now(clock);
 		var ticket = tickets.lockOpen(ticketId, now);
+		requireRoomFor(ticketId, lineIds.size());
 		var position = tickets.nextPosition(ticketId);
 		for (var lineId : lineIds) {
 			var source = tickets.requireLine(ticketId, lineId);
@@ -77,6 +79,13 @@ public class TicketLines {
 			tickets.insertLine(ticketId, position++, price(draft, ticket.currency()), draft, now);
 		}
 		return ticketService.view(ticket);
+	}
+
+	private void requireRoomFor(UUID ticketId, int added) {
+		if (tickets.liveLineCount(ticketId) + added > TicketLimits.MAX_LINES) {
+			throw new BusinessException(InstoreError.TOO_MANY_LINES,
+					"A ticket holds at most " + TicketLimits.MAX_LINES + " lines");
+		}
 	}
 
 	private LinePrice price(LineDraft draft, Currency ticketCurrency) {

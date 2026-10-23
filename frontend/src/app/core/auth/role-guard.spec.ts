@@ -62,6 +62,41 @@ describe('roleGuard', () => {
     );
   });
 
+  it.each([
+    ['a 503 while the environment starts', { status: 503, statusText: 'Service Unavailable' }],
+    ['a gateway error', { status: 502, statusText: 'Bad Gateway' }],
+  ])('keeps the destination on an auth outage (%s) instead of sending the user to login', async (_label, init) => {
+    vi.spyOn(router, 'currentNavigation').mockReturnValue({
+      extractedUrl: router.parseUrl('/staff/tickets/k1'),
+    } as ReturnType<Router['currentNavigation']>);
+    const result = run('SERVER', 'CASHIER', 'ADMIN');
+
+    http.expectOne(REFRESH).flush(null, init);
+
+    expect(router.serializeUrl((await result) as UrlTree)).toBe(
+      '/service-unavailable?returnUrl=%2Fstaff%2Ftickets%2Fk1',
+    );
+  });
+
+  it('keeps the destination on a network failure', async () => {
+    const result = run('ADMIN');
+
+    http.expectOne(REFRESH).error(new ProgressEvent('error'));
+
+    expect(router.serializeUrl((await result) as UrlTree)).toMatch(/^\/service-unavailable/);
+  });
+
+  it('asks the server again on the next navigation after an outage', async () => {
+    const first = run('ADMIN');
+    http.expectOne(REFRESH).flush(null, { status: 503, statusText: 'Service Unavailable' });
+    await first;
+
+    const second = run('ADMIN');
+    http.expectOne(REFRESH).flush(session('ADMIN'));
+
+    expect(await second).toBe(true);
+  });
+
   it('sends a signed-in user with the wrong role to the forbidden page', async () => {
     const result = run('ADMIN');
 

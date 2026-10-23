@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.PayloadApplicationEvent;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import com.jhanantezana.jugueria.instore.PaymentMethod;
 import com.jhanantezana.jugueria.instore.PaymentRecorded;
 import com.jhanantezana.jugueria.instore.PaymentVoided;
 import com.jhanantezana.jugueria.instore.SaleRecorded;
+import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.inventory.internal.StockService;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
@@ -106,6 +108,22 @@ class TicketPaymentIT {
 			assertThat(sale.ticketId()).isEqualTo(UUID.fromString(ticket));
 			assertThat(sale.total().amount()).isEqualByComparingTo("5.00");
 			assertThat(sale.lines()).hasSize(1);
+		});
+	}
+
+	@Test
+	void aSaleClosedByAVoidIsAttributedToWhoeverTookTheLastPaymentNotToTheVoider() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBody("CARD", "5.00", null, List.of(small)));
+		var server = UUID.randomUUID();
+
+		var result = voidLineAs(large, server, Role.SERVER);
+
+		assertThat(result).hasStatusOk();
+		assertThat(events.stream(SaleRecorded.class)).singleElement().satisfies(sale -> {
+			assertThat(sale.actorId()).isEqualTo(cashier);
+			assertThat(sale.actorRole()).isNull();
 		});
 	}
 
@@ -371,17 +389,17 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void aPaymentThatClosesTheTicketIsRejectedWhenThereIsNotEnoughStockAndNothingIsRecorded() {
+	void aPaymentThatClosesTheTicketIsRecordedWhenThereIsNotEnoughStockAndStockGoesNegative() {
 		var bottle = trackedProduct(1);
 		sentLine(bottle, 2);
 
 		var result = pay(ticket, "CARD", "10.00", null);
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(paymentCount()).isZero();
-		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("OPEN");
-		assertThat(stock.get(bottle).onHand()).isEqualTo(1);
-		assertThat(events.stream(SaleRecorded.class)).isEmpty();
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(paymentCount()).isEqualTo(1);
+		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("CLOSED");
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
+		assertThat(events.stream(SaleRecorded.class)).hasSize(1);
 	}
 
 	@Test
@@ -501,22 +519,60 @@ class TicketPaymentIT {
 	}
 
 	@Test
-	void anAdminVoidsWithNoDrawerOnceThePaymentsShiftIsClosed() {
+	void anAdminPaysTheCashOfAClosedShiftBackOutOfTheirOwnOpenShift() {
 		sentLine(juice.small());
 		sentLine(juice.small());
 		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		closeCashiersShift();
+		var admin = UUID.randomUUID();
+		var adminShift = openShift(admin, "10.00");
+
+		assertThat(voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidShift(payment)).isEqualTo(UUID.fromString(adminShift));
+		var closed = mvc.post()
+			.uri(SHIFTS + "/" + adminShift + "/close")
+			.with(AuthenticatedAs.user(admin, Role.ADMIN))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"countedCash\":{\"amount\":\"5.00\",\"currency\":\"PEN\"}}")
+			.exchange();
+		assertThat(closed).bodyJson().extractingPath("$.expectedCash.amount").isEqualTo("5.00");
+		assertThat(closed).bodyJson().extractingPath("$.totals.voidedCash.amount").isEqualTo("5.00");
+	}
+
+	@Test
+	void anAdminWithNoOpenShiftCannotPayBackTheCashOfAClosedShift() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CASH", "5.00", "5.00"), 0);
+		closeCashiersShift();
+
+		var result = voidPayment(payment, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN);
+
+		assertProblem(result, HttpStatus.CONFLICT, "instore.no-open-shift");
+		assertThat(voidCount(payment)).isZero();
+		assertThat(events.stream(PaymentVoided.class)).isEmpty();
+	}
+
+	@Test
+	void anAdminVoidsANonCashPaymentOfAClosedShiftWithNoDrawer() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var payment = paymentId(pay(ticket, "CARD", "5.00", null), 0);
+		closeCashiersShift();
+
+		assertThat(voidPayment(payment, CHANGED_MIND, UUID.randomUUID(), Role.ADMIN)).hasStatusOk();
+
+		assertThat(voidShift(payment)).isNull();
+	}
+
+	private void closeCashiersShift() {
 		mvc.post()
 			.uri(SHIFTS + "/" + shift + "/close")
 			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"countedCash\":{\"amount\":\"105.00\",\"currency\":\"PEN\"}}")
 			.exchange();
-		var admin = UUID.randomUUID();
-		openShift(admin, "10.00");
-
-		assertThat(voidPayment(payment, CHANGED_MIND, admin, Role.ADMIN)).hasStatusOk();
-
-		assertThat(voidShift(payment)).isNull();
 	}
 
 	@Test
@@ -634,10 +690,32 @@ class TicketPaymentIT {
 			assertThat(sale.total().amount()).isEqualByComparingTo("5.00");
 			assertThat(sale.lines()).hasSize(1);
 		});
+		var audited = jdbc.sql("select after::text from audit.audit_log where action = 'TICKET_LINE_VOIDED' and entity_id = ?")
+			.param(large)
+			.query(String.class)
+			.single();
+		assertThat(audited).contains("\"ticketClosed\": true").contains("\"amount\": \"8.00\"");
 	}
 
 	@Test
-	void aLineVoidThatWouldCloseTheTicketIsRejectedWhenTheShelfCannotCoverTheSale() {
+	void aLineVoidThatClosesTheTicketPublishesTheVoidBeforeTheSale() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBody("CARD", "5.00", null, List.of(small)));
+
+		assertThat(voidLine(large)).hasStatusOk();
+
+		var order = events.stream()
+			.filter(PayloadApplicationEvent.class::isInstance)
+			.map(event -> ((PayloadApplicationEvent<?>) event).getPayload())
+			.filter(payload -> payload instanceof TicketLineVoided || payload instanceof SaleRecorded)
+			.map(payload -> payload.getClass().getSimpleName())
+			.toList();
+		assertThat(order).containsExactly("TicketLineVoided", "SaleRecorded");
+	}
+
+	@Test
+	void aLineVoidThatClosesTheTicketSucceedsWhenTheShelfCannotCoverTheSale() {
 		var bottle = trackedProduct(2);
 		var bottles = sentLine(bottle, 2);
 		var small = sentLine(juice.small());
@@ -646,10 +724,11 @@ class TicketPaymentIT {
 
 		var result = voidLine(small);
 
-		assertProblem(result, HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(InstoreTables.lineState(jdbc, small)).isEqualTo("SENT");
-		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("OPEN");
-		assertThat(events.stream(SaleRecorded.class)).isEmpty();
+		assertThat(result).hasStatusOk();
+		assertThat(InstoreTables.lineState(jdbc, small)).isEqualTo("VOIDED");
+		assertThat(InstoreTables.ticketStatus(jdbc, UUID.fromString(ticket))).isEqualTo("CLOSED");
+		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
+		assertThat(events.stream(SaleRecorded.class)).hasSize(1);
 	}
 
 	@Test
@@ -802,9 +881,13 @@ class TicketPaymentIT {
 	}
 
 	private MvcTestResult voidLine(UUID line) {
+		return voidLineAs(line, cashier, Role.CASHIER);
+	}
+
+	private MvcTestResult voidLineAs(UUID line, UUID actor, Role role) {
 		return mvc.post()
 			.uri(TICKETS + "/" + ticket + "/lines/" + line + "/void")
-			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.with(AuthenticatedAs.user(actor, role))
 			.header("Idempotency-Key", UUID.randomUUID().toString())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(CHANGED_MIND)

@@ -20,20 +20,24 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
+import com.jhanantezana.jugueria.inventory.StockDeficit;
 import com.jhanantezana.jugueria.inventory.internal.StockService;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
 import com.jhanantezana.testsupport.InventoryTables;
 
-/** With the store setting on, a sale the shelf cannot cover still closes and stock goes negative. */
+/** Money already taken is never rejected: a sale the shelf cannot cover closes and stock goes negative. */
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
+@RecordApplicationEvents
 class NegativeStockSaleIT {
 
 	static final String TICKETS = "/api/v1/tickets";
@@ -47,12 +51,15 @@ class NegativeStockSaleIT {
 	@Autowired
 	StockService stock;
 
+	@Autowired
+	ApplicationEvents events;
+
 	UUID cashier = UUID.randomUUID();
 
 	@BeforeEach
 	void anOpenShift() {
 		InstoreTables.aVoidReason(jdbc, "Changed mind");
-		allowNegativeStock(false);
+		storeSettingIs(false);
 		assertThat(mvc.post()
 			.uri("/api/v1/shifts")
 			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
@@ -64,19 +71,14 @@ class NegativeStockSaleIT {
 
 	@AfterEach
 	void cleanUp() {
-		allowNegativeStock(false);
 		InstoreTables.cleanAll(jdbc);
 	}
 
 	@Test
-	void theSettingDecidesWhetherAShortSaleIsRejected() {
+	void aShortSaleClosesWhateverTheOldSettingSays() {
 		var bottle = trackedProduct(1);
 		var ticket = sentTicket(bottle, 2);
 
-		assertProblem(pay(ticket, UUID.randomUUID()), HttpStatus.CONFLICT, "inventory.insufficient-stock");
-		assertThat(stock.get(bottle).onHand()).isEqualTo(1);
-
-		allowNegativeStock(true);
 		var result = pay(ticket, UUID.randomUUID());
 
 		assertThat(result).hasStatus(HttpStatus.CREATED);
@@ -84,11 +86,33 @@ class NegativeStockSaleIT {
 		assertThat(stock.get(bottle).onHand()).isEqualTo(-1);
 		assertThat(ledger(bottle)).containsExactly("SALE/-2/" + ticket);
 		assertThat(InventoryTables.isAvailable(jdbc, bottle)).isFalse();
+		assertThat(jdbc.sql("select count(*) from instore.in_store_payment where ticket_id = ?")
+			.param(ticket)
+			.query(Long.class)
+			.single()).isEqualTo(1);
+	}
+
+	@Test
+	void aShortSaleRaisesAStockDeficitAlert() {
+		var bottle = trackedProduct(1);
+		var ticket = sentTicket(bottle, 3);
+
+		pay(ticket, UUID.randomUUID());
+
+		assertThat(events.stream(StockDeficit.class)).singleElement().satisfies(deficit -> {
+			assertThat(deficit.productId()).isEqualTo(bottle);
+			assertThat(deficit.referenceId()).isEqualTo(ticket);
+			assertThat(deficit.shortBy()).isEqualTo(2);
+			assertThat(deficit.onHand()).isEqualTo(-2);
+		});
+		assertThat(jdbc.sql("select count(*) from audit.audit_log where action = 'STOCK_DEFICIT' and entity_id = ?")
+			.param(bottle)
+			.query(Long.class)
+			.single()).isEqualTo(1);
 	}
 
 	@Test
 	void retryingTheClosingPaymentDoesNotDeductTwice() {
-		allowNegativeStock(true);
 		var bottle = trackedProduct(1);
 		var ticket = sentTicket(bottle, 2);
 		var key = UUID.randomUUID();
@@ -103,7 +127,6 @@ class NegativeStockSaleIT {
 
 	@Test
 	void voidingTheSaleReturnsTheUnitsAndBringsStockBackUp() {
-		allowNegativeStock(true);
 		var bottle = trackedProduct(1);
 		var ticket = sentTicket(bottle, 2);
 		pay(ticket, UUID.randomUUID());
@@ -122,7 +145,6 @@ class NegativeStockSaleIT {
 
 	@Test
 	void aLineVoidThatSettlesTheTicketClosesItBelowZeroToo() {
-		allowNegativeStock(true);
 		var bottle = trackedProduct(1);
 		var ticket = UUID.fromString(openTicket());
 		var bottles = addLine(ticket, bottle, 2);
@@ -153,7 +175,6 @@ class NegativeStockSaleIT {
 
 	@Test
 	void aQuickSaleOfTheLastUnitsAlsoClosesBelowZero() {
-		allowNegativeStock(true);
 		var bottle = trackedProduct(1);
 
 		var result = mvc.post()
@@ -171,7 +192,6 @@ class NegativeStockSaleIT {
 
 	@Test
 	void twoTicketsClosingOnTheLastUnitAtOnceBothSucceed() throws Exception {
-		allowNegativeStock(true);
 		var bottle = trackedProduct(1);
 		var first = sentTicket(bottle, 1);
 		var second = sentTicket(bottle, 1);
@@ -185,12 +205,12 @@ class NegativeStockSaleIT {
 
 	// helpers
 
-	private void allowNegativeStock(boolean allowed) {
+	private void storeSettingIs(boolean allowed) {
 		jdbc.sql("update store.store_settings set allow_negative_stock_on_sale = ?").param(allowed).update();
 	}
 
 	private UUID trackedProduct(int quantity) {
-		var product = InventoryTables.aProduct(jdbc);
+		var product = InstoreTables.pinnedForQuickSale(jdbc, InventoryTables.aProduct(jdbc));
 		stock.track(product, true, 0);
 		stock.recordEntry(product, quantity, null);
 		return product;

@@ -1156,6 +1156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/closed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ticketListClosed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{id}": {
         parameters: {
             query?: never;
@@ -1182,6 +1198,22 @@ export interface paths {
         get?: never;
         put: operations["ticketBillRequested"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ticketCancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1230,6 +1262,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ticketVoidLine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ticketChangeNote"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1512,6 +1560,9 @@ export interface components {
             /** Format: uuid */
             stationId: string;
         };
+        ChangeNoteRequest: {
+            note?: string | null;
+        };
         ChangeStaffRoleRequest: {
             /** @enum {string} */
             role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
@@ -1519,6 +1570,25 @@ export interface components {
         CloseShiftRequest: {
             countedCash: components["schemas"]["Money"];
             note?: string | null;
+        };
+        ClosedTicketSummaryResponse: {
+            /** Format: uuid */
+            cashierId: string | null;
+            /** Format: date-time */
+            closedAt: string;
+            counterName: string | null;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            number: number;
+            quickSale: boolean;
+            /** Format: uuid */
+            tableId: string | null;
+            tableName: string | null;
+            total: components["schemas"]["Money"];
+            /** @enum {string} */
+            type: "TABLE" | "COUNTER";
+            voided: boolean;
         };
         CreateCategoryRequest: {
             /** Format: int32 */
@@ -1579,7 +1649,7 @@ export interface components {
          * @description Every error code the API can return; codes are never renamed or reused.
          * @enum {string}
          */
-        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.cash-movement-not-found" | "instore.counted-cash-locked" | "instore.difference-note-required" | "instore.invalid-amount" | "instore.invalid-cash-movement" | "instore.invalid-payment" | "instore.invalid-reason" | "instore.invalid-ticket" | "instore.line-already-paid" | "instore.line-already-sent" | "instore.line-covered-by-payment" | "instore.line-not-found" | "instore.line-not-sent" | "instore.no-open-shift" | "instore.payment-exceeds-balance" | "instore.payment-not-found" | "instore.sale-void-not-permitted" | "instore.shift-already-open" | "instore.shift-closed" | "instore.shift-closing" | "instore.shift-not-found" | "instore.table-has-open-ticket" | "instore.table-inactive" | "instore.table-name-already-used" | "instore.table-not-found" | "instore.table-occupied" | "instore.ticket-closed" | "instore.ticket-has-no-table" | "instore.ticket-has-unsent-lines" | "instore.ticket-not-closed" | "instore.ticket-not-found" | "inventory.insufficient-stock" | "inventory.invalid-quantity" | "inventory.invalid-reason" | "inventory.product-not-found" | "inventory.product-not-tracked" | "inventory.reservation-not-active" | "inventory.stock-item-not-found" | "inventory.stock-reserved" | "preparation.line-already-flagged" | "preparation.line-already-ready" | "preparation.line-flagged-unavailable" | "preparation.line-not-found" | "preparation.line-not-pending" | "preparation.lines-not-acknowledged" | "preparation.marker-already-acknowledged" | "preparation.marker-not-found" | "preparation.order-already-started" | "preparation.order-cancelled" | "preparation.order-closed" | "preparation.order-not-completed" | "preparation.order-not-found" | "preparation.order-not-preparing" | "preparation.order-not-ready" | "preparation.recall-window-expired" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
+        ErrorCode: "auth.account-locked" | "auth.forbidden" | "auth.invalid-credentials" | "auth.invalid-refresh-token" | "auth.invalid-set-password-token" | "auth.unauthenticated" | "catalog.category-name-already-used" | "catalog.category-not-found" | "catalog.currency-mismatch" | "catalog.invalid-image" | "catalog.invalid-modifier-group" | "catalog.invalid-modifier-selection" | "catalog.invalid-price" | "catalog.invalid-product" | "catalog.modifier-group-in-use" | "catalog.modifier-group-name-already-used" | "catalog.modifier-group-not-found" | "catalog.modifier-option-not-found" | "catalog.modifier-option-unavailable" | "catalog.price-currency-mismatch" | "catalog.product-name-already-used" | "catalog.product-not-found" | "catalog.product-unavailable" | "catalog.provider-unavailable" | "catalog.station-name-already-used" | "catalog.station-not-found" | "catalog.unknown-category" | "catalog.unknown-modifier-group" | "catalog.unknown-station" | "common.concurrent-modification" | "common.content-too-large" | "common.idempotency-in-progress" | "common.idempotency-key-required" | "common.idempotency-key-reused" | "common.internal-error" | "common.malformed-request" | "common.method-not-allowed" | "common.not-acceptable" | "common.not-found" | "common.precondition-failed" | "common.precondition-required" | "common.service-unavailable" | "common.unsupported-media-type" | "common.validation-failed" | "identity.cannot-modify-own-account" | "identity.email-already-registered" | "identity.invalid-staff-role" | "identity.last-active-admin-required" | "instore.cash-movement-not-found" | "instore.cash-out-exceeds-drawer" | "instore.counted-cash-locked" | "instore.difference-note-required" | "instore.invalid-amount" | "instore.invalid-cash-movement" | "instore.invalid-date-range" | "instore.invalid-payment" | "instore.invalid-reason" | "instore.invalid-ticket" | "instore.line-already-paid" | "instore.line-already-sent" | "instore.line-covered-by-payment" | "instore.line-not-found" | "instore.line-not-sent" | "instore.line-product-unavailable" | "instore.no-open-shift" | "instore.payment-exceeds-balance" | "instore.payment-not-found" | "instore.product-not-quick-sale" | "instore.sale-void-not-permitted" | "instore.shift-already-open" | "instore.shift-closed" | "instore.shift-closing" | "instore.shift-not-found" | "instore.table-has-open-ticket" | "instore.table-inactive" | "instore.table-name-already-used" | "instore.table-not-found" | "instore.table-occupied" | "instore.ticket-closed" | "instore.ticket-has-no-table" | "instore.ticket-has-unsent-lines" | "instore.ticket-not-closed" | "instore.ticket-not-empty" | "instore.ticket-not-found" | "instore.too-many-lines" | "instore.user-has-open-shift" | "inventory.insufficient-stock" | "inventory.invalid-quantity" | "inventory.invalid-reason" | "inventory.product-not-found" | "inventory.product-not-tracked" | "inventory.product-out-of-stock" | "inventory.reservation-not-active" | "inventory.stock-item-not-found" | "inventory.stock-reserved" | "preparation.line-already-flagged" | "preparation.line-already-ready" | "preparation.line-flagged-unavailable" | "preparation.line-not-found" | "preparation.line-not-pending" | "preparation.lines-not-acknowledged" | "preparation.marker-already-acknowledged" | "preparation.marker-not-found" | "preparation.order-already-started" | "preparation.order-cancelled" | "preparation.order-closed" | "preparation.order-not-completed" | "preparation.order-not-found" | "preparation.order-not-preparing" | "preparation.order-not-ready" | "preparation.recall-window-expired" | "store.currency-locked" | "store.delivery-zone-currency-mismatch" | "store.delivery-zone-name-already-used" | "store.delivery-zone-not-found" | "store.invalid-board-thresholds" | "store.invalid-delivery-zone" | "store.invalid-opening-hours" | "store.invalid-settings-value" | "store.reason-code-already-used" | "store.reason-not-found";
         ForceCloseShiftRequest: {
             reason: string;
         };
@@ -1719,7 +1789,7 @@ export interface components {
             /** Format: int32 */
             reservedDelta: number;
             /** @enum {string} */
-            type: "ENTRY" | "ADJUSTMENT" | "SALE" | "RETURN" | "RESERVE" | "COMMIT" | "RELEASE" | "EXPIRE";
+            type: "ENTRY" | "ADJUSTMENT" | "SALE" | "RETURN" | "WASTE" | "RESERVE" | "COMMIT" | "RELEASE" | "EXPIRE";
         };
         OpenShiftRequest: {
             openingFloat: components["schemas"]["Money"];
@@ -1747,6 +1817,17 @@ export interface components {
         };
         PageResponseAuditEntryResponse: {
             content: components["schemas"]["AuditEntryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PageResponseClosedTicketSummaryResponse: {
+            content: components["schemas"]["ClosedTicketSummaryResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -1791,6 +1872,17 @@ export interface components {
         };
         PageResponseStaffResponse: {
             content: components["schemas"]["StaffResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        PageResponseTicketSummaryResponse: {
+            content: components["schemas"]["TicketSummaryResponse"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -2009,6 +2101,10 @@ export interface components {
             tracked: boolean;
         };
         StoreSettingsResponse: {
+            /**
+             * @deprecated
+             * @description No longer affects sales; a sale is always recorded and stock may go negative.
+             */
             allowNegativeStockOnSale: boolean;
             /** Format: int32 */
             basePrepMinutes: number;
@@ -2096,7 +2192,7 @@ export interface components {
             quickSale: boolean;
             saleVoid: components["schemas"]["SaleVoidResponse"] | null;
             /** @enum {string} */
-            status: "OPEN" | "CLOSED";
+            status: "OPEN" | "CLOSED" | "CANCELLED";
             /** Format: uuid */
             tableId: string | null;
             tableName: string | null;
@@ -2160,6 +2256,10 @@ export interface components {
             opensAt?: string | null;
         };
         UpdateStoreSettingsRequest: {
+            /**
+             * @deprecated
+             * @description No longer affects sales; a sale is always recorded and stock may go negative.
+             */
             allowNegativeStockOnSale: boolean;
             /** Format: int32 */
             basePrepMinutes: number;
@@ -5070,7 +5170,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: common.concurrent-modification */
+            /** @description Conflict. Error codes: common.concurrent-modification, store.currency-locked */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -7228,7 +7328,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.order-cancelled, preparation.order-not-preparing */
+            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.lines-not-acknowledged, preparation.order-cancelled, preparation.order-not-preparing */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -8015,6 +8115,15 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
+            /** @description Conflict. Error codes: inventory.product-out-of-stock */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
             415: {
                 headers: {
@@ -8124,7 +8233,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment */
+            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.product-not-quick-sale */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -8271,6 +8380,9 @@ export interface operations {
         parameters: {
             query?: {
                 status?: "OPEN" | "CLOSED";
+                cashierId?: string;
+                from?: string;
+                to?: string;
                 page?: number;
                 size?: number;
             };
@@ -8318,6 +8430,15 @@ export interface operations {
             };
             /** @description Not Acceptable. Error codes: common.not-acceptable */
             406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Content. Error codes: instore.invalid-date-range */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -8744,7 +8865,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount, instore.invalid-cash-movement, instore.invalid-reason */
+            /** @description Unprocessable Content. Error codes: common.idempotency-key-reused, instore.cash-out-exceeds-drawer, instore.invalid-amount, instore.invalid-cash-movement, instore.invalid-reason */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -9362,7 +9483,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: identity.last-active-admin-required */
+            /** @description Conflict. Error codes: identity.last-active-admin-required, instore.user-has-open-shift */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -9536,7 +9657,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: identity.last-active-admin-required */
+            /** @description Conflict. Error codes: identity.last-active-admin-required, instore.user-has-open-shift */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -9818,7 +9939,10 @@ export interface operations {
     };
     ticketListOpen: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                size?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -9831,7 +9955,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TicketSummaryResponse"][];
+                    "application/json": components["schemas"]["PageResponseTicketSummaryResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Unauthorized. Error codes: auth.unauthenticated */
@@ -9962,6 +10095,88 @@ export interface operations {
                 };
             };
             /** @description Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-ticket */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ticketListClosed: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                cashierId?: string;
+                tableId?: string;
+                type?: "TABLE" | "COUNTER";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseClosedTicketSummaryResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unprocessable Content. Error codes: instore.invalid-date-range */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -10155,6 +10370,91 @@ export interface operations {
             };
         };
     };
+    ticketCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: instore.ticket-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: instore.ticket-closed, instore.ticket-not-empty */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     ticketAddLine: {
         parameters: {
             query?: never;
@@ -10246,7 +10546,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused */
+            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.too-many-lines */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -10550,6 +10850,104 @@ export interface operations {
             };
             /** @description Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-reason, instore.line-not-sent */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Internal Server Error. Error codes: common.internal-error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    ticketChangeNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketResponse"];
+                };
+            };
+            /** @description Bad Request. Error codes: common.malformed-request, common.validation-failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unauthorized. Error codes: auth.unauthenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden. Error codes: auth.forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Found. Error codes: instore.ticket-not-found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not Acceptable. Error codes: common.not-acceptable */
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict. Error codes: instore.ticket-closed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Unsupported Media Type. Error codes: common.unsupported-media-type */
+            415: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -10878,7 +11276,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused */
+            /** @description Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.too-many-lines */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -10963,7 +11361,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: instore.ticket-closed */
+            /** @description Conflict. Error codes: instore.line-product-unavailable, instore.ticket-closed */
             409: {
                 headers: {
                     [name: string]: unknown;

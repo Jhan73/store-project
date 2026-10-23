@@ -268,6 +268,25 @@ class TicketLinesControllerIT {
 	}
 
 	@Test
+	void rejectsALineBeyondTheMaximumLinesOfATicketAndCountsOnlyLiveOnes() {
+		var first = lineIdOf(addLine(line(juice.productId(), 1, null, false, juice.small()), Role.SERVER));
+		for (var i = 1; i < 100; i++) {
+			assertThat(addLine(line(juice.productId(), 1, null, false, juice.small()), Role.SERVER))
+				.hasStatus(HttpStatus.CREATED);
+		}
+
+		assertProblem(addLine(line(juice.productId(), 1, null, false, juice.small()), Role.SERVER),
+				HttpStatus.UNPROCESSABLE_CONTENT, "instore.too-many-lines");
+		assertProblem(repeat("{\"lineIds\":[\"%s\"]}".formatted(first), Role.SERVER), HttpStatus.UNPROCESSABLE_CONTENT,
+				"instore.too-many-lines");
+		assertThat(InstoreTables.count(jdbc, "ticket_line")).isEqualTo(100);
+
+		jdbc.sql("update instore.ticket_line set state = 'VOIDED', board_source_id = ticket_id where id = ?").param(UUID.fromString(first)).update();
+		assertThat(addLine(line(juice.productId(), 1, null, false, juice.small()), Role.SERVER))
+			.hasStatus(HttpStatus.CREATED);
+	}
+
+	@Test
 	void repeatsLinesAsNewUnsentLinesPricedAtTodaysPrice() {
 		var first = lineIdOf(addLine(line(juice.productId(), 2, "No ice", true, juice.large()), Role.SERVER));
 		markSent(first);
