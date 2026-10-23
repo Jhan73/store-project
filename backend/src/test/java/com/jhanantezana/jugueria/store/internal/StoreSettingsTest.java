@@ -36,6 +36,23 @@ class StoreSettingsTest {
 	}
 
 	@Test
+	void rejectsAFixedOffsetAsTheTimeZone() {
+		for (var offset : new String[] { "+05:00", "-05:00", "UTC+5", "GMT-05:00", "Z" }) {
+			assertThatThrownBy(() -> new StoreSettings(offset, PEN, 10, 2, 15, 5, 10, Money.of("20.00", PEN), 3, 20, NOW))
+				.isInstanceOf(BusinessException.class)
+				.extracting(ex -> ((BusinessException) ex).errorCode())
+				.isEqualTo(StoreError.INVALID_SETTINGS_VALUE);
+		}
+	}
+
+	@Test
+	void acceptsRegionZones() {
+		var settings = new StoreSettings("Europe/Madrid", PEN, 10, 2, 15, 5, 10, Money.of("20.00", PEN), 3, 20, NOW);
+
+		assertThat(settings.getTimeZone()).isEqualTo("Europe/Madrid");
+	}
+
+	@Test
 	void rejectsBoardWarningNotBeforeLate() {
 		assertThatThrownBy(() -> new StoreSettings("America/Lima", PEN, 10, 2, 15, 10, 10, Money.of("20.00", PEN), 3,
 				20, NOW)).isInstanceOf(BusinessException.class)

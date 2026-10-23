@@ -44,7 +44,7 @@ class StoreSettingsServiceTest {
 	void setUp() {
 		existing = new StoreSettings("America/Lima", PEN, 10, 2, 15, 5, 10, Money.of("20.00", PEN), 3, 20, NOW);
 		when(repository.findAll()).thenReturn(List.of(existing));
-		service = new StoreSettingsService(repository, events, currentActor, Clock.fixed(NOW, ZoneOffset.UTC));
+		service = new StoreSettingsService(repository, events, List.of(), currentActor, Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test

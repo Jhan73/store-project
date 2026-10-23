@@ -1,6 +1,5 @@
 package com.jhanantezana.jugueria.store.internal;
 
-import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Currency;
@@ -130,11 +129,9 @@ public class StoreSettings extends BaseEntity {
 	private static void validate(String timeZone, Currency currency, int basePrepMinutes,
 			int queueMinutesPerOrder, int busyModeMinutes, int boardWarningMinutes, int boardLateMinutes,
 			Money registerDifferenceThreshold, int exceptionThreshold, int onlineCapacityLimit) {
-		try {
-			ZoneId.of(timeZone);
-		}
-		catch (DateTimeException e) {
-			throw invalid("timeZone is not a valid IANA zone id: " + timeZone);
+		// ZoneId.of also accepts fixed offsets ("+05:00"), which never follow daylight saving or history.
+		if (!ZoneId.getAvailableZoneIds().contains(timeZone)) {
+			throw invalid("timeZone must be an IANA region id such as America/Lima: " + timeZone);
 		}
 		if (basePrepMinutes <= 0 || queueMinutesPerOrder < 0 || busyModeMinutes < 0 || boardWarningMinutes <= 0
 				|| exceptionThreshold <= 0 || onlineCapacityLimit <= 0) {
