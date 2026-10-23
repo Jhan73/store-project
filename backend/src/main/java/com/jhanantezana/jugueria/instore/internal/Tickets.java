@@ -196,6 +196,14 @@ class Tickets {
 				""").param("id", ticketId).query(UUID.class).list();
 	}
 
+	/** Takes the lock every ticket command starts with on the table's open ticket, if it has one. */
+	Optional<UUID> lockOpenTicketOn(UUID tableId, Instant now) {
+		return jdbc.sql("""
+				UPDATE instore.ticket SET version = version + 1, updated_at = :now
+				WHERE table_id = :table AND status = 'OPEN' RETURNING id
+				""").param("now", utc(now)).param("table", tableId).query(UUID.class).optional();
+	}
+
 	/** Blocks tickets opening or moving onto the table until this transaction ends. */
 	void lockTable(UUID tableId) {
 		jdbc.sql("SELECT 1 FROM instore.dining_table WHERE id = :id FOR UPDATE").param("id", tableId).query().listOfRows();
