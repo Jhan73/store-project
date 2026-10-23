@@ -305,6 +305,31 @@ class TicketCompIT {
 	}
 
 	@Test
+	void retryingACompThatClosedTheTicketStillSucceeds() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		pay(List.of(small), "5.00");
+		assertThat(comp(large, STAFF_MEAL, Role.CASHIER)).hasStatusOk();
+		assertThat(InstoreTables.ticketStatus(jdbc, ticket)).isEqualTo("CLOSED");
+
+		var retry = comp(large, STAFF_MEAL, Role.CASHIER);
+
+		assertThat(retry).hasStatusOk();
+		assertThat(retry).bodyJson().extractingPath("$.status").isEqualTo("CLOSED");
+		assertThat(events.stream(TicketLineComped.class)).hasSize(1);
+	}
+
+	@Test
+	void aCompedLineOfAClosedTicketStillRejectsOtherLines() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		pay(List.of(small), "5.00");
+		assertThat(comp(large, STAFF_MEAL, Role.CASHIER)).hasStatusOk();
+
+		assertProblem(comp(small, STAFF_MEAL, Role.CASHIER), HttpStatus.CONFLICT, "instore.ticket-closed");
+	}
+
+	@Test
 	void aLineCoveredByAPaymentCannotBeCompedUntilThePaymentIsVoided() {
 		var small = sentLine(juice.small());
 		sentLine(juice.large());

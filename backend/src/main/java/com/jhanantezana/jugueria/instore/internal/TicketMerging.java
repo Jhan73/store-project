@@ -63,8 +63,17 @@ public class TicketMerging {
 		var now = Instant.now(clock);
 		var first = targetId.compareTo(sourceId) < 0 ? targetId : sourceId;
 		var second = first.equals(targetId) ? sourceId : targetId;
-		tickets.lockOpen(first, now);
-		tickets.lockOpen(second, now);
+		try {
+			tickets.lockOpen(first, now);
+			tickets.lockOpen(second, now);
+		}
+		catch (BusinessException e) {
+			// An overlapping identical merge may have just committed while this one waited for the locks.
+			if (e.errorCode() == InstoreError.TICKET_CLOSED && targetId.equals(tickets.mergedInto(sourceId).orElse(null))) {
+				return ticketService.view(tickets.require(targetId));
+			}
+			throw e;
+		}
 		var target = tickets.require(targetId);
 		var source = tickets.require(sourceId);
 		if (payments.livePaid(sourceId).compareTo(BigDecimal.ZERO) != 0) {

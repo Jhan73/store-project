@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -330,6 +331,30 @@ class TicketMergeIT {
 			assertThat(jdbc.sql("select count(*) from instore.ticket where status = 'MERGED'").query(Long.class).single())
 				.isEqualTo(1);
 			assertThat(jdbc.sql("select count(*) from instore.ticket_line").query(Long.class).single()).isEqualTo(2);
+		}
+		finally {
+			pool.shutdownNow();
+		}
+	}
+
+	@RepeatedTest(5)
+	void identicalMergesAtTheSameTimeBothSucceedAndMergeOnce() throws Exception {
+		sentLine(source, juice.large());
+		var pool = Executors.newFixedThreadPool(2);
+		try {
+			List<Callable<MvcTestResult>> calls = List.of(() -> merge(target, source, Role.SERVER),
+					() -> merge(target, source, Role.SERVER));
+			var statuses = pool.invokeAll(calls).stream().map(future -> {
+				try {
+					return future.get().getResponse().getStatus();
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(e);
+				}
+			}).toList();
+
+			assertThat(statuses).containsExactly(200, 200);
+			assertThat(events.stream(TicketsMerged.class)).hasSize(1);
 		}
 		finally {
 			pool.shutdownNow();

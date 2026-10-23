@@ -67,7 +67,18 @@ public class TicketComps {
 	@Transactional
 	public TicketView comp(UUID ticketId, UUID lineId, String reasonCode, @Nullable String note) {
 		var now = Instant.now(clock);
-		var ticket = tickets.lockOpen(ticketId, now);
+		Tickets.TicketRow ticket;
+		try {
+			ticket = tickets.lockOpen(ticketId, now);
+		}
+		catch (BusinessException e) {
+			// An overlapping comp of this same line may have just closed the ticket.
+			if (e.errorCode() == InstoreError.TICKET_CLOSED
+					&& tickets.line(ticketId, lineId).filter(l -> l.state() == TicketLineState.COMPED).isPresent()) {
+				return ticketService.view(tickets.require(ticketId));
+			}
+			throw e;
+		}
 		var line = tickets.requireLine(ticketId, lineId);
 		if (line.state() == TicketLineState.COMPED) {
 			return ticketService.view(ticket);
