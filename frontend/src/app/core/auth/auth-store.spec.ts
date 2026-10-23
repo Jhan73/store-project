@@ -223,11 +223,24 @@ describe('AuthStore', () => {
       const refresh = store.refresh();
       const logout = store.logout();
       http.expectOne(LOGOUT).flush(null, { status: 204, statusText: 'No Content' });
+      await logout;
       http.expectOne(REFRESH).flush(session('late'));
 
       expect(await refresh).toBe('rejected');
-      await logout;
       expect(store.isAuthenticated()).toBe(false);
+    });
+
+    it('keeps a refresh valid when the logout request could not reach the server', async () => {
+      await signIn();
+
+      const refresh = store.refresh();
+      const logout = store.logout();
+      http.expectOne(LOGOUT).error(new ProgressEvent('error'));
+      await logout;
+      http.expectOne(REFRESH).flush(session('renewed'));
+
+      expect(await refresh).toBe('refreshed');
+      expect(store.isAuthenticated()).toBe(true);
     });
 
     it('remembers that the session ended until the next login', async () => {

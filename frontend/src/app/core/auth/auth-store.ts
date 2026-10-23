@@ -123,7 +123,6 @@ export class AuthStore {
     if (this.signOutHooks.size > 0) {
       await this.runSignOutHooks();
     }
-    this.generation++;
     try {
       await firstValueFrom(this.api.logout());
     } catch (error) {
@@ -131,6 +130,7 @@ export class AuthStore {
         return false;
       }
     }
+    this.generation++;
     this.ended = true;
     this.restoration = Promise.resolve();
     this.state.set(null);
