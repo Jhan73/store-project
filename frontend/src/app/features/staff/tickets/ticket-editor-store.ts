@@ -1,17 +1,20 @@
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { forkJoin, Observable } from 'rxjs';
 import type {
   ActiveReason,
+  CompLineRequest,
   LineRequest,
   Menu,
   Money,
+  ReasonType,
   RecordPaymentRequest,
   TableGridEntry,
   Ticket,
   TicketLine,
+  TicketSummary,
   VoidLineRequest,
   VoidPaymentRequest,
   VoidSaleRequest,
@@ -53,6 +56,7 @@ export class TicketEditorStore {
   private readonly reasonsApi = inject(ReasonsApi);
   private readonly auth = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
   private readonly keys = new IntentKeys();
@@ -63,6 +67,8 @@ export class TicketEditorStore {
   private readonly tableList = signal<readonly TableGridEntry[]>([]);
   private readonly voidReasons = signal<ActiveReason[] | null>(null);
   private readonly reasonsFailed = signal(false);
+  private readonly candidateList = signal<readonly TicketSummary[] | null>(null);
+  private readonly candidatesError = signal(false);
   private readonly notFound = signal(false);
   private readonly loadFailed = signal(false);
   private readonly splitList = signal<readonly Money[] | null>(null);
@@ -74,6 +80,7 @@ export class TicketEditorStore {
   private lastMenuRequest = 0;
   private lastTablesRequest = 0;
   private lastReasonsRequest = 0;
+  private lastCandidatesRequest = 0;
 
   readonly ticket = this.current.asReadonly();
   readonly menu = this.currentMenu.asReadonly();
@@ -88,6 +95,10 @@ export class TicketEditorStore {
   readonly shiftStateErrors = this.shiftErrors.asReadonly();
   readonly reasons = this.voidReasons.asReadonly();
   readonly reasonsLoadFailed = this.reasonsFailed.asReadonly();
+  // Null until the read of the open tickets answers.
+  readonly mergeCandidates = computed(() => (this.candidateList() ?? []).filter((ticket) => ticket.id !== this.ticketId));
+  readonly mergeCandidatesLoaded = computed(() => this.candidateList() !== null);
+  readonly mergeCandidatesFailed = this.candidatesError.asReadonly();
   readonly freeTables = computed(() => this.tableList().filter((table) => table.status === 'FREE'));
   readonly isOpen = computed(() => this.current()?.status === 'OPEN');
   // Nothing billed: no line was sent and no payment is live, so the whole ticket can be dropped.
@@ -118,6 +129,7 @@ export class TicketEditorStore {
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.ticketId = params.get('id') ?? '';
       this.current.set(null);
+      this.candidateList.set(null);
       this.notFound.set(false);
       this.load();
       this.loadMenu();
@@ -157,12 +169,26 @@ export class TicketEditorStore {
     return line.state === 'SENT' && !this.mayVoid(line);
   }
 
+  // Only a cashier or an admin comps; a server has no such action.
+  mayComp(line: TicketLine): boolean {
+    const role = this.auth.role();
+    return line.state === 'SENT' && (role === 'CASHIER' || role === 'ADMIN');
+  }
+
   loadVoidReasons(): void {
+    this.loadReasons('VOID');
+  }
+
+  loadCompReasons(): void {
+    this.loadReasons('COMP');
+  }
+
+  private loadReasons(type: ReasonType): void {
     const request = ++this.lastReasonsRequest;
     this.voidReasons.set(null);
     this.reasonsFailed.set(false);
     this.reasonsApi
-      .active('VOID')
+      .active(type)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (reasons) => {
@@ -189,6 +215,45 @@ export class TicketEditorStore {
         voided();
       },
     );
+  }
+
+  compLine(line: TicketLine, request: CompLineRequest, comped: () => void): void {
+    const intent = `comp:${line.id}:${JSON.stringify(request)}`;
+    this.command(
+      `comp:${line.id}`,
+      this.api.compLine(this.ticketId, line.id, request, this.keys.keyFor(intent)),
+      () => {
+        this.keys.release(intent);
+        comped();
+      },
+      true,
+    );
+  }
+
+  loadMergeCandidates(): void {
+    const request = ++this.lastCandidatesRequest;
+    this.candidateList.set(null);
+    this.candidatesError.set(false);
+    this.api
+      .openTickets()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tickets) => {
+          if (request === this.lastCandidatesRequest) {
+            this.candidateList.set(tickets);
+          }
+        },
+        error: (error: unknown) => {
+          if (request === this.lastCandidatesRequest) {
+            this.candidatesError.set(true);
+            this.notifier.show(error);
+          }
+        },
+      });
+  }
+
+  merge(sourceTicketId: string, merged: () => void): void {
+    this.command('merge', this.api.merge(this.ticketId, sourceTicketId), merged);
   }
 
   addLine(line: LineRequest, added: () => void): void {
@@ -333,6 +398,7 @@ export class TicketEditorStore {
           this.notFound.set(false);
           this.loadFailed.set(false);
           this.sync.applied(read);
+          this.followMerge(ticket);
         },
         error: (error: unknown) => {
           if (request !== this.lastTicketRequest) {
@@ -347,6 +413,18 @@ export class TicketEditorStore {
           this.notifier.show(error);
         },
       });
+  }
+
+  // A screen left open on a ticket that was folded into another continues on the one that stayed.
+  private followMerge(ticket: Ticket): void {
+    if (ticket.status !== 'MERGED' || ticket.mergedIntoId === null || ticket.mergedIntoId === undefined) {
+      return;
+    }
+    this.messages.add({
+      severity: 'info',
+      summary: $localize`:@@staff.ticket.mergedInto:La cuenta ${ticket.number}:number: se unió a otra. Seguimos en la cuenta que quedó.`,
+    });
+    void this.router.navigate(['/staff/tickets', ticket.mergedIntoId], { replaceUrl: true });
   }
 
   private loadBoard(): void {

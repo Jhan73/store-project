@@ -4,8 +4,10 @@ import { expand, map, Observable, reduce } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
   BoardOrder,
+  CompLineRequest,
   LineRequest,
   Menu,
+  MergeTicketRequest,
   OpenTicketRequest,
   TableGridEntry,
   Ticket,
@@ -96,6 +98,19 @@ export class TicketsApi {
       request,
       idempotencyKey(key),
     );
+  }
+
+  compLine(id: string, lineId: string, request: CompLineRequest, key: string): Observable<Ticket> {
+    return this.http.post<Ticket>(
+      `${this.base}/tickets/${id}/lines/${lineId}/comp`,
+      request,
+      idempotencyKey(key),
+    );
+  }
+
+  merge(id: string, sourceTicketId: string): Observable<Ticket> {
+    const request: MergeTicketRequest = { sourceTicketId };
+    return this.http.post<Ticket>(`${this.base}/tickets/${id}/merge`, request);
   }
 
   cancel(id: string): Observable<Ticket> {
