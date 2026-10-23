@@ -14,6 +14,7 @@ import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { ClosedShiftHandoff } from './closed-shift-handoff';
 import { RegisterApi } from './register-api';
 
 const SHIFT_STATE_CODES = ['instore.shift-closing', 'instore.shift-closed', 'instore.no-open-shift'];
@@ -29,6 +30,7 @@ export class ShiftStore {
   private readonly reasonsApi = inject(ReasonsApi);
   private readonly notifier = inject(ErrorNotifier);
   private readonly messages = inject(MessageService);
+  private readonly handoff = inject(ClosedShiftHandoff);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
@@ -80,9 +82,13 @@ export class ShiftStore {
           this.isLoaded.set(true);
           this.loadFailed.set(false);
           if (shift) {
+            this.handoff.shift.set(null);
             this.storeCurrency.set(shift.openingFloat.currency);
-          } else if (scope === 'full' && this.storeCurrency() === null) {
-            this.loadCurrency();
+          } else {
+            this.closed.update((closed) => closed ?? this.handoff.shift());
+            if (scope === 'full' && this.storeCurrency() === null) {
+              this.loadCurrency();
+            }
           }
         },
         error: (error: unknown) => {
@@ -117,6 +123,7 @@ export class ShiftStore {
             return;
           }
           this.lastShiftRequest++;
+          this.handoff.shift.set(null);
           this.current.set(shift);
           this.isLoaded.set(true);
           opened?.();
@@ -213,6 +220,9 @@ export class ShiftStore {
       .subscribe({
         next: (outcome) => {
           this.pending.delete('close');
+          if (outcome.kind === 'closed') {
+            this.handoff.shift.set(outcome.shift);
+          }
           if (this.destroyed) {
             if (outcome.kind === 'closed') {
               this.messages.add({
@@ -239,13 +249,36 @@ export class ShiftStore {
         error: (error: unknown) => {
           this.pending.delete('close');
           this.notifier.show(error);
-          this.reload();
+          this.recoverClose(shift.id);
         },
       });
   }
 
   dismissClosed(): void {
     this.closed.set(null);
+    this.handoff.shift.set(null);
+  }
+
+  // The answer to a close can be lost after the server closed the shift: ask before claiming there is none.
+  private recoverClose(id: string): void {
+    this.api.shift(id).subscribe({
+      next: (shift) => {
+        if (shift.status !== 'CLOSED') {
+          this.reload();
+          return;
+        }
+        this.handoff.shift.set(shift);
+        if (!this.destroyed) {
+          this.lastShiftRequest++;
+          this.current.set(null);
+          this.closed.set(shift);
+          this.noteRequired.set(null);
+          this.locked.set(false);
+          this.movementList.set([]);
+        }
+      },
+      error: () => this.reload(),
+    });
   }
 
   private reload(): void {

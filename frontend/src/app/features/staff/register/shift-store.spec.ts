@@ -225,7 +225,18 @@ describe('ShiftStore', () => {
       expect(store.shift()?.id).toBe('s1');
     });
 
-    it('reads the shift again when the close is refused', () => {
+    it('shows the closed shift when the close answer was lost but the server did close it', () => {
+      withShift();
+
+      store.close('100.00', null);
+      http.expectOne(`${BASE}/shifts/s1/close`).error(new ProgressEvent('error'));
+      http.expectOne(`${BASE}/shifts/s1`).flush(closedShift);
+
+      expect(store.closedShift()?.expectedCash).toEqual(pen('100.00'));
+      expect(store.shift()).toBeNull();
+    });
+
+    it('shows the closed shift when the retry finds it already closed', () => {
       withShift();
       const added = vi.spyOn(messages, 'add');
 
@@ -233,11 +244,82 @@ describe('ShiftStore', () => {
       http
         .expectOne(`${BASE}/shifts/s1/close`)
         .flush(problem(409, 'instore.shift-closed'), { status: 409, statusText: 'Conflict' });
+      http.expectOne(`${BASE}/shifts/s1`).flush(closedShift);
+
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+      expect(store.closedShift()?.id).toBe('s1');
+    });
+
+    it('reads the current shift again when the refused close left it open', () => {
+      withShift();
+
+      store.close('100.00', null);
+      http
+        .expectOne(`${BASE}/shifts/s1/close`)
+        .flush(problem(503, 'common.service-unavailable'), { status: 503, statusText: 'Unavailable' });
+      http.expectOne(`${BASE}/shifts/s1`).flush(shift());
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+
+      expect(store.closedShift()).toBeNull();
+      expect(store.shift()?.id).toBe('s1');
+    });
+
+    it('reads the current shift again when the closed shift cannot be read either', () => {
+      withShift();
+
+      store.close('100.00', null);
+      http.expectOne(`${BASE}/shifts/s1/close`).error(new ProgressEvent('error'));
+      http.expectOne(`${BASE}/shifts/s1`).error(new ProgressEvent('error'));
       http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
       zone();
 
-      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
       expect(store.shift()).toBeNull();
+    });
+
+    it('hands the summary to the screen that comes back when the close finished after leaving', () => {
+      const screen = createEnvironmentInjector([ShiftStore], TestBed.inject(EnvironmentInjector));
+      const gone = screen.get(ShiftStore);
+      gone.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+      gone.close('100.00', null);
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+      screen.destroy();
+      request.flush(closedShift);
+
+      const back = createEnvironmentInjector([ShiftStore], TestBed.inject(EnvironmentInjector)).get(
+        ShiftStore,
+      );
+      back.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+      zone();
+      http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+      expect(back.closedShift()?.id).toBe('s1');
+    });
+
+    it('hands the summary over when the answer to a close made before leaving was lost', () => {
+      const screen = createEnvironmentInjector([ShiftStore], TestBed.inject(EnvironmentInjector));
+      const gone = screen.get(ShiftStore);
+      gone.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(shift());
+      zone();
+      gone.close('100.00', null);
+      const request = http.expectOne(`${BASE}/shifts/s1/close`);
+      screen.destroy();
+      request.error(new ProgressEvent('error'));
+      http.expectOne(`${BASE}/shifts/s1`).flush(closedShift);
+
+      const back = createEnvironmentInjector([ShiftStore], TestBed.inject(EnvironmentInjector)).get(
+        ShiftStore,
+      );
+      back.load();
+      http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+      zone();
+      http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+      expect(back.closedShift()?.id).toBe('s1');
     });
 
     it('forgets the closed shift to open another', () => {
@@ -272,7 +354,7 @@ describe('ShiftStore', () => {
       request.flush(shift({ status: 'CLOSED' }));
     });
 
-    it('reports a close that fails after the screen is destroyed without reading again', () => {
+    it('reports a close that fails after the screen is destroyed and reads only that shift', () => {
       const added = vi.spyOn(messages, 'add');
       own.close('100.00', null);
       const request = http.expectOne(`${BASE}/shifts/s1/close`);
@@ -282,6 +364,7 @@ describe('ShiftStore', () => {
         status: 503,
         statusText: 'Unavailable',
       });
+      http.expectOne(`${BASE}/shifts/s1`).flush(shift());
 
       expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
     });
