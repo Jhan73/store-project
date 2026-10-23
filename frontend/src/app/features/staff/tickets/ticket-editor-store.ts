@@ -28,7 +28,7 @@ import { RegisterApi } from '../register/register-api';
 import { isShiftStateError } from '../register/shift-store';
 import { TicketsApi } from './tickets-api';
 
-export type LineState = 'UNSENT' | 'SENT' | 'READY' | 'VOIDED';
+export type LineState = 'UNSENT' | 'SENT' | 'READY' | 'VOIDED' | 'COMPED';
 
 export const MAX_LINE_QUANTITY = 99;
 

@@ -27,6 +27,7 @@ import com.jhanantezana.jugueria.instore.internal.ClosedTicketFilter;
 import com.jhanantezana.jugueria.instore.internal.TicketCancellation;
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
+import com.jhanantezana.jugueria.instore.internal.TicketMerging;
 import com.jhanantezana.jugueria.instore.internal.TicketPlacement;
 import com.jhanantezana.jugueria.instore.internal.TicketSending;
 import com.jhanantezana.jugueria.instore.internal.TicketService;
@@ -64,10 +65,14 @@ class TicketController {
 
 	private final TicketCancellation cancellation;
 
+	private final TicketMerging merging;
+
 	private final CurrentActor currentActor;
 
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
-			TicketPlacement placement, TicketCancellation cancellation, CurrentActor currentActor) {
+			TicketPlacement placement, TicketCancellation cancellation, TicketMerging merging,
+			CurrentActor currentActor) {
+		this.merging = merging;
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
@@ -223,6 +228,14 @@ class TicketController {
 			"instore.table-not-found", "instore.table-inactive", "instore.table-occupied" })
 	TicketResponse transfer(@PathVariable UUID id, @Valid @RequestBody TransferTicketRequest request) {
 		return TicketResponse.from(placement.transfer(id, request.tableId()));
+	}
+
+	@PostMapping("/{id}/merge")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.invalid-merge",
+			"instore.ticket-has-payments", "instore.too-many-lines" })
+	TicketResponse merge(@PathVariable UUID id, @Valid @RequestBody MergeTicketRequest request) {
+		return TicketResponse.from(merging.merge(id, request.sourceTicketId()));
 	}
 
 	@PutMapping("/{id}/bill-requested")

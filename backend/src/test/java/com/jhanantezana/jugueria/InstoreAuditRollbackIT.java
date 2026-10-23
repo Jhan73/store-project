@@ -232,6 +232,32 @@ class InstoreAuditRollbackIT {
 	}
 
 	@Test
+	void anAuditWriteFailureRollsBackAMerge() {
+		var target = openTicketWithALine();
+		var table = InstoreTables.aTable(jdbc, "Table 5");
+		var source = UUID.fromString(idOf(mvc.post()
+			.uri(TICKETS)
+			.with(floorStaff())
+			.header("Idempotency-Key", UUID.randomUUID().toString())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"tableId\":\"%s\"}".formatted(table))
+			.exchange()));
+		mvc.post().uri(TICKETS + "/" + target + "/send").with(floorStaff()).exchange();
+		auditWritesNowFail();
+
+		var result = mvc.post()
+			.uri(TICKETS + "/" + target + "/merge")
+			.with(floorStaff())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"sourceTicketId\":\"%s\"}".formatted(source))
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+		assertThat(InstoreTables.ticketStatus(jdbc, source)).isEqualTo("OPEN");
+		assertThat(count("select count(*) from instore.ticket_line where ticket_id = ?", target)).isEqualTo(1);
+	}
+
+	@Test
 	void anAuditWriteFailureRollsBackACancellation() {
 		var ticket = openTicketWithALine();
 		auditWritesNowFail();

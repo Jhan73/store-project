@@ -123,6 +123,32 @@ class Tickets {
 		}
 	}
 
+	/** Ends a ticket this transaction holds the lock of by folding it into another; the table is free again from here on. */
+	void markMerged(UUID id, UUID intoId, Instant now) {
+		var merged = jdbc.sql("""
+				UPDATE instore.ticket SET status = 'MERGED', merged_into_id = :into, closed_at = :now
+				WHERE id = :id AND status = 'OPEN'
+				""").param("into", intoId).param("now", utc(now)).param("id", id).update();
+		if (merged != 1) {
+			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
+		}
+	}
+
+	Optional<UUID> mergedInto(UUID id) {
+		return jdbc.sql("SELECT merged_into_id FROM instore.ticket WHERE id = :id AND status = 'MERGED'")
+			.param("id", id)
+			.query(UUID.class)
+			.optional();
+	}
+
+	/** Moves every line, whatever its state, behind the target's own; each keeps the card it was sent to. */
+	List<UUID> moveLines(UUID fromId, UUID toId, int offset) {
+		return jdbc.sql("""
+				UPDATE instore.ticket_line SET ticket_id = :to, position = position + :offset, version = version + 1
+				WHERE ticket_id = :from RETURNING id
+				""").param("to", toId).param("offset", offset).param("from", fromId).query(UUID.class).list();
+	}
+
 	void deleteUnsentLines(UUID ticketId) {
 		jdbc.sql("DELETE FROM instore.ticket_line WHERE ticket_id = :ticket AND state = 'UNSENT'")
 			.param("ticket", ticketId)

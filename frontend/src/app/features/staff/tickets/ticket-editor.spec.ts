@@ -92,8 +92,6 @@ function payment(id: string, overrides: Partial<Payment> = {}): Payment {
     voided: false,
     voidReasonCode: null,
     voidNote: null,
-    compReasonCode: null,
-    compNote: null,
     ...overrides,
   };
 }

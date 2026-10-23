@@ -39,6 +39,7 @@ import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
 import com.jhanantezana.jugueria.instore.TicketTransferred;
+import com.jhanantezana.jugueria.instore.TicketsMerged;
 import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Role;
@@ -235,6 +236,26 @@ class RecordAuditOnInstoreEventsIT {
 		assertThat(entry.getEntityType()).isEqualTo("TICKET");
 		assertThat(entry.getBefore()).containsEntry("tableId", from.toString());
 		assertThat(entry.getAfter()).containsEntry("tableId", to.toString());
+	}
+
+	@Test
+	void recordsTwoTicketsBeingMerged() {
+		var target = UUID.randomUUID();
+		var source = UUID.randomUUID();
+		var table = UUID.randomUUID();
+		var line = UUID.randomUUID();
+
+		publish(new TicketsMerged(target, source, 7, table, List.of(line), UUID.randomUUID(), Role.SERVER, NOW));
+
+		var entry = findByEntityId(target);
+		assertThat(entry.getAction()).isEqualTo("TICKETS_MERGED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET");
+		assertThat(entry.getActorRole()).isEqualTo("SERVER");
+		assertThat(entry.getBefore()).containsEntry("sourceTicketId", source.toString())
+			.containsEntry("sourceNumber", "7")
+			.containsEntry("sourceTableId", table.toString());
+		assertThat(entry.getAfter()).containsEntry("movedLineIds", List.of(line.toString()))
+			.containsEntry("sourceStatus", "MERGED");
 	}
 
 	@Test
