@@ -78,6 +78,6 @@ Tell the `ADMIN`: start and end time, number of paper tickets, and anything that
 ## Not covered yet
 
 - Online orders (milestone M3): they will need pausing online ordering as the first step, which this runbook cannot do while the system is down.
-- Comp and merge are not built, so a comped item on paper is only written on the cash sheet.
+- A comped item on paper is only written on the cash sheet; key it in as a comp once the system is back (the comp screen is M2-F5, the API exists).
 - The closed-ticket search exists in the API only; staff have no screen to find a sale keyed in by mistake once its ticket is left.
 - There is no way to record a paper sale without it appearing on the board: step 3.5 is the cost of that.
