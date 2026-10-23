@@ -91,7 +91,7 @@ Folders are named after business features, never after technical types (`compone
 |--------|------|
 | `/`, `/legal/*` | `Prerender` |
 | `/menu`, `/menu/:category` | `Server` (SEO + fresh data; `@defer` with incremental hydration) |
-| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/login`, `/forbidden`, `/set-password`, `/staff/**`, `/display`, `/admin/**` | `Client` |
+| `/cart`, `/checkout`, `/account/**`, `/orders/**`, `/login`, `/forbidden`, `/service-unavailable`, `/set-password`, `/staff/**`, `/display`, `/admin/**` | `Client` |
 
 SSR never renders authenticated content, so tokens never exist on the SSR server.
 
@@ -140,6 +140,7 @@ SSR never renders authenticated content, so tokens never exist on the SSR server
 - Work that must still go out when the session ends registers with `AuthStore.onSignOut` (the board flushes its Ready queue and waits for the answers, up to 5 s), so it is sent while the bearer still works and its errors still have a toast.
 - Queueing a Ready renews an access token that would expire within the undo window plus 30 s (`AuthStore.ensureFresh`, reading `exp` from the token), because the `pagehide` flush cannot wait for a refresh.
 - Sign-out ends the session only after the server revoked the refresh cookie (a `401` also counts); when it cannot be reached the session stays and the workspace shows a toast, so the next `restore()` can never reopen a session the employee believes is closed.
+- When the first `POST /auth/refresh` of a reload fails with an outage (network, `5xx`, timeout) the role guard sends the employee to `/service-unavailable?returnUrl=<the screen>` instead of `/login`; its retry asks again and returns to that screen, and a `401` there goes to login.
 - Role guards per feature with `canMatch`. They are UX only — the backend enforces.
 
 **Errors** (tech-spec §5.1)

@@ -11,7 +11,7 @@
     </unit>
     <unit id="display.pageTitle">
       <notes>
-        <note category="location">src/app/app.routes.ts:30</note>
+        <note category="location">src/app/app.routes.ts:35</note>
       </notes>
       <segment>
         <source>Pedidos</source>
@@ -5414,6 +5414,46 @@
         <source>Entrar</source>
       </segment>
     </unit>
+    <unit id="serviceUnavailable.title">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:30,31</note>
+      </notes>
+      <segment>
+        <source>El servicio no está disponible</source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.hint">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:32,34</note>
+      </notes>
+      <segment>
+        <source> No se pudo comprobar tu sesión. Tu trabajo no se perdió: vuelve a intentarlo en unos segundos. </source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.stillDown">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:36,39</note>
+      </notes>
+      <segment>
+        <source> El servicio sigue sin responder. </source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.retry.tooltip">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:45,46</note>
+      </notes>
+      <segment>
+        <source>Volver a comprobar la sesión</source>
+      </segment>
+    </unit>
+    <unit id="serviceUnavailable.retry">
+      <notes>
+        <note category="location">src/app/features/service-unavailable/service-unavailable.ts:53,56</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
     <unit id="setPassword.title">
       <notes>
         <note category="location">src/app/features/set-password/set-password.ts:73,74</note>
@@ -7087,7 +7127,7 @@
     </unit>
     <unit id="staff.register.close.registered">
       <notes>
-        <note category="location">src/app/features/staff/register/shift-store.ts:237</note>
+        <note category="location">src/app/features/staff/register/shift-store.ts:239</note>
       </notes>
       <segment>
         <source>El turno quedó cerrado.</source>
