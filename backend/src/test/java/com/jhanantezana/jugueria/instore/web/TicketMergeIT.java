@@ -1,7 +1,9 @@
 package com.jhanantezana.jugueria.instore.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -15,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -44,6 +49,9 @@ class TicketMergeIT {
 
 	@Autowired
 	JdbcClient jdbc;
+
+	@Autowired
+	PlatformTransactionManager transactions;
 
 	@Autowired
 	ApplicationEvents events;
@@ -337,6 +345,38 @@ class TicketMergeIT {
 		}
 	}
 
+	@Test
+	void aDeadlockWithAnotherLockerIsARetryableConflictAndMergesNothing() throws Exception {
+		var first = target.compareTo(source) < 0 ? target : source;
+		var second = first.equals(target) ? source : target;
+		var pool = Executors.newSingleThreadExecutor();
+		try {
+			var outcome = new TransactionTemplate(transactions).execute(status -> {
+				lockRow(second);
+				var merging = pool.submit(() -> merge(target, source, Role.SERVER));
+				await().atMost(Duration.ofSeconds(10))
+					.until(() -> jdbc.sql("select count(*) from pg_stat_activity where wait_event_type = 'Lock'")
+						.query(Long.class)
+						.single() > 0);
+				try {
+					lockRow(first);
+				}
+				catch (DataAccessException e) {
+					// The other side lost instead; the merge then proceeds once this transaction ends.
+				}
+				return merging;
+			});
+
+			var result = outcome.get();
+			assertProblem(result, HttpStatus.CONFLICT, "common.concurrent-modification");
+			assertThat(InstoreTables.ticketStatus(jdbc, source)).isEqualTo("OPEN");
+			assertThat(events.stream(TicketsMerged.class)).isEmpty();
+		}
+		finally {
+			pool.shutdownNow();
+		}
+	}
+
 	@RepeatedTest(5)
 	void identicalMergesAtTheSameTimeBothSucceedAndMergeOnce() throws Exception {
 		sentLine(source, juice.large());
@@ -396,6 +436,10 @@ class TicketMergeIT {
 	}
 
 	// helpers
+
+	private void lockRow(UUID ticket) {
+		jdbc.sql("update instore.ticket set updated_at = now() where id = ?").param(ticket).update();
+	}
 
 	private void insertLines(UUID ticket, int count) {
 		jdbc.sql("""

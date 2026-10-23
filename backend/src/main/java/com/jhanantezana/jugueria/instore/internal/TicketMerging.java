@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import com.jhanantezana.jugueria.instore.TicketsMerged;
 import com.jhanantezana.jugueria.preparation.BoardSource;
 import com.jhanantezana.jugueria.preparation.PreparationApi;
 import com.jhanantezana.jugueria.shared.BusinessException;
+import com.jhanantezana.jugueria.shared.CommonError;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
 /** Folds one open ticket into another; the lines keep their state and the cards they were sent to. */
@@ -54,6 +56,17 @@ public class TicketMerging {
 	 */
 	@Transactional
 	public TicketView merge(UUID targetId, UUID sourceId) {
+		try {
+			return mergeLocked(targetId, sourceId);
+		}
+		// The database aborted this transaction as the deadlock loser (e.g. against a transfer onto the source's table).
+		catch (PessimisticLockingFailureException e) {
+			throw new BusinessException(CommonError.CONCURRENT_MODIFICATION,
+					"Tickets " + targetId + " and " + sourceId + " were changed concurrently; retry the merge");
+		}
+	}
+
+	private TicketView mergeLocked(UUID targetId, UUID sourceId) {
 		if (targetId.equals(sourceId)) {
 			throw new BusinessException(InstoreError.INVALID_MERGE, "A ticket cannot be merged into itself");
 		}
