@@ -116,11 +116,11 @@ const MARKER_LABELS = {
                       <tabler-icon [icon]="icons.flag" aria-hidden="true" />
                       <span i18n="@@board.card.line.voided">Anulada</span>
                     }
-                    @case ('comped') {
-                      <span i18n="@@board.card.line.comped">Cortesía</span>
-                    }
                   }
                 </span>
+              }
+              @if (item.comped) {
+                <span class="state comped" [attr.data-testid]="'comp-' + item.id" i18n="@@board.card.line.comped">Cortesía</span>
               }
               @for (tag of markersOf(item); track tag.id) {
                 <span class="marker inline" [class]="tag.kind.toLowerCase()" [attr.data-testid]="'marker-' + tag.id">
@@ -358,12 +358,10 @@ export class BoardCard {
     return MARKER_LABELS[marker.kind];
   }
 
-  protected stateOf(line: BoardLine): 'ready' | 'flagged' | 'voided' | 'comped' | null {
+  protected stateOf(line: BoardLine): 'ready' | 'flagged' | 'voided' | null {
     switch (line.state) {
       case 'VOIDED':
         return 'voided';
-      case 'COMPED':
-        return 'comped';
       case 'READY':
         return 'ready';
       default:

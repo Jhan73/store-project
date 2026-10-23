@@ -5,6 +5,7 @@ export const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 6
 export function line(overrides: Partial<BoardLine> & { id: string }): BoardLine {
   return {
     allergy: false,
+    comped: false,
     displayName: 'Jugo de naranja',
     flaggedUnavailable: false,
     modifiersText: null,
