@@ -91,9 +91,12 @@ public class TicketVoids {
 		if (waste) {
 			inventory.recordWaste(lineId, List.of(new StockLine(line.productId(), line.quantity())));
 		}
-		var closed = settlement.closeWhenSettled(ticket, now);
+		var closed = settlement.isSettled(ticket);
 		events.publishEvent(new TicketLineVoided(ticketId, lineId, line.productId(), line.quantity(), waste, reason, text,
 				actor, role, now, line.lineTotal(), closed));
+		if (closed) {
+			settlement.close(ticket, now);
+		}
 		return ticketService.view(tickets.require(ticketId));
 	}
 

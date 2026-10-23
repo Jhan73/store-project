@@ -43,15 +43,28 @@ class TicketSettlement {
 
 	/** The caller holds the ticket's lock. @return whether the ticket was closed */
 	boolean closeWhenSettled(Tickets.TicketRow ticket, Instant now) {
+		if (!isSettled(ticket)) {
+			return false;
+		}
+		close(ticket, now);
+		return true;
+	}
+
+	/** Whether the ticket has nothing unsent and its live payments equal its total. */
+	boolean isSettled(Tickets.TicketRow ticket) {
 		var lines = tickets.lines(ticket.id());
 		if (lines.stream().anyMatch(line -> line.state() == TicketLineState.UNSENT)) {
 			return false;
 		}
 		var total = TicketRules.total(lines, ticket.currency());
 		var paid = new Money(payments.livePaid(ticket.id()), ticket.currency());
-		if (total.isZero() || paid.compareTo(total) != 0) {
-			return false;
-		}
+		return !total.isZero() && paid.compareTo(total) == 0;
+	}
+
+	/** The caller holds the ticket's lock and checked {@link #isSettled}. */
+	void close(Tickets.TicketRow ticket, Instant now) {
+		var lines = tickets.lines(ticket.id());
+		var total = TicketRules.total(lines, ticket.currency());
 		inventory.deductAllowingShortfall(ticket.id(), stockLines(lines));
 		tickets.close(ticket.id(), now);
 		// A void can close the ticket, and whoever voided it may be a server with no shift: the sale is the cashier's.
@@ -62,7 +75,6 @@ class TicketSettlement {
 		if (ticket.tableId() != null) {
 			events.publishEvent(new TableOccupancyChanged(ticket.tableId(), now));
 		}
-		return true;
 	}
 
 	/** The charged lines: what the sale took off the shelf and what a void of it puts back. */

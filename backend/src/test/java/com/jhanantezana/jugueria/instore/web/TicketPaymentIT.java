@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.PayloadApplicationEvent;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +26,7 @@ import com.jhanantezana.jugueria.instore.PaymentMethod;
 import com.jhanantezana.jugueria.instore.PaymentRecorded;
 import com.jhanantezana.jugueria.instore.PaymentVoided;
 import com.jhanantezana.jugueria.instore.SaleRecorded;
+import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.inventory.internal.StockService;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
@@ -693,6 +695,23 @@ class TicketPaymentIT {
 			.query(String.class)
 			.single();
 		assertThat(audited).contains("\"ticketClosed\": true").contains("\"amount\": \"8.00\"");
+	}
+
+	@Test
+	void aLineVoidThatClosesTheTicketPublishesTheVoidBeforeTheSale() {
+		var small = sentLine(juice.small());
+		var large = sentLine(juice.large());
+		payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBody("CARD", "5.00", null, List.of(small)));
+
+		assertThat(voidLine(large)).hasStatusOk();
+
+		var order = events.stream()
+			.filter(PayloadApplicationEvent.class::isInstance)
+			.map(event -> ((PayloadApplicationEvent<?>) event).getPayload())
+			.filter(payload -> payload instanceof TicketLineVoided || payload instanceof SaleRecorded)
+			.map(payload -> payload.getClass().getSimpleName())
+			.toList();
+		assertThat(order).containsExactly("TicketLineVoided", "SaleRecorded");
 	}
 
 	@Test
