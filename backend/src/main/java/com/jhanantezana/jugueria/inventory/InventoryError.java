@@ -10,6 +10,7 @@ public enum InventoryError implements ErrorCode {
 	STOCK_ITEM_NOT_FOUND("inventory.stock-item-not-found", HttpStatus.NOT_FOUND),
 	PRODUCT_NOT_TRACKED("inventory.product-not-tracked", HttpStatus.CONFLICT),
 	INSUFFICIENT_STOCK("inventory.insufficient-stock", HttpStatus.CONFLICT),
+	PRODUCT_OUT_OF_STOCK("inventory.product-out-of-stock", HttpStatus.CONFLICT),
 	STOCK_RESERVED("inventory.stock-reserved", HttpStatus.CONFLICT),
 	RESERVATION_NOT_ACTIVE("inventory.reservation-not-active", HttpStatus.CONFLICT),
 	INVALID_QUANTITY("inventory.invalid-quantity", HttpStatus.UNPROCESSABLE_CONTENT),

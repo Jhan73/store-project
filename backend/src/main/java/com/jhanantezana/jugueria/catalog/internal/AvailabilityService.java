@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.catalog.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.jhanantezana.jugueria.catalog.AvailabilityChanged;
 import com.jhanantezana.jugueria.catalog.AvailabilityTarget;
 import com.jhanantezana.jugueria.catalog.CatalogError;
+import com.jhanantezana.jugueria.catalog.ProductAvailabilityGuard;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
@@ -23,17 +25,29 @@ public class AvailabilityService {
 
 	private final CatalogChanges changes;
 
+	private final List<ProductAvailabilityGuard> guards;
+
 	private final CurrentActor currentActor;
 
 	private final Clock clock;
 
 	AvailabilityService(ProductRepository products, ModifierOptionRepository options, CatalogChanges changes,
-			CurrentActor currentActor, Clock clock) {
+			List<ProductAvailabilityGuard> guards, CurrentActor currentActor, Clock clock) {
 		this.products = products;
 		this.options = options;
 		this.changes = changes;
+		this.guards = guards;
 		this.currentActor = currentActor;
 		this.clock = clock;
+	}
+
+	/** The 86 screen's command: marking a product available asks every guard first, unlike the system's own flips. */
+	@Transactional
+	public void markProductAvailability(UUID productId, boolean available) {
+		if (available) {
+			guards.forEach(guard -> guard.requireCanBeMarkedAvailable(productId));
+		}
+		setProductAvailability(productId, available);
 	}
 
 	@Transactional
