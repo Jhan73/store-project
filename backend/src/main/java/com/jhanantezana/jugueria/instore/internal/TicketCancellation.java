@@ -57,10 +57,11 @@ public class TicketCancellation {
 			throw new BusinessException(InstoreError.TICKET_NOT_EMPTY,
 					"Ticket " + ticketId + " has billed lines or payments; void them first");
 		}
+		var discarded = tickets.lines(ticketId).stream().filter(line -> line.state() == TicketLineState.UNSENT).toList();
 		tickets.deleteUnsentLines(ticketId);
 		tickets.cancel(ticketId, now);
 		events.publishEvent(new TicketCancelled(ticketId, ticket.number(), ticket.type(), ticket.tableId(),
-				currentActor.id(), currentActor.role(), now));
+				discarded.size(), discarded.stream().map(TicketLineView::productId).toList(), currentActor.id(), currentActor.role(), now));
 		if (ticket.tableId() != null) {
 			events.publishEvent(new TableOccupancyChanged(ticket.tableId(), now));
 		}

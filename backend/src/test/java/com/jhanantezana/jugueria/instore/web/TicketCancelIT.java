@@ -105,6 +105,25 @@ class TicketCancelIT {
 	}
 
 	@Test
+	void auditsHowManyUnsentLinesTheCancellationDiscarded() {
+		var ticket = openAt(table);
+		addLine(ticket);
+		addLine(ticket);
+
+		assertThat(cancel(ticket, Role.SERVER)).hasStatusOk();
+
+		assertThat(events.stream(TicketCancelled.class)).singleElement().satisfies(cancelled -> {
+			assertThat(cancelled.discardedLines()).isEqualTo(2);
+			assertThat(cancelled.discardedProductIds()).hasSize(2);
+		});
+		var before = jdbc.sql("select before::text from audit.audit_log where action = 'TICKET_CANCELLED' and entity_id = ?")
+			.param(ticket)
+			.query(String.class)
+			.single();
+		assertThat(before).contains("\"discardedLines\": \"2\"").contains("discardedProductIds");
+	}
+
+	@Test
 	void cancelsATicketWhoseEverySentLineWasVoided() {
 		var ticket = openAt(table);
 		var line = addLine(ticket);

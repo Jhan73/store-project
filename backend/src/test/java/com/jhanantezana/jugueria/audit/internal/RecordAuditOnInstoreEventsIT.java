@@ -202,7 +202,9 @@ class RecordAuditOnInstoreEventsIT {
 		var ticketId = UUID.randomUUID();
 		var table = UUID.randomUUID();
 
-		publish(new TicketCancelled(ticketId, 12, TicketType.TABLE, table, UUID.randomUUID(), Role.SERVER, NOW));
+		var product = UUID.randomUUID();
+		publish(new TicketCancelled(ticketId, 12, TicketType.TABLE, table, 2, List.of(product, product), UUID.randomUUID(),
+				Role.SERVER, NOW));
 
 		var entry = findByEntityId(ticketId);
 		assertThat(entry.getAction()).isEqualTo("TICKET_CANCELLED");
