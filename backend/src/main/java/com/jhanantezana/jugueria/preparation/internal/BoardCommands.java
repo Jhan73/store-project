@@ -78,6 +78,7 @@ public class BoardCommands {
 		var order = store.lock(orderId, now, PREPARING)
 			.orElseThrow(() -> store.rejection(orderId,
 					status -> status == WAITING ? PreparationError.ORDER_NOT_PREPARING : PreparationError.LINE_NOT_PENDING));
+		requireAddedLinesAcknowledged(orderId);
 		var sourceLine = jdbc.sql("""
 				UPDATE preparation.board_line
 				SET state = 'READY', ready_at = :now, version = version + 1, updated_at = :now
@@ -106,15 +107,7 @@ public class BoardCommands {
 		var now = Instant.now(clock);
 		var order = store.lock(orderId, now, PREPARING)
 			.orElseThrow(() -> store.rejection(orderId, status -> PreparationError.ORDER_NOT_PREPARING));
-		// A line added since the screen loaded still carries its unacknowledged label, so staff have not seen it.
-		var unseen = jdbc.sql("""
-				SELECT EXISTS (SELECT 1 FROM preparation.board_marker m JOIN preparation.board_line l ON l.id = m.line_id
-					WHERE l.board_order_id = :id AND l.state = 'PENDING' AND m.kind = 'MODIFIED' AND m.acknowledged_at IS NULL)
-				""").param("id", orderId).query(Boolean.class).single();
-		if (unseen) {
-			throw new BusinessException(PreparationError.LINES_NOT_ACKNOWLEDGED,
-					"Board order " + orderId + " has added lines that are not acknowledged yet");
-		}
+		requireAddedLinesAcknowledged(orderId);
 		var ready = jdbc.sql("""
 				UPDATE preparation.board_order SET status = 'READY', ready_at = :now, updated_at = :now
 				WHERE id = :id AND status = 'PREPARING'
@@ -141,6 +134,18 @@ public class BoardCommands {
 		events.publishEvent(new OrderReady(orderId, order.source(), order.sourceId(), now));
 		boardEvents.changed("ORDER_READY", orderId, null, now);
 		return queries.card(orderId);
+	}
+
+	// A line added since the screen loaded still carries its unacknowledged label, so staff have not seen it.
+	private void requireAddedLinesAcknowledged(UUID orderId) {
+		var unseen = jdbc.sql("""
+				SELECT EXISTS (SELECT 1 FROM preparation.board_marker m JOIN preparation.board_line l ON l.id = m.line_id
+					WHERE l.board_order_id = :id AND l.state = 'PENDING' AND m.kind = 'MODIFIED' AND m.acknowledged_at IS NULL)
+				""").param("id", orderId).query(Boolean.class).single();
+		if (unseen) {
+			throw new BusinessException(PreparationError.LINES_NOT_ACKNOWLEDGED,
+					"Board order " + orderId + " has added lines that are not acknowledged yet");
+		}
 	}
 
 	@Transactional

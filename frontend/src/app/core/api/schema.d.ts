@@ -7320,7 +7320,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.order-cancelled, preparation.order-not-preparing */
+            /** @description Conflict. Error codes: preparation.line-flagged-unavailable, preparation.line-not-pending, preparation.lines-not-acknowledged, preparation.order-cancelled, preparation.order-not-preparing */
             409: {
                 headers: {
                     [name: string]: unknown;
