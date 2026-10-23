@@ -10,6 +10,7 @@ import type {
   TableGridEntry,
   Ticket,
   TicketSummary,
+  TicketSummaryPage,
   VoidLineRequest,
 } from '../../../core/api/api-types';
 
@@ -33,7 +34,7 @@ export class TicketsApi {
   }
 
   openTickets(): Observable<TicketSummary[]> {
-    return this.http.get<TicketSummary[]>(`${this.base}/tickets`);
+    return this.http.get<TicketSummaryPage>(`${this.base}/tickets`).pipe(map((page) => page.content));
   }
 
   ticket(id: string): Observable<Ticket> {

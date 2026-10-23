@@ -51,6 +51,7 @@ export type AuditPage = Schemas['PageResponseAuditEntryResponse'];
 export type TableGridEntry = Schemas['TableGridResponse'];
 export type TableStatus = TableGridEntry['status'];
 export type TicketSummary = Schemas['TicketSummaryResponse'];
+export type TicketSummaryPage = Schemas['PageResponseTicketSummaryResponse'];
 export type Ticket = Schemas['TicketResponse'];
 export type TicketLine = Schemas['TicketLineResponse'];
 export type LineRequest = Schemas['LineRequest'];

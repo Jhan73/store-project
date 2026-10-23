@@ -47,7 +47,9 @@ describe('TicketsApi', () => {
 
   it('reads the open tickets, one ticket, the menu and the board', () => {
     api.openTickets().subscribe();
-    http.expectOne(`${BASE}/tickets`).flush([]);
+    http
+      .expectOne(`${BASE}/tickets`)
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     api.ticket('k1').subscribe();
     http.expectOne(`${BASE}/tickets/k1`).flush({});
     api.menu().subscribe();

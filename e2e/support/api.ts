@@ -287,7 +287,7 @@ export class AdminApi {
 
   // Closes the open tickets of this suite with a cash payment, which is the only way a ticket can end.
   private async settleTickets(): Promise<void> {
-    const open = await this.get<TicketSummary[]>('/api/v1/tickets');
+    const open = (await this.get<{ content: TicketSummary[] }>('/api/v1/tickets')).content;
     for (const summary of open.filter((ticket) => E2E_NAME.test(ticket.tableName ?? ticket.counterName ?? ''))) {
       const initial = await this.get<TicketDetail>(`/api/v1/tickets/${summary.id}`);
       for (const line of initial.lines.filter((candidate) => candidate.state === 'UNSENT')) {
