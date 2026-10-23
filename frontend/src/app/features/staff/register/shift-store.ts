@@ -38,6 +38,7 @@ export class ShiftStore {
   private readonly isLoaded = signal(false);
   private readonly loadFailed = signal(false);
   private readonly storeCurrency = signal<string | null>(null);
+  private readonly currencyUnreadable = signal(false);
   private readonly zone = signal<string | null>(null);
   private readonly movementList = signal<readonly CashMovement[]>([]);
   private readonly reasonList = signal<ActiveReason[] | null>(null);
@@ -60,6 +61,8 @@ export class ShiftStore {
   readonly loaded = this.isLoaded.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
   readonly currency = this.storeCurrency.asReadonly();
+  // True when the currency could not be read at all, as opposed to the store having no products.
+  readonly currencyFailed = this.currencyUnreadable.asReadonly();
   readonly timeZone = this.zone.asReadonly();
   readonly pending = new PendingIds();
 
@@ -102,7 +105,11 @@ export class ShiftStore {
       this.api
         .timeZone()
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({ next: (zone) => this.zone.set(zone), error: () => undefined });
+        .subscribe({
+          next: (zone) => this.zone.set(zone),
+          // Hours must not render blank: the device zone covers a failed read until the next one succeeds.
+          error: () => this.zone.update((zone) => zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
+        });
     }
   }
 
@@ -287,11 +294,19 @@ export class ShiftStore {
     }
   }
 
+  retryCurrency(): void {
+    this.loadCurrency();
+  }
+
   private loadCurrency(): void {
+    this.currencyUnreadable.set(false);
     this.api
       .currency()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (currency) => this.storeCurrency.set(currency), error: () => undefined });
+      .subscribe({
+        next: (currency) => this.storeCurrency.set(currency),
+        error: () => this.currencyUnreadable.set(true),
+      });
   }
 
   formatTime(instant: string): string {

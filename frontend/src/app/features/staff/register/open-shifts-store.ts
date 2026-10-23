@@ -41,7 +41,10 @@ export class OpenShiftsStore {
     this.api
       .timeZone()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (zone) => this.zone.set(zone), error: () => undefined });
+      .subscribe({
+        next: (zone) => this.zone.set(zone),
+        error: () => this.zone.update((zone) => zone ?? Intl.DateTimeFormat().resolvedOptions().timeZone),
+      });
   }
 
   forceClose(shift: Shift, reason: string, closed: () => void): void {

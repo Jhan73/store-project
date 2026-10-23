@@ -123,7 +123,26 @@ import { ShiftStore } from './shift-store';
             >
           }
         </div>
-        @if (store.currency() === null) {
+        @if (store.currencyFailed()) {
+          <div class="offline" role="status" data-testid="currency-failed">
+            <ng-container i18n="@@staff.register.none.currencyFailed"
+              >No se pudo leer la moneda de la tienda, así que todavía no se puede abrir un turno.</ng-container
+            >
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              data-testid="currency-retry"
+              (click)="store.retryCurrency()"
+              pTooltip="Volver a leer la moneda de la tienda"
+              i18n-pTooltip="@@staff.register.none.currencyRetry.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+              <span i18n="@@staff.register.none.currencyRetry">Reintentar</span>
+            </button>
+          </div>
+        } @else if (store.currency() === null) {
           <p class="muted" data-testid="no-currency" i18n="@@staff.register.none.noCurrency">
             Todavía no hay productos en el menú, así que no se puede abrir un turno.
           </p>

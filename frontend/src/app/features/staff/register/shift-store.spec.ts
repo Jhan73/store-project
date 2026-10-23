@@ -88,6 +88,46 @@ describe('ShiftStore', () => {
     expect(store.formatTime('2026-10-13T14:00:00Z')).toContain('9:00');
   });
 
+  it('tells a failed currency read from a menu without products and reads it again on demand', () => {
+    store.load();
+    http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+    zone();
+    http.expectOne(`${BASE}/catalog/menu`).flush(null, { status: 503, statusText: 'Unavailable' });
+    http.expectOne(`${BASE}/quick-sales/items`).flush(null, { status: 503, statusText: 'Unavailable' });
+
+    expect(store.currency()).toBeNull();
+    expect(store.currencyFailed()).toBe(true);
+
+    store.retryCurrency();
+    expect(store.currencyFailed()).toBe(false);
+    http.expectOne(`${BASE}/catalog/menu`).flush({
+      categories: [{ id: 'c', products: [{ id: 'p', price: pen('9.00') }] }],
+    });
+
+    expect(store.currency()).toBe('PEN');
+    expect(store.currencyFailed()).toBe(false);
+  });
+
+  it('does not call an empty menu a failure', () => {
+    store.load();
+    http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+    zone();
+    http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+    expect(store.currency()).toBeNull();
+    expect(store.currencyFailed()).toBe(false);
+  });
+
+  it('formats moments in the device zone while the store zone cannot be read', () => {
+    store.load();
+    http.expectOne(`${BASE}/shifts/current`).flush(shift());
+    http
+      .expectOne(`${BASE}/store/board-thresholds`)
+      .flush(null, { status: 503, statusText: 'Unavailable' });
+
+    expect(store.formatTime('2026-10-13T14:00:00Z')).not.toBe('');
+  });
+
   describe('cash movements', () => {
     const out = { type: 'OUT' as const, amount: pen('5.00'), reasonCode: 'Change', note: null, reference: null };
 

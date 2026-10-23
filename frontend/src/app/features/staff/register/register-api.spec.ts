@@ -242,6 +242,26 @@ describe('RegisterApi', () => {
     expect(currency).toBe('PEN');
   });
 
+  it('takes the currency from the pinned quick-sale items when the menu cannot be read', () => {
+    let currency: string | null | undefined;
+    api.currency().subscribe((value) => (currency = value));
+
+    http.expectOne(`${BASE}/catalog/menu`).flush(null, { status: 503, statusText: 'Unavailable' });
+    http.expectOne(`${BASE}/quick-sales/items`).flush([{ productId: 'p', name: 'Naranja', price: pen('8.00') }]);
+
+    expect(currency).toBe('PEN');
+  });
+
+  it('fails when neither the menu nor the pinned items can say the currency', () => {
+    let failed = false;
+    api.currency().subscribe({ error: () => (failed = true) });
+
+    http.expectOne(`${BASE}/catalog/menu`).flush(null, { status: 503, statusText: 'Unavailable' });
+    http.expectOne(`${BASE}/quick-sales/items`).flush([]);
+
+    expect(failed).toBe(true);
+  });
+
   it('reads the menu', () => {
     api.menu().subscribe();
 

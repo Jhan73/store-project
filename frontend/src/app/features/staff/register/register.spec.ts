@@ -133,6 +133,28 @@ describe('Register', () => {
     expect(find(fixture, 'shift-summary')).not.toBeNull();
   });
 
+  it('says the menu could not be read, with a retry, instead of claiming there are no products', async () => {
+    const fixture = TestBed.createComponent(Register);
+    await fixture.whenStable();
+    http.expectOne(`${BASE}/shifts/current`).flush(notFound, { status: 404, statusText: 'Not Found' });
+    http.expectOne(`${BASE}/store/board-thresholds`).flush({ timeZone: 'America/Lima' });
+    http.expectOne(`${BASE}/catalog/menu`).flush(null, { status: 503, statusText: 'Unavailable' });
+    http.expectOne(`${BASE}/quick-sales/items`).flush(null, { status: 503, statusText: 'Unavailable' });
+    await fixture.whenStable();
+
+    expect(find(fixture, 'no-currency')).toBeNull();
+    expect(find(fixture, 'currency-failed')).not.toBeNull();
+
+    find<HTMLButtonElement>(fixture, 'currency-retry')!.click();
+    http.expectOne(`${BASE}/catalog/menu`).flush({
+      categories: [{ id: 'c', products: [{ id: 'p', price: pen('9.00') }] }],
+    });
+    await fixture.whenStable();
+
+    expect(find(fixture, 'currency-failed')).toBeNull();
+    expect(find<HTMLButtonElement>(fixture, 'open-submit')!.disabled).toBe(false);
+  });
+
   it('shows the cash movements of the open shift and none without a shift', async () => {
     const open = await openScreen(shift());
     expect(host(open).querySelector('app-cash-movements')).not.toBeNull();

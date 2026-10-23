@@ -6877,9 +6877,33 @@
         <source>Escribe un monto, como 50 o 50.00.</source>
       </segment>
     </unit>
+    <unit id="staff.register.none.currencyFailed">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:129,131</note>
+      </notes>
+      <segment>
+        <source>No se pudo leer la moneda de la tienda, así que todavía no se puede abrir un turno.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.none.currencyRetry.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:137,138</note>
+      </notes>
+      <segment>
+        <source>Volver a leer la moneda de la tienda</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.none.currencyRetry">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:142,144</note>
+      </notes>
+      <segment>
+        <source>Reintentar</source>
+      </segment>
+    </unit>
     <unit id="staff.register.none.noCurrency">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:128,131</note>
+        <note category="location">src/app/features/staff/register/register.ts:147,150</note>
       </notes>
       <segment>
         <source> Todavía no hay productos en el menú, así que no se puede abrir un turno. </source>
@@ -6887,7 +6911,7 @@
     </unit>
     <unit id="staff.register.none.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:137,138</note>
+        <note category="location">src/app/features/staff/register/register.ts:156,157</note>
       </notes>
       <segment>
         <source>Abrir el turno con este fondo inicial</source>
@@ -6895,7 +6919,7 @@
     </unit>
     <unit id="staff.register.none.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:144,146</note>
+        <note category="location">src/app/features/staff/register/register.ts:163,165</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -7063,7 +7087,7 @@
     </unit>
     <unit id="staff.register.close.registered">
       <notes>
-        <note category="location">src/app/features/staff/register/shift-store.ts:220</note>
+        <note category="location">src/app/features/staff/register/shift-store.ts:237</note>
       </notes>
       <segment>
         <source>El turno quedó cerrado.</source>
