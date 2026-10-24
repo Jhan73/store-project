@@ -5,7 +5,9 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { AdminTable } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { numberIsInvalid, numberText, typeNumber } from '../../../testing/primeng-controls';
+import { clickPastUndo } from '../../../testing/undo-window';
 import { TableList } from './table-list';
 import { TablesApi } from './tables-api';
 
@@ -46,26 +48,33 @@ async function render(tables: AdminTable[] = [one, two]) {
   return { fixture, host: fixture.nativeElement as HTMLElement, http };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
+const body = () => document.body;
+
+function type(selector: string, value: string) {
+  const input = body().querySelector<HTMLInputElement>(selector)!;
   input.value = value;
   input.dispatchEvent(new Event('input'));
 }
 
-function submit(host: HTMLElement) {
-  host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+function submit() {
+  body().querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
 }
 
-function click(host: HTMLElement, testId: string) {
-  host.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`)!.click();
+function button(host: HTMLElement, testId: string) {
+  return host.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`)!;
+}
+
+async function open(fixture: { whenStable(): Promise<unknown> }, host: HTMLElement, testId: string) {
+  button(host, testId).click();
+  await fixture.whenStable();
 }
 
 function rows(host: HTMLElement) {
   return Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
 }
 
-function value(host: HTMLElement, selector: string) {
-  return host.querySelector<HTMLInputElement>(selector)!.value;
+function value(selector: string) {
+  return body().querySelector<HTMLInputElement>(selector)!.value;
 }
 
 describe('TableList', () => {
@@ -82,12 +91,13 @@ describe('TableList', () => {
     expect(second).toContain('Inactiva');
   });
 
-  it('creates a table, with no area when it is left blank', async () => {
+  it('creates a table from a dialog, with no area when it is left blank', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#table-name', ' Mesa 3 ');
-    typeNumber(host, 'table-order', '3');
-    submit(host);
+    await open(fixture, host, 'add-table');
+    type('#table-name', ' Mesa 3 ');
+    typeNumber(body(), 'table-order', '3');
+    submit();
     const request = http.expectOne(ADMIN);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ name: 'Mesa 3', area: null, displayOrder: 3 });
@@ -95,15 +105,16 @@ describe('TableList', () => {
     await fixture.whenStable();
 
     expect(rows(host)).toHaveLength(1);
-    expect(value(host, '#table-name')).toBe('');
+    expect(body().querySelector('#table-name')).toBeNull();
   });
 
   it('places a created table by its display order, then by name', async () => {
     const { fixture, host, http } = await render([one, two]);
 
-    type(host, '#table-name', 'Barra');
-    typeNumber(host, 'table-order', '0');
-    submit(host);
+    await open(fixture, host, 'add-table');
+    type('#table-name', 'Barra');
+    typeNumber(body(), 'table-order', '0');
+    submit();
     http
       .expectOne(ADMIN)
       .flush({ ...one, id: 't3', name: 'Barra', area: null, displayOrder: 0 });
@@ -118,10 +129,9 @@ describe('TableList', () => {
   it('moves an edited table to the position of its new display order', async () => {
     const { fixture, host, http } = await render([one, two]);
 
-    click(host, 'edit-t2');
-    await fixture.whenStable();
-    typeNumber(host, 'table-order', '0');
-    submit(host);
+    await open(fixture, host, 'edit-t2');
+    typeNumber(body(), 'table-order', '0');
+    submit();
     http.expectOne(`${ADMIN}/t2`).flush({ ...two, displayOrder: 0, etag: '"3"' });
     await fixture.whenStable();
 
@@ -130,12 +140,13 @@ describe('TableList', () => {
   });
 
   it('creates a table with an area', async () => {
-    const { host, http } = await render([]);
+    const { fixture, host, http } = await render([]);
 
-    type(host, '#table-name', 'Barra 1');
-    type(host, '#table-area', ' Barra ');
-    typeNumber(host, 'table-order', '0');
-    submit(host);
+    await open(fixture, host, 'add-table');
+    type('#table-name', 'Barra 1');
+    type('#table-area', ' Barra ');
+    typeNumber(body(), 'table-order', '0');
+    submit();
 
     expect(http.expectOne(ADMIN).request.body).toEqual({
       name: 'Barra 1',
@@ -147,30 +158,30 @@ describe('TableList', () => {
   it('does not send a table with a bad name, area or order', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#table-name', 'x'.repeat(61));
-    type(host, '#table-area', 'y'.repeat(61));
-    typeNumber(host, 'table-order', '-1');
-    submit(host);
+    await open(fixture, host, 'add-table');
+    type('#table-name', 'x'.repeat(61));
+    type('#table-area', 'y'.repeat(61));
+    typeNumber(body(), 'table-order', '-1');
+    submit();
     await fixture.whenStable();
 
     http.expectNone(ADMIN);
-    expect(numberIsInvalid(host, 'table-order')).toBe(true);
+    expect(numberIsInvalid(body(), 'table-order')).toBe(true);
     for (const id of ['name', 'area']) {
-      expect(host.querySelector(`#table-${id}`)!.getAttribute('aria-invalid')).toBe('true');
+      expect(body().querySelector(`#table-${id}`)!.getAttribute('aria-invalid')).toBe('true');
     }
   });
 
   it('edits a table with the version it was listed with', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    expect(value(host, '#table-name')).toBe('Mesa 1');
-    expect(value(host, '#table-area')).toBe('Terraza');
-    expect(numberText(host, 'table-order')).toBe('1');
-    type(host, '#table-area', '');
-    typeNumber(host, 'table-order', '5');
-    submit(host);
+    await open(fixture, host, 'edit-t1');
+    expect(value('#table-name')).toBe('Mesa 1');
+    expect(value('#table-area')).toBe('Terraza');
+    expect(numberText(body(), 'table-order')).toBe('1');
+    type('#table-area', '');
+    typeNumber(body(), 'table-order', '5');
+    submit();
     const request = http.expectOne(`${ADMIN}/t1`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.headers.get('If-Match')).toBe('"2"');
@@ -179,53 +190,72 @@ describe('TableList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).not.toContain('Terraza');
-    expect(value(host, '#table-name')).toBe('');
+    expect(body().querySelector('#table-name')).toBeNull();
   });
 
   it('keeps the typed name and tells the user when the name is already used', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#table-name', 'Mesa 1');
-    typeNumber(host, 'table-order', '1');
-    submit(host);
+    await open(fixture, host, 'add-table');
+    type('#table-name', 'Mesa 1');
+    typeNumber(body(), 'table-order', '1');
+    submit();
     http.expectOne(ADMIN).flush(
       { type: 'about:blank', status: 409, code: 'instore.table-name-already-used', correlationId: 'c' },
       { status: 409, statusText: 'Conflict' },
     );
     await fixture.whenStable();
 
-    expect(value(host, '#table-name')).toBe('Mesa 1');
-    expect(rows(host)).toHaveLength(0);
+    expect(value('#table-name')).toBe('Mesa 1');
+    expect(rows(host)).toEqual(['No hay resultados.']);
   });
 
-  it('deactivates and reactivates with the version of the table and blocks the button meanwhile', async () => {
-    const { fixture, host, http } = await render([one, { ...two, active: false }]);
-    const button = (id: string) =>
-      host.querySelector<HTMLButtonElement>(`[data-testid="toggle-${id}"]`)!;
+  it('shows a deactivated table as inactive at once and sends it with its version after the undo window', async () => {
+    const { fixture, host, http } = await render();
 
-    button('t1').click();
+    clickPastUndo(button(host, 'toggle-t1'));
     await fixture.whenStable();
-    expect(button('t1').disabled).toBe(true);
-    button('t1').click();
+    expect(rows(host)[0]).toContain('Inactiva');
+    expect(button(host, 'toggle-t1').disabled).toBe(true);
     const off = http.expectOne(`${ADMIN}/t1/deactivate`);
     expect(off.request.headers.get('If-Match')).toBe('"2"');
     off.flush({ ...one, active: false, etag: '"3"' });
     await fixture.whenStable();
-    expect(rows(host)[0]).toContain('Inactiva');
-    expect(button('t1').disabled).toBe(false);
 
-    button('t2').click();
+    expect(rows(host)[0]).toContain('Inactiva');
+    expect(button(host, 'toggle-t1').disabled).toBe(false);
+  });
+
+  it('undoing a deactivation sends nothing', async () => {
+    const { fixture, host } = await render();
+    const notice = TestBed.inject(UndoNotice);
+
+    button(host, 'toggle-t1').click();
+    await fixture.whenStable();
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).not.toContain('Inactiva');
+  });
+
+  it('reactivates straight away with the version of the table', async () => {
+    const { fixture, host, http } = await render([one, { ...two, active: false }]);
+
+    button(host, 'toggle-t2').click();
+    await fixture.whenStable();
+    expect(button(host, 'toggle-t2').disabled).toBe(true);
     const on = http.expectOne(`${ADMIN}/t2/reactivate`);
     expect(on.request.headers.get('If-Match')).toBe('"2"');
     on.flush({ ...two, active: true, etag: '"3"' });
     await fixture.whenStable();
-    expect(rows(host)[1]).toContain('Activa');
+
+    expect(rows(host)[1]).not.toContain('Inactiva');
   });
 
-  it('re-enables the button and reloads when a toggle is stale', async () => {
+  it('re-enables the button and reloads when a deactivation is stale', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'toggle-t1');
+    clickPastUndo(button(host, 'toggle-t1'));
     http
       .expectOne(`${ADMIN}/t1/deactivate`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -234,34 +264,33 @@ describe('TableList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('Fresh');
-    expect(host.querySelector<HTMLButtonElement>('[data-testid="toggle-t1"]')!.disabled).toBe(false);
+    expect(rows(host)[0]).not.toContain('Inactiva');
+    expect(button(host, 'toggle-t1').disabled).toBe(false);
   });
 
   it('retries a stale save with the refreshed version and shows the current values', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    type(host, '#table-name', 'Mine');
-    submit(host);
+    await open(fixture, host, 'edit-t1');
+    type('#table-name', 'Mine');
+    submit();
     http.expectOne(`${ADMIN}/t1`).flush(stale, { status: 412, statusText: 'Precondition Failed' });
     await fixture.whenStable();
     http.expectOne(ADMIN).flush([{ ...one, name: 'Fresh', etag: '"9"' }, two]);
     await fixture.whenStable();
 
-    expect(value(host, '#table-name')).toBe('Fresh');
-    submit(host);
+    expect(value('#table-name')).toBe('Fresh');
+    submit();
     const retry = http.expectOne(`${ADMIN}/t1`);
     expect(retry.request.headers.get('If-Match')).toBe('"9"');
     retry.flush({ ...one, name: 'Fresh', etag: '"10"' });
   });
 
-  it('leaves edit mode when the table no longer exists after a failed save', async () => {
+  it('closes the dialog when the table no longer exists after a failed save', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    submit(host);
+    await open(fixture, host, 'edit-t1');
+    submit();
     http.expectOne(`${ADMIN}/t1`).flush(
       { type: 'about:blank', status: 404, code: 'instore.table-not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -270,82 +299,27 @@ describe('TableList', () => {
     http.expectOne(ADMIN).flush([two]);
     await fixture.whenStable();
 
-    expect(value(host, '#table-name')).toBe('');
-    expect(host.querySelector('form [type="button"]')).toBeNull();
+    expect(body().querySelector('#table-name')).toBeNull();
   });
 
-  it('saves with the version returned by a toggle of the table being edited', async () => {
+  it('blocks the buttons while a save is in flight', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-t1');
+    await open(fixture, host, 'edit-t1');
+    submit();
     await fixture.whenStable();
-    click(host, 'toggle-t1');
-    http.expectOne(`${ADMIN}/t1/deactivate`).flush({ ...one, active: false, etag: '"7"' });
-    await fixture.whenStable();
-    submit(host);
-
-    expect(http.expectOne(`${ADMIN}/t1`).request.headers.get('If-Match')).toBe('"7"');
-  });
-
-  it('keeps unsaved typing when an unrelated table goes stale', async () => {
-    const { fixture, host, http } = await render();
-
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    type(host, '#table-name', 'Mine');
-    click(host, 'toggle-t2');
-    http
-      .expectOne(`${ADMIN}/t2/deactivate`)
-      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
-    await fixture.whenStable();
-    http.expectOne(ADMIN).flush([one, { ...two, name: 'Fresh', etag: '"9"' }]);
+    expect(button(host, 'edit-t2').disabled).toBe(true);
+    http.expectOne(`${ADMIN}/t1`).flush({ ...one, etag: '"3"' });
     await fixture.whenStable();
 
-    expect(rows(host)[1]).toContain('Fresh');
-    expect(value(host, '#table-name')).toBe('Mine');
-  });
-
-  it('re-points the form when a toggle of the table being edited goes stale', async () => {
-    const { fixture, host, http } = await render();
-
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    type(host, '#table-name', 'Mine');
-    click(host, 'toggle-t1');
-    http
-      .expectOne(`${ADMIN}/t1/deactivate`)
-      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
-    await fixture.whenStable();
-    http.expectOne(ADMIN).flush([{ ...one, name: 'Fresh', etag: '"9"' }, two]);
-    await fixture.whenStable();
-
-    expect(value(host, '#table-name')).toBe('Fresh');
-  });
-
-  it('blocks the edit buttons while a save is in flight', async () => {
-    const { fixture, host, http } = await render();
-    const edit = (id: string) => host.querySelector<HTMLButtonElement>(`[data-testid="edit-${id}"]`)!;
-
-    click(host, 'edit-t1');
-    await fixture.whenStable();
-    submit(host);
-    await fixture.whenStable();
-    expect(edit('t2').disabled).toBe(true);
-    edit('t2').click();
-    http
-      .expectOne(`${ADMIN}/t1`)
-      .flush({ ...one, etag: '"3"' });
-    await fixture.whenStable();
-
-    expect(edit('t2').disabled).toBe(false);
-    expect(value(host, '#table-name')).toBe('');
+    expect(button(host, 'edit-t2').disabled).toBe(false);
   });
 
   it('applies only the latest reload when answers arrive out of order', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'toggle-t1');
-    click(host, 'toggle-t2');
+    clickPastUndo(button(host, 'toggle-t1'));
+    clickPastUndo(button(host, 'toggle-t2'));
     http
       .expectOne(`${ADMIN}/t1/deactivate`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });

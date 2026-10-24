@@ -7,6 +7,8 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { StaffMember, StaffPage } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import {
   chooseOption,
   filterOptions,
@@ -18,7 +20,7 @@ import { StaffApi } from './staff-api';
 import { StaffList } from './staff-list';
 
 const API = 'http://api.test/api/v1';
-const LIST = `${API}/staff?page=0&size=20`;
+const LIST = `${API}/staff?page=0&size=100`;
 
 const ana: StaffMember = {
   id: 'u1',
@@ -31,8 +33,10 @@ const beto: StaffMember = { ...ana, id: 'u2', email: 'beto@juguera.pe', role: 'C
 const me: StaffMember = { ...ana, id: 'me', email: 'yo@juguera.pe', role: 'ADMIN' };
 
 function page(content: StaffMember[], overrides: Partial<StaffPage> = {}): StaffPage {
-  return { content, page: 0, size: 20, totalElements: content.length, totalPages: 1, ...overrides };
+  return { content, page: 0, size: 100, totalElements: content.length, totalPages: 1, ...overrides };
 }
+
+const ask = vi.fn(() => Promise.resolve(true));
 
 async function render(first: StaffPage = page([ana, beto, me])) {
   TestBed.configureTestingModule({
@@ -41,6 +45,7 @@ async function render(first: StaffPage = page([ana, beto, me])) {
       provideHttpClientTesting(),
       MessageService,
       StaffApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: AuthStore, useValue: { session: signal({ userId: 'me', role: 'ADMIN' }) } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
@@ -55,14 +60,21 @@ async function render(first: StaffPage = page([ana, beto, me])) {
   return { fixture, host: fixture.nativeElement as HTMLElement, http, toast };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
+const body = () => document.body;
+
+function type(selector: string, value: string) {
+  const input = body().querySelector<HTMLInputElement>(selector)!;
   input.value = value;
   input.dispatchEvent(new Event('input'));
 }
 
-function submit(host: HTMLElement) {
-  host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+function submit() {
+  body().querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
+}
+
+async function openInvite(fixture: { whenStable(): Promise<unknown> }, host: HTMLElement) {
+  host.querySelector<HTMLButtonElement>('[data-testid="invite-staff"]')!.click();
+  await fixture.whenStable();
 }
 
 function button(host: HTMLElement, testId: string) {
@@ -73,6 +85,11 @@ function rows(host: HTMLElement) {
   return Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
 }
 
+// The role change waits out the undo window; flushing sends it now.
+function sendPending(fixture: { componentInstance: StaffList }) {
+  (fixture.componentInstance as unknown as { changes: { flush(): void } }).changes.flush();
+}
+
 function problem(status: number, code: string) {
   return [
     { type: 'about:blank', status, code, correlationId: 'c' },
@@ -81,6 +98,7 @@ function problem(status: number, code: string) {
 }
 
 describe('StaffList', () => {
+  beforeEach(() => ask.mockReset().mockResolvedValue(true));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('lists the accounts with their role, state and creation time in the store time zone', async () => {
@@ -95,13 +113,38 @@ describe('StaffList', () => {
     expect(second).toContain('Inactiva');
   });
 
-  it('invites an account with an email and a role and never asks for a password', async () => {
+  it('reads every page of accounts', async () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        MessageService,
+        StaffApi,
+        { provide: ConfirmAction, useValue: { ask } },
+        { provide: AuthStore, useValue: { session: signal({ userId: 'me', role: 'ADMIN' }) } },
+        { provide: API_ORIGIN, useValue: 'http://api.test' },
+      ],
+    });
+    const fixture = TestBed.createComponent(StaffList);
+    const http = TestBed.inject(HttpTestingController);
+    await fixture.whenStable();
+    http.expectOne(LIST).flush(page([ana], { totalPages: 2, totalElements: 2 }));
+    http.expectOne(`${API}/admin/settings`).flush({ timeZone: 'America/Lima', currency: 'PEN' });
+    await fixture.whenStable();
+    http.expectOne(`${API}/staff?page=1&size=100`).flush(page([beto], { page: 1, totalPages: 2, totalElements: 2 }));
+    await fixture.whenStable();
+
+    expect(rows(fixture.nativeElement as HTMLElement)).toHaveLength(2);
+  });
+
+  it('invites an account from a dialog with an email and a role and never asks for a password', async () => {
     const { fixture, host, http } = await render();
 
-    expect(host.querySelector('input[type="password"]')).toBeNull();
-    type(host, '#staff-email', ' nueva@juguera.pe ');
-    await chooseOption(fixture, host, 'staff-role', 'Cajero');
-    submit(host);
+    await openInvite(fixture, host);
+    expect(body().querySelector('input[type="password"]')).toBeNull();
+    type('#staff-email', ' nueva@juguera.pe ');
+    await chooseOption(fixture, body(), 'staff-role', 'Cajero');
+    submit();
     const request = http.expectOne(`${API}/staff`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ email: 'nueva@juguera.pe', role: 'CASHIER' });
@@ -115,24 +158,26 @@ describe('StaffList', () => {
 
     expect(host.querySelector('[role="status"]')?.textContent).toContain('nueva@juguera.pe');
     expect(rows(host)).toHaveLength(4);
-    expect(host.querySelector<HTMLInputElement>('#staff-email')!.value).toBe('');
+    expect(body().querySelector('#staff-email')).toBeNull();
   });
 
   it('does not invite an address that is not an email', async () => {
     const { fixture, host, http } = await render();
 
-    type(host, '#staff-email', 'not-an-email');
-    submit(host);
+    await openInvite(fixture, host);
+    type('#staff-email', 'not-an-email');
+    submit();
     await fixture.whenStable();
 
     http.expectNone(`${API}/staff`);
-    expect(host.querySelector('#staff-email')!.getAttribute('aria-invalid')).toBe('true');
+    expect(body().querySelector('#staff-email')!.getAttribute('aria-invalid')).toBe('true');
   });
 
   it('offers only staff roles when inviting', async () => {
     const { fixture, host } = await render();
 
-    expect(await optionLabels(fixture, host, 'staff-role')).toEqual([
+    await openInvite(fixture, host);
+    expect(await optionLabels(fixture, body(), 'staff-role')).toEqual([
       'Mozo',
       'Cajero',
       'Administrador',
@@ -142,10 +187,11 @@ describe('StaffList', () => {
   it('searches the roles and invites with the one that is picked', async () => {
     const { fixture, host, http } = await render();
 
-    expect(await filterOptions(fixture, host, 'staff-role', 'caj')).toEqual(['Cajero']);
-    await chooseOption(fixture, host, 'staff-role', 'Cajero');
-    type(host, '#staff-email', 'nueva@juguera.pe');
-    submit(host);
+    await openInvite(fixture, host);
+    expect(await filterOptions(fixture, body(), 'staff-role', 'caj')).toEqual(['Cajero']);
+    await chooseOption(fixture, body(), 'staff-role', 'Cajero');
+    type('#staff-email', 'nueva@juguera.pe');
+    submit();
 
     expect(http.expectOne(`${API}/staff`).request.body).toEqual({
       email: 'nueva@juguera.pe',
@@ -162,22 +208,26 @@ describe('StaffList', () => {
   it('keeps the typed email and tells the user when it is already registered', async () => {
     const { fixture, host, http, toast } = await render();
 
-    type(host, '#staff-email', 'ana@juguera.pe');
-    submit(host);
+    await openInvite(fixture, host);
+    type('#staff-email', 'ana@juguera.pe');
+    submit();
     http.expectOne(`${API}/staff`).flush(...problem(409, 'identity.email-already-registered'));
     await fixture.whenStable();
 
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-    expect(host.querySelector<HTMLInputElement>('#staff-email')!.value).toBe('ana@juguera.pe');
+    expect(body().querySelector<HTMLInputElement>('#staff-email')!.value).toBe('ana@juguera.pe');
     expect(host.querySelector('[role="status"]')).toBeNull();
   });
 
-  it('changes a role and blocks the control meanwhile', async () => {
+  it('shows a changed role at once with an undo and sends it after the undo window', async () => {
     const { fixture, host, http } = await render();
 
     await chooseOption(fixture, host, 'role-u1', 'Cajero');
     await fixture.whenStable();
+    expect(rows(host)[0]).toContain('Cajero');
+    expect(selectedLabel(host, 'role-u1')).toBe('Cajero');
     expect(selectIsDisabled(host, 'role-u1')).toBe(true);
+    sendPending(fixture);
     const request = http.expectOne(`${API}/staff/u1/role`);
     expect(request.request.method).toBe('PATCH');
     expect(request.request.body).toEqual({ role: 'CASHIER' });
@@ -189,10 +239,23 @@ describe('StaffList', () => {
     expect(selectedLabel(host, 'role-u1')).toBe('Cajero');
   });
 
+  it('undoing a role change sends nothing and shows the old role', async () => {
+    const { fixture, host } = await render();
+    const notice = TestBed.inject(UndoNotice);
+
+    await chooseOption(fixture, host, 'role-u1', 'Administrador');
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(selectedLabel(host, 'role-u1')).toBe('Mozo');
+    expect(selectIsDisabled(host, 'role-u1')).toBe(false);
+  });
+
   it('puts the role control back to what the server holds when the change is refused', async () => {
     const { fixture, host, http, toast } = await render();
 
     await chooseOption(fixture, host, 'role-u1', 'Administrador');
+    sendPending(fixture);
     http.expectOne(`${API}/staff/u1/role`).flush(...problem(409, 'identity.last-active-admin-required'));
     await fixture.whenStable();
 
@@ -220,33 +283,54 @@ describe('StaffList', () => {
     );
   });
 
-  it('deactivates and reactivates an account and blocks the button meanwhile', async () => {
+  it('asks for confirmation that says the sessions will be closed, then deactivates the account', async () => {
     const { fixture, host, http } = await render();
 
     button(host, 'toggle-u1')!.click();
     await fixture.whenStable();
+    expect(ask).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('sesiones abiertas se cerrarán') }),
+    );
     expect(button(host, 'toggle-u1')!.disabled).toBe(true);
-    button(host, 'toggle-u1')!.click();
     http.expectOne(`${API}/staff/u1/deactivate`).flush({ ...ana, active: false });
     await fixture.whenStable();
+
     expect(rows(host)[0]).toContain('Inactiva');
     expect(button(host, 'toggle-u1')!.disabled).toBe(false);
+  });
+
+  it('does nothing when the deactivation is not confirmed', async () => {
+    ask.mockResolvedValue(false);
+    const { fixture, host } = await render();
+
+    button(host, 'toggle-u1')!.click();
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('Activa');
+    expect(rows(host)[0]).not.toContain('Inactiva');
+  });
+
+  it('reactivates an account straight away without asking', async () => {
+    const { fixture, host, http } = await render();
 
     button(host, 'toggle-u2')!.click();
     http.expectOne(`${API}/staff/u2/reactivate`).flush({ ...beto, active: true });
     await fixture.whenStable();
-    expect(rows(host)[1]).toContain('Activa');
+
+    expect(ask).not.toHaveBeenCalled();
+    expect(rows(host)[1]).not.toContain('Inactiva');
   });
 
   it('keeps the state and tells the user when the last administrator cannot be deactivated', async () => {
     const { fixture, host, http, toast } = await render();
 
     button(host, 'toggle-u1')!.click();
+    await fixture.whenStable();
     http.expectOne(`${API}/staff/u1/deactivate`).flush(...problem(409, 'identity.last-active-admin-required'));
     await fixture.whenStable();
 
     expect(toast).toHaveBeenCalled();
-    expect(rows(host)[0]).toContain('Activa');
+    expect(rows(host)[0]).not.toContain('Inactiva');
     expect(button(host, 'toggle-u1')!.disabled).toBe(false);
   });
 
@@ -288,10 +372,11 @@ describe('StaffList', () => {
     expect(rows(host)).toHaveLength(2);
   });
 
-  it('reloads the current page when an account is gone', async () => {
+  it('reloads the list when an account is gone', async () => {
     const { fixture, host, http } = await render();
 
     button(host, 'toggle-u1')!.click();
+    await fixture.whenStable();
     http.expectOne(`${API}/staff/u1/deactivate`).flush(...problem(404, 'common.not-found'));
     await fixture.whenStable();
     http.expectOne(LIST).flush(page([beto, me]));
@@ -299,21 +384,5 @@ describe('StaffList', () => {
 
     expect(rows(host)).toHaveLength(2);
     expect(rows(host)[0]).toContain('beto@juguera.pe');
-  });
-
-  it('moves between pages and shows only the latest page asked for', async () => {
-    const { fixture, host, http } = await render(page([ana], { totalPages: 3, totalElements: 41 }));
-
-    button(host, 'next-page')!.click();
-    const second = http.expectOne(`${API}/staff?page=1&size=20`);
-    button(host, 'next-page')!.click();
-    const third = http.expectOne(`${API}/staff?page=1&size=20`);
-    third.flush(page([beto], { page: 1, totalPages: 3, totalElements: 41 }));
-    second.flush(page([me], { page: 1, totalPages: 3, totalElements: 41 }));
-    await fixture.whenStable();
-
-    expect(rows(host)).toHaveLength(1);
-    expect(rows(host)[0]).toContain('beto@juguera.pe');
-    expect(host.textContent).toContain('Página 2 de 3');
   });
 });
