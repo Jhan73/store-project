@@ -34,10 +34,12 @@ import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
 import com.jhanantezana.jugueria.instore.TicketCancelled;
+import com.jhanantezana.jugueria.instore.TicketLineComped;
 import com.jhanantezana.jugueria.instore.TicketLineVoided;
 import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
 import com.jhanantezana.jugueria.instore.TicketTransferred;
+import com.jhanantezana.jugueria.instore.TicketsMerged;
 import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Role;
@@ -183,6 +185,45 @@ class RecordAuditOnInstoreEventsIT {
 	}
 
 	@Test
+	void recordsALineCompWithItsReasonAndAmount() {
+		var ticketId = UUID.randomUUID();
+		var lineId = UUID.randomUUID();
+		var product = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new TicketLineComped(ticketId, lineId, product, 2, "Staff meal", "Cook's lunch", actorId, Role.CASHIER, NOW,
+				new Money(new BigDecimal("16.00"), PEN), false, TicketType.TABLE, false, "Juice", Money.of("8.00", PEN),
+				List.of()));
+
+		var entry = findByEntityId(lineId);
+		assertThat(entry.getAction()).isEqualTo("TICKET_LINE_COMPED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET_LINE");
+		assertThat(entry.getActorId()).isEqualTo(actorId);
+		assertThat(entry.getActorRole()).isEqualTo("CASHIER");
+		assertThat(entry.getReason()).isEqualTo("Staff meal: Cook's lunch");
+		assertThat(entry.getBefore()).containsEntry("state", "SENT");
+		assertThat(entry.getAfter()).containsEntry("state", "COMPED")
+			.containsEntry("waste", true)
+			.containsEntry("ticketId", ticketId.toString())
+			.containsEntry("productId", product.toString())
+			.containsEntry("quantity", 2)
+			.containsEntry("amount", "16.00")
+			.containsEntry("currency", "PEN")
+			.containsEntry("ticketClosed", false);
+	}
+
+	@Test
+	void recordsALineCompWithoutANote() {
+		var lineId = UUID.randomUUID();
+
+		publish(new TicketLineComped(UUID.randomUUID(), lineId, UUID.randomUUID(), 1, "Staff meal", null, UUID.randomUUID(),
+				Role.ADMIN, NOW, Money.of("5.00", PEN), true, TicketType.COUNTER, false, "Juice", Money.of("5.00", PEN),
+				List.of()));
+
+		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Staff meal");
+	}
+
+	@Test
 	void recordsATicketTransfer() {
 		var ticketId = UUID.randomUUID();
 		var from = UUID.randomUUID();
@@ -195,6 +236,26 @@ class RecordAuditOnInstoreEventsIT {
 		assertThat(entry.getEntityType()).isEqualTo("TICKET");
 		assertThat(entry.getBefore()).containsEntry("tableId", from.toString());
 		assertThat(entry.getAfter()).containsEntry("tableId", to.toString());
+	}
+
+	@Test
+	void recordsTwoTicketsBeingMerged() {
+		var target = UUID.randomUUID();
+		var source = UUID.randomUUID();
+		var table = UUID.randomUUID();
+		var line = UUID.randomUUID();
+
+		publish(new TicketsMerged(target, source, 7, table, List.of(line), UUID.randomUUID(), Role.SERVER, NOW));
+
+		var entry = findByEntityId(target);
+		assertThat(entry.getAction()).isEqualTo("TICKETS_MERGED");
+		assertThat(entry.getEntityType()).isEqualTo("TICKET");
+		assertThat(entry.getActorRole()).isEqualTo("SERVER");
+		assertThat(entry.getBefore()).containsEntry("sourceTicketId", source.toString())
+			.containsEntry("sourceNumber", "7")
+			.containsEntry("sourceTableId", table.toString());
+		assertThat(entry.getAfter()).containsEntry("movedLineIds", List.of(line.toString()))
+			.containsEntry("sourceStatus", "MERGED");
 	}
 
 	@Test

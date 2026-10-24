@@ -47,6 +47,14 @@ public interface PreparationApi {
 	boolean voidLine(BoardSource source, UUID sourceId, UUID sourceLineId, VoidMode mode);
 
 	/**
+	 * Comps a line: served free of charge, so it counts as waste. A comp is a billing decision only: a pending or
+	 * finished line keeps its state, is flagged as comped, and is still prepared; no marker is raised. Comping a line
+	 * that is already comped does nothing, and a voided one is {@code preparation.line-not-pending}. A handed-over card
+	 * still accepts a comp; only a cancelled card is closed.
+	 */
+	void compLine(BoardSource source, UUID sourceId, UUID sourceLineId);
+
+	/**
 	 * Cancels a card nobody has started. Cancelling a card that is already cancelled does nothing; one that staff
 	 * started is {@code preparation.order-already-started}.
 	 */

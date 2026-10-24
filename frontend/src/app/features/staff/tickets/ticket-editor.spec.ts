@@ -18,7 +18,7 @@ import type {
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
-import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
+import { chooseOption, optionLabels, selectedLabel } from '../../../testing/primeng-controls';
 import { shift } from '../../../testing/register-fixtures';
 import { RegisterApi } from '../register/register-api';
 import { TicketEditor } from './ticket-editor';
@@ -49,6 +49,8 @@ function line(id: string, overrides: Partial<TicketLine> = {}): TicketLine {
     state: 'UNSENT',
     sentAt: null,
     voidNote: null,
+    compReasonCode: null,
+    compNote: null,
     voidReasonCode: null,
     waste: false,
     ...overrides,
@@ -554,6 +556,257 @@ describe('TicketEditor', () => {
 
     expect(text(fixture, 'ticket-title')).toContain('Mesa 4');
     expect(inDialog('[data-testid="transfer-confirm"]')).toBeNull();
+  });
+
+  describe('comping a sent line', () => {
+    const COMP_REASONS = `${BASE}/reasons?type=COMP`;
+    const sent = () => ticket([line('l1', { state: 'SENT', sentAt: SENT_AT }), line('l2')]);
+    const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement;
+
+    it('offers the comp on a sent line to a cashier and an admin, not to a server', async () => {
+      const cashier = await ready(sent());
+      expect(find(cashier, 'comp-l1')).not.toBeNull();
+      expect(find(cashier, 'comp-l2')).toBeNull();
+      cashier.destroy();
+
+      role.set('SERVER');
+      const server = await ready(sent());
+      expect(find(server, 'comp-l1')).toBeNull();
+    });
+
+    it('tells a server to ask a cashier for the comp, and tells nobody else', async () => {
+      role.set('SERVER');
+      const server = await ready(sent());
+      expect(text(server, 'comp-blocked-l1')).toContain('pide a un cajero');
+      expect(find(server, 'comp-blocked-l2')).toBeNull();
+      server.destroy();
+
+      role.set('CASHIER');
+      const cashier = await ready(sent());
+      expect(find(cashier, 'comp-blocked-l1')).toBeNull();
+    });
+
+    it('offers no comp on a voided or comped line or on a closed ticket', async () => {
+      const lines = [
+        line('l1', { state: 'VOIDED' }),
+        line('l2', { state: 'COMPED', compReasonCode: 'Staff meal' }),
+      ];
+      const fixture = await ready(ticket(lines));
+      expect(find(fixture, 'comp-l1')).toBeNull();
+      expect(find(fixture, 'comp-l2')).toBeNull();
+      fixture.destroy();
+
+      const closed = await ready(
+        ticket([line('l1', { state: 'SENT', sentAt: SENT_AT })], { status: 'CLOSED' }),
+      );
+      expect(find(closed, 'comp-l1')).toBeNull();
+    });
+
+    it('comps the line with a COMP reason and shows it as a courtesy with the totals from the API', async () => {
+      const fixture = await ready(sent());
+      await press(fixture, 'comp-l1');
+      http.expectOne(COMP_REASONS).flush([
+        { type: 'COMP', code: 'Staff meal' },
+        { type: 'COMP', code: 'Other' },
+      ]);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Staff meal');
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/lines/l1/comp`);
+      expect(request.request.method).toBe('POST');
+      expect(request.request.body).toEqual({ reason: 'Staff meal', note: null });
+      expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
+      request.flush(
+        ticket(
+          [
+            line('l1', {
+              state: 'COMPED',
+              sentAt: SENT_AT,
+              compReasonCode: 'Staff meal',
+              lineTotal: pen('10.00'),
+            }),
+            line('l2'),
+          ],
+          { total: pen('10.00'), balance: pen('10.00') },
+        ),
+      );
+      await fixture.whenStable();
+
+      expect(text(fixture, 'line-status-l1')).toContain('Cortesía');
+      expect(text(fixture, 'line-status-l1')).toContain('Staff meal');
+      expect(find(fixture, 'line-l1')!.classList.contains('comped')).toBe(true);
+      expect(find(fixture, 'line-l1')!.classList.contains('voided')).toBe(false);
+      expect(text(fixture, 'ticket-total')).toContain('10.00');
+      expect(find(fixture, 'comp-l1')).toBeNull();
+      expect(find(fixture, 'void-l1')).toBeNull();
+      expect(inDialog('[data-testid="vd-confirm"]')).toBeNull();
+    });
+
+    it('needs a note for the reason "Other" and sends it', async () => {
+      const fixture = await ready(sent());
+      await press(fixture, 'comp-l1');
+      http.expectOne(COMP_REASONS).flush([{ type: 'COMP', code: 'Other' }]);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Otro');
+      expect(inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.disabled).toBe(true);
+
+      const note = inDialog<HTMLTextAreaElement>('[data-testid="vd-note"]')!;
+      note.value = 'Tasting';
+      note.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/lines/l1/comp`);
+      expect(request.request.body).toEqual({ reason: 'Other', note: 'Tasting' });
+      request.flush(sent());
+    });
+
+    it('keeps the dialog and shows the refusal when the line is covered by a payment', async () => {
+      const added = vi.spyOn(messages, 'add');
+      const fixture = await ready(sent());
+      await press(fixture, 'comp-l1');
+      http.expectOne(COMP_REASONS).flush([{ type: 'COMP', code: 'Staff meal' }]);
+      await fixture.whenStable();
+      await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Staff meal');
+      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      await fixture.whenStable();
+
+      http
+        .expectOne(`${TICKET}/lines/l1/comp`)
+        .flush(
+          { ...failure, status: 409, code: 'instore.line-covered-by-payment' },
+          { status: 409, statusText: 'Conflict' },
+        );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(sent());
+      flushBoard();
+      await fixture.whenStable();
+
+      expect(added).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error', summary: expect.stringContaining('Anula primero el pago') }),
+      );
+      expect(inDialog('[data-testid="vd-confirm"]')).not.toBeNull();
+    });
+  });
+
+  describe('merging another open ticket into this one', () => {
+    const OPEN_LIST = `${BASE}/tickets?page=0&size=100`;
+    const summary = (id: string, number: number, tableName: string | null, counterName: string | null = null) => ({
+      id,
+      number,
+      type: tableName ? 'TABLE' : 'COUNTER',
+      tableName,
+      counterName,
+      billRequested: false,
+      openedAt: '2026-10-13T10:00:00Z',
+      tableId: null,
+      total: pen('5.00'),
+    });
+    const page = (content: unknown[]) => ({ content, page: 0, size: 100, totalElements: content.length, totalPages: 1 });
+    const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement;
+
+    async function openMerge(content: unknown[]) {
+      const fixture = await ready();
+      await press(fixture, 'merge-open');
+      http.expectOne(OPEN_LIST).flush(page(content));
+      await fixture.whenStable();
+      return fixture;
+    }
+
+    it('offers the action to floor staff on an open ticket, even a server', async () => {
+      role.set('SERVER');
+      const fixture = await ready();
+
+      expect(find(fixture, 'merge-open')).not.toBeNull();
+    });
+
+    it('offers nothing on a closed ticket', async () => {
+      const fixture = await ready(ticket([line('l1')], { status: 'CLOSED' }));
+
+      expect(find(fixture, 'merge-open')).toBeNull();
+    });
+
+    it('lists the other open tickets, never the one being edited', async () => {
+      const fixture = await openMerge([
+        summary('k1', 12, 'Mesa 1'),
+        summary('k2', 13, 'Mesa 2'),
+        summary('k3', 14, null, 'Ana'),
+      ]);
+      const labels = await optionLabels(fixture, dialog(), 'merge-source');
+
+      expect(labels).toEqual(['Mesa 2 · Cuenta 13', 'Mostrador: Ana · Cuenta 14']);
+    });
+
+    it('says there is nothing to merge when no other ticket is open', async () => {
+      await openMerge([summary('k1', 12, 'Mesa 1')]);
+
+      expect(inDialog('[data-testid="merge-empty"]')).not.toBeNull();
+      expect(inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.disabled).toBe(true);
+    });
+
+    it('merges the chosen ticket, shows the surviving ticket from the answer and closes the dialog', async () => {
+      const fixture = await openMerge([summary('k2', 13, 'Mesa 2')]);
+      await chooseOption(fixture, dialog(), 'merge-source', 'Mesa 2 · Cuenta 13');
+      inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.click();
+      await fixture.whenStable();
+
+      const request = http.expectOne(`${TICKET}/merge`);
+      expect(request.request.body).toEqual({ sourceTicketId: 'k2' });
+      request.flush(ticket([line('l1'), line('l9')], { total: pen('50.00'), balance: pen('50.00') }));
+      await fixture.whenStable();
+
+      expect(text(fixture, 'ticket-total')).toContain('50.00');
+      expect(find(fixture, 'line-l9')).not.toBeNull();
+      expect(inDialog('[data-testid="merge-confirm"]')).toBeNull();
+    });
+
+    it('keeps the dialog and shows the refusal when the other ticket has payments', async () => {
+      const added = vi.spyOn(messages, 'add');
+      const fixture = await openMerge([summary('k2', 13, 'Mesa 2')]);
+      await chooseOption(fixture, dialog(), 'merge-source', 'Mesa 2 · Cuenta 13');
+      inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.click();
+      await fixture.whenStable();
+
+      http
+        .expectOne(`${TICKET}/merge`)
+        .flush(
+          { ...failure, code: 'instore.ticket-has-payments' },
+          { status: 409, statusText: 'Conflict' },
+        );
+      await fixture.whenStable();
+      http.expectOne(TICKET).flush(ticket([line('l1')]));
+      flushBoard();
+      await fixture.whenStable();
+
+      expect(added).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'error', summary: expect.stringContaining('tiene pagos') }),
+      );
+      expect(inDialog('[data-testid="merge-confirm"]')).not.toBeNull();
+    });
+
+    it('offers a retry when the open tickets cannot be read', async () => {
+      const fixture = await ready();
+      await press(fixture, 'merge-open');
+      http
+        .expectOne(OPEN_LIST)
+        .flush({ ...failure, status: 500, code: 'common.internal-error' }, { status: 500, statusText: 'Error' });
+      await fixture.whenStable();
+
+      expect(inDialog('[data-testid="merge-failed"]')).not.toBeNull();
+      inDialog<HTMLButtonElement>('[data-testid="merge-retry"]')!.click();
+      await fixture.whenStable();
+      http.expectOne(OPEN_LIST).flush(page([]));
+    });
+  });
+
+  it('tells the employee a merged ticket is no longer editable', async () => {
+    const fixture = await open(ticket([line('l1')], { status: 'MERGED', mergedIntoId: null }));
+
+    expect(find(fixture, 'merged-notice')).not.toBeNull();
+    expect(find(fixture, 'closed-notice')).toBeNull();
   });
 
   describe('cancelling a ticket with nothing billed', () => {

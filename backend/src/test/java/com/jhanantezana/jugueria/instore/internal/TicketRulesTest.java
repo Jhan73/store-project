@@ -43,9 +43,9 @@ class TicketRulesTest {
 	}
 
 	@Test
-	void theTotalCountsLinesThatAreNotVoided() {
+	void theTotalCountsOnlyLinesThatAreNeitherVoidedNorComped() {
 		var lines = List.of(line(TicketLineState.UNSENT, "5.00", 2), line(TicketLineState.SENT, "4.50", 1),
-				line(TicketLineState.VOIDED, "9.00", 3));
+				line(TicketLineState.VOIDED, "9.00", 3), line(TicketLineState.COMPED, "7.00", 1));
 
 		assertThat(TicketRules.total(lines, PEN)).isEqualTo(Money.of("14.50", PEN));
 	}
@@ -70,7 +70,7 @@ class TicketRulesTest {
 
 	private static TicketLineView line(TicketLineState state, String unitPrice, int quantity) {
 		return new TicketLineView(java.util.UUID.randomUUID(), java.util.UUID.randomUUID(), "Juice", quantity,
-				Money.of(unitPrice, PEN), List.of(), null, false, state, null, false, null, null);
+				Money.of(unitPrice, PEN), List.of(), null, false, state, null, false, null, null, null, null);
 	}
 
 }

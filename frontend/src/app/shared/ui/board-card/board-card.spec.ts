@@ -171,6 +171,32 @@ describe('BoardCard', () => {
     });
   });
 
+  describe('comped lines', () => {
+    it('keeps preparing a comped line and labels it as a courtesy', () => {
+      render(
+        order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1', comped: true })] }),
+      );
+
+      expect(host().querySelector('[data-testid="comp-l1"]')?.textContent).toContain('Cortesía');
+      expect(button('ready-line-l1')).not.toBeNull();
+    });
+
+    it('labels a comped line that is already ready with both words', () => {
+      render(
+        order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1', state: 'READY', comped: true })] }),
+      );
+
+      expect(host().querySelector('[data-testid="line-state-l1"]')?.textContent).toContain('Lista');
+      expect(host().querySelector('[data-testid="comp-l1"]')?.textContent).toContain('Cortesía');
+    });
+
+    it('shows no courtesy label on an ordinary line', () => {
+      render(order({ id: 'o1', status: 'PREPARING' }));
+
+      expect(host().querySelector('[data-testid^="comp-"]')).toBeNull();
+    });
+  });
+
   describe('actions', () => {
     it('starts a waiting order', () => {
       render(order({ id: 'o1', status: 'WAITING' }));

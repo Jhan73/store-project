@@ -82,6 +82,15 @@ ul {
   border-bottom: 1px solid var(--border);
 }
 
+.lines li.comped .amount {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+.lines li.comped .state {
+  color: var(--primary);
+}
+
 .lines li.voided .line-main,
 .lines li.voided .detail {
   color: var(--muted-foreground);

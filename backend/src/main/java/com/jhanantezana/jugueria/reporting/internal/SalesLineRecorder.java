@@ -30,8 +30,14 @@ class SalesLineRecorder {
 
 	void record(UUID sourceId, UUID ticketId, TicketType ticketType, boolean quickSale, List<SoldLine> lines,
 			boolean voided, @Nullable UUID employeeId, Instant occurredAt) {
+		record(sourceId, ticketId, ticketType, quickSale, lines, voided, false, employeeId, occurredAt);
+	}
+
+	/** A comped line is written with a zero total, so sums of sales never count it as revenue. */
+	void record(UUID sourceId, UUID ticketId, TicketType ticketType, boolean quickSale, List<SoldLine> lines,
+			boolean voided, boolean comped, @Nullable UUID employeeId, Instant occurredAt) {
 		var fact = new SalesLines.Fact(sourceId, ticketId, occurredAt, BusinessMoment.of(occurredAt, store.timeZone()),
-				ticketType, quickSale, voided, voided ? -1 : 1, employeeId);
+				ticketType, quickSale, voided, voided ? -1 : 1, employeeId, comped);
 		var categories = catalog.categoriesOf(lines.stream().map(SoldLine::productId).distinct().toList());
 		for (var line : lines) {
 			salesLines.insert(fact, line, categories.get(line.productId()));

@@ -123,7 +123,8 @@ public class TicketService {
 		var balance = ticket.status() == TicketStatus.OPEN ? total.minus(paid) : Money.zero(ticket.currency());
 		return new TicketView(ticket.id(), ticket.number(), ticket.type(), ticket.tableId(), ticket.tableName(),
 				ticket.counterName(), ticket.note(), ticket.status(), ticket.billRequested(), total, ticket.createdAt(),
-				lines, ticket.quickSale(), paid, balance, recorded, payments.saleVoidOf(ticket.id()).orElse(null));
+				lines, ticket.quickSale(), paid, balance, recorded, payments.saleVoidOf(ticket.id()).orElse(null),
+				ticket.mergedIntoId());
 	}
 
 	private UUID requireActor() {

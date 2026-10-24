@@ -274,9 +274,15 @@ class PreparationRaceIT {
 			var results = inParallel(2, i -> i == 0 ? () -> commands.readyLine(lineId)
 					: () -> preparation.addLines(intake.source(), intake.sourceId(), List.of(extra)));
 
-			assertThat(results).as("round %d", round).allSatisfy(result -> assertThat(result.failure()).isNull());
+			assertThat(results.get(1).succeeded()).as("round %d", round).isTrue();
 			assertThat(PreparationTables.orderStatus(jdbc, order)).isEqualTo("PREPARING");
-			assertThat(pendingLines(order)).isEqualTo(1);
+			if (results.get(0).succeeded()) {
+				assertThat(pendingLines(order)).isEqualTo(1);
+			}
+			else {
+				assertThat(rejectionCodes(results)).containsExactly("preparation.lines-not-acknowledged");
+				assertThat(pendingLines(order)).isEqualTo(2);
+			}
 			assertThat(readyOrdersWithPendingLines()).isZero();
 		}
 	}

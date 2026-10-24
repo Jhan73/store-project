@@ -78,6 +78,8 @@ function sale(overrides: Partial<Ticket> = {}): Ticket {
         voided: false,
         voidReasonCode: null,
         voidNote: null,
+        compReasonCode: null,
+        compNote: null,
       },
     ],
     lines: [],

@@ -10,7 +10,8 @@ import com.jhanantezana.jugueria.shared.Money;
 
 public record TicketLineView(UUID id, UUID productId, String productName, int quantity, Money unitPrice,
 		List<ChosenOption> modifiers, @Nullable String note, boolean allergy, TicketLineState state,
-		@Nullable Instant sentAt, boolean waste, @Nullable String voidReasonCode, @Nullable String voidNote) {
+		@Nullable Instant sentAt, boolean waste, @Nullable String voidReasonCode, @Nullable String voidNote,
+		@Nullable String compReasonCode, @Nullable String compNote) {
 
 	public Money lineTotal() {
 		return unitPrice.times(quantity);

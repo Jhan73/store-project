@@ -30,18 +30,20 @@ class Tickets {
 
 	record TicketRow(UUID id, long number, TicketType type, @Nullable UUID tableId, @Nullable String tableName,
 			@Nullable String counterName, @Nullable String note, TicketStatus status, boolean billRequested,
-			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt, boolean quickSale) {
+			@Nullable UUID boardSourceId, int boardRounds, Currency currency, Instant createdAt, boolean quickSale,
+			@Nullable UUID mergedIntoId) {
 	}
 
 	private static final String TICKET_COLUMNS = """
 			k.id, k.number, k.type, k.table_id, t.name AS table_name, k.counter_name, k.note, k.status, k.bill_requested,
-			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale
+			k.board_source_id, k.board_rounds, k.currency, k.created_at, k.quick_sale,
+			k.merged_into_id
 			FROM instore.ticket k LEFT JOIN instore.dining_table t ON t.id = k.table_id
 			""";
 
 	private static final String LINE_COLUMNS = """
 			id, product_id, product_name, quantity, unit_price_amount, unit_price_currency, modifiers, note, allergy, state,
-			sent_at, waste, void_reason_code, void_note
+			sent_at, waste, void_reason_code, void_note, comp_reason_code, comp_note
 			""";
 
 	private static final TypeReference<List<ChosenOption>> OPTIONS = new TypeReference<>() {
@@ -121,6 +123,32 @@ class Tickets {
 		if (cancelled != 1) {
 			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
 		}
+	}
+
+	/** Ends a ticket this transaction holds the lock of by folding it into another; the table is free again from here on. */
+	void markMerged(UUID id, UUID intoId, Instant now) {
+		var merged = jdbc.sql("""
+				UPDATE instore.ticket SET status = 'MERGED', merged_into_id = :into, closed_at = :now
+				WHERE id = :id AND status = 'OPEN'
+				""").param("into", intoId).param("now", utc(now)).param("id", id).update();
+		if (merged != 1) {
+			throw new IllegalStateException("Ticket " + id + " changed state while it was locked");
+		}
+	}
+
+	Optional<UUID> mergedInto(UUID id) {
+		return jdbc.sql("SELECT merged_into_id FROM instore.ticket WHERE id = :id AND status = 'MERGED'")
+			.param("id", id)
+			.query(UUID.class)
+			.optional();
+	}
+
+	/** Moves every line, whatever its state, behind the target's own; each keeps the card it was sent to. */
+	List<UUID> moveLines(UUID fromId, UUID toId, int offset) {
+		return jdbc.sql("""
+				UPDATE instore.ticket_line SET ticket_id = :to, position = position + :offset, version = version + 1
+				WHERE ticket_id = :from RETURNING id
+				""").param("to", toId).param("offset", offset).param("from", fromId).query(UUID.class).list();
 	}
 
 	void deleteUnsentLines(UUID ticketId) {
@@ -346,6 +374,25 @@ class Tickets {
 		}
 	}
 
+	void markComped(UUID ticketId, UUID lineId, String reasonCode, @Nullable String note, UUID actor, Instant now) {
+		var comped = jdbc.sql("""
+				UPDATE instore.ticket_line
+				SET state = 'COMPED', waste = true, comp_reason_code = :reason, comp_note = :note, comped_by = :actor,
+					comped_at = :now, version = version + 1, updated_at = :now
+				WHERE id = :id AND ticket_id = :ticket AND state = 'SENT'
+				""")
+			.param("reason", reasonCode)
+			.param("note", note)
+			.param("actor", actor)
+			.param("now", utc(now))
+			.param("id", lineId)
+			.param("ticket", ticketId)
+			.update();
+		if (comped != 1) {
+			throw new IllegalStateException("Line " + lineId + " changed state while its ticket was locked");
+		}
+	}
+
 	Optional<TicketLineView> line(UUID ticketId, UUID lineId) {
 		return jdbc.sql("SELECT " + LINE_COLUMNS + " FROM instore.ticket_line WHERE id = :id AND ticket_id = :ticket")
 			.param("id", lineId)
@@ -444,7 +491,8 @@ class Tickets {
 				rs.getString("counter_name"), rs.getString("note"), TicketStatus.valueOf(rs.getString("status")),
 				rs.getBoolean("bill_requested"), rs.getObject("board_source_id", UUID.class), rs.getInt("board_rounds"),
 				Currency.getInstance(rs.getString("currency").trim()),
-				rs.getObject("created_at", OffsetDateTime.class).toInstant(), rs.getBoolean("quick_sale"));
+				rs.getObject("created_at", OffsetDateTime.class).toInstant(), rs.getBoolean("quick_sale"),
+				rs.getObject("merged_into_id", UUID.class));
 	}
 
 	private TicketSummary summary(ResultSet rs) throws SQLException {
@@ -471,7 +519,8 @@ class Tickets {
 				rs.getString("product_name"), rs.getInt("quantity"), new Money(rs.getBigDecimal("unit_price_amount"), currency),
 				json.readValue(rs.getString("modifiers"), OPTIONS), rs.getString("note"), rs.getBoolean("allergy"),
 				TicketLineState.valueOf(rs.getString("state")), sentAt == null ? null : sentAt.toInstant(),
-				rs.getBoolean("waste"), rs.getString("void_reason_code"), rs.getString("void_note"));
+				rs.getBoolean("waste"), rs.getString("void_reason_code"), rs.getString("void_note"),
+				rs.getString("comp_reason_code"), rs.getString("comp_note"));
 	}
 
 }

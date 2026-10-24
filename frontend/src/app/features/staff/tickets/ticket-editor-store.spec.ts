@@ -7,7 +7,7 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { Observable, of, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
@@ -56,6 +56,8 @@ function line(id: string, overrides: Partial<TicketLine> = {}): TicketLine {
     state: 'UNSENT',
     sentAt: null,
     voidNote: null,
+    compReasonCode: null,
+    compNote: null,
     voidReasonCode: null,
     waste: false,
     ...overrides,
@@ -94,6 +96,7 @@ describe('TicketEditorStore', () => {
   let http: HttpTestingController;
   let messages: MessageService;
   let realtime: FakeRealtime;
+  let router: { navigate: ReturnType<typeof vi.fn> };
   let role: WritableSignal<Role | null>;
   let screen: EnvironmentInjector;
   let store: TicketEditorStore;
@@ -101,8 +104,10 @@ describe('TicketEditorStore', () => {
   beforeEach(() => {
     realtime = new FakeRealtime();
     role = signal<Role | null>('CASHIER');
+    router = { navigate: vi.fn().mockResolvedValue(true) };
     TestBed.configureTestingModule({
       providers: [
+        { provide: Router, useValue: router },
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         MessageService,
@@ -418,6 +423,157 @@ describe('TicketEditorStore', () => {
       request.flush(ticket({ note: 'Sin hielo' }));
 
       expect(store.ticket()?.note).toBe('Sin hielo');
+    });
+  });
+
+  describe('comping a line', () => {
+    const sent = line('l1', { state: 'SENT', sentAt: '2026-10-13T10:05:00Z' });
+    const request = { reason: 'Staff meal', note: null };
+
+    it('offers a comp on a sent line to a cashier or an admin, never to a server', () => {
+      expect(store.mayComp(sent)).toBe(true);
+
+      role.set('ADMIN');
+      expect(store.mayComp(sent)).toBe(true);
+
+      role.set('SERVER');
+      expect(store.mayComp(sent)).toBe(false);
+    });
+
+    it('never offers a comp on an unsent, voided or comped line', () => {
+      expect(store.mayComp(line('l2'))).toBe(false);
+      expect(store.mayComp(line('l3', { state: 'VOIDED' }))).toBe(false);
+      expect(store.mayComp(line('l4', { state: 'COMPED' }))).toBe(false);
+    });
+
+    it('comps under one key, reuses it on a retry, releases it after success and takes the totals from the answer', () => {
+      const done = vi.fn();
+      store.compLine(sent, request, done);
+      const first = http.expectOne(`${TICKET}/lines/l1/comp`);
+      const key = first.request.headers.get('Idempotency-Key');
+      expect(first.request.body).toEqual(request);
+      first.flush(problem(503, 'common.service-unavailable'), { status: 503, statusText: 'Unavailable' });
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      store.compLine(sent, request, done);
+      const second = http.expectOne(`${TICKET}/lines/l1/comp`);
+      expect(second.request.headers.get('Idempotency-Key')).toBe(key);
+      second.flush(
+        ticket({
+          total: pen('0.00'),
+          balance: pen('0.00'),
+          lines: [line('l1', { state: 'COMPED', lineTotal: pen('0.00') })],
+        }),
+      );
+
+      expect(done).toHaveBeenCalledTimes(1);
+      expect(store.ticket()?.total).toEqual(pen('0.00'));
+      expect(store.stateOf(store.ticket()!.lines[0])).toBe('COMPED');
+
+      store.compLine(sent, request, done);
+      const third = http.expectOne(`${TICKET}/lines/l1/comp`);
+      expect(third.request.headers.get('Idempotency-Key')).not.toBe(key);
+      third.flush(ticket());
+    });
+
+    it('keeps the comp going after the screen is destroyed and reports it', () => {
+      const done = vi.fn();
+      const added = vi.spyOn(messages, 'add');
+      store.compLine(sent, request, done);
+      const comp = http.expectOne(`${TICKET}/lines/l1/comp`);
+
+      screen.destroy();
+      expect(comp.cancelled).toBe(false);
+      comp.flush(ticket());
+
+      expect(done).not.toHaveBeenCalled();
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'success' }));
+    });
+
+    it('reads the comp reasons', () => {
+      store.loadCompReasons();
+      http.expectOne(`${BASE}/reasons?type=COMP`).flush([{ type: 'COMP', code: 'Staff meal' }]);
+
+      expect(store.reasons()).toEqual([{ type: 'COMP', code: 'Staff meal' }]);
+    });
+  });
+
+  describe('merging tickets', () => {
+    const summary = (id: string) => ({ id, number: 1, type: 'TABLE', tableName: 'Mesa' });
+
+    it('lists the other open tickets, not the one being edited', () => {
+      store.loadMergeCandidates();
+      http
+        .expectOne(`${BASE}/tickets?page=0&size=100`)
+        .flush({ content: [summary('k1'), summary('k2')], page: 0, size: 100, totalElements: 2, totalPages: 1 });
+
+      expect(store.mergeCandidates().map((candidate) => candidate.id)).toEqual(['k2']);
+    });
+
+    it('reports a failed candidate read so it can be retried', () => {
+      store.loadMergeCandidates();
+      http
+        .expectOne(`${BASE}/tickets?page=0&size=100`)
+        .flush(problem(500, 'common.internal-error'), { status: 500, statusText: 'Error' });
+
+      expect(store.mergeCandidatesFailed()).toBe(true);
+      expect(store.mergeCandidates()).toEqual([]);
+    });
+
+    it('merges the chosen ticket into this one and takes the surviving ticket from the answer', () => {
+      const done = vi.fn();
+      store.merge('k2', done);
+      const request = http.expectOne(`${TICKET}/merge`);
+      expect(request.request.body).toEqual({ sourceTicketId: 'k2' });
+      expect(store.pending.has('merge')).toBe(true);
+      request.flush(ticket({ number: 40, total: pen('30.00') }));
+
+      expect(done).toHaveBeenCalled();
+      expect(store.ticket()?.total).toEqual(pen('30.00'));
+      expect(store.pending.has('merge')).toBe(false);
+    });
+
+    it('keeps the toast and reads again when the merge is refused', () => {
+      const added = vi.spyOn(messages, 'add');
+      const done = vi.fn();
+      store.merge('k2', done);
+      http
+        .expectOne(`${TICKET}/merge`)
+        .flush(problem(409, 'instore.ticket-has-payments'), { status: 409, statusText: 'Conflict' });
+      http.expectOne(TICKET).flush(ticket());
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(done).not.toHaveBeenCalled();
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    });
+  });
+
+  describe('a ticket that was merged into another', () => {
+    it('goes to the surviving ticket with an info toast', () => {
+      const added = vi.spyOn(messages, 'add');
+      store.load();
+      http.expectOne(TICKET).flush(ticket({ status: 'MERGED', mergedIntoId: 'k9' }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/staff/tickets', 'k9'], { replaceUrl: true });
+      expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'info' }));
+    });
+
+    it('stays put when a merged ticket names no survivor', () => {
+      store.load();
+      http.expectOne(TICKET).flush(ticket({ status: 'MERGED', mergedIntoId: null }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('does not move for an open ticket', () => {
+      expect(router.navigate).not.toHaveBeenCalled();
     });
   });
 

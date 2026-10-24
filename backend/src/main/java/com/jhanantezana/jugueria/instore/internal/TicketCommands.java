@@ -31,15 +31,18 @@ public class TicketCommands {
 
 	private final TicketVoids voids;
 
+	private final TicketComps comps;
+
 	private final Idempotency idempotency;
 
 	private final JsonMapper json;
 
-	TicketCommands(TicketService tickets, TicketLines lines, TicketVoids voids, Idempotency idempotency,
-			JsonMapper json) {
+	TicketCommands(TicketService tickets, TicketLines lines, TicketVoids voids, TicketComps comps,
+			Idempotency idempotency, JsonMapper json) {
 		this.tickets = tickets;
 		this.lines = lines;
 		this.voids = voids;
+		this.comps = comps;
 		this.idempotency = idempotency;
 		this.json = json;
 	}
@@ -64,6 +67,12 @@ public class TicketCommands {
 	public Outcome voidLine(UUID actorId, UUID key, String requestHash, UUID ticketId, UUID lineId, String reasonCode,
 			@Nullable String note) {
 		return once(actorId, key, requestHash, OK, () -> voids.voidLine(ticketId, lineId, reasonCode, note));
+	}
+
+	@Transactional
+	public Outcome compLine(UUID actorId, UUID key, String requestHash, UUID ticketId, UUID lineId, String reasonCode,
+			@Nullable String note) {
+		return once(actorId, key, requestHash, OK, () -> comps.comp(ticketId, lineId, reasonCode, note));
 	}
 
 	private Outcome once(UUID actorId, UUID key, String requestHash, int status, Supplier<TicketView> command) {

@@ -169,6 +169,10 @@ header {
   &.voided {
     color: var(--destructive);
   }
+
+  &.comped {
+    color: var(--primary);
+  }
 }
 
 .marker {

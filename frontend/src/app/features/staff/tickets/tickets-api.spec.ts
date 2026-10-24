@@ -141,6 +141,25 @@ describe('TicketsApi', () => {
     request.flush({});
   });
 
+  it('comps a sent line with a reason and an idempotency key', () => {
+    api.compLine('k1', 'l1', { reason: 'Staff meal', note: null }, 'key-5').subscribe();
+
+    const request = http.expectOne(`${BASE}/tickets/k1/lines/l1/comp`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get('Idempotency-Key')).toBe('key-5');
+    expect(request.request.body).toEqual({ reason: 'Staff meal', note: null });
+    request.flush({});
+  });
+
+  it('merges another ticket into the one in the path', () => {
+    api.merge('k1', 'k2').subscribe();
+
+    const request = http.expectOne(`${BASE}/tickets/k1/merge`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ sourceTicketId: 'k2' });
+    request.flush({});
+  });
+
   it('sets the bill request flag', () => {
     api.setBillRequested('k1', true).subscribe();
 

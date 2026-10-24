@@ -15,14 +15,16 @@ import com.jhanantezana.jugueria.shared.Money;
 record TicketResponse(UUID id, long number, TicketType type, @Nullable UUID tableId, @Nullable String tableName,
 		@Nullable String counterName, @Nullable String note, TicketStatus status, boolean billRequested, Money total,
 		Instant openedAt, List<TicketLineResponse> lines, boolean quickSale, Money paid, Money balance,
-		List<PaymentResponse> payments, @Nullable SaleVoidResponse saleVoid) {
+		List<PaymentResponse> payments, @Nullable SaleVoidResponse saleVoid,
+		@Nullable UUID mergedIntoId) {
 
 	static TicketResponse from(TicketView ticket) {
 		return new TicketResponse(ticket.id(), ticket.number(), ticket.type(), ticket.tableId(), ticket.tableName(),
 				ticket.counterName(), ticket.note(), ticket.status(), ticket.billRequested(), ticket.total(),
 				ticket.openedAt(), ticket.lines().stream().map(TicketLineResponse::from).toList(), ticket.quickSale(),
 				ticket.paid(), ticket.balance(), ticket.payments().stream().map(PaymentResponse::from).toList(),
-				ticket.saleVoid() == null ? null : SaleVoidResponse.from(ticket.saleVoid()));
+				ticket.saleVoid() == null ? null : SaleVoidResponse.from(ticket.saleVoid()),
+				ticket.mergedIntoId());
 	}
 
 }

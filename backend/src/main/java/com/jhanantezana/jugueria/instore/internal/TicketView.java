@@ -16,7 +16,7 @@ import com.jhanantezana.jugueria.shared.Money;
 public record TicketView(UUID id, long number, TicketType type, @Nullable UUID tableId, @Nullable String tableName,
 		@Nullable String counterName, @Nullable String note, TicketStatus status, boolean billRequested, Money total,
 		Instant openedAt, List<TicketLineView> lines, boolean quickSale, Money paid, Money balance,
-		List<PaymentView> payments, @Nullable SaleVoidView saleVoid) {
+		List<PaymentView> payments, @Nullable SaleVoidView saleVoid, @Nullable UUID mergedIntoId) {
 
 	// A response stored before payments existed has none of these fields.
 	public TicketView {

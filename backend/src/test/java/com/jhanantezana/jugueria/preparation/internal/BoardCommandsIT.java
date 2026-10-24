@@ -380,6 +380,18 @@ class BoardCommandsIT {
 	}
 
 	@Test
+	void aCompedLineCannotBeFlaggedUnavailable() {
+		var first = aLine();
+		var intake = anOrder(first, aLine());
+		var order = preparation.accept(intake);
+		preparation.compLine(intake.source(), intake.sourceId(), first.sourceLineId());
+		var line = PreparationTables.lineIdOf(jdbc, order, first.sourceLineId());
+
+		assertRejected(() -> commands.flagLine(line), PreparationError.LINE_COMPED);
+		assertThat(queries.card(order).lines()).anySatisfy(l -> assertThat(l.flaggedUnavailable()).isFalse());
+	}
+
+	@Test
 	void aLineOfAReadyOrderCannotBeFlagged() {
 		var order = accepted(aLine());
 		commands.start(order);

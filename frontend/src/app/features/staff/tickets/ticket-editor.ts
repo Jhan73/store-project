@@ -11,6 +11,8 @@ import {
   IconDeviceFloppy,
   IconCash,
   IconCheck,
+  IconGift,
+  IconGitMerge,
   IconMinus,
   IconPlus,
   IconReceipt,
@@ -75,7 +77,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           @if (ticket.type === 'TABLE') {
             {{ ticket.tableName }}
           } @else {
-            <ng-container i18n="@@staff.tickets.counterTitle">Mostrador: {{ ticket.counterName }}</ng-container>
+            <ng-container i18n="@@staff.tickets.counterTitle"
+              >Mostrador: {{ ticket.counterName }}</ng-container
+            >
           }
         </h1>
         <p class="muted" i18n="@@staff.tickets.number">Cuenta {{ ticket.number }}</p>
@@ -118,7 +122,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
     @if (store.missing()) {
       <p data-testid="missing-notice" i18n="@@staff.tickets.missing">La cuenta no existe.</p>
     } @else if (store.ticket(); as ticket) {
-      @if (ticket.status === 'CANCELLED') {
+      @if (ticket.status === 'MERGED') {
+        <p class="closed" data-testid="merged-notice" i18n="@@staff.tickets.merged">
+          La cuenta se unió a otra y ya no se puede modificar.
+        </p>
+      } @else if (ticket.status === 'CANCELLED') {
         <p class="closed" data-testid="cancelled-notice" i18n="@@staff.tickets.cancelled">
           La cuenta fue cancelada y ya no se puede modificar.
         </p>
@@ -170,7 +178,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           <h2 id="ticket-heading" i18n="@@staff.tickets.lines">Cuenta</h2>
           <ul class="lines">
             @for (line of ticket.lines; track line.id) {
-              <li [attr.data-testid]="'line-' + line.id" [class.voided]="line.state === 'VOIDED'">
+              <li
+                [attr.data-testid]="'line-' + line.id"
+                [class.voided]="line.state === 'VOIDED'"
+                [class.comped]="line.state === 'COMPED'"
+              >
                 <div class="line-main">
                   <span class="quantity">{{ line.quantity }} ×</span>
                   <span class="name">{{ line.productName }}</span>
@@ -197,6 +209,12 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       @case ('READY') {
                         <ng-container i18n="@@staff.tickets.state.ready">Lista</ng-container>
                       }
+                      @case ('COMPED') {
+                        <ng-container i18n="@@staff.tickets.state.comped">Cortesía</ng-container>
+                        @if (line.compReasonCode) {
+                          <span class="reason">({{ label(line.compReasonCode) }})</span>
+                        }
+                      }
                       @case ('VOIDED') {
                         <ng-container i18n="@@staff.tickets.state.voided">Anulada</ng-container>
                         @if (line.voidReasonCode) {
@@ -221,8 +239,34 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       <span i18n="@@staff.tickets.void">Anular</span>
                     </button>
                   } @else if (store.isOpen() && store.mustAskCashier(line)) {
-                    <span class="detail warn" [attr.data-testid]="'void-blocked-' + line.id" i18n="@@staff.tickets.void.blocked"
+                    <span
+                      class="detail warn"
+                      [attr.data-testid]="'void-blocked-' + line.id"
+                      i18n="@@staff.tickets.void.blocked"
                       >Ya está lista: pide a un cajero que la anule.</span
+                    >
+                  }
+                  @if (store.isOpen() && store.mayComp(line)) {
+                    <button
+                      pButton
+                      type="button"
+                      severity="secondary"
+                      [attr.data-testid]="'comp-' + line.id"
+                      [disabled]="!store.enabled() || store.pending.has('comp:' + line.id)"
+                      pTooltip="Dar esta línea de cortesía: no se cobra"
+                      i18n-pTooltip="@@staff.tickets.comp.tooltip"
+                      tooltipPosition="top"
+                      (click)="startComp(line)"
+                    >
+                      <tabler-icon [icon]="icons.comp" aria-hidden="true" />
+                      <span i18n="@@staff.tickets.comp">Cortesía</span>
+                    </button>
+                  } @else if (store.isOpen() && store.mustAskCashierToComp(line)) {
+                    <span
+                      class="detail warn"
+                      [attr.data-testid]="'comp-blocked-' + line.id"
+                      i18n="@@staff.tickets.comp.blocked"
+                      >Para dar una cortesía, pide a un cajero.</span
                     >
                   }
                   @if (store.isOpen() && line.state === 'UNSENT') {
@@ -232,7 +276,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         type="button"
                         severity="secondary"
                         [attr.data-testid]="'quantity-down-' + line.id"
-                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id) || line.quantity <= 1"
+                        [disabled]="
+                          !store.enabled() ||
+                          store.pending.has('line:' + line.id) ||
+                          line.quantity <= 1
+                        "
                         aria-label="Una unidad menos"
                         i18n-aria-label="@@staff.tickets.quantity.downLabel"
                         pTooltip="Una unidad menos"
@@ -247,7 +295,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         type="button"
                         severity="secondary"
                         [attr.data-testid]="'quantity-up-' + line.id"
-                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id) || line.quantity >= maxQuantity"
+                        [disabled]="
+                          !store.enabled() ||
+                          store.pending.has('line:' + line.id) ||
+                          line.quantity >= maxQuantity
+                        "
                         aria-label="Una unidad más"
                         i18n-aria-label="@@staff.tickets.quantity.upLabel"
                         pTooltip="Una unidad más"
@@ -316,7 +368,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                       type="button"
                       severity="danger"
                       [attr.data-testid]="'void-payment-' + payment.id"
-                      [disabled]="!store.enabled() || store.pending.has('void-payment:' + payment.id)"
+                      [disabled]="
+                        !store.enabled() || store.pending.has('void-payment:' + payment.id)
+                      "
                       pTooltip="Anular este pago con un motivo"
                       i18n-pTooltip="@@staff.tickets.voidPayment.tooltip"
                       tooltipPosition="top"
@@ -363,7 +417,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 pButton
                 type="button"
                 data-testid="send"
-                [disabled]="!store.enabled() || store.pending.has('send') || store.unsent().length === 0"
+                [disabled]="
+                  !store.enabled() || store.pending.has('send') || store.unsent().length === 0
+                "
                 pTooltip="Enviar las líneas nuevas a cocina"
                 i18n-pTooltip="@@staff.tickets.send.tooltip"
                 tooltipPosition="top"
@@ -377,7 +433,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 type="button"
                 severity="secondary"
                 data-testid="repeat"
-                [disabled]="!store.enabled() || store.pending.has('repeat') || store.lastRound().length === 0"
+                [disabled]="
+                  !store.enabled() || store.pending.has('repeat') || store.lastRound().length === 0
+                "
                 pTooltip="Agregar de nuevo las líneas de la última ronda enviada"
                 i18n-pTooltip="@@staff.tickets.repeat.tooltip"
                 tooltipPosition="top"
@@ -419,6 +477,20 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                   <span i18n="@@staff.tickets.transfer">Cambiar de mesa</span>
                 </button>
               }
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                data-testid="merge-open"
+                [disabled]="!store.enabled()"
+                pTooltip="Unir otra cuenta abierta a esta"
+                i18n-pTooltip="@@staff.tickets.merge.tooltip"
+                tooltipPosition="top"
+                (click)="startMerge()"
+              >
+                <tabler-icon [icon]="icons.merge" aria-hidden="true" />
+                <span i18n="@@staff.tickets.merge">Unir cuenta</span>
+              </button>
               @if (store.canCancel()) {
                 <button
                   pButton
@@ -564,6 +636,96 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
     </p-dialog>
 
     <p-dialog
+      header="Unir cuenta"
+      i18n-header="@@staff.tickets.merge.title"
+      [modal]="true"
+      [draggable]="false"
+      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [visible]="merging()"
+      (visibleChange)="closeMerge($event)"
+    >
+      <p i18n="@@staff.tickets.merge.explain">
+        Las líneas de la cuenta elegida pasan a esta cuenta y esa cuenta queda unida a ella.
+      </p>
+      @if (store.mergeCandidatesFailed()) {
+        <div data-testid="merge-failed" role="status">
+          <p i18n="@@staff.tickets.merge.failed">No se pudieron cargar las cuentas abiertas.</p>
+          <button
+            pButton
+            type="button"
+            severity="secondary"
+            data-testid="merge-retry"
+            pTooltip="Volver a cargar las cuentas abiertas"
+            i18n-pTooltip="@@staff.tickets.merge.retry.tooltip"
+            tooltipPosition="top"
+            (click)="store.loadMergeCandidates()"
+          >
+            <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+            <span i18n="@@staff.tickets.merge.retry">Reintentar</span>
+          </button>
+        </div>
+      } @else if (!store.mergeCandidatesLoaded()) {
+        <p class="muted" i18n="@@staff.tickets.merge.loading">Cargando las cuentas abiertas…</p>
+      } @else {
+        @if (store.mergeCandidates().length === 0) {
+          <p data-testid="merge-empty" i18n="@@staff.tickets.merge.empty">
+            No hay otras cuentas abiertas para unir.
+          </p>
+        }
+        <div class="field">
+          <label for="merge-source" id="merge-source-label" i18n="@@staff.tickets.merge.source"
+            >Cuenta a unir</label
+          >
+          <p-select
+            inputId="merge-source"
+            [ariaLabelledBy]="'merge-source-label'"
+            [formControl]="mergeSource"
+            optionLabel="label"
+            optionValue="id"
+            [options]="mergeOptions()"
+            [filter]="true"
+            filterBy="label"
+            [resetFilterOnHide]="true"
+            filterPlaceholder="Buscar"
+            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+            placeholder="Elige una cuenta"
+            i18n-placeholder="@@staff.tickets.merge.placeholder"
+            [appendTo]="'body'"
+            fluid
+          />
+        </div>
+      }
+      <ng-template #footer>
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="merge-cancel"
+          pTooltip="Cerrar sin unir ninguna cuenta"
+          i18n-pTooltip="@@staff.tickets.merge.cancel.tooltip"
+          tooltipPosition="top"
+          (click)="closeMerge(false)"
+        >
+          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
+          <span i18n="@@staff.tickets.merge.cancel">Cancelar</span>
+        </button>
+        <button
+          pButton
+          type="button"
+          data-testid="merge-confirm"
+          [disabled]="!chosenSource() || store.pending.has('merge')"
+          pTooltip="Unir la cuenta elegida a esta"
+          i18n-pTooltip="@@staff.tickets.merge.confirm.tooltip"
+          tooltipPosition="top"
+          (click)="merge()"
+        >
+          <tabler-icon [icon]="icons.merge" aria-hidden="true" />
+          <span i18n="@@staff.tickets.merge.confirm">Unir</span>
+        </button>
+      </ng-template>
+    </p-dialog>
+
+    <p-dialog
       header="Cancelar cuenta"
       i18n-header="@@staff.tickets.cancel.title"
       [modal]="true"
@@ -573,8 +735,8 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       (visibleChange)="closeCancel($event)"
     >
       <p data-testid="cancel-explain" i18n="@@staff.tickets.cancel.explain">
-        Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar libre y
-        esto no se puede deshacer.
+        Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar
+        libre y esto no se puede deshacer.
       </p>
       <ng-template #footer>
         <button
@@ -623,6 +785,25 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       (retried)="store.loadVoidReasons()"
     />
 
+    <app-void-dialog
+      header="Dar de cortesía"
+      i18n-header="@@staff.tickets.comp.title"
+      [confirmLabel]="compLabel"
+      [confirmTooltip]="compTooltip"
+      [confirmIcon]="icons.comp"
+      [visible]="comping() !== null"
+      [reasons]="store.reasons()"
+      [failed]="store.reasonsLoadFailed()"
+      [busy]="compBusy()"
+      (confirmed)="confirmComp($event)"
+      (dismissed)="comping.set(null)"
+      (retried)="store.loadCompReasons()"
+    >
+      @if (comping(); as line) {
+        <p class="detail">{{ line.quantity }} × {{ line.productName }}</p>
+      }
+    </app-void-dialog>
+
     <p-dialog
       header="Anular línea"
       i18n-header="@@staff.tickets.void.title"
@@ -658,7 +839,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
             </p>
           }
           <div class="field" data-testid="void-reason-box">
-            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason">Motivo</label>
+            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason"
+              >Motivo</label
+            >
             <p-select
               inputId="void-reason"
               [ariaLabelledBy]="'void-reason-label'"
@@ -689,7 +872,9 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
               fluid
             ></textarea>
             @if (noteRequired()) {
-              <small i18n="@@staff.tickets.void.noteRequired">Para el motivo «Otro» la nota es obligatoria.</small>
+              <small i18n="@@staff.tickets.void.noteRequired"
+                >Para el motivo «Otro» la nota es obligatoria.</small
+              >
             }
           </div>
         } @else {
@@ -747,6 +932,8 @@ export class TicketEditor {
     pay: IconCash,
     save: IconDeviceFloppy,
     cancelTicket: IconCircleOff,
+    comp: IconGift,
+    merge: IconGitMerge,
   };
   protected readonly tips = {
     billOn: $localize`:@@staff.tickets.billOn.tooltip:Avisar que la mesa pidió la cuenta`,
@@ -773,7 +960,9 @@ export class TicketEditor {
   protected readonly noteControl = new FormControl('', { nonNullable: true });
   private readonly typedTicketNote = toSignal(this.noteControl.valueChanges, { initialValue: '' });
   private readonly savedNote = computed(() => this.store.ticket()?.note ?? '');
-  protected readonly noteChanged = computed(() => this.typedTicketNote().trim() !== this.savedNote());
+  protected readonly noteChanged = computed(
+    () => this.typedTicketNote().trim() !== this.savedNote(),
+  );
   // The text follows the server's note, except while the user is typing a different one.
   private readonly syncNote = effect(() => {
     const saved = this.savedNote();
@@ -802,15 +991,40 @@ export class TicketEditor {
     if (target === null) {
       return false;
     }
-    return this.store.pending.has(target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`);
+    return this.store.pending.has(
+      target.kind === 'sale' ? 'void-sale' : `void-payment:${target.id}`,
+    );
   });
-  protected readonly canPay = computed(() => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN');
+  protected readonly compLabel = $localize`:@@staff.tickets.comp.confirm:Dar de cortesía`;
+  protected readonly compTooltip = $localize`:@@staff.tickets.comp.confirm.tooltip:Dar la línea de cortesía con el motivo elegido`;
+  protected readonly comping = signal<TicketLine | null>(null);
+  protected readonly compBusy = computed(() =>
+    this.store.pending.has(`comp:${this.comping()?.id}`),
+  );
+  protected readonly merging = signal(false);
+  protected readonly mergeSource = new FormControl<string | null>(null);
+  protected readonly chosenSource = toSignal(this.mergeSource.valueChanges, { initialValue: null });
+  protected readonly mergeOptions = computed(() =>
+    this.store.mergeCandidates().map((candidate) => ({
+      id: candidate.id,
+      label:
+        candidate.type === 'TABLE'
+          ? $localize`:@@staff.tickets.merge.option.table:${candidate.tableName}:name: · Cuenta ${candidate.number}:number:`
+          : $localize`:@@staff.tickets.merge.option.counter:Mostrador: ${candidate.counterName}:name: · Cuenta ${candidate.number}:number:`,
+    })),
+  );
+  protected readonly canPay = computed(
+    () => this.auth.role() === 'CASHIER' || this.auth.role() === 'ADMIN',
+  );
   protected readonly configuring = signal<MenuProduct | null>(null);
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
   protected readonly label = reasonLabel;
   protected readonly reasonOptions = computed(() =>
-    (this.store.reasons() ?? []).map((reason) => ({ code: reason.code, label: reasonLabel(reason.code) })),
+    (this.store.reasons() ?? []).map((reason) => ({
+      code: reason.code,
+      label: reasonLabel(reason.code),
+    })),
   );
   protected readonly voiding = signal<TicketLine | null>(null);
   protected readonly voidReason = new FormControl<string | null>(null);
@@ -858,6 +1072,37 @@ export class TicketEditor {
     });
   }
 
+  protected startComp(line: TicketLine): void {
+    this.store.loadCompReasons();
+    this.comping.set(line);
+  }
+
+  protected confirmComp(choice: VoidChoice): void {
+    const line = this.comping();
+    if (line) {
+      this.store.compLine(line, choice, () => this.comping.set(null));
+    }
+  }
+
+  protected startMerge(): void {
+    this.mergeSource.reset();
+    this.store.loadMergeCandidates();
+    this.merging.set(true);
+  }
+
+  protected closeMerge(visible: boolean): void {
+    if (!visible) {
+      this.merging.set(false);
+    }
+  }
+
+  protected merge(): void {
+    const source = this.mergeSource.value;
+    if (source) {
+      this.store.merge(source, () => this.merging.set(false));
+    }
+  }
+
   protected startRegisterVoid(target: RegisterVoid): void {
     this.store.loadVoidReasons();
     this.registerVoid.set(target);
@@ -891,7 +1136,9 @@ export class TicketEditor {
     const reason = this.voidReason.value;
     if (line && reason !== null && this.canConfirmVoid()) {
       const note = this.voidNote.value.trim();
-      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () => this.voiding.set(null));
+      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () =>
+        this.voiding.set(null),
+      );
     }
   }
 

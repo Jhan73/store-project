@@ -27,6 +27,7 @@ import com.jhanantezana.jugueria.instore.internal.ClosedTicketFilter;
 import com.jhanantezana.jugueria.instore.internal.TicketCancellation;
 import com.jhanantezana.jugueria.instore.internal.TicketCommands;
 import com.jhanantezana.jugueria.instore.internal.TicketLines;
+import com.jhanantezana.jugueria.instore.internal.TicketMerging;
 import com.jhanantezana.jugueria.instore.internal.TicketPlacement;
 import com.jhanantezana.jugueria.instore.internal.TicketSending;
 import com.jhanantezana.jugueria.instore.internal.TicketService;
@@ -64,15 +65,19 @@ class TicketController {
 
 	private final TicketCancellation cancellation;
 
+	private final TicketMerging merging;
+
 	private final CurrentActor currentActor;
 
 	TicketController(TicketService tickets, TicketCommands commands, TicketLines lines, TicketSending sending,
-			TicketPlacement placement, TicketCancellation cancellation, CurrentActor currentActor) {
+			TicketPlacement placement, TicketCancellation cancellation, TicketMerging merging,
+			CurrentActor currentActor) {
 		this.tickets = tickets;
 		this.lines = lines;
 		this.sending = sending;
 		this.placement = placement;
 		this.cancellation = cancellation;
+		this.merging = merging;
 		this.commands = commands;
 		this.currentActor = currentActor;
 	}
@@ -175,7 +180,8 @@ class TicketController {
 	@PostMapping("/{id}/lines/{lineId}/void")
 	@PreAuthorize(FLOOR_STAFF)
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
-			"instore.invalid-reason", "preparation.line-already-ready", "preparation.order-closed",
+			"instore.line-comped", "instore.line-covered-by-payment", "instore.invalid-reason",
+			"preparation.line-already-ready", "preparation.order-closed",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> voidLine(@PathVariable UUID id, @PathVariable UUID lineId,
 			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
@@ -183,6 +189,27 @@ class TicketController {
 		var key = IdempotencyKeyHeader.require(idempotencyKey);
 		var path = BASE + "/" + id + "/lines/" + lineId + "/void";
 		var outcome = commands.voidLine(requireActor(), key, RequestHash.of("POST", path, request), id, lineId,
+				request.reason(), request.note());
+		var response = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
+		if (outcome.replayed()) {
+			response.header("Idempotent-Replayed", "true");
+		}
+		return response.body(TicketResponse.from(outcome.ticket()));
+	}
+
+	@PostMapping("/{id}/lines/{lineId}/comp")
+	@PreAuthorize(REGISTER_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.line-not-found", "instore.line-not-sent",
+			"instore.line-voided", "instore.line-covered-by-payment", "instore.invalid-reason",
+			"preparation.line-not-found", "preparation.line-not-pending", "preparation.line-flagged-unavailable",
+				"preparation.order-closed",
+			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
+	ResponseEntity<TicketResponse> compLine(@PathVariable UUID id, @PathVariable UUID lineId,
+			@RequestHeader(value = IDEMPOTENCY_KEY, required = false) @Nullable String idempotencyKey,
+			@Valid @RequestBody CompLineRequest request) {
+		var key = IdempotencyKeyHeader.require(idempotencyKey);
+		var path = BASE + "/" + id + "/lines/" + lineId + "/comp";
+		var outcome = commands.compLine(requireActor(), key, RequestHash.of("POST", path, request), id, lineId,
 				request.reason(), request.note());
 		var response = ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON);
 		if (outcome.replayed()) {
@@ -204,6 +231,14 @@ class TicketController {
 			"instore.table-not-found", "instore.table-inactive", "instore.table-occupied" })
 	TicketResponse transfer(@PathVariable UUID id, @Valid @RequestBody TransferTicketRequest request) {
 		return TicketResponse.from(placement.transfer(id, request.tableId()));
+	}
+
+	@PostMapping("/{id}/merge")
+	@PreAuthorize(FLOOR_STAFF)
+	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.invalid-merge",
+			"instore.ticket-has-payments", "instore.too-many-lines", "common.concurrent-modification" })
+	TicketResponse merge(@PathVariable UUID id, @Valid @RequestBody MergeTicketRequest request) {
+		return TicketResponse.from(merging.merge(id, request.sourceTicketId()));
 	}
 
 	@PutMapping("/{id}/bill-requested")

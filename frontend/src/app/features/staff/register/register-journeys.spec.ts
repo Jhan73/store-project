@@ -112,6 +112,8 @@ describe('register journeys', () => {
             voided: false,
             voidReasonCode: null,
             voidNote: null,
+            compReasonCode: null,
+            compNote: null,
           },
         ],
       } as unknown as Ticket,

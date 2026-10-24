@@ -38,7 +38,7 @@ export interface VoidChoice {
             type="button"
             severity="secondary"
             data-testid="vd-retry"
-            pTooltip="Volver a cargar los motivos de anulación"
+            pTooltip="Volver a cargar los motivos"
             i18n-pTooltip="@@shared.voidDialog.retry.tooltip"
             tooltipPosition="top"
             (click)="retried.emit()"
@@ -50,7 +50,7 @@ export interface VoidChoice {
       } @else if (reasons(); as reasons) {
         @if (reasons.length === 0) {
           <p data-testid="vd-no-reasons" i18n="@@shared.voidDialog.noReasons">
-            No hay motivos de anulación configurados. Pide a un administrador que los agregue.
+            No hay motivos configurados. Pide a un administrador que los agregue.
           </p>
         }
         <div class="field" data-testid="vd-reason-box">
@@ -99,7 +99,7 @@ export interface VoidChoice {
           type="button"
           severity="secondary"
           data-testid="vd-cancel"
-          pTooltip="Cerrar sin anular"
+          pTooltip="Cerrar sin confirmar"
           i18n-pTooltip="@@shared.voidDialog.cancel.tooltip"
           tooltipPosition="top"
           (click)="dismissed.emit()"
@@ -117,7 +117,7 @@ export interface VoidChoice {
           tooltipPosition="top"
           (click)="confirm()"
         >
-          <tabler-icon [icon]="icons.confirm" aria-hidden="true" />
+          <tabler-icon [icon]="confirmIcon()" aria-hidden="true" />
           <span>{{ confirmLabel() }}</span>
         </button>
       </ng-template>
@@ -148,12 +148,13 @@ export class VoidDialog {
   readonly reasons = input<readonly ActiveReason[] | null>(null);
   readonly failed = input(false);
   readonly busy = input(false);
+  readonly confirmIcon = input<typeof IconBan>(IconBan);
 
   readonly confirmed = output<VoidChoice>();
   readonly dismissed = output<void>();
   readonly retried = output<void>();
 
-  protected readonly icons = { confirm: IconBan, cancel: IconX, retry: IconRefresh };
+  protected readonly icons = { cancel: IconX, retry: IconRefresh };
   protected readonly reason = new FormControl<string | null>(null);
   protected readonly note = new FormControl('', { nonNullable: true });
   private readonly chosen = toSignal(this.reason.valueChanges, { initialValue: null });

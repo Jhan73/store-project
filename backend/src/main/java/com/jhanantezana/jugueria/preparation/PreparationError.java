@@ -19,6 +19,7 @@ public enum PreparationError implements ErrorCode {
 	LINE_NOT_PENDING("preparation.line-not-pending", HttpStatus.CONFLICT),
 	LINE_ALREADY_READY("preparation.line-already-ready", HttpStatus.CONFLICT),
 	LINE_ALREADY_FLAGGED("preparation.line-already-flagged", HttpStatus.CONFLICT),
+	LINE_COMPED("preparation.line-comped", HttpStatus.CONFLICT),
 	LINE_FLAGGED_UNAVAILABLE("preparation.line-flagged-unavailable", HttpStatus.CONFLICT),
 	LINES_NOT_ACKNOWLEDGED("preparation.lines-not-acknowledged", HttpStatus.CONFLICT),
 	MARKER_ALREADY_ACKNOWLEDGED("preparation.marker-already-acknowledged", HttpStatus.CONFLICT);
