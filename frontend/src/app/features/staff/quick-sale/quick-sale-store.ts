@@ -86,7 +86,10 @@ export class QuickSaleStore {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => (this.destroyed = true));
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      this.removals.flush();
+    });
   }
 
   load(): void {

@@ -245,6 +245,23 @@ describe('QuickSaleStore', () => {
     });
   });
 
+  it('leaves no undo notice behind when the screen is destroyed inside the window', () => {
+    vi.useFakeTimers();
+    try {
+      const screen = createEnvironmentInjector([QuickSaleStore], TestBed.inject(EnvironmentInjector));
+      const own = screen.get(QuickSaleStore);
+      own.addPlain(items[0]);
+      own.remove(own.cart()[0]);
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(1);
+
+      screen.destroy();
+
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   describe('selling', () => {
     function cart() {
       load();
