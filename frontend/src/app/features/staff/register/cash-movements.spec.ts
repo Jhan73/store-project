@@ -51,11 +51,19 @@ describe('CashMovements', () => {
   const host = (fixture: ComponentFixture<CashMovements>) => fixture.nativeElement as HTMLElement;
   const find = <T extends HTMLElement>(fixture: ComponentFixture<CashMovements>, testId: string) =>
     host(fixture).querySelector<T>(`[data-testid="${testId}"]`);
-  const type = (fixture: ComponentFixture<CashMovements>, testId: string, value: string) => {
-    const input = find<HTMLInputElement | HTMLTextAreaElement>(fixture, testId)!;
+  const body = () => document.body;
+  const inDialog = <T extends HTMLElement>(selector: string) =>
+    body().querySelector<T>('[role="dialog"] ' + selector);
+  const type = (selector: string, value: string) => {
+    const input = inDialog<HTMLInputElement | HTMLTextAreaElement>(selector)!;
     input.value = value;
     input.dispatchEvent(new Event('input'));
   };
+  const save = () => inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!;
+  async function openForm(fixture: ComponentFixture<CashMovements>) {
+    find<HTMLButtonElement>(fixture, 'mv-open')!.click();
+    await fixture.whenStable();
+  }
 
   async function open(movements: CashMovement[] = [], reasons = [{ code: 'Change' }, { code: 'Other' }]) {
     const store = TestBed.inject(ShiftStore);
@@ -90,17 +98,18 @@ describe('CashMovements', () => {
   it('says so when the shift has no movements', async () => {
     const fixture = await open([]);
 
-    expect(find(fixture, 'no-movements')).not.toBeNull();
+    expect(host(fixture).querySelector('tbody')!.textContent).toContain('todavía no tiene movimientos');
   });
 
   it('records a cash-out with a reason and a reference, under one key per intent', async () => {
     const fixture = await open();
-    await chooseOption(fixture, host(fixture), 'mv-reason', 'Change');
-    type(fixture, 'mv-amount', '5');
-    type(fixture, 'mv-reference', 'F-100');
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-reason', 'Change');
+    type('#mv-amount', '5');
+    type('#mv-reference', 'F-100');
     await fixture.whenStable();
 
-    find<HTMLButtonElement>(fixture, 'mv-submit')!.click();
+    save().click();
     await fixture.whenStable();
 
     const request = http.expectOne(MOVEMENTS);
@@ -118,42 +127,48 @@ describe('CashMovements', () => {
     await fixture.whenStable();
 
     expect(host(fixture).querySelectorAll('tbody tr')).toHaveLength(1);
-    expect(find<HTMLInputElement>(fixture, 'mv-amount')!.value).toBe('');
+    expect(inDialog('#mv-amount')).toBeNull();
+    expect(inDialog('[data-testid="fd-save"]')).toBeNull();
   });
 
-  it('asks for a reason before a cash-out can be recorded', async () => {
+  it('asks for a reason before a cash-out can be recorded and says so', async () => {
     const fixture = await open();
-    type(fixture, 'mv-amount', '5');
+    await openForm(fixture);
+    type('#mv-amount', '5');
     await fixture.whenStable();
 
-    expect(find<HTMLButtonElement>(fixture, 'mv-submit')!.disabled).toBe(true);
+    expect(save().disabled).toBe(true);
+    expect(inDialog('[data-testid="fd-reason"]')!.textContent).toContain('motivo');
   });
 
   it('asks for a note when the reason is Other', async () => {
     const fixture = await open();
-    await chooseOption(fixture, host(fixture), 'mv-reason', 'Otro');
-    type(fixture, 'mv-amount', '5');
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-reason', 'Otro');
+    type('#mv-amount', '5');
     await fixture.whenStable();
 
-    expect(find<HTMLButtonElement>(fixture, 'mv-submit')!.disabled).toBe(true);
-    expect(find(fixture, 'note-required')).not.toBeNull();
+    expect(save().disabled).toBe(true);
+    expect(inDialog('app-form-field .message')!.textContent).toBeDefined();
+    expect(body().textContent).toContain('La nota es obligatoria');
 
-    type(fixture, 'mv-note', 'Taxi');
+    type('#mv-note', 'Taxi');
     await fixture.whenStable();
-    expect(find<HTMLButtonElement>(fixture, 'mv-submit')!.disabled).toBe(false);
+    expect(save().disabled).toBe(false);
   });
 
   it('records a cash-in with a note and no reason', async () => {
     const fixture = await open();
-    await chooseOption(fixture, host(fixture), 'mv-type', 'Entrada');
-    type(fixture, 'mv-amount', '20,5');
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-type', 'Entrada');
+    type('#mv-amount', '20,5');
     await fixture.whenStable();
-    expect(find<HTMLButtonElement>(fixture, 'mv-submit')!.disabled).toBe(true);
-    expect(find(fixture, 'mv-reason-box')).toBeNull();
+    expect(save().disabled).toBe(true);
+    expect(inDialog('[data-testid="mv-reason-box"]')).toBeNull();
 
-    type(fixture, 'mv-note', 'Sencillo del banco');
+    type('#mv-note', 'Sencillo del banco');
     await fixture.whenStable();
-    find<HTMLButtonElement>(fixture, 'mv-submit')!.click();
+    save().click();
     await fixture.whenStable();
 
     const request = http.expectOne(MOVEMENTS);
@@ -170,10 +185,27 @@ describe('CashMovements', () => {
 
   it('refuses an amount that is not a positive amount', async () => {
     const fixture = await open();
-    await chooseOption(fixture, host(fixture), 'mv-reason', 'Change');
-    type(fixture, 'mv-amount', '0');
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-reason', 'Change');
+    type('#mv-amount', '0');
     await fixture.whenStable();
 
-    expect(find<HTMLButtonElement>(fixture, 'mv-submit')!.disabled).toBe(true);
+    expect(save().disabled).toBe(true);
+  });
+
+  it('is aria-busy and keeps the dialog while the movement is being recorded', async () => {
+    const fixture = await open();
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-reason', 'Change');
+    type('#mv-amount', '5');
+    await fixture.whenStable();
+    save().click();
+    await fixture.whenStable();
+
+    expect(inDialog('form')!.getAttribute('aria-busy')).toBe('true');
+    expect(inDialog<HTMLButtonElement>('[data-testid="fd-cancel"]')!.disabled).toBe(true);
+
+    http.expectOne(MOVEMENTS).flush({}, { status: 201, statusText: 'Created' });
+    http.expectOne(MOVEMENTS).flush([]);
   });
 });

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import type { Shift } from '../../../core/api/api-types';
-import { formatMoney } from '../../../core/money/money';
+import { formatMoneyOrDash } from '../../../core/money/money';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 import { methodLabel } from './payment-methods';
@@ -114,7 +114,7 @@ export class ShiftResult {
   readonly shift = input.required<Shift>();
   readonly timeZone = input<string | null>(null);
 
-  protected readonly money = formatMoney;
+  protected readonly money = formatMoneyOrDash;
   protected readonly method = methodLabel;
 
   protected time(instant: string): string {

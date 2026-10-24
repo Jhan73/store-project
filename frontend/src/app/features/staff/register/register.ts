@@ -1,11 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { IconLock, IconLockOpen, IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
-import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
-import { formatMoney, parseAmount } from '../../../core/money/money';
-import { amountValidator } from '../../../shared/forms/amount-validator';
+import { formatMoneyOrDash, parseAmount } from '../../../core/money/money';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { CashMovements } from './cash-movements';
 import { CloseShift } from './close-shift';
 import { ShiftResult } from './shift-result';
@@ -16,8 +18,9 @@ import { ShiftStore } from './shift-store';
   imports: [
     ReactiveFormsModule,
     ButtonDirective,
-    InputText,
     Tooltip,
+    FormField,
+    MoneyInput,
     TablerIconComponent,
     CashMovements,
     CloseShift,
@@ -25,7 +28,7 @@ import { ShiftStore } from './shift-store';
   ],
   providers: [ShiftStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './register.scss',
+  styleUrl: './register-panel.scss',
   template: `
     <h1 i18n="@@staff.register.title">Caja</h1>
 
@@ -106,23 +109,14 @@ import { ShiftStore } from './shift-store';
         <p class="muted" i18n="@@staff.register.none.hint">
           Abre un turno con el efectivo que dejas en la caja para cobrar.
         </p>
-        <div class="field">
-          <label for="float" i18n="@@staff.register.none.float">Fondo inicial</label>
-          <input
-            pInputText
-            id="float"
-            data-testid="float"
-            [formControl]="float"
-            [attr.inputmode]="'decimal'"
-            autocomplete="off"
-            [attr.aria-invalid]="showError() ? 'true' : null"
-          />
-          @if (showError()) {
-            <small class="error" data-testid="float-error" i18n="@@staff.register.none.floatInvalid"
-              >Escribe un monto, como 50 o 50.00.</small
-            >
-          }
-        </div>
+        <app-form-field
+          label="Fondo inicial"
+          i18n-label="@@staff.register.none.float"
+          controlId="float"
+          [error]="showError() ? floatInvalid : null"
+        >
+          <app-money-input inputId="float" [formControl]="float" [currency]="store.currency()" />
+        </app-form-field>
         @if (store.currencyFailed()) {
           <div class="offline" role="status" data-testid="currency-failed">
             <ng-container i18n="@@staff.register.none.currencyFailed"
@@ -173,10 +167,13 @@ export class Register {
 
   protected readonly icons = { open: IconLockOpen, close: IconLock, retry: IconRefresh };
   protected readonly closing = signal(false);
-  protected readonly money = formatMoney;
-  protected readonly float = new FormControl('', { nonNullable: true, validators: [amountValidator] });
-  private readonly attempted = signal(false);
-  protected readonly showError = computed(() => this.attempted() && this.float.invalid);
+  protected readonly money = formatMoneyOrDash;
+  protected readonly floatInvalid = $localize`:@@staff.register.none.floatInvalid:Escribe un monto, como 50 o 50.00.`;
+  protected readonly float = new FormControl('', { nonNullable: true });
+  protected readonly showError = toSignal(
+    this.float.events.pipe(map(() => this.float.invalid && this.float.touched)),
+    { initialValue: false },
+  );
   protected readonly opening = computed(() => this.store.pending.has('open'));
 
   constructor() {
@@ -185,7 +182,7 @@ export class Register {
 
   protected open(event: Event): void {
     event.preventDefault();
-    this.attempted.set(true);
+    this.float.markAsTouched();
     const amount = parseAmount(this.float.value);
     if (amount !== null && !this.opening()) {
       this.store.open(amount);

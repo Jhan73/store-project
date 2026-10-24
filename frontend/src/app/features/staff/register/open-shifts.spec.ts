@@ -72,20 +72,20 @@ describe('OpenShifts', () => {
   it('says so when no shift is open', async () => {
     const fixture = await open([]);
 
-    expect(find(fixture, 'no-open-shifts')).not.toBeNull();
+    expect(host(fixture).querySelector('tbody')!.textContent).toContain('No hay turnos abiertos');
   });
 
   it('force-closes a shift with a reason and then shows its expected cash', async () => {
     const fixture = await open();
     find<HTMLButtonElement>(fixture, 'force-s1')!.click();
     await fixture.whenStable();
-    expect(inDialog<HTMLButtonElement>('force-confirm')!.disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-save')!.disabled).toBe(true);
 
     const reason = inDialog<HTMLTextAreaElement>('force-reason')!;
     reason.value = 'Se fue sin cerrar';
     reason.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    inDialog<HTMLButtonElement>('force-confirm')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
 
     const request = http.expectOne(`${BASE}/shifts/s1/force-close`);
@@ -97,7 +97,7 @@ describe('OpenShifts', () => {
 
     expect(inDialog('expected-cash')?.textContent).toContain('120.00');
     expect(inDialog('forced')?.textContent).toContain('Se fue sin cerrar');
-    expect(find(fixture, 'no-open-shifts')).not.toBeNull();
+    expect(host(fixture).querySelector('tbody')!.textContent).toContain('No hay turnos abiertos');
   });
 
   it('keeps the dialog and reads the list again when the force close is refused', async () => {
@@ -110,7 +110,7 @@ describe('OpenShifts', () => {
     reason.dispatchEvent(new Event('input'));
     await fixture.whenStable();
 
-    inDialog<HTMLButtonElement>('force-confirm')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
     http
       .expectOne(`${BASE}/shifts/s1/force-close`)
@@ -119,7 +119,7 @@ describe('OpenShifts', () => {
     await fixture.whenStable();
 
     expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-    expect(find(fixture, 'no-open-shifts')).not.toBeNull();
+    expect(host(fixture).querySelector('tbody')!.textContent).toContain('No hay turnos abiertos');
   });
 
   it('lets a failed list be retried', async () => {
@@ -137,6 +137,34 @@ describe('OpenShifts', () => {
     http.expectOne(ZONE).flush({ timeZone: 'America/Lima' });
     await fixture.whenStable();
 
-    expect(find(fixture, 'no-open-shifts')).not.toBeNull();
+    expect(host(fixture).querySelector('tbody')!.textContent).toContain('No hay turnos abiertos');
+  });
+
+  it('uses the shared table with the same Acciones header as the other tables', async () => {
+    const fixture = await open();
+
+    expect(host(fixture).querySelector('app-data-table')).not.toBeNull();
+    const headers = Array.from(host(fixture).querySelectorAll('thead th')).map((th) => th.textContent?.trim());
+    expect(headers).toContain('Acciones');
+    expect(host(fixture).querySelector('td.actions > .row-actions')).not.toBeNull();
+  });
+
+  it('says why the force close is off and blocks closing the dialog while it runs', async () => {
+    const fixture = await open();
+    find<HTMLButtonElement>(fixture, 'force-s1')!.click();
+    await fixture.whenStable();
+    expect(inDialog('fd-reason')!.textContent).toContain('motivo');
+
+    const reason = inDialog<HTMLTextAreaElement>('force-reason')!;
+    reason.value = 'Se fue';
+    reason.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
+    await fixture.whenStable();
+
+    expect(document.body.querySelector('[role="dialog"] form')!.getAttribute('aria-busy')).toBe('true');
+    expect(inDialog<HTMLButtonElement>('fd-cancel')!.disabled).toBe(true);
+    http.expectOne(`${BASE}/shifts/s1/force-close`).flush(shift({ status: 'CLOSED', closeKind: 'FORCED', forceReason: 'x' }));
+    http.expectOne(LIST).flush(page([]));
   });
 });

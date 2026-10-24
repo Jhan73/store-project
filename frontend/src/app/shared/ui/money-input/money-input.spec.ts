@@ -8,11 +8,13 @@ import { MoneyInput } from './money-input';
   template: `
     <app-money-input inputId="price" currency="PEN" [formControl]="price" />
     <app-money-input inputId="tip" [optional]="true" [formControl]="tip" />
+    <app-money-input inputId="locked" [readonly]="true" [formControl]="locked" />
   `,
 })
 class Host {
   readonly price = new FormControl('', { nonNullable: true });
   readonly tip = new FormControl('', { nonNullable: true });
+  readonly locked = new FormControl('90.00', { nonNullable: true });
 }
 
 describe('MoneyInput', () => {
@@ -84,5 +86,14 @@ describe('MoneyInput', () => {
     await fixture.whenStable();
 
     expect(input('price').disabled).toBe(true);
+  });
+
+  it('can be read-only: it keeps its value and stays focusable', async () => {
+    const { input } = await render();
+
+    expect(input('locked').readOnly).toBe(true);
+    expect(input('locked').disabled).toBe(false);
+    expect(input('locked').value).toBe('90.00');
+    expect(input('price').readOnly).toBe(false);
   });
 });

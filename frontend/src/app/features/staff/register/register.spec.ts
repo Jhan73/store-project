@@ -73,7 +73,7 @@ describe('Register', () => {
 
   it('opens a shift with the typed float', async () => {
     const fixture = await openScreen(null);
-    const input = find<HTMLInputElement>(fixture, 'float')!;
+    const input = host(fixture).querySelector<HTMLInputElement>('#float')!;
     input.value = '50';
     input.dispatchEvent(new Event('input'));
 
@@ -94,14 +94,24 @@ describe('Register', () => {
 
   it('refuses a float that is not an amount without calling the API', async () => {
     const fixture = await openScreen(null);
-    const input = find<HTMLInputElement>(fixture, 'float')!;
+    const input = host(fixture).querySelector<HTMLInputElement>('#float')!;
     input.value = 'abc';
     input.dispatchEvent(new Event('input'));
 
     find<HTMLButtonElement>(fixture, 'open-submit')!.click();
     await fixture.whenStable();
 
-    expect(find(fixture, 'float-error')).not.toBeNull();
+    expect(host(fixture).textContent).toContain('Escribe un monto');
+    expect(host(fixture).querySelector('#float')!.getAttribute('aria-invalid')).toBe('true');
+    expect(host(fixture).querySelector('#float')!.getAttribute('aria-describedby')).toBeTruthy();
+  });
+
+  it('labels the float field and reserves the room of its message before any error', async () => {
+    const fixture = await openScreen(null);
+
+    expect(host(fixture).querySelector('app-form-field label[for="float"]')).not.toBeNull();
+    expect(host(fixture).querySelector('app-form-field .message')).not.toBeNull();
+    expect(host(fixture).textContent).not.toContain('Escribe un monto');
   });
 
   it('shows the open shift with its opening float and never an expected cash', async () => {
@@ -165,7 +175,7 @@ describe('Register', () => {
 
     find<HTMLButtonElement>(fixture, 'close-open')!.click();
     await fixture.whenStable();
-    const count = document.body.querySelector<HTMLInputElement>('[data-testid="close-count"]')!;
+    const count = document.body.querySelector<HTMLInputElement>('#close-count')!;
     count.value = '100';
     count.dispatchEvent(new Event('input'));
     await fixture.whenStable();

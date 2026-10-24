@@ -56,18 +56,18 @@ describe('VoidDialog', () => {
     const fixture = await open();
 
     expect(dialog().textContent).toContain('Anular pago');
-    expect(inDialog<HTMLButtonElement>('vd-confirm')!.disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-save')!.disabled).toBe(true);
 
     await choose(fixture, 'Error');
 
-    expect(inDialog<HTMLButtonElement>('vd-confirm')!.disabled).toBe(false);
+    expect(inDialog<HTMLButtonElement>('fd-save')!.disabled).toBe(false);
   });
 
   it('confirms with the reason and no note', async () => {
     const fixture = await open();
     await choose(fixture, 'Error');
 
-    inDialog<HTMLButtonElement>('vd-confirm')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.confirmed).toEqual([{ reason: 'Error', note: null }]);
@@ -76,14 +76,14 @@ describe('VoidDialog', () => {
   it('needs a note for the reason Other and sends it trimmed', async () => {
     const fixture = await open();
     await choose(fixture, 'Otro');
-    expect(inDialog<HTMLButtonElement>('vd-confirm')!.disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-save')!.disabled).toBe(true);
 
     const note = inDialog<HTMLTextAreaElement>('vd-note')!;
     expect(note.getAttribute('maxlength')).toBe('280');
     note.value = '  Cliente se fue ';
     note.dispatchEvent(new Event('input'));
     await fixture.whenStable();
-    inDialog<HTMLButtonElement>('vd-confirm')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.confirmed).toEqual([{ reason: 'Other', note: 'Cliente se fue' }]);
@@ -95,7 +95,33 @@ describe('VoidDialog', () => {
     fixture.componentInstance.busy.set(true);
     await fixture.whenStable();
 
-    expect(inDialog<HTMLButtonElement>('vd-confirm')!.disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-save')!.disabled).toBe(true);
+  });
+
+  it('is aria-busy and cannot be cancelled while the request runs', async () => {
+    const fixture = await open();
+    await choose(fixture, 'Error');
+    fixture.componentInstance.busy.set(true);
+    await fixture.whenStable();
+
+    expect(dialog().querySelector('form')!.getAttribute('aria-busy')).toBe('true');
+    expect(inDialog<HTMLButtonElement>('fd-cancel')!.disabled).toBe(true);
+  });
+
+  it('says why the confirm button is off and ties the note hint to the note', async () => {
+    const fixture = await open();
+    expect(inDialog('fd-reason')!.textContent).toContain('Elige un motivo');
+
+    await choose(fixture, 'Otro');
+    expect(inDialog('fd-reason')!.textContent).toContain('nota');
+    const note = inDialog<HTMLTextAreaElement>('vd-note')!;
+    const hint = dialog().querySelector<HTMLElement>('#' + note.getAttribute('aria-describedby')!.split(' ')[0])!;
+    expect(hint.textContent).toContain('obligatoria');
+
+    note.value = 'Cliente se fue';
+    note.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(inDialog('fd-reason')).toBeNull();
   });
 
   it('says there are no reasons and offers none to pick', async () => {
@@ -120,7 +146,7 @@ describe('VoidDialog', () => {
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('vd-cancel')!.click();
+    inDialog<HTMLButtonElement>('fd-cancel')!.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.visible()).toBe(false);

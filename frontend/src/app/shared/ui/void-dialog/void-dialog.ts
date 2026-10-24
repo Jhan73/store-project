@@ -1,14 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IconBan, IconRefresh, IconX, TablerIconComponent } from '@tabler/icons-angular';
+import { IconBan, IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { ActiveReason } from '../../../core/api/api-types';
 import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
+import { FormDialog } from '../form-dialog/form-dialog';
+import { FormField } from '../form-field/form-field';
 
 export interface VoidChoice {
   readonly reason: string;
@@ -18,16 +19,31 @@ export interface VoidChoice {
 // Presentational: the owner loads the reasons and runs the command; this only collects the choice.
 @Component({
   selector: 'app-void-dialog',
-  imports: [ReactiveFormsModule, ButtonDirective, Dialog, Select, Textarea, Tooltip, TablerIconComponent],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    Select,
+    Textarea,
+    Tooltip,
+    TablerIconComponent,
+    FormDialog,
+    FormField,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <p-dialog
+    <app-form-dialog
       [header]="header()"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
       [visible]="visible()"
-      (visibleChange)="visibleChange($event)"
+      [busy]="busy()"
+      [saveDisabled]="!canConfirm()"
+      [saveLabel]="confirmLabel()"
+      [saveTooltip]="confirmTooltip()"
+      [saveIcon]="confirmIcon()"
+      saveSeverity="danger"
+      [disabledReason]="whyDisabled()"
+      width="30rem"
+      (saved)="confirm()"
+      (dismissed)="dismissed.emit()"
     >
       <ng-content />
       @if (failed()) {
@@ -53,81 +69,57 @@ export interface VoidChoice {
             No hay motivos configurados. Pide a un administrador que los agregue.
           </p>
         }
-        <div class="field" data-testid="vd-reason-box">
-          <label for="void-dialog-reason" id="void-dialog-reason-label" i18n="@@shared.voidDialog.reason"
-            >Motivo</label
+        <div class="dialog-fields" data-testid="vd-reason-box">
+          <app-form-field
+            label="Motivo"
+            i18n-label="@@shared.voidDialog.reason"
+            controlId="void-dialog-reason"
           >
-          <p-select
-            inputId="void-dialog-reason"
-            [ariaLabelledBy]="'void-dialog-reason-label'"
-            [formControl]="reason"
-            optionLabel="label"
-            optionValue="code"
-            [options]="options()"
-            [filter]="true"
-            filterBy="label"
-            [resetFilterOnHide]="true"
-            filterPlaceholder="Buscar"
-            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
-            placeholder="Elige un motivo"
-            i18n-placeholder="@@shared.voidDialog.reason.placeholder"
-            [appendTo]="'body'"
-            fluid
-          />
-        </div>
-        <div class="field">
-          <label for="void-dialog-note" i18n="@@shared.voidDialog.note">Nota</label>
-          <textarea
-            pTextarea
-            id="void-dialog-note"
-            data-testid="vd-note"
-            [formControl]="note"
-            maxlength="280"
-            rows="3"
-            fluid
-          ></textarea>
-          @if (noteRequired()) {
-            <small i18n="@@shared.voidDialog.noteRequired">Para el motivo «Otro» la nota es obligatoria.</small>
-          }
+            <p-select
+              inputId="void-dialog-reason"
+              [ariaLabel]="labels.reason"
+              [formControl]="reason"
+              optionLabel="label"
+              optionValue="code"
+              [options]="options()"
+              [filter]="true"
+              filterBy="label"
+              [resetFilterOnHide]="true"
+              filterPlaceholder="Buscar"
+              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+              placeholder="Elige un motivo"
+              i18n-placeholder="@@shared.voidDialog.reason.placeholder"
+              [appendTo]="'body'"
+              fluid
+            />
+          </app-form-field>
+          <app-form-field
+            label="Nota"
+            i18n-label="@@shared.voidDialog.note"
+            controlId="void-dialog-note"
+            [hint]="noteRequired() ? labels.noteRequired : null"
+          >
+            <textarea
+              pTextarea
+              id="void-dialog-note"
+              data-testid="vd-note"
+              [formControl]="note"
+              maxlength="280"
+              rows="3"
+              fluid
+            ></textarea>
+          </app-form-field>
         </div>
       } @else {
         <p class="muted" i18n="@@shared.voidDialog.loading">Cargando los motivos…</p>
       }
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="vd-cancel"
-          pTooltip="Cerrar sin confirmar"
-          i18n-pTooltip="@@shared.voidDialog.cancel.tooltip"
-          tooltipPosition="top"
-          (click)="dismissed.emit()"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@shared.voidDialog.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          severity="danger"
-          data-testid="vd-confirm"
-          [disabled]="!canConfirm() || busy()"
-          [pTooltip]="confirmTooltip()"
-          tooltipPosition="top"
-          (click)="confirm()"
-        >
-          <tabler-icon [icon]="confirmIcon()" aria-hidden="true" />
-          <span>{{ confirmLabel() }}</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+    </app-form-dialog>
   `,
   styles: `
-    .field {
+    .dialog-fields {
       display: flex;
       flex-direction: column;
-      gap: var(--space-1);
+      gap: var(--space-3);
       margin-top: var(--space-3);
     }
 
@@ -154,7 +146,11 @@ export class VoidDialog {
   readonly dismissed = output<void>();
   readonly retried = output<void>();
 
-  protected readonly icons = { cancel: IconX, retry: IconRefresh };
+  protected readonly icons = { retry: IconRefresh };
+  protected readonly labels = {
+    reason: $localize`:@@shared.voidDialog.reason.aria:Motivo`,
+    noteRequired: $localize`:@@shared.voidDialog.noteRequired:Para el motivo «Otro» la nota es obligatoria.`,
+  };
   protected readonly reason = new FormControl<string | null>(null);
   protected readonly note = new FormControl('', { nonNullable: true });
   private readonly chosen = toSignal(this.reason.valueChanges, { initialValue: null });
@@ -167,6 +163,19 @@ export class VoidDialog {
     () => this.chosen() !== null && (!this.noteRequired() || this.typed().trim() !== ''),
   );
 
+  protected readonly whyDisabled = computed(() => {
+    if (this.failed()) {
+      return $localize`:@@shared.voidDialog.why.failed:Carga los motivos para continuar.`;
+    }
+    if (this.reasons() === null) {
+      return $localize`:@@shared.voidDialog.why.loading:Esperando los motivos.`;
+    }
+    if (this.chosen() === null) {
+      return $localize`:@@shared.voidDialog.why.reason:Elige un motivo para continuar.`;
+    }
+    return this.noteRequired() ? $localize`:@@shared.voidDialog.why.note:Escribe la nota para continuar.` : null;
+  });
+
   constructor() {
     effect(() => {
       if (this.visible()) {
@@ -176,12 +185,6 @@ export class VoidDialog {
         });
       }
     });
-  }
-
-  protected visibleChange(visible: boolean): void {
-    if (!visible) {
-      this.dismissed.emit();
-    }
   }
 
   protected confirm(): void {

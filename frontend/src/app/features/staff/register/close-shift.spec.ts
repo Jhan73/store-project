@@ -61,8 +61,10 @@ describe('CloseShift', () => {
   const inDialog = <T extends HTMLElement>(selector: string) =>
     document.body.querySelector<T>(`[role="dialog"] ${selector}`);
   const byId = <T extends HTMLElement>(testId: string) => inDialog<T>(`[data-testid="${testId}"]`);
+  const field = (testId: string) =>
+    testId === 'close-count' ? inDialog<HTMLInputElement>('#close-count') : byId<HTMLInputElement | HTMLTextAreaElement>(testId);
   const type = (testId: string, value: string) => {
-    const input = byId<HTMLInputElement | HTMLTextAreaElement>(testId)!;
+    const input = field(testId)!;
     input.value = value;
     input.dispatchEvent(new Event('input'));
   };
@@ -85,7 +87,7 @@ describe('CloseShift', () => {
   it('asks for the count first and shows no expected cash', async () => {
     const fixture = await open();
 
-    expect(byId('close-count')).not.toBeNull();
+    expect(inDialog('#close-count')).not.toBeNull();
     expect(byId('expected-cash')).toBeNull();
     expect(byId('close-note')).toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('Efectivo esperado');
@@ -115,7 +117,7 @@ describe('CloseShift', () => {
     expect(byId('expected-cash')?.textContent).toContain('100.00');
     expect(byId('counted-cash')?.textContent).toContain('90.00');
     expect(inDialog('tbody')?.textContent).toContain('Efectivo');
-    expect(byId('close-count')).toBeNull();
+    expect(inDialog('#close-count')).toBeNull();
   });
 
   it('shows the difference, locks the count and asks for a note when it is required', async () => {
@@ -132,7 +134,7 @@ describe('CloseShift', () => {
     await fixture.whenStable();
 
     expect(byId('close-difference')?.textContent).toContain('10.00');
-    expect(byId<HTMLInputElement>('close-count')!.readOnly).toBe(true);
+    expect(inDialog<HTMLInputElement>('#close-count')!.readOnly).toBe(true);
     expect(byId('close-note')).not.toBeNull();
     expect(byId<HTMLButtonElement>('close-confirm')!.disabled).toBe(true);
 
@@ -194,8 +196,8 @@ describe('CloseShift', () => {
     fixture.componentInstance.visible.set(true);
     await fixture.whenStable();
 
-    expect(byId<HTMLInputElement>('close-count')!.value).toBe('90.00');
-    expect(byId<HTMLInputElement>('close-count')!.readOnly).toBe(true);
+    expect(inDialog<HTMLInputElement>('#close-count')!.value).toBe('90.00');
+    expect(inDialog<HTMLInputElement>('#close-count')!.readOnly).toBe(true);
     expect(byId('close-note')).not.toBeNull();
     type('close-note', 'Faltó sencillo');
     await fixture.whenStable();
@@ -211,5 +213,39 @@ describe('CloseShift', () => {
     await fixture.whenStable();
 
     expect(fixture.componentInstance.visible()).toBe(false);
+  });
+
+  it('says why the confirm button is off until the count is an amount', async () => {
+    await open();
+
+    expect(byId('close-why')?.textContent).toContain('contado');
+    expect(byId<HTMLButtonElement>('close-confirm')!.getAttribute('aria-describedby')).toBe(byId('close-why')!.id);
+  });
+
+  it('labels the count and note fields and ties the error room to them', async () => {
+    const fixture = await open();
+
+    expect(inDialog('label[for="close-count"]')).not.toBeNull();
+    type('close-count', 'abc');
+    inDialog<HTMLInputElement>('#close-count')!.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+    expect(inDialog('#close-count')!.getAttribute('aria-invalid')).toBe('true');
+    expect(inDialog('app-form-field .message.error')?.textContent).toContain('Escribe un monto');
+  });
+
+  it('is aria-busy and cannot be dismissed while the close request runs', async () => {
+    const fixture = await open();
+    type('close-count', '90');
+    await fixture.whenStable();
+    await submit(fixture);
+
+    expect(inDialog('form')!.getAttribute('aria-busy')).toBe('true');
+    expect(byId<HTMLButtonElement>('close-cancel')!.disabled).toBe(true);
+    expect(inDialog('.p-dialog-close-button')).toBeNull();
+    inDialog('form')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+    expect(fixture.componentInstance.visible()).toBe(true);
+
+    http.expectOne(CLOSE).flush(closed());
   });
 });

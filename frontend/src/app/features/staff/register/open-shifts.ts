@@ -1,14 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { IconCheck, IconClockStop, IconRefresh, IconX, TablerIconComponent } from '@tabler/icons-angular';
+import { IconCheck, IconClockStop, IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { Shift } from '../../../core/api/api-types';
-import { formatMoney } from '../../../core/money/money';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
+import { formatMoneyOrDash, safeMinorUnits } from '../../../core/money/money';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { OpenShiftsStore } from './open-shifts-store';
 import { ShiftResult } from './shift-result';
 
@@ -22,7 +24,9 @@ import { ShiftResult } from './shift-result';
     Textarea,
     Tooltip,
     TablerIconComponent,
-    TableScroll,
+    DataTable,
+    FormDialog,
+    FormField,
     ShiftResult,
   ],
   providers: [OpenShiftsStore],
@@ -49,110 +53,78 @@ import { ShiftResult } from './shift-result';
         </button>
       </div>
     } @else if (store.shifts(); as shifts) {
-      @if (shifts.length === 0) {
-        <p class="muted" data-testid="no-open-shifts" i18n="@@staff.register.shifts.empty">
-          No hay turnos abiertos.
-        </p>
-      } @else {
-        <app-table-scroll label="Turnos abiertos" i18n-label="@@staff.register.shifts.scroll">
-          <table>
-            <thead>
-              <tr>
-                <th i18n="@@staff.register.shifts.cashier">Cajero</th>
-                <th i18n="@@staff.register.shifts.since">Desde</th>
-                <th i18n="@@staff.register.shifts.float">Fondo inicial</th>
-                <th><span i18n="@@staff.register.shifts.actions">Acciones</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (shift of shifts; track shift.id) {
-                <tr>
-                  <td>{{ store.nameOf(shift.cashierId) }}</td>
-                  <td>{{ store.formatTime(shift.openedAt) }}</td>
-                  <td>{{ money(shift.openingFloat) }}</td>
-                  <td>
-                    <button
-                      pButton
-                      type="button"
-                      severity="danger"
-                      [attr.data-testid]="'force-' + shift.id"
-                      [disabled]="store.pending.has('force:' + shift.id)"
-                      pTooltip="Cerrar este turno sin contar la caja"
-                      i18n-pTooltip="@@staff.register.shifts.force.tooltip"
-                      tooltipPosition="top"
-                      (click)="start(shift)"
-                    >
-                      <tabler-icon [icon]="icons.force" aria-hidden="true" />
-                      <span i18n="@@staff.register.shifts.force">Cierre forzado</span>
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </app-table-scroll>
-      }
+      <app-data-table
+        label="Turnos abiertos"
+        i18n-label="@@staff.register.shifts.scroll"
+        [value]="rowsView()"
+        [columns]="columns"
+        [emptyText]="emptyText"
+        [searchable]="false"
+      >
+        <ng-template #row let-shift>
+          <td>{{ shift.cashier }}</td>
+          <td>{{ shift.sinceText }}</td>
+          <td>{{ shift.floatText }}</td>
+          <td class="actions">
+            <div class="row-actions">
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [attr.data-testid]="'force-' + shift.id"
+                [disabled]="store.pending.has('force:' + shift.id)"
+                pTooltip="Cerrar este turno sin contar la caja"
+                i18n-pTooltip="@@staff.register.shifts.force.tooltip"
+                tooltipPosition="top"
+                (click)="start(shift)"
+              >
+                <tabler-icon [icon]="icons.force" aria-hidden="true" />
+                <span i18n="@@staff.register.shifts.force">Cierre forzado</span>
+              </button>
+            </div>
+          </td>
+        </ng-template>
+      </app-data-table>
     } @else {
       <p class="muted" i18n="@@staff.register.shifts.loading">Cargando los turnos…</p>
     }
 
-    <p-dialog
+    <app-form-dialog
       header="Cierre forzado"
       i18n-header="@@staff.register.force.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      width="30rem"
       [visible]="forcing() !== null"
-      (visibleChange)="closeForce($event)"
+      [busy]="forceBusy()"
+      [saveDisabled]="!canConfirm()"
+      [saveLabel]="labels.forceSave"
+      [saveTooltip]="labels.forceTooltip"
+      [saveIcon]="icons.force"
+      saveSeverity="danger"
+      [disabledReason]="needsReason() ? labels.forceWhy : null"
+      (saved)="confirm()"
+      (dismissed)="closeForce(false)"
     >
       @if (forcing(); as shift) {
-        <p>
-          <ng-container i18n="@@staff.register.force.who">Turno de</ng-container>
-          <strong>{{ store.nameOf(shift.cashierId) }}</strong>
-        </p>
-        <div class="field">
-          <label for="force-reason" i18n="@@staff.register.force.reason">Motivo</label>
-          <textarea
-            pTextarea
-            id="force-reason"
-            data-testid="force-reason"
-            [formControl]="reason"
-            maxlength="280"
-            rows="3"
-            fluid
-          ></textarea>
+        <div class="dialog-fields">
+          <p>
+            <ng-container i18n="@@staff.register.force.who">Turno de</ng-container>
+            <strong>{{ store.nameOf(shift.cashierId) }}</strong>
+          </p>
+          <app-form-field label="Motivo" i18n-label="@@staff.register.force.reason" controlId="force-reason">
+            <textarea
+              pTextarea
+              id="force-reason"
+              data-testid="force-reason"
+              [formControl]="reason"
+              maxlength="280"
+              rows="3"
+              fluid
+            ></textarea>
+          </app-form-field>
         </div>
       }
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="force-cancel"
-          pTooltip="Cerrar sin forzar el cierre"
-          i18n-pTooltip="@@staff.register.force.cancel.tooltip"
-          tooltipPosition="top"
-          (click)="closeForce(false)"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@staff.register.force.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          severity="danger"
-          data-testid="force-confirm"
-          [disabled]="!canConfirm()"
-          pTooltip="Cerrar el turno con este motivo"
-          i18n-pTooltip="@@staff.register.force.confirm.tooltip"
-          tooltipPosition="top"
-          (click)="confirm()"
-        >
-          <tabler-icon [icon]="icons.force" aria-hidden="true" />
-          <span i18n="@@staff.register.force.confirm">Forzar cierre</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+    </app-form-dialog>
 
     <p-dialog
       header="Turno cerrado"
@@ -186,8 +158,34 @@ import { ShiftResult } from './shift-result';
 export class OpenShifts {
   protected readonly store = inject(OpenShiftsStore);
 
-  protected readonly icons = { force: IconClockStop, retry: IconRefresh, cancel: IconX, confirm: IconCheck };
-  protected readonly money = formatMoney;
+  protected readonly icons = { force: IconClockStop, retry: IconRefresh, confirm: IconCheck };
+  protected readonly labels = {
+    forceSave: $localize`:@@staff.register.force.confirm:Forzar cierre`,
+    forceTooltip: $localize`:@@staff.register.force.confirm.tooltip:Cerrar el turno con este motivo`,
+    forceWhy: $localize`:@@staff.register.force.why:Escribe el motivo para forzar el cierre.`,
+  };
+  protected readonly emptyText = $localize`:@@staff.register.shifts.empty:No hay turnos abiertos.`;
+  protected readonly columns: readonly DataColumn[] = [
+    { field: 'cashier', header: $localize`:@@staff.register.shifts.cashier:Cajero`, sortable: true },
+    { field: 'openedAt', header: $localize`:@@staff.register.shifts.since:Desde`, sortable: true },
+    { field: 'floatMinor', header: $localize`:@@staff.register.shifts.float:Fondo inicial`, sortable: true },
+    { field: '', header: $localize`:@@staff.register.shifts.actions:Acciones` },
+  ];
+  protected readonly money = formatMoneyOrDash;
+  protected readonly rowsView = computed(() =>
+    (this.store.shifts() ?? []).map((shift) => ({
+      ...shift,
+      cashier: this.store.nameOf(shift.cashierId),
+      sinceText: this.store.formatTime(shift.openedAt),
+      floatText: formatMoneyOrDash(shift.openingFloat),
+      floatMinor: safeMinorUnits(shift.openingFloat) ?? 0,
+    })),
+  );
+  protected readonly needsReason = computed(() => this.typedReason().trim() === '');
+  protected readonly forceBusy = computed(() => {
+    const shift = this.forcing();
+    return shift !== null && this.store.pending.has(`force:${shift.id}`);
+  });
   protected readonly forcing = signal<Shift | null>(null);
   protected readonly reason = new FormControl('', { nonNullable: true });
   private readonly typedReason = toSignal(this.reason.valueChanges, { initialValue: '' });

@@ -89,6 +89,12 @@
     gap: var(--space-3);
   }
 
+  // A note field grows vertically up to a limit and never past its container.
+  textarea {
+    max-width: 100%;
+    max-height: 12rem;
+  }
+
   .check {
     display: inline-flex;
     align-items: center;

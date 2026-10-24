@@ -30,6 +30,7 @@ import { amountValidator, optionalAmountValidator } from '../../forms/amount-val
       [attr.aria-invalid]="showInvalid()"
       [attr.placeholder]="placeholder()"
       [value]="text()"
+      [readOnly]="readonly()"
       [disabled]="disabled()"
       (input)="typed($event)"
       (blur)="touch()"
@@ -45,6 +46,7 @@ export class MoneyInput implements ControlValueAccessor, Validator {
   readonly currency = input<string | null>(null);
   readonly optional = input(false);
   readonly placeholder = input<string | null>(null);
+  readonly readonly = input(false);
 
   protected readonly text = signal('');
   protected readonly disabled = signal(false);
