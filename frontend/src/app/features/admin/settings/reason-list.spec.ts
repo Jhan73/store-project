@@ -168,7 +168,7 @@ describe('ReasonList', () => {
     await fixture.whenStable();
 
     expect(dialogInput()!.value).toBe('Spilled');
-    expect(rows(host)).toEqual(['No hay resultados.']);
+    expect(rows(host)).toEqual(['Todavía no hay motivos en esta lista.']);
   });
 
   it('shows a deactivated reason as inactive at once and sends it with its version after the undo window', async () => {

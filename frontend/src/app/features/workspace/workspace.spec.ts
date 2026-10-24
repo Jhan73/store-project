@@ -348,8 +348,8 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/admin/users');
     http
-      .expectOne('http://api.test/api/v1/staff?page=0&size=20')
-      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     http
       .expectOne('http://api.test/api/v1/admin/settings')
       .flush({ timeZone: 'America/Lima', currency: 'PEN' });
@@ -504,8 +504,8 @@ describe('staff and admin area', () => {
     await harness.navigateByUrl('/admin/catalog');
     http.expectOne('http://api.test/api/v1/admin/categories').flush([]);
     http
-      .expectOne('http://api.test/api/v1/admin/products?page=0&size=20')
-      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+      .expectOne('http://api.test/api/v1/admin/products?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     await harness.fixture.whenStable();
 
     expect(url()).toBe('/admin/catalog/products');

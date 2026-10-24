@@ -83,6 +83,8 @@ import { isStale } from '../admin-errors';
     <app-data-table
       label="Listado de productos"
       i18n-label="@@admin.catalog.products.tableScroll"
+      emptyText="Todavía no hay productos."
+      i18n-emptyText="@@admin.catalog.products.empty"
       [value]="rowsView()"
       [columns]="columns"
       [rows]="20"

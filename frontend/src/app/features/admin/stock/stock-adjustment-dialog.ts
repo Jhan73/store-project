@@ -19,9 +19,8 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { IconDeviceFloppy, IconRefresh, IconX, TablerIconComponent } from '@tabler/icons-angular';
+import { IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
@@ -33,6 +32,8 @@ import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
 import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
 import { IntentKeys } from '../../../shared/state/intent-keys';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { reportFailure } from '../admin-errors';
 import { StockApi } from './stock-api';
 
@@ -50,7 +51,8 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
   imports: [
     ReactiveFormsModule,
     ButtonDirective,
-    Dialog,
+    FormDialog,
+    FormField,
     InputNumber,
     Select,
     TablerIconComponent,
@@ -59,6 +61,13 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    .dialog-fields {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+
     .field {
       display: flex;
       flex-direction: column;
@@ -79,16 +88,15 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
     }
   `,
   template: `
-    <p-dialog
+    <app-form-dialog
       header="Ajustar stock"
       i18n-header="@@admin.stock.adjust.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
-      [closable]="!saving()"
-      [closeOnEscape]="!saving()"
+      width="30rem"
       [visible]="visible()"
-      (visibleChange)="visibleChange($event)"
+      [busy]="saving()"
+      [saveDisabled]="reasons() === null || reasons()!.length === 0"
+      (saved)="submit()"
+      (dismissed)="dismissed.emit()"
     >
       <strong data-testid="adjust-product">{{ productName() }}</strong>
       @if (failed()) {
@@ -116,30 +124,32 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
             No hay motivos de ajuste configurados. Agrégalos en Configuración, en motivos.
           </p>
         }
-        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <div class="field">
-            <label for="adjust-delta" i18n="@@admin.stock.adjust.delta">Cambio de unidades</label>
+        <div [formGroup]="form" class="dialog-fields">
+          <app-form-field
+            label="Cambio de unidades"
+            i18n-label="@@admin.stock.adjust.delta"
+            controlId="adjust-delta"
+            [error]="invalid('quantityDelta') ? labels.deltaInvalid : null"
+            [hint]="labels.deltaHint"
+          >
             <p-inputnumber
               inputId="adjust-delta"
               formControlName="quantityDelta"
               [useGrouping]="false"
               [invalid]="invalid('quantityDelta')"
               [pt]="numberAriaInvalid(invalid('quantityDelta'))"
+              fluid
             />
-            <small class="muted" i18n="@@admin.stock.adjust.delta.hint">
-              Un número negativo descuenta unidades (por ejemplo -3) y uno positivo las suma.
-            </small>
-            @if (invalid('quantityDelta')) {
-              <small class="error" i18n="@@admin.stock.adjust.delta.invalid">
-                Escribe un número entero distinto de cero.
-              </small>
-            }
-          </div>
-          <div class="field">
-            <label for="adjust-reason" id="adjust-reason-label" i18n="@@admin.stock.adjust.reason">Motivo</label>
+          </app-form-field>
+          <app-form-field
+            label="Motivo"
+            i18n-label="@@admin.stock.adjust.reason"
+            controlId="adjust-reason"
+            [error]="invalid('reason') ? labels.reasonInvalid : null"
+          >
             <p-select
               inputId="adjust-reason"
-              [ariaLabelledBy]="'adjust-reason-label'"
+              [ariaLabel]="labels.reason"
               formControlName="reason"
               optionLabel="label"
               optionValue="code"
@@ -156,12 +166,14 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               [appendTo]="'body'"
               fluid
             />
-            @if (invalid('reason')) {
-              <small class="error" i18n="@@admin.stock.adjust.reason.invalid">Elige un motivo.</small>
-            }
-          </div>
-          <div class="field">
-            <label for="adjust-note" i18n="@@admin.stock.adjust.note">Nota</label>
+          </app-form-field>
+          <app-form-field
+            label="Nota"
+            i18n-label="@@admin.stock.adjust.note"
+            controlId="adjust-note"
+            [error]="invalid('note') ? labels.noteRequired : null"
+            [hint]="noteRequired() ? labels.noteRequired : null"
+          >
             <textarea
               pTextarea
               id="adjust-note"
@@ -172,12 +184,7 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               [attr.aria-invalid]="invalid('note') ? 'true' : null"
               fluid
             ></textarea>
-            @if (noteRequired()) {
-              <small [class.error]="invalid('note')" data-testid="adjust-note-required" i18n="@@admin.stock.adjust.noteRequired">
-                Para el motivo «Otro» la nota es obligatoria.
-              </small>
-            }
-          </div>
+          </app-form-field>
           @if (shownAvailable() !== null) {
             <small [class.error]="available() !== null" role="status" data-testid="adjust-available">
               <ng-container i18n="@@admin.stock.adjust.available">
@@ -198,41 +205,9 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               }
             </small>
           }
-        </form>
+        </div>
       }
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="adjust-cancel"
-          [disabled]="saving()"
-          (click)="dismissed.emit()"
-          pTooltip="Cerrar sin ajustar el stock"
-          i18n-pTooltip="@@admin.stock.adjust.cancel.tooltip"
-          tooltipPosition="top"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@admin.stock.adjust.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          data-testid="adjust-save"
-          [loading]="saving()"
-          [disabled]="reasons() === null || reasons()!.length === 0"
-          (click)="submit()"
-          pTooltip="Aplicar este cambio de unidades al stock"
-          i18n-pTooltip="@@admin.stock.adjust.save.tooltip"
-          tooltipPosition="top"
-        >
-          @if (!saving()) {
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
-          }
-          <span i18n="@@admin.stock.adjust.save">Ajustar stock</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+    </app-form-dialog>
   `,
 })
 export class StockAdjustmentDialog {
@@ -251,7 +226,14 @@ export class StockAdjustmentDialog {
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
 
-  protected readonly icons = { save: IconDeviceFloppy, cancel: IconX, retry: IconRefresh };
+  protected readonly icons = { retry: IconRefresh };
+  protected readonly labels = {
+    deltaHint: $localize`:@@admin.stock.adjust.delta.hint:Un número negativo descuenta unidades (por ejemplo -3) y uno positivo las suma.`,
+    deltaInvalid: $localize`:@@admin.stock.adjust.delta.invalid:Escribe un número entero distinto de cero.`,
+    reason: $localize`:@@admin.stock.adjust.reason:Motivo`,
+    reasonInvalid: $localize`:@@admin.stock.adjust.reason.invalid:Elige un motivo.`,
+    noteRequired: $localize`:@@admin.stock.adjust.noteRequired:Para el motivo «Otro» la nota es obligatoria.`,
+  };
   protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly saving = signal(false);
@@ -306,12 +288,6 @@ export class StockAdjustmentDialog {
   protected invalid(name: string): boolean {
     const control = this.form.get(name);
     return !!control && control.invalid && control.touched;
-  }
-
-  protected visibleChange(visible: boolean): void {
-    if (!visible && !this.saving()) {
-      this.dismissed.emit();
-    }
   }
 
   protected loadReasons(): void {

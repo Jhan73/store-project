@@ -69,6 +69,8 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
     <app-data-table
       label="Listado de mesas"
       i18n-label="@@admin.tables.tableScroll"
+      emptyText="Todavía no hay mesas."
+      i18n-emptyText="@@admin.tables.empty"
       [value]="rowsView()"
       [columns]="columns"
     >

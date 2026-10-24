@@ -153,7 +153,7 @@ describe('StockTrackDialog', () => {
     typeNumber(dialog(), 'stock-threshold', '8');
     await fixture.whenStable();
 
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     const request = http.expectOne(`${STOCK}/${PAPAYA}`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ tracked: true, lowStockThreshold: 8 });
@@ -169,7 +169,7 @@ describe('StockTrackDialog', () => {
     typeNumber(dialog(), 'stock-threshold', '0');
     await fixture.whenStable();
 
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
 
     const request = http.expectOne(`${STOCK}/${KIWI}`);
     expect(request.request.body).toEqual({ tracked: true, lowStockThreshold: 0 });
@@ -179,7 +179,7 @@ describe('StockTrackDialog', () => {
   it('does not send anything without a product and a threshold, and marks both', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
 
     http.expectNone(`${STOCK}/${PAPAYA}`);
@@ -195,7 +195,7 @@ describe('StockTrackDialog', () => {
       typeNumber(dialog(), 'stock-threshold', value);
       await fixture.whenStable();
 
-      inDialog<HTMLButtonElement>('track-save')!.click();
+      inDialog<HTMLButtonElement>('fd-save')!.click();
       await fixture.whenStable();
 
       http.expectNone(`${STOCK}/${PAPAYA}`);
@@ -209,7 +209,7 @@ describe('StockTrackDialog', () => {
     typeNumber(dialog(), 'stock-threshold', '8');
     await fixture.whenStable();
 
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     http.expectOne(`${STOCK}/${PAPAYA}`).flush(
       { type: 'about:blank', status: 404, code: 'inventory.product-not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -228,7 +228,7 @@ describe('StockTrackDialog', () => {
     expect(dialog().textContent).toContain('Papaya');
     typeNumber(dialog(), 'stock-threshold', '12');
     await fixture.whenStable();
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
 
     const request = http.expectOne(`${STOCK}/${PAPAYA}`);
     expect(request.request.body).toEqual({ tracked: true, lowStockThreshold: 12 });
@@ -241,10 +241,10 @@ describe('StockTrackDialog', () => {
     typeNumber(dialog(), 'stock-threshold', '8');
     await fixture.whenStable();
 
-    inDialog<HTMLButtonElement>('track-save')!.click();
+    inDialog<HTMLButtonElement>('fd-save')!.click();
     await fixture.whenStable();
 
-    expect(inDialog<HTMLButtonElement>('track-cancel')!.disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-cancel')!.disabled).toBe(true);
     expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
     http.expectOne(`${STOCK}/${PAPAYA}`).flush(stock(PAPAYA));
   });
@@ -252,7 +252,7 @@ describe('StockTrackDialog', () => {
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('track-cancel')!.click();
+    inDialog<HTMLButtonElement>('fd-cancel')!.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.visible()).toBe(false);

@@ -112,7 +112,7 @@ export interface DataRowContext<T> {
         </ng-template>
         <ng-template #emptymessage>
           <tr>
-            <td [attr.colspan]="columns().length" i18n="@@shared.dataTable.empty">No hay resultados.</td>
+            <td [attr.colspan]="columns().length">{{ emptyMessage() }}</td>
           </tr>
         </ng-template>
       </p-table>
@@ -130,6 +130,8 @@ export class DataTable<T = unknown> {
   readonly loading = input(false);
   readonly searchable = input(true);
   readonly searchDelay = input(300);
+  // Shown when there are no records at all; a search that finds none still says "no results".
+  readonly emptyText = input<string | null>(null);
 
   readonly lazyLoad = output<DataTableLazyEvent>();
 
@@ -137,6 +139,11 @@ export class DataTable<T = unknown> {
   protected readonly searchId = `data-table-search-${nextId++}`;
   // p-table sorts the array it is given in place.
   protected readonly rowsCopy = computed(() => [...this.value()]);
+  protected readonly emptyMessage = computed(
+    () =>
+      (this.value().length === 0 ? this.emptyText() : null) ??
+      $localize`:@@shared.dataTable.empty:No hay resultados.`,
+  );
   protected readonly hasFilters = computed(() => this.columns().some((column) => column.filter));
   protected readonly searchFields = computed(() =>
     this.columns()

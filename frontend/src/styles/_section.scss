@@ -104,13 +104,6 @@
     color: var(--destructive);
   }
 
-  .badge {
-    padding: 0 var(--space-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 0.875rem;
-  }
-
   @include bp.tablet-up {
     form {
       flex-direction: row;

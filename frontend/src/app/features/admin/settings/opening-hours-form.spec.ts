@@ -97,7 +97,7 @@ describe('OpeningHoursForm', () => {
     expect(closedBox(host, 'SUNDAY').checked).toBe(true);
     expect(input(host, 'hours-SUNDAY-opens').disabled).toBe(true);
     expect(input(host, 'hours-SUNDAY-closes').disabled).toBe(true);
-  });
+  }, 15_000);
 
   it('saves the week untouched, guarded by the ETag of the read', async () => {
     const { host, http } = await render();

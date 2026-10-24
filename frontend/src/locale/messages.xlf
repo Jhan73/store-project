@@ -1523,9 +1523,9 @@
         <note category="location">src/app/features/admin/catalog/product-form.ts:277</note>
         <note category="location">src/app/features/admin/catalog/product-list.ts:76</note>
         <note category="location">src/app/features/admin/settings/reason-list.ts:89</note>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:168</note>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:151</note>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:139</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:166</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:161</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:156</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:96</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:194</note>
         <note category="location">src/app/features/staff/board/board.ts:157</note>
@@ -2003,7 +2003,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:90,92</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:62,64</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:133,135</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:135,137</note>
       </notes>
       <segment>
         <source>Editar</source>
@@ -2013,7 +2013,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:105,106</note>
         <note category="location">src/app/features/admin/catalog/category-list.ts:280</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:149,150</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:151,152</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2022,7 +2022,7 @@
     <unit id="admin.catalog.reactivate">
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:108,110</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:152,154</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:154,156</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2161,7 +2161,7 @@
       <notes>
         <note category="location">src/app/features/admin/catalog/category-list.ts:212</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:91</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:194</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:196</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:121</note>
       </notes>
       <segment>
@@ -2856,7 +2856,7 @@
     <unit id="admin.catalog.products.filter">
       <notes>
         <note category="location">src/app/features/admin/catalog/product-list.ts:60,61</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:173</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:175</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -2878,9 +2878,17 @@
         <source>Listado de productos</source>
       </segment>
     </unit>
+    <unit id="admin.catalog.products.empty">
+      <notes>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:86,87</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay productos.</source>
+      </segment>
+    </unit>
     <unit id="admin.catalog.products.edit.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:128,129</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:130,131</note>
       </notes>
       <segment>
         <source>Editar los datos de este producto</source>
@@ -2888,7 +2896,7 @@
     </unit>
     <unit id="admin.catalog.products.deactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:169</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:171</note>
       </notes>
       <segment>
         <source>Ocultar este producto del menú</source>
@@ -2896,7 +2904,7 @@
     </unit>
     <unit id="admin.catalog.products.reactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:170</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:172</note>
       </notes>
       <segment>
         <source>Volver a mostrar este producto en el menú</source>
@@ -2904,7 +2912,7 @@
     </unit>
     <unit id="admin.catalog.products.active">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:174</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:176</note>
       </notes>
       <segment>
         <source>Activo</source>
@@ -2912,7 +2920,7 @@
     </unit>
     <unit id="admin.catalog.products.inactive">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:175</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:177</note>
       </notes>
       <segment>
         <source>Inactivo</source>
@@ -2920,7 +2928,7 @@
     </unit>
     <unit id="admin.catalog.products.image">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:178</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:180</note>
       </notes>
       <segment>
         <source>Imagen</source>
@@ -2928,7 +2936,7 @@
     </unit>
     <unit id="admin.catalog.products.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:179</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:181</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -2936,7 +2944,7 @@
     </unit>
     <unit id="admin.catalog.products.category">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:182</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:184</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -2944,7 +2952,7 @@
     </unit>
     <unit id="admin.catalog.products.price">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:188</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:190</note>
       </notes>
       <segment>
         <source>Precio</source>
@@ -2952,7 +2960,7 @@
     </unit>
     <unit id="admin.catalog.products.state">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:192</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:194</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2960,7 +2968,7 @@
     </unit>
     <unit id="admin.catalog.products.available">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:193</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:195</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -2968,7 +2976,7 @@
     </unit>
     <unit id="admin.catalog.products.deactivated">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:263</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:265</note>
       </notes>
       <segment>
         <source>Producto &quot;<ph id="0" equiv="name" disp="product.name"/>&quot; desactivado</source>
@@ -3313,7 +3321,7 @@
     <unit id="admin.settings.reasons.typeLabel">
       <notes>
         <note category="location">src/app/features/admin/settings/reason-list.ts:75,76</note>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:177</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:179</note>
       </notes>
       <segment>
         <source>Lista de motivos</source>
@@ -3327,9 +3335,17 @@
         <source>Listado de motivos</source>
       </segment>
     </unit>
+    <unit id="admin.settings.reasons.empty">
+      <notes>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:99,100</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay motivos en esta lista.</source>
+      </segment>
+    </unit>
     <unit id="admin.settings.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:126,128</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:128,130</note>
         <note category="location">src/app/features/admin/settings/zone-list.ts:116,118</note>
       </notes>
       <segment>
@@ -3338,7 +3354,7 @@
     </unit>
     <unit id="admin.settings.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:129,131</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:131,133</note>
         <note category="location">src/app/features/admin/settings/zone-list.ts:119,121</note>
       </notes>
       <segment>
@@ -3347,7 +3363,7 @@
     </unit>
     <unit id="admin.settings.reasons.createHeader">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:138,139</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:140,141</note>
       </notes>
       <segment>
         <source>Agregar motivo</source>
@@ -3355,7 +3371,7 @@
     </unit>
     <unit id="admin.settings.reasons.codeLabel">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:147,148</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:149,150</note>
       </notes>
       <segment>
         <source>Nuevo motivo</source>
@@ -3363,7 +3379,7 @@
     </unit>
     <unit id="admin.settings.reasons.deactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:173</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:175</note>
       </notes>
       <segment>
         <source>Dejar de ofrecer este motivo</source>
@@ -3371,7 +3387,7 @@
     </unit>
     <unit id="admin.settings.reasons.reactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:174</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:176</note>
       </notes>
       <segment>
         <source>Volver a ofrecer este motivo</source>
@@ -3379,7 +3395,7 @@
     </unit>
     <unit id="admin.settings.reasons.active">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:178</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:180</note>
       </notes>
       <segment>
         <source>Activo</source>
@@ -3387,7 +3403,7 @@
     </unit>
     <unit id="admin.settings.reasons.inactive">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:179</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:181</note>
       </notes>
       <segment>
         <source>Inactivo</source>
@@ -3395,7 +3411,7 @@
     </unit>
     <unit id="admin.settings.reasons.codeInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:180</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:182</note>
       </notes>
       <segment>
         <source>Escribe un motivo.</source>
@@ -3403,7 +3419,7 @@
     </unit>
     <unit id="admin.settings.reasons.code">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:183</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:185</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -3411,7 +3427,7 @@
     </unit>
     <unit id="admin.settings.reasons.state">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:184</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:186</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -3419,7 +3435,7 @@
     </unit>
     <unit id="admin.settings.actions">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:185</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:187</note>
         <note category="location">src/app/features/admin/settings/zone-list.ts:238</note>
       </notes>
       <segment>
@@ -3428,7 +3444,7 @@
     </unit>
     <unit id="admin.settings.reasons.deactivated">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:245</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:247</note>
       </notes>
       <segment>
         <source>Motivo &quot;<ph id="0" equiv="code" disp="reason.code"/>&quot; desactivado</source>
@@ -3436,7 +3452,7 @@
     </unit>
     <unit id="admin.settings.general.basePrepMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:57</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:56</note>
       </notes>
       <segment>
         <source>Minutos base de preparación</source>
@@ -3444,7 +3460,7 @@
     </unit>
     <unit id="admin.settings.general.queueMinutesPerOrder">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:62</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:61</note>
       </notes>
       <segment>
         <source>Minutos extra por pedido en cola</source>
@@ -3452,7 +3468,7 @@
     </unit>
     <unit id="admin.settings.general.busyModeMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:67</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:66</note>
       </notes>
       <segment>
         <source>Minutos extra en modo ocupado</source>
@@ -3460,7 +3476,7 @@
     </unit>
     <unit id="admin.settings.general.onlineCapacityLimit">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:72</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:71</note>
       </notes>
       <segment>
         <source>Límite de pedidos en línea simultáneos</source>
@@ -3468,7 +3484,7 @@
     </unit>
     <unit id="admin.settings.general.boardWarningMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:80</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:79</note>
       </notes>
       <segment>
         <source>Minutos para marcar advertencia</source>
@@ -3476,7 +3492,7 @@
     </unit>
     <unit id="admin.settings.general.boardLateMinutes">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:85</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:84</note>
       </notes>
       <segment>
         <source>Minutos para marcar atraso</source>
@@ -3484,7 +3500,7 @@
     </unit>
     <unit id="admin.settings.general.exceptionThreshold">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:92</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:91</note>
       </notes>
       <segment>
         <source>Umbral de excepciones</source>
@@ -3492,7 +3508,7 @@
     </unit>
     <unit id="admin.settings.general.title">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:131,133</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:129,131</note>
       </notes>
       <segment>
         <source>Configuración de la tienda</source>
@@ -3500,7 +3516,7 @@
     </unit>
     <unit id="admin.settings.general.regional">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:153,155</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:151,153</note>
       </notes>
       <segment>
         <source>Región</source>
@@ -3508,8 +3524,8 @@
     </unit>
     <unit id="admin.settings.general.timeZone">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:156,157</note>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:255</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:154,155</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:253</note>
       </notes>
       <segment>
         <source>Zona horaria</source>
@@ -3517,7 +3533,7 @@
     </unit>
     <unit id="admin.settings.general.currency">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:176,177</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:174,175</note>
       </notes>
       <segment>
         <source>Moneda (ISO 4217)</source>
@@ -3525,7 +3541,7 @@
     </unit>
     <unit id="admin.settings.general.preparation">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:195,196</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:193,194</note>
       </notes>
       <segment>
         <source>Preparación y pedidos en línea</source>
@@ -3533,7 +3549,7 @@
     </unit>
     <unit id="admin.settings.general.board">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:202,203</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:200,201</note>
       </notes>
       <segment>
         <source>Tablero de preparación</source>
@@ -3541,7 +3557,7 @@
     </unit>
     <unit id="admin.settings.general.boardOrderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:208,213</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:206,211</note>
       </notes>
       <segment>
         <source>El tiempo de atraso debe ser mayor que el de advertencia.</source>
@@ -3549,7 +3565,7 @@
     </unit>
     <unit id="admin.settings.general.cash">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:214,216</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:212,214</note>
       </notes>
       <segment>
         <source>Caja y excepciones</source>
@@ -3557,7 +3573,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifference">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:217,218</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:215,216</note>
       </notes>
       <segment>
         <source>Diferencia de caja permitida</source>
@@ -3565,7 +3581,7 @@
     </unit>
     <unit id="admin.settings.general.save.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:236,237</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:234,235</note>
       </notes>
       <segment>
         <source>Guardar los cambios de la configuración</source>
@@ -3573,7 +3589,7 @@
     </unit>
     <unit id="admin.settings.general.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:243,246</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:241,244</note>
       </notes>
       <segment>
         <source>Guardar cambios</source>
@@ -3581,7 +3597,7 @@
     </unit>
     <unit id="admin.settings.general.saved">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:247,252</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:245,250</note>
       </notes>
       <segment>
         <source>Cambios guardados.</source>
@@ -3589,7 +3605,7 @@
     </unit>
     <unit id="admin.settings.general.currencyInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:256</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:254</note>
       </notes>
       <segment>
         <source>Escribe un código de tres letras, como PEN.</source>
@@ -3597,7 +3613,7 @@
     </unit>
     <unit id="admin.settings.general.currencyChangeWarning">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:257</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:255</note>
       </notes>
       <segment>
         <source>Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para actualizarla.</source>
@@ -3605,7 +3621,7 @@
     </unit>
     <unit id="admin.settings.general.registerDifferenceInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:258</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:256</note>
       </notes>
       <segment>
         <source>Escribe un monto, como 5.00.</source>
@@ -3613,7 +3629,7 @@
     </unit>
     <unit id="admin.settings.general.numberInvalid">
       <notes>
-        <note category="location">src/app/features/admin/settings/settings-form.ts:319</note>
+        <note category="location">src/app/features/admin/settings/settings-form.ts:317</note>
       </notes>
       <segment>
         <source>Escribe un número entero de <ph id="0" equiv="min" disp="field.min"/> o más.</source>
@@ -3901,7 +3917,7 @@
     </unit>
     <unit id="admin.stock.adjust.title">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:83,84</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:92,93</note>
       </notes>
       <segment>
         <source>Ajustar stock</source>
@@ -3909,7 +3925,7 @@
     </unit>
     <unit id="admin.stock.adjust.failed">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:96,98</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:104,106</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los motivos.</source>
@@ -3917,7 +3933,7 @@
     </unit>
     <unit id="admin.stock.adjust.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:103,104</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:111,112</note>
       </notes>
       <segment>
         <source>Volver a cargar los motivos de ajuste</source>
@@ -3925,7 +3941,7 @@
     </unit>
     <unit id="admin.stock.adjust.retry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:108,110</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:116,118</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -3933,7 +3949,7 @@
     </unit>
     <unit id="admin.stock.adjust.loading">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:112,114</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:120,122</note>
       </notes>
       <segment>
         <source>Cargando los motivos…</source>
@@ -3941,7 +3957,7 @@
     </unit>
     <unit id="admin.stock.adjust.noReasons">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:116,119</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:124,127</note>
       </notes>
       <segment>
         <source> No hay motivos de ajuste configurados. Agrégalos en Configuración, en motivos. </source>
@@ -3949,31 +3965,16 @@
     </unit>
     <unit id="admin.stock.adjust.delta">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:121,123</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:129,130</note>
       </notes>
       <segment>
         <source>Cambio de unidades</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.delta.hint">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:130,132</note>
-      </notes>
-      <segment>
-        <source> Un número negativo descuenta unidades (por ejemplo -3) y uno positivo las suma. </source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.adjust.delta.invalid">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:134,136</note>
-      </notes>
-      <segment>
-        <source> Escribe un número entero distinto de cero. </source>
-      </segment>
-    </unit>
     <unit id="admin.stock.adjust.reason">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:139,141</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:146</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:233</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -3981,39 +3982,23 @@
     </unit>
     <unit id="admin.stock.adjust.reason.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:152,153</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:162,163</note>
       </notes>
       <segment>
         <source>Elige un motivo</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.reason.invalid">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:160,163</note>
-      </notes>
-      <segment>
-        <source>Elige un motivo.</source>
-      </segment>
-    </unit>
     <unit id="admin.stock.adjust.note">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:164,166</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:172</note>
       </notes>
       <segment>
         <source>Nota</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.noteRequired">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:177,179</note>
-      </notes>
-      <segment>
-        <source> Para el motivo «Otro» la nota es obligatoria. </source>
-      </segment>
-    </unit>
     <unit id="admin.stock.adjust.available">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:184,185</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:191,192</note>
       </notes>
       <segment>
         <source> Disponible ahora: <ph id="0" equiv="INTERPOLATION" disp="{{ shownAvailable() }}"/> </source>
@@ -4021,7 +4006,7 @@
     </unit>
     <unit id="admin.stock.adjust.effect.add">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:192,193</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:199,200</note>
       </notes>
       <segment>
         <source> <ph id="0" equiv="ICU" disp="{current.units, plural, =1 {Se sumará 1 unidad} other {Se sumarán {{ current.units }} unidades}}" subFlows="7720918593988481959"/> </source>
@@ -4029,7 +4014,7 @@
     </unit>
     <unit id="7640955395865797565">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:192,193</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:199,200</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =1 {Se sumará 1 unidad} other {Se sumarán <ph id="0" equiv="INTERPOLATION"/> unidades}}</source>
@@ -4037,7 +4022,7 @@
     </unit>
     <unit id="admin.stock.adjust.effect.remove">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:196,197</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:203,204</note>
       </notes>
       <segment>
         <source> <ph id="0" equiv="ICU" disp="{current.units, plural, =1 {Se descontará 1 unidad} other {Se descontarán {{ current.units }} unidades}}" subFlows="2076273116995906490"/> </source>
@@ -4045,47 +4030,47 @@
     </unit>
     <unit id="3193010961251299267">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:196,197</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:203,204</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =1 {Se descontará 1 unidad} other {Se descontarán <ph id="0" equiv="INTERPOLATION"/> unidades}}</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.cancel.tooltip">
+    <unit id="admin.stock.adjust.delta.hint">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:211,212</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:231</note>
       </notes>
       <segment>
-        <source>Cerrar sin ajustar el stock</source>
+        <source>Un número negativo descuenta unidades (por ejemplo -3) y uno positivo las suma.</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.cancel">
+    <unit id="admin.stock.adjust.delta.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:216,218</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:232</note>
       </notes>
       <segment>
-        <source>Cancelar</source>
+        <source>Escribe un número entero distinto de cero.</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.save.tooltip">
+    <unit id="admin.stock.adjust.reason.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:225,226</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:234</note>
       </notes>
       <segment>
-        <source>Aplicar este cambio de unidades al stock</source>
+        <source>Elige un motivo.</source>
       </segment>
     </unit>
-    <unit id="admin.stock.adjust.save">
+    <unit id="admin.stock.adjust.noteRequired">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:232,234</note>
+        <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:235</note>
       </notes>
       <segment>
-        <source>Ajustar stock</source>
+        <source>Para el motivo «Otro» la nota es obligatoria.</source>
       </segment>
     </unit>
     <unit id="admin.stock.entry.title">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:58,59</note>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:44,45</note>
       </notes>
       <segment>
         <source>Registrar entrada</source>
@@ -4093,58 +4078,26 @@
     </unit>
     <unit id="admin.stock.entry.quantity">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:71,73</note>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:55,56</note>
       </notes>
       <segment>
         <source>Unidades que entran</source>
       </segment>
     </unit>
-    <unit id="admin.stock.entry.quantity.invalid">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:81,83</note>
-      </notes>
-      <segment>
-        <source> Escribe un número entero entre 1 y 1000000. </source>
-      </segment>
-    </unit>
     <unit id="admin.stock.entry.note">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:86,88</note>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:70,71</note>
       </notes>
       <segment>
         <source>Nota (opcional)</source>
       </segment>
     </unit>
-    <unit id="admin.stock.entry.cancel.tooltip">
+    <unit id="admin.stock.entry.quantity.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:106,107</note>
+        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:102</note>
       </notes>
       <segment>
-        <source>Cerrar sin registrar la entrada</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.entry.cancel">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:111,113</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.entry.save.tooltip">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:119,120</note>
-      </notes>
-      <segment>
-        <source>Sumar estas unidades al stock del producto</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.entry.save">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-entry-dialog.ts:126,128</note>
-      </notes>
-      <segment>
-        <source>Registrar entrada</source>
+        <source>Escribe un número entero entre 1 y 1000000.</source>
       </segment>
     </unit>
     <unit id="admin.stock.movement.entry">
@@ -4221,7 +4174,7 @@
     </unit>
     <unit id="admin.stock.title">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:55,57</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:59,61</note>
       </notes>
       <segment>
         <source>Inventario</source>
@@ -4229,7 +4182,7 @@
     </unit>
     <unit id="admin.stock.lowOnly">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:65,67</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:69,71</note>
       </notes>
       <segment>
         <source>Solo stock bajo</source>
@@ -4237,7 +4190,7 @@
     </unit>
     <unit id="admin.stock.track.new.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:72,73</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:76,77</note>
       </notes>
       <segment>
         <source>Empezar a controlar el stock de un producto</source>
@@ -4245,7 +4198,7 @@
     </unit>
     <unit id="admin.stock.track.new">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:77,79</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:81,83</note>
       </notes>
       <segment>
         <source>Controlar un producto</source>
@@ -4253,7 +4206,7 @@
     </unit>
     <unit id="admin.stock.catalogFailed">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:83,85</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:87,89</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los nombres de los productos.</source>
@@ -4261,7 +4214,7 @@
     </unit>
     <unit id="admin.stock.catalogRetry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:90,91</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:94,95</note>
       </notes>
       <segment>
         <source>Volver a cargar los nombres de los productos</source>
@@ -4269,7 +4222,7 @@
     </unit>
     <unit id="admin.stock.catalogRetry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:95,97</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:99,101</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4277,7 +4230,7 @@
     </unit>
     <unit id="admin.stock.loading">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:102,104</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:106,108</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -4285,7 +4238,7 @@
     </unit>
     <unit id="admin.stock.error">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:106,108</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:110,112</note>
       </notes>
       <segment>
         <source>No se pudo cargar el inventario.</source>
@@ -4293,7 +4246,7 @@
     </unit>
     <unit id="admin.stock.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:113,114</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:117,118</note>
       </notes>
       <segment>
         <source>Volver a cargar el inventario</source>
@@ -4301,7 +4254,7 @@
     </unit>
     <unit id="admin.stock.retry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:118,120</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:122,124</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4309,7 +4262,7 @@
     </unit>
     <unit id="admin.stock.emptyLow">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:126,127</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:130,131</note>
       </notes>
       <segment>
         <source>Ningún producto tiene el stock bajo.</source>
@@ -4317,7 +4270,7 @@
     </unit>
     <unit id="admin.stock.empty">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:129,130</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:133,134</note>
       </notes>
       <segment>
         <source> Todavía no hay productos con control de stock. </source>
@@ -4325,95 +4278,15 @@
     </unit>
     <unit id="admin.stock.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:134</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:139,140</note>
       </notes>
       <segment>
         <source>Inventario de productos</source>
       </segment>
     </unit>
-    <unit id="admin.stock.col.product">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:138,139</note>
-      </notes>
-      <segment>
-        <source>Producto</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.available">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:139,140</note>
-      </notes>
-      <segment>
-        <source>Disponible</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.onHand">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:140,141</note>
-      </notes>
-      <segment>
-        <source>En existencia</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.reserved">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:141,142</note>
-      </notes>
-      <segment>
-        <source>Reservado</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.threshold">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:142,143</note>
-      </notes>
-      <segment>
-        <source>Umbral de stock bajo</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.state">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:143,144</note>
-      </notes>
-      <segment>
-        <source>Estado</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.tracked">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:144,145</note>
-      </notes>
-      <segment>
-        <source>Controlado</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.col.actions">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:145,147</note>
-      </notes>
-      <segment>
-        <source>Acciones</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.low">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:160,161</note>
-      </notes>
-      <segment>
-        <source>Stock bajo</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.normal">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:163,164</note>
-      </notes>
-      <segment>
-        <source>Normal</source>
-      </segment>
-    </unit>
     <unit id="admin.stock.entry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:183,184</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:174,175</note>
       </notes>
       <segment>
         <source>Registrar unidades que entraron de un proveedor</source>
@@ -4421,7 +4294,7 @@
     </unit>
     <unit id="admin.stock.entry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:188,189</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:179,180</note>
       </notes>
       <segment>
         <source>Entrada</source>
@@ -4429,7 +4302,7 @@
     </unit>
     <unit id="admin.stock.adjust.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:197,198</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:188,189</note>
       </notes>
       <segment>
         <source>Corregir las unidades de este producto con un motivo</source>
@@ -4437,7 +4310,7 @@
     </unit>
     <unit id="admin.stock.adjust">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:202,203</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:193,194</note>
       </notes>
       <segment>
         <source>Ajustar</source>
@@ -4445,7 +4318,7 @@
     </unit>
     <unit id="admin.stock.movements.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:212,213</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:203,204</note>
       </notes>
       <segment>
         <source>Ver los movimientos de este producto</source>
@@ -4453,7 +4326,7 @@
     </unit>
     <unit id="admin.stock.movements">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:217,218</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:208,209</note>
       </notes>
       <segment>
         <source>Movimientos</source>
@@ -4461,7 +4334,7 @@
     </unit>
     <unit id="admin.stock.threshold.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:227,228</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:218,219</note>
       </notes>
       <segment>
         <source>Cambiar el umbral de stock bajo de este producto</source>
@@ -4469,18 +4342,106 @@
     </unit>
     <unit id="admin.stock.threshold">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:232,233</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:223,224</note>
       </notes>
       <segment>
         <source>Umbral</source>
       </segment>
     </unit>
+    <unit id="admin.stock.low">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:282</note>
+      </notes>
+      <segment>
+        <source>Stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.normal">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:283</note>
+      </notes>
+      <segment>
+        <source>Normal</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.product">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:286</note>
+      </notes>
+      <segment>
+        <source>Producto</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.available">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:287</note>
+      </notes>
+      <segment>
+        <source>Disponible</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.onHand">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:288</note>
+      </notes>
+      <segment>
+        <source>En existencia</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.reserved">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:289</note>
+      </notes>
+      <segment>
+        <source>Reservado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.threshold">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:292</note>
+      </notes>
+      <segment>
+        <source>Umbral de stock bajo</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.state">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:296</note>
+      </notes>
+      <segment>
+        <source>Estado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.tracked">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:297</note>
+      </notes>
+      <segment>
+        <source>Controlado</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.col.actions">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:298</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
     <unit id="admin.stock.tracked.aria">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-list.ts:349</note>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:366</note>
       </notes>
       <segment>
         <source>Controlado: <ph id="0" equiv="name" disp="name"/></source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.untracked">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-list.ts:446</note>
+      </notes>
+      <segment>
+        <source>Se dejó de controlar el stock de <ph id="0" equiv="name" disp="this.nameOf(id)"/></source>
       </segment>
     </unit>
     <unit id="admin.stock.movements.title">
@@ -4629,7 +4590,7 @@
     </unit>
     <unit id="admin.stock.track.help">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:68,71</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:83,86</note>
       </notes>
       <segment>
         <source> Al controlar un producto sin unidades disponibles, deja de estar disponible en el menú. Marcarlo como agotado a mano sigue siendo independiente. </source>
@@ -4637,7 +4598,7 @@
     </unit>
     <unit id="admin.stock.track.product">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:74,75</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:89,90</note>
       </notes>
       <segment>
         <source>Producto</source>
@@ -4645,7 +4606,7 @@
     </unit>
     <unit id="admin.stock.track.failed">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:79,81</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:94,96</note>
       </notes>
       <segment>
         <source>No se pudo cargar la lista de productos con stock.</source>
@@ -4653,7 +4614,7 @@
     </unit>
     <unit id="admin.stock.track.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:86,87</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:101,102</note>
       </notes>
       <segment>
         <source>Volver a cargar los productos con stock</source>
@@ -4661,7 +4622,7 @@
     </unit>
     <unit id="admin.stock.track.retry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:91,93</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:106,108</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4669,7 +4630,7 @@
     </unit>
     <unit id="admin.stock.track.catalogFailed">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:96,98</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:111,113</note>
       </notes>
       <segment>
         <source>No se pudo cargar el catálogo de productos.</source>
@@ -4677,7 +4638,7 @@
     </unit>
     <unit id="admin.stock.track.catalogRetry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:103,104</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:118,119</note>
       </notes>
       <segment>
         <source>Volver a cargar el catálogo de productos</source>
@@ -4685,7 +4646,7 @@
     </unit>
     <unit id="admin.stock.track.catalogRetry">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:108,110</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:123,125</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -4693,7 +4654,7 @@
     </unit>
     <unit id="admin.stock.track.catalogLoading">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:113,115</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:128,130</note>
       </notes>
       <segment>
         <source> Cargando el catálogo… </source>
@@ -4701,7 +4662,7 @@
     </unit>
     <unit id="admin.stock.track.emptyCatalog">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:117,119</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:132,134</note>
       </notes>
       <segment>
         <source> El catálogo todavía no tiene productos. </source>
@@ -4709,7 +4670,7 @@
     </unit>
     <unit id="admin.stock.track.none">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:121,123</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:136,138</note>
       </notes>
       <segment>
         <source> Todos los productos del catálogo ya tienen control de stock. </source>
@@ -4717,7 +4678,8 @@
     </unit>
     <unit id="admin.stock.track.productLabel">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:126,128</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:140,141</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:203</note>
       </notes>
       <segment>
         <source>Producto</source>
@@ -4725,95 +4687,47 @@
     </unit>
     <unit id="admin.stock.track.product.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:140,141</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:157,158</note>
       </notes>
       <segment>
         <source>Elige un producto</source>
       </segment>
     </unit>
-    <unit id="admin.stock.track.product.invalid">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:149,152</note>
-      </notes>
-      <segment>
-        <source>Elige un producto.</source>
-      </segment>
-    </unit>
     <unit id="admin.stock.track.threshold">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:154,156</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:168,169</note>
       </notes>
       <segment>
         <source>Avisar cuando queden</source>
       </segment>
     </unit>
-    <unit id="admin.stock.track.threshold.hint">
+    <unit id="admin.stock.track.product.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:163,165</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:204</note>
       </notes>
       <segment>
-        <source> Unidades disponibles o menos; con 0 solo avisa cuando se agota. </source>
+        <source>Elige un producto.</source>
+      </segment>
+    </unit>
+    <unit id="admin.stock.track.threshold.hint">
+      <notes>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:205</note>
+      </notes>
+      <segment>
+        <source>Unidades disponibles o menos; con 0 solo avisa cuando se agota.</source>
       </segment>
     </unit>
     <unit id="admin.stock.track.threshold.invalid">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:167,169</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:206</note>
       </notes>
       <segment>
-        <source> Escribe un número entero entre 0 y 1000000. </source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:180,181</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin guardar</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.cancel">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:185,187</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.create.tooltip">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:221</note>
-      </notes>
-      <segment>
-        <source>Empezar a controlar el stock de este producto</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.edit.tooltip">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:222</note>
-      </notes>
-      <segment>
-        <source>Guardar el nuevo umbral de stock bajo</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.create">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:225</note>
-      </notes>
-      <segment>
-        <source>Controlar stock</source>
-      </segment>
-    </unit>
-    <unit id="admin.stock.track.edit">
-      <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:226</note>
-      </notes>
-      <segment>
-        <source>Guardar umbral</source>
+        <source>Escribe un número entero entre 0 y 1000000.</source>
       </segment>
     </unit>
     <unit id="admin.stock.track.title.edit">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:251</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:231</note>
       </notes>
       <segment>
         <source>Umbral de stock bajo</source>
@@ -4821,7 +4735,7 @@
     </unit>
     <unit id="admin.stock.track.title.create">
       <notes>
-        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:252</note>
+        <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:232</note>
       </notes>
       <segment>
         <source>Controlar un producto</source>
@@ -4859,9 +4773,17 @@
         <source>Listado de mesas</source>
       </segment>
     </unit>
+    <unit id="admin.tables.empty">
+      <notes>
+        <note category="location">src/app/features/admin/tables/table-list.ts:72,73</note>
+      </notes>
+      <segment>
+        <source>Todavía no hay mesas.</source>
+      </segment>
+    </unit>
     <unit id="admin.tables.edit.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:95,96</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:97,98</note>
       </notes>
       <segment>
         <source>Editar los datos de esta mesa</source>
@@ -4869,7 +4791,7 @@
     </unit>
     <unit id="admin.tables.edit">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:100,102</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:102,104</note>
       </notes>
       <segment>
         <source>Editar</source>
@@ -4877,7 +4799,7 @@
     </unit>
     <unit id="admin.tables.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:116,117</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:118,119</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -4885,7 +4807,7 @@
     </unit>
     <unit id="admin.tables.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:119,121</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:121,123</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -4893,7 +4815,7 @@
     </unit>
     <unit id="admin.tables.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:136,137</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:138,139</note>
       </notes>
       <segment>
         <source>Nombre de la mesa</source>
@@ -4901,7 +4823,7 @@
     </unit>
     <unit id="admin.tables.areaLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:151,152</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:153,154</note>
       </notes>
       <segment>
         <source>Zona (opcional)</source>
@@ -4909,7 +4831,7 @@
     </unit>
     <unit id="admin.tables.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:166,167</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:168,169</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -4917,7 +4839,7 @@
     </unit>
     <unit id="admin.tables.deactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:192</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:194</note>
       </notes>
       <segment>
         <source>Ocultar esta mesa sin borrarla</source>
@@ -4925,7 +4847,7 @@
     </unit>
     <unit id="admin.tables.reactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:193</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:195</note>
       </notes>
       <segment>
         <source>Volver a activar esta mesa</source>
@@ -4933,7 +4855,7 @@
     </unit>
     <unit id="admin.tables.active">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:196</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:198</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -4941,7 +4863,7 @@
     </unit>
     <unit id="admin.tables.inactive">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:197</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:199</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -4949,7 +4871,7 @@
     </unit>
     <unit id="admin.tables.createHeader">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:198</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:200</note>
       </notes>
       <segment>
         <source>Agregar mesa</source>
@@ -4957,7 +4879,7 @@
     </unit>
     <unit id="admin.tables.editHeader">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:199</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:201</note>
       </notes>
       <segment>
         <source>Editar mesa</source>
@@ -4965,7 +4887,7 @@
     </unit>
     <unit id="admin.tables.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:200</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:202</note>
       </notes>
       <segment>
         <source>Escribe un nombre de hasta 60 caracteres.</source>
@@ -4973,7 +4895,7 @@
     </unit>
     <unit id="admin.tables.areaInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:201</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:203</note>
       </notes>
       <segment>
         <source>La zona admite hasta 60 caracteres.</source>
@@ -4981,7 +4903,7 @@
     </unit>
     <unit id="admin.tables.orderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:202</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:204</note>
       </notes>
       <segment>
         <source>Escribe un número entero.</source>
@@ -4989,7 +4911,7 @@
     </unit>
     <unit id="admin.tables.name">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:205</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:207</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -4997,7 +4919,7 @@
     </unit>
     <unit id="admin.tables.area">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:206</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:208</note>
       </notes>
       <segment>
         <source>Zona</source>
@@ -5005,7 +4927,7 @@
     </unit>
     <unit id="admin.tables.order">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:207</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:209</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -5013,7 +4935,7 @@
     </unit>
     <unit id="admin.tables.state">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:208</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:210</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -5021,7 +4943,7 @@
     </unit>
     <unit id="admin.tables.actions">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:209</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:211</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -5029,7 +4951,7 @@
     </unit>
     <unit id="admin.tables.deactivated">
       <notes>
-        <note category="location">src/app/features/admin/tables/table-list.ts:279</note>
+        <note category="location">src/app/features/admin/tables/table-list.ts:281</note>
       </notes>
       <segment>
         <source>Mesa &quot;<ph id="0" equiv="name" disp="table.name"/>&quot; desactivada</source>
@@ -9010,7 +8932,7 @@
     </unit>
     <unit id="shared.dataTable.empty">
       <notes>
-        <note category="location">src/app/shared/ui/data-table/data-table.ts:115,117</note>
+        <note category="location">src/app/shared/ui/data-table/data-table.ts:145</note>
       </notes>
       <segment>
         <source>No hay resultados.</source>

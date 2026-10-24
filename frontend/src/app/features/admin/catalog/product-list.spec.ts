@@ -103,7 +103,7 @@ describe('ProductList', () => {
   it('says so when there are no products', async () => {
     const { host } = await render(page([]));
 
-    expect(host.textContent).toContain('No hay resultados');
+    expect(host.textContent).toContain('Todavía no hay productos');
   });
 
   it('shows the product image with its name as the alternative text', async () => {

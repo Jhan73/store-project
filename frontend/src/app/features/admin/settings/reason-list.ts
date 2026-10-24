@@ -96,6 +96,8 @@ const TYPES: readonly TypeOption[] = [
     <app-data-table
       label="Listado de motivos"
       i18n-label="@@admin.settings.reasons.tableScroll"
+      emptyText="Todavía no hay motivos en esta lista."
+      i18n-emptyText="@@admin.settings.reasons.empty"
       [value]="rowsView()"
       [columns]="columns"
     >

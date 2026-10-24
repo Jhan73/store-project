@@ -31,6 +31,7 @@ const COLUMNS: DataColumn[] = [
       [lazy]="lazy()"
       [totalRecords]="total()"
       [searchDelay]="0"
+      [emptyText]="emptyText()"
       (lazyLoad)="events.push($event)"
     >
       <ng-template #row let-item>
@@ -45,6 +46,7 @@ class Host {
   readonly rows = signal<Row[]>(ROWS);
   readonly pageSize = signal(10);
   readonly lazy = signal(false);
+  readonly emptyText = signal<string | null>(null);
   readonly total = signal(0);
   readonly columns = COLUMNS;
   readonly events: DataTableLazyEvent[] = [];
@@ -125,6 +127,23 @@ describe('DataTable', () => {
     expect(names()).toEqual(['Piña', 'Papaya']);
 
     fixture.componentInstance.rows.set([]);
+    await fixture.whenStable();
+    expect(root.querySelector('tbody')?.textContent).toContain('No hay resultados');
+  });
+
+  it('says its own text when there are no records at all, and "no results" when a search finds none', async () => {
+    const { fixture, root } = await render((host) => host.emptyText.set('Todavía no hay mesas.'));
+
+    fixture.componentInstance.rows.set([]);
+    await fixture.whenStable();
+    expect(root.querySelector('tbody')?.textContent).toContain('Todavía no hay mesas.');
+
+    fixture.componentInstance.rows.set(ROWS);
+    await fixture.whenStable();
+    const search = root.querySelector<HTMLInputElement>('[data-testid="dt-search"]')!;
+    search.value = 'zzz';
+    search.dispatchEvent(new Event('input'));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     await fixture.whenStable();
     expect(root.querySelector('tbody')?.textContent).toContain('No hay resultados');
   });

@@ -7,6 +7,7 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Product, StockItem } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { primeTranslation } from '../../../core/theme/prime-translation';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { chooseOption, typeNumber } from '../../../testing/primeng-controls';
 import { By } from '@angular/platform-browser';
 import { StockAdjustmentDialog } from './stock-adjustment-dialog';
@@ -69,6 +70,11 @@ async function render(items: StockItem[] = [], products: Product[] = [papaya, ma
 
 function rows(host: HTMLElement) {
   return Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
+}
+
+// Untracking waits out the undo window; flushing sends it now.
+function sendPending(fixture: { componentInstance: StockList }) {
+  (fixture.componentInstance as unknown as { changes: { flush(): void } }).changes.flush();
 }
 
 const click = (host: HTMLElement, testId: string) =>
@@ -195,7 +201,7 @@ describe('StockList', () => {
       await chooseOption(fixture, dialog()!, 'stock-track-product', 'Mango');
       typeNumber(dialog()!, 'stock-threshold', '4');
       await fixture.whenStable();
-      dialog()!.querySelector<HTMLButtonElement>('[data-testid="track-save"]')!.click();
+      dialog()!.querySelector<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       http.expectOne(`${STOCK}/${MANGO}`).flush(stock(MANGO, 0, { lowStockThreshold: 4 }));
       await fixture.whenStable();
       http.expectOne(STOCK).flush([stock(PAPAYA, 40), stock(MANGO, 0, { lowStockThreshold: 4 })]);
@@ -213,7 +219,7 @@ describe('StockList', () => {
       expect(dialog()!.textContent).toContain('Papaya');
       typeNumber(dialog()!, 'stock-threshold', '30');
       await fixture.whenStable();
-      dialog()!.querySelector<HTMLButtonElement>('[data-testid="track-save"]')!.click();
+      dialog()!.querySelector<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       const request = http.expectOne(`${STOCK}/${PAPAYA}`);
       expect(request.request.body).toEqual({ tracked: true, lowStockThreshold: 30 });
       request.flush(stock(PAPAYA, 40, { lowStockThreshold: 30, low: false }));
@@ -239,6 +245,7 @@ describe('StockList', () => {
       trackedSwitch(host, PAPAYA).click();
       await fixture.whenStable();
       expect(trackedSwitch(host, PAPAYA).disabled).toBe(true);
+      sendPending(fixture);
       const request = http.expectOne(`${STOCK}/${PAPAYA}`);
       expect(request.request.method).toBe('PUT');
       expect(request.request.body).toEqual({ tracked: false, lowStockThreshold: 7 });
@@ -249,11 +256,26 @@ describe('StockList', () => {
       expect(rows(host)[0]).toContain('Mango');
     });
 
+    it('shows the switch off at once, and undoing keeps the item tracked without sending anything', async () => {
+      const { fixture, host } = await render([stock(PAPAYA, 40)]);
+      const notice = TestBed.inject(UndoNotice);
+
+      trackedSwitch(host, PAPAYA).click();
+      await fixture.whenStable();
+      expect(notice.active()).toHaveLength(1);
+      notice.undo(notice.active()[0]);
+      await fixture.whenStable();
+
+      expect(trackedSwitch(host, PAPAYA).checked).toBe(true);
+      expect(trackedSwitch(host, PAPAYA).disabled).toBe(false);
+    });
+
     it('puts the switch back and tells the user when units are still reserved', async () => {
       const { fixture, host, http, toast } = await render([stock(PAPAYA, 40, { reserved: 2 })]);
 
       trackedSwitch(host, PAPAYA).click();
       await fixture.whenStable();
+      sendPending(fixture);
       http.expectOne(`${STOCK}/${PAPAYA}`).flush(
         { type: 'about:blank', status: 409, code: 'inventory.stock-reserved', correlationId: 'c' },
         { status: 409, statusText: 'Conflict' },
@@ -276,7 +298,7 @@ describe('StockList', () => {
     expect(dialog.textContent).toContain('Papaya');
     typeNumber(dialog, 'entry-quantity', '20');
     await fixture.whenStable();
-    dialog.querySelector<HTMLButtonElement>('[data-testid="entry-save"]')!.click();
+    dialog.querySelector<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
     const request = http.expectOne(`${STOCK}/${PAPAYA}/entries`);
     expect(request.request.body).toEqual({ quantity: 20, note: null });
     request.flush(stock(PAPAYA, 23));
@@ -307,7 +329,7 @@ describe('StockList', () => {
     it('adjusts an item from its row and shows the new quantities', async () => {
       const { fixture, host, http } = await openAdjustment([stock(PAPAYA, 6)]);
 
-      dialog().querySelector<HTMLButtonElement>('[data-testid="adjust-save"]')!.click();
+      dialog().querySelector<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       const request = http.expectOne(`${STOCK}/${PAPAYA}/adjustments`);
       expect(request.request.body).toEqual({ quantityDelta: -2, reason: 'Damaged', note: null });
       request.flush(stock(PAPAYA, 4));
@@ -336,7 +358,7 @@ describe('StockList', () => {
     it('re-reads the stock and keeps the dialog open when there is not enough', async () => {
       const { fixture, host, http } = await openAdjustment([stock(PAPAYA, 6)]);
 
-      dialog().querySelector<HTMLButtonElement>('[data-testid="adjust-save"]')!.click();
+      dialog().querySelector<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       http.expectOne(`${STOCK}/${PAPAYA}/adjustments`).flush(
         {
           type: 'about:blank',
@@ -385,6 +407,7 @@ describe('StockList', () => {
       .querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="tracked-${PAPAYA}"] input`)!
       .click();
     await fixture.whenStable();
+    sendPending(fixture);
     http
       .expectOne(`${STOCK}/${PAPAYA}`)
       .flush(stock(PAPAYA, 3, { tracked: false }));

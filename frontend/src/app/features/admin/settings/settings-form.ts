@@ -23,7 +23,6 @@ import {
 import { ButtonDirective } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { Checkbox } from 'primeng/checkbox';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
@@ -115,7 +114,6 @@ function timeZoneOptions(current: string): string[] {
   imports: [
     ReactiveFormsModule,
     ButtonDirective,
-    Checkbox,
     InputNumber,
     InputText,
     Select,

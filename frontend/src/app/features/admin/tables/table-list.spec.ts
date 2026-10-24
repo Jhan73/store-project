@@ -207,7 +207,7 @@ describe('TableList', () => {
     await fixture.whenStable();
 
     expect(value('#table-name')).toBe('Mesa 1');
-    expect(rows(host)).toEqual(['No hay resultados.']);
+    expect(rows(host)).toEqual(['Todavía no hay mesas.']);
   });
 
   it('shows a deactivated table as inactive at once and sends it with its version after the undo window', async () => {

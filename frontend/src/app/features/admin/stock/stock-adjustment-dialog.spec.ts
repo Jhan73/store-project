@@ -99,7 +99,7 @@ describe('StockAdjustmentDialog', () => {
     area.dispatchEvent(new Event('input'));
   }
 
-  const save = () => inDialog<HTMLButtonElement>('adjust-save').click();
+  const save = () => inDialog<HTMLButtonElement>('fd-save').click();
 
   const problem = (status: number, code: string, extra: Record<string, unknown> = {}) =>
     [
@@ -220,7 +220,8 @@ describe('StockAdjustmentDialog', () => {
     save();
     await fixture.whenStable();
     http.expectNone(ADJUST);
-    expect(inDialog('adjust-note-required')).not.toBeNull();
+    const noteField = inDialog('adjust-note').closest('app-form-field')!;
+    expect(noteField.querySelector('.message.error')?.textContent).toContain('la nota es obligatoria');
 
     note('Se cayó la caja');
     await fixture.whenStable();
@@ -319,7 +320,7 @@ describe('StockAdjustmentDialog', () => {
     save();
     await fixture.whenStable();
 
-    expect(inDialog<HTMLButtonElement>('adjust-cancel').disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-cancel').disabled).toBe(true);
     expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
     http.expectOne(ADJUST).flush(item);
   });
@@ -327,7 +328,7 @@ describe('StockAdjustmentDialog', () => {
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('adjust-cancel').click();
+    inDialog<HTMLButtonElement>('fd-cancel').click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.visible()).toBe(false);
