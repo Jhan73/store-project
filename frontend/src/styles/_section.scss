@@ -83,6 +83,12 @@
     min-width: 0;
   }
 
+  .dialog-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
   .check {
     display: inline-flex;
     align-items: center;

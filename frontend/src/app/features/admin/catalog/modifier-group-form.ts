@@ -34,6 +34,8 @@ import type {
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
 import { amountValidator } from '../../../shared/forms/amount-validator';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { AllergenPicker } from './allergen-picker';
 import { CatalogApi } from './catalog-api';
 import { isStale, reportFailure } from '../admin-errors';
@@ -69,6 +71,8 @@ type OptionForm = ReturnType<typeof optionForm>;
     InputText,
     ToggleSwitch,
     AllergenPicker,
+    FormField,
+    MoneyInput,
     TablerIconComponent,
     Tooltip,
   ],
@@ -98,20 +102,23 @@ type OptionForm = ReturnType<typeof optionForm>;
 
     @if (ready()) {
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <div class="field wide">
-          <label for="group-name" i18n="@@admin.catalog.groupForm.name">Nombre del grupo</label>
+        <app-form-field
+          class="field wide"
+          label="Nombre del grupo"
+          i18n-label="@@admin.catalog.groupForm.name"
+          controlId="group-name"
+          [error]="invalid(form.controls.name) ? labels.nameInvalid : null"
+        >
           <input
             pInputText
             id="group-name"
             formControlName="name"
             autocomplete="off"
+            maxlength="120"
             [attr.aria-invalid]="invalid(form.controls.name) ? 'true' : null"
             fluid
           />
-          @if (invalid(form.controls.name)) {
-            <small class="error" i18n="@@admin.catalog.groupForm.nameInvalid">Escribe un nombre válido.</small>
-          }
-        </div>
+        </app-form-field>
 
         <div class="field">
           <span class="check">
@@ -119,22 +126,32 @@ type OptionForm = ReturnType<typeof optionForm>;
             <label for="group-required" i18n="@@admin.catalog.groupForm.required">Elección obligatoria</label>
           </span>
         </div>
-        <div class="field">
-          <label for="group-min" i18n="@@admin.catalog.groupForm.min">Mínimo de opciones</label>
+        <app-form-field
+          class="field"
+          label="Mínimo de opciones"
+          i18n-label="@@admin.catalog.groupForm.min"
+          controlId="group-min"
+        >
           <p-inputnumber
             inputId="group-min"
             formControlName="minChoices"
             [useGrouping]="false"
+            fluid
           />
-        </div>
-        <div class="field">
-          <label for="group-max" i18n="@@admin.catalog.groupForm.max">Máximo de opciones</label>
+        </app-form-field>
+        <app-form-field
+          class="field"
+          label="Máximo de opciones"
+          i18n-label="@@admin.catalog.groupForm.max"
+          controlId="group-max"
+        >
           <p-inputnumber
             inputId="group-max"
             formControlName="maxChoices"
             [useGrouping]="false"
+            fluid
           />
-        </div>
+        </app-form-field>
 
         @if (attempted() && violations().length > 0) {
           <ul class="error" role="alert" data-testid="violations">
@@ -179,31 +196,35 @@ type OptionForm = ReturnType<typeof optionForm>;
           @for (option of options.controls; track option; let i = $index) {
             <fieldset [formGroupName]="i" [attr.data-testid]="'option-' + i">
               <legend i18n="@@admin.catalog.groupForm.optionLegend">Opción {{ i + 1 }}</legend>
-              <div class="field wide">
-                <label [for]="'option-' + i + '-name'" i18n="@@admin.catalog.groupForm.optionName">Nombre de la opción</label>
+              <app-form-field
+                class="field wide"
+                label="Nombre de la opción"
+                i18n-label="@@admin.catalog.groupForm.optionName"
+                [controlId]="'option-' + i + '-name'"
+              >
                 <input
                   pInputText
                   [id]="'option-' + i + '-name'"
                   formControlName="name"
                   autocomplete="off"
+                  maxlength="120"
                   [attr.aria-invalid]="invalid(option.controls.name) ? 'true' : null"
                   fluid
                 />
-              </div>
-              <div class="field">
-                <label [for]="'option-' + i + '-price'" i18n="@@admin.catalog.groupForm.optionPrice">Precio adicional ({{ currency() }})</label>
-                <input
-                  pInputText
-                  [id]="'option-' + i + '-price'"
+              </app-form-field>
+              <app-form-field
+                class="field"
+                label="Precio adicional"
+                i18n-label="@@admin.catalog.groupForm.optionPrice"
+                [controlId]="'option-' + i + '-price'"
+                [error]="invalid(option.controls.price) ? labels.optionPriceInvalid : null"
+              >
+                <app-money-input
+                  [inputId]="'option-' + i + '-price'"
                   formControlName="price"
-                  [attr.inputmode]="'decimal'"
-                  autocomplete="off"
-                  [attr.aria-invalid]="invalid(option.controls.price) ? 'true' : null"
+                  [currency]="currency()"
                 />
-                @if (invalid(option.controls.price)) {
-                  <small class="error" i18n="@@admin.catalog.groupForm.optionPriceInvalid">Escribe un monto como 1.50.</small>
-                }
-              </div>
+              </app-form-field>
               @if (option.controls.id.value) {
                 <span class="check">
                   <p-toggleswitch
@@ -281,6 +302,10 @@ export class ModifierGroupForm {
     remove: IconTrash,
     add: IconPlus,
     save: IconDeviceFloppy,
+  };
+  protected readonly labels = {
+    nameInvalid: $localize`:@@admin.catalog.groupForm.nameInvalid:Escribe un nombre válido.`,
+    optionPriceInvalid: $localize`:@@admin.catalog.groupForm.optionPriceInvalid:Escribe un monto como 1.50.`,
   };
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);

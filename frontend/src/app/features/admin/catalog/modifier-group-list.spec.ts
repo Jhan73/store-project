@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { ModifierGroup } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { CatalogApi } from './catalog-api';
 import { ModifierGroupList } from './modifier-group-list';
 
@@ -37,6 +38,8 @@ const extras: ModifierGroup = {
   options: [option('o3')],
 };
 
+const ask = vi.fn(() => Promise.resolve(true));
+
 async function render(groups: ModifierGroup[] = [size, extras]) {
   TestBed.configureTestingModule({
     providers: [
@@ -45,6 +48,7 @@ async function render(groups: ModifierGroup[] = [size, extras]) {
       provideHttpClientTesting(),
       MessageService,
       CatalogApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -67,6 +71,7 @@ const click = (host: HTMLElement, testId: string) =>
   host.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`)!.click();
 
 describe('ModifierGroupList', () => {
+  beforeEach(() => ask.mockReset().mockResolvedValue(true));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('lists the groups with their rule and option count, and links to create and edit', async () => {
@@ -84,16 +89,14 @@ describe('ModifierGroupList', () => {
     expect(host.querySelector('a[href="/admin/catalog/modifier-groups/g1"]')).not.toBeNull();
   });
 
-  it('asks for confirmation before deleting, and deleting nothing when it is cancelled', async () => {
+  it('asks for confirmation before deleting, and deletes nothing when it is declined', async () => {
+    ask.mockResolvedValue(false);
     const { fixture, host } = await render();
 
     click(host, 'delete-g1');
     await fixture.whenStable();
-    expect(host.querySelector('[data-testid="confirm-delete-g1"]')).not.toBeNull();
 
-    click(host, 'cancel-delete-g1');
-    await fixture.whenStable();
-    expect(host.querySelector('[data-testid="confirm-delete-g1"]')).toBeNull();
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Size') }));
     expect(rows(host)).toHaveLength(2);
   });
 
@@ -102,7 +105,6 @@ describe('ModifierGroupList', () => {
 
     click(host, 'delete-g1');
     await fixture.whenStable();
-    click(host, 'confirm-delete-g1');
     const request = http.expectOne(`${GROUPS}/g1`);
     expect(request.request.method).toBe('DELETE');
     expect(request.request.headers.get('If-Match')).toBe('"7"');
@@ -119,7 +121,6 @@ describe('ModifierGroupList', () => {
 
     click(host, 'delete-g1');
     await fixture.whenStable();
-    click(host, 'confirm-delete-g1');
     http.expectOne(`${GROUPS}/g1`).flush(
       { type: 'about:blank', status: 409, code: 'catalog.modifier-group-in-use', correlationId: 'c' },
       { status: 409, statusText: 'Conflict' },

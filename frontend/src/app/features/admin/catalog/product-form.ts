@@ -45,6 +45,8 @@ import type {
 } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { AllergenPicker } from './allergen-picker';
 import { CatalogApi } from './catalog-api';
 import { isStale, reportFailure } from '../admin-errors';
@@ -70,6 +72,8 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
     Select,
     Textarea,
     AllergenPicker,
+    FormField,
+    MoneyInput,
     TablerIconComponent,
     Tooltip,
   ],
@@ -99,42 +103,50 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
 
     @if (ready()) {
       <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-        <div class="field wide">
-          <label for="product-name" i18n="@@admin.catalog.productForm.name">Nombre</label>
+        <app-form-field
+          class="field wide"
+          label="Nombre"
+          i18n-label="@@admin.catalog.productForm.name"
+          controlId="product-name"
+          [error]="invalid(form.controls.name) ? labels.nameInvalid : null"
+        >
           <input
             pInputText
             id="product-name"
             formControlName="name"
             autocomplete="off"
+            maxlength="120"
             [attr.aria-invalid]="invalid(form.controls.name) ? 'true' : null"
             fluid
           />
-          @if (invalid(form.controls.name)) {
-            <small class="error" i18n="@@admin.catalog.productForm.nameInvalid">Escribe un nombre válido.</small>
-          }
-        </div>
+        </app-form-field>
 
-        <div class="field wide">
-          <label for="product-description" i18n="@@admin.catalog.productForm.description">Descripción (opcional)</label>
+        <app-form-field
+          class="field wide"
+          label="Descripción (opcional)"
+          i18n-label="@@admin.catalog.productForm.description"
+          controlId="product-description"
+        >
           <textarea
             pTextarea
             id="product-description"
             formControlName="description"
             rows="2"
+            maxlength="500"
             fluid
           ></textarea>
-        </div>
+        </app-form-field>
 
-        <div class="field">
-          <label
-            for="product-category"
-            id="product-category-label"
-            i18n="@@admin.catalog.productForm.category"
-            >Categoría</label
-          >
+        <app-form-field
+          class="field"
+          label="Categoría"
+          i18n-label="@@admin.catalog.productForm.category"
+          controlId="product-category"
+          [error]="invalid(form.controls.categoryId) ? labels.categoryInvalid : null"
+        >
           <p-select
             inputId="product-category"
-            [ariaLabelledBy]="'product-category-label'"
+            [ariaLabel]="labels.category"
             formControlName="categoryId"
             placeholder="Elige una categoría"
             i18n-placeholder="@@admin.catalog.productForm.categoryPlaceholder"
@@ -148,35 +160,33 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
             [invalid]="invalid(form.controls.categoryId)"
             [pt]="selectAriaInvalid(invalid(form.controls.categoryId))"
+            fluid
           />
-          @if (invalid(form.controls.categoryId)) {
-            <small class="error" i18n="@@admin.catalog.productForm.categoryInvalid">Elige una categoría.</small>
-          }
-        </div>
+        </app-form-field>
 
-        <div class="field">
-          <label for="product-price" i18n="@@admin.catalog.productForm.price">Precio ({{ currency() }})</label>
-          <input
-            pInputText
-            id="product-price"
-            formControlName="price"
-            [attr.inputmode]="'decimal'"
-            autocomplete="off"
-            [attr.aria-invalid]="invalid(form.controls.price) ? 'true' : null"
-          />
-          @if (invalid(form.controls.price)) {
-            <small class="error" i18n="@@admin.catalog.productForm.priceInvalid">Escribe un monto mayor que cero, como 9.50.</small>
-          }
-        </div>
+        <app-form-field
+          class="field"
+          label="Precio"
+          i18n-label="@@admin.catalog.productForm.price"
+          controlId="product-price"
+          [error]="invalid(form.controls.price) ? labels.priceInvalid : null"
+        >
+          <app-money-input inputId="product-price" formControlName="price" [currency]="currency()" />
+        </app-form-field>
 
-        <div class="field">
-          <label for="product-order" i18n="@@admin.catalog.productForm.order">Orden de aparición</label>
+        <app-form-field
+          class="field"
+          label="Orden de aparición"
+          i18n-label="@@admin.catalog.productForm.order"
+          controlId="product-order"
+        >
           <p-inputnumber
             inputId="product-order"
             formControlName="displayOrder"
             [useGrouping]="false"
+            fluid
           />
-        </div>
+        </app-form-field>
 
         <span class="check">
           <p-checkbox inputId="product-pinned" formControlName="quickSalePinned" [binary]="true" />
@@ -248,14 +258,13 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
           <div class="actions">
             <label
               for="product-group-add"
-              id="product-group-add-label"
               class="sr-only"
               i18n="@@admin.catalog.productForm.addGroupLabel"
               >Grupo a agregar</label
             >
             <p-select
               inputId="product-group-add"
-              [ariaLabelledBy]="'product-group-add-label'"
+              [ariaLabel]="labels.addGroup"
               placeholder="Elige un grupo"
               i18n-placeholder="@@admin.catalog.productForm.groupPlaceholder"
               optionLabel="name"
@@ -375,6 +384,13 @@ export class ProductForm {
   protected readonly saving = signal(false);
   protected readonly imageAccept = IMAGE_TYPES.join(',');
   protected readonly maxImageBytes = MAX_IMAGE_BYTES;
+  protected readonly labels = {
+    nameInvalid: $localize`:@@admin.catalog.productForm.nameInvalid:Escribe un nombre válido.`,
+    categoryInvalid: $localize`:@@admin.catalog.productForm.categoryInvalid:Elige una categoría.`,
+    priceInvalid: $localize`:@@admin.catalog.productForm.priceInvalid:Escribe un monto mayor que cero, como 9.50.`,
+    category: $localize`:@@admin.catalog.productForm.category:Categoría`,
+    addGroup: $localize`:@@admin.catalog.productForm.addGroupLabel:Grupo a agregar`,
+  };
   protected readonly imageInvalid = $localize`:@@admin.catalog.productForm.imageInvalid:La imagen debe ser PNG, JPG o WebP y pesar como máximo 2 MB.`;
   private readonly uploader = viewChild(FileUpload);
   protected readonly currency = signal('');

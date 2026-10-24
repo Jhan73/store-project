@@ -1,12 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
-  IconDeviceFloppy,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
-  IconX,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -17,14 +15,17 @@ import { Tooltip } from 'primeng/tooltip';
 import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
 import { isStale, reportFailure } from '../admin-errors';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-category-list',
   imports: [
-    TableScroll,
     ReactiveFormsModule,
     ButtonDirective,
     InputNumber,
@@ -32,165 +33,150 @@ import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
     Select,
     TablerIconComponent,
     Tooltip,
+    DataTable,
+    FormDialog,
+    FormField,
+    StatusTag,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
-    <h2 i18n="@@admin.catalog.categories.title">Categorías</h2>
+    <div class="toolbar">
+      <h2 i18n="@@admin.catalog.categories.title">Categorías</h2>
+      <button
+        pButton
+        type="button"
+        data-testid="add-category"
+        (click)="add()"
+        pTooltip="Agregar una categoría nueva"
+        i18n-pTooltip="@@admin.catalog.categories.create.tooltip"
+        tooltipPosition="top"
+      >
+        <tabler-icon [icon]="icons.create" aria-hidden="true" />
+        <span i18n="@@admin.catalog.categories.create">Agregar categoría</span>
+      </button>
+    </div>
 
-    <app-table-scroll label="Listado de categorías" i18n-label="@@admin.catalog.categories.tableScroll">
-      <table>
-      <thead>
-        <tr>
-          <th i18n="@@admin.catalog.categories.name">Nombre</th>
-          <th i18n="@@admin.catalog.categories.station">Estación</th>
-          <th i18n="@@admin.catalog.categories.order">Orden</th>
-          <th i18n="@@admin.catalog.categories.state">Estado</th>
-          <th><span class="sr-only" i18n="@@admin.catalog.actions">Acciones</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (category of categories(); track category.id) {
-          <tr>
-            <td>{{ category.name }}</td>
-            <td>{{ stationName(category.stationId) }}</td>
-            <td>{{ category.displayOrder }}</td>
-            <td>
+    <app-data-table
+      label="Listado de categorías"
+      i18n-label="@@admin.catalog.categories.tableScroll"
+      [value]="rowsView()"
+      [columns]="columns"
+    >
+      <ng-template #row let-category>
+        <td>{{ category.name }}</td>
+        <td>{{ category.stationName }}</td>
+        <td>{{ category.displayOrder }}</td>
+        <td>
+          <app-status-tag
+            [value]="category.stateLabel"
+            [severity]="category.active ? 'success' : 'secondary'"
+          />
+        </td>
+        <td class="actions">
+          <div class="row-actions">
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              [size]="'small'"
+              [attr.data-testid]="'edit-' + category.id"
+              (click)="edit(category)"
+              pTooltip="Editar los datos de esta categoría"
+              i18n-pTooltip="@@admin.catalog.categories.edit.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+              <span i18n="@@admin.catalog.edit">Editar</span>
+            </button>
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              [size]="'small'"
+              [outlined]="true"
+              [attr.data-testid]="'toggle-' + category.id"
+              (click)="toggle(category)"
+              [pTooltip]="category.active ? tips.deactivate : tips.reactivate"
+              tooltipPosition="top"
+            >
               @if (category.active) {
-                <span i18n="@@admin.catalog.active">Activa</span>
+                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
               } @else {
-                <span class="muted" i18n="@@admin.catalog.inactive">Inactiva</span>
+                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
               }
-            </td>
-            <td class="actions">
-              <button
-                pButton
-                type="button"
-                severity="secondary"
-                [size]="'small'"
-                [attr.data-testid]="'edit-' + category.id"
-                (click)="edit(category)"
-                pTooltip="Editar los datos de esta categoría"
-                i18n-pTooltip="@@admin.catalog.categories.edit.tooltip"
-                tooltipPosition="top"
-              >
-                <tabler-icon [icon]="icons.edit" aria-hidden="true" />
-                <span i18n="@@admin.catalog.edit">Editar</span>
-              </button>
-              <button
-                pButton
-                type="button"
-                severity="secondary"
-                [size]="'small'"
-                [outlined]="true"
-                [attr.data-testid]="'toggle-' + category.id"
-                (click)="toggle(category)"
-                [pTooltip]="category.active ? tips.deactivate : tips.reactivate"
-                tooltipPosition="top"
-              >
-                @if (category.active) {
-                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                  <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
-                } @else {
-                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                  <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
-                }
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-      </table>
-    </app-table-scroll>
+            </button>
+          </div>
+        </td>
+      </ng-template>
+    </app-data-table>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="field wide">
-        <label for="category-name" i18n="@@admin.catalog.categories.nameLabel">Nombre de la categoría</label>
-        <input
-          pInputText
-          id="category-name"
-          formControlName="name"
-          autocomplete="off"
-          [attr.aria-invalid]="invalid('name') ? 'true' : null"
-          fluid
-        />
-        @if (invalid('name')) {
-          <small class="error" i18n="@@admin.catalog.categories.nameInvalid">Escribe un nombre válido.</small>
-        }
-      </div>
-      <div class="field">
-        <label for="category-order" i18n="@@admin.catalog.categories.orderLabel">Orden de aparición</label>
-        <p-inputnumber
-          inputId="category-order"
-          formControlName="displayOrder"
-          [useGrouping]="false"
-          [invalid]="invalid('displayOrder')"
-          [pt]="numberAriaInvalid(invalid('displayOrder'))"
-        />
-        @if (invalid('displayOrder')) {
-          <small class="error" i18n="@@admin.catalog.categories.orderInvalid">Escribe un número entero.</small>
-        }
-      </div>
-      <div class="field">
-        <label
-          for="category-station"
-          id="category-station-label"
-          i18n="@@admin.catalog.categories.stationLabel"
-          >Estación de preparación</label
+    <app-form-dialog
+      [header]="editing() ? labels.editHeader : labels.createHeader"
+      [visible]="open()"
+      [busy]="saving()"
+      (saved)="submit()"
+      (dismissed)="close()"
+    >
+      <div [formGroup]="form" class="dialog-fields">
+        <app-form-field
+          label="Nombre de la categoría"
+          i18n-label="@@admin.catalog.categories.nameLabel"
+          controlId="category-name"
+          [error]="invalid('name') ? labels.nameInvalid : null"
         >
-        <p-select
-          inputId="category-station"
-          [ariaLabelledBy]="'category-station-label'"
-          formControlName="stationId"
-          placeholder="Estación predeterminada"
-          i18n-placeholder="@@admin.catalog.categories.defaultStation"
-          optionLabel="name"
-          optionValue="id"
-          [options]="stationOptions()"
-          [filter]="true"
-          filterBy="name"
-          [resetFilterOnHide]="true"
-          filterPlaceholder="Buscar"
-          i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
-          [showClear]="!editing()"
-        />
-      </div>
-      <div class="actions">
-        <button
-          pButton
-          type="submit"
-          [loading]="saving()"
-          [pTooltip]="editing() ? tips.save : tips.create"
-          tooltipPosition="top"
+          <input
+            pInputText
+            id="category-name"
+            formControlName="name"
+            autocomplete="off"
+            maxlength="120"
+            [attr.aria-invalid]="invalid('name') ? 'true' : null"
+            fluid
+          />
+        </app-form-field>
+        <app-form-field
+          label="Orden de aparición"
+          i18n-label="@@admin.catalog.categories.orderLabel"
+          controlId="category-order"
+          [error]="invalid('displayOrder') ? labels.orderInvalid : null"
         >
-          @if (editing()) {
-            @if (!saving()) {
-              <tabler-icon [icon]="icons.save" aria-hidden="true" />
-            }
-            <ng-container i18n="@@admin.catalog.categories.save">Guardar cambios</ng-container>
-          } @else {
-            @if (!saving()) {
-              <tabler-icon [icon]="icons.create" aria-hidden="true" />
-            }
-            <ng-container i18n="@@admin.catalog.categories.create">Agregar categoría</ng-container>
-          }
-        </button>
-        @if (editing()) {
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            (click)="cancel()"
-            pTooltip="Descartar los cambios y cerrar el formulario"
-            i18n-pTooltip="@@admin.catalog.cancel.tooltip"
-            tooltipPosition="top"
-          >
-            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-            <span i18n="@@admin.catalog.cancel">Cancelar</span>
-          </button>
-        }
+          <p-inputnumber
+            inputId="category-order"
+            formControlName="displayOrder"
+            [useGrouping]="false"
+            [invalid]="invalid('displayOrder')"
+            [pt]="numberAriaInvalid(invalid('displayOrder'))"
+            fluid
+          />
+        </app-form-field>
+        <app-form-field
+          label="Estación de preparación"
+          i18n-label="@@admin.catalog.categories.stationLabel"
+          controlId="category-station"
+        >
+          <p-select
+            inputId="category-station"
+            [ariaLabel]="labels.station"
+            formControlName="stationId"
+            placeholder="Estación predeterminada"
+            i18n-placeholder="@@admin.catalog.categories.defaultStation"
+            optionLabel="name"
+            optionValue="id"
+            [options]="stationOptions()"
+            [filter]="true"
+            filterBy="name"
+            [resetFilterOnHide]="true"
+            filterPlaceholder="Buscar"
+            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+            [showClear]="!editing()"
+            fluid
+          />
+        </app-form-field>
       </div>
-    </form>
+    </app-form-dialog>
   `,
 })
 export class CategoryList {
@@ -198,27 +184,53 @@ export class CategoryList {
     edit: IconPencil,
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
-    save: IconDeviceFloppy,
     create: IconPlus,
-    cancel: IconX,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.catalog.categories.deactivate.tooltip:Ocultar esta categoría del menú`,
     reactivate: $localize`:@@admin.catalog.categories.reactivate.tooltip:Volver a mostrar esta categoría en el menú`,
-    save: $localize`:@@admin.catalog.categories.save.tooltip:Guardar los cambios de la categoría`,
-    create: $localize`:@@admin.catalog.categories.create.tooltip:Agregar una categoría nueva`,
   };
+  protected readonly labels = {
+    active: $localize`:@@admin.catalog.active:Activa`,
+    inactive: $localize`:@@admin.catalog.inactive:Inactiva`,
+    createHeader: $localize`:@@admin.catalog.categories.createHeader:Agregar categoría`,
+    editHeader: $localize`:@@admin.catalog.categories.editHeader:Editar categoría`,
+    nameInvalid: $localize`:@@admin.catalog.categories.nameInvalid:Escribe un nombre válido.`,
+    orderInvalid: $localize`:@@admin.catalog.categories.orderInvalid:Escribe un número entero.`,
+    station: $localize`:@@admin.catalog.categories.stationLabel:Estación de preparación`,
+  };
+  protected readonly columns: readonly DataColumn[] = [
+    { field: 'name', header: $localize`:@@admin.catalog.categories.name:Nombre`, sortable: true, filter: true },
+    {
+      field: 'stationName',
+      header: $localize`:@@admin.catalog.categories.station:Estación`,
+      sortable: true,
+      filter: true,
+    },
+    { field: 'displayOrder', header: $localize`:@@admin.catalog.categories.order:Orden`, sortable: true },
+    { field: 'stateLabel', header: $localize`:@@admin.catalog.categories.state:Estado`, sortable: true },
+    { field: '', header: $localize`:@@admin.catalog.actions:Acciones` },
+  ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly stations = signal<readonly Station[]>([]);
   protected readonly editing = signal<Category | null>(null);
+  protected readonly open = signal(false);
   protected readonly saving = signal(false);
   protected readonly numberAriaInvalid = numberAriaInvalid;
   protected readonly stationOptions = computed(() => [...this.stations()]);
   private readonly stationNames = computed(
     () => new Map(this.stations().map((station) => [station.id, station.name])),
+  );
+  protected readonly rowsView = computed(() =>
+    this.categories().map((category) => ({
+      ...category,
+      stationName: this.stationNames().get(category.stationId) ?? '',
+      stateLabel: category.active ? this.labels.active : this.labels.inactive,
+    })),
   );
   protected readonly form = new FormGroup({
     name: new FormControl('', {
@@ -237,30 +249,40 @@ export class CategoryList {
     });
   }
 
-  protected stationName(id: string): string {
-    return this.stationNames().get(id) ?? '';
-  }
-
   protected invalid(name: 'name' | 'displayOrder'): boolean {
     const control = this.form.controls[name];
     return control.invalid && control.touched;
   }
 
+  protected add(): void {
+    this.editing.set(null);
+    this.resetForm();
+    this.open.set(true);
+  }
+
   protected edit(category: Category): void {
     this.editing.set(category);
-    this.form.setValue({
-      name: category.name,
-      displayOrder: category.displayOrder,
-      stationId: category.stationId,
-    });
+    this.fill(category);
+    this.open.set(true);
   }
 
-  protected cancel(): void {
+  protected close(): void {
+    this.open.set(false);
     this.editing.set(null);
-    this.form.reset({ name: '', displayOrder: 0, stationId: null });
+    this.resetForm();
   }
 
-  protected toggle(category: Category): void {
+  protected async toggle(category: Category): Promise<void> {
+    if (category.active) {
+      const confirmed = await this.confirm.ask({
+        header: $localize`:@@admin.catalog.categories.deactivate.header:Desactivar categoría`,
+        message: $localize`:@@admin.catalog.categories.deactivate.confirm:La categoría "${category.name}:name:" y sus productos dejarán de mostrarse en el menú.`,
+        acceptLabel: $localize`:@@admin.catalog.deactivate:Desactivar`,
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
     const request = category.active
       ? this.api.deactivateCategory(category.id, category.etag)
       : this.api.reactivateCategory(category.id, category.etag);
@@ -295,7 +317,7 @@ export class CategoryList {
         } else {
           this.categories.update((list) => [...list, saved]);
         }
-        this.cancel();
+        this.close();
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -303,6 +325,18 @@ export class CategoryList {
         this.fail(error, this.form);
       },
     });
+  }
+
+  private fill(category: Category): void {
+    this.form.reset({
+      name: category.name,
+      displayOrder: category.displayOrder,
+      stationId: category.stationId,
+    });
+  }
+
+  private resetForm(): void {
+    this.form.reset({ name: '', displayOrder: 0, stationId: null });
   }
 
   private replace(saved: Category): void {
@@ -326,9 +360,10 @@ export class CategoryList {
         const current = this.editing();
         const fresh = current && list.find((item) => item.id === current.id);
         if (fresh) {
-          this.edit(fresh);
+          this.editing.set(fresh);
+          this.fill(fresh);
         } else if (current) {
-          this.cancel();
+          this.close();
         }
       },
       error: (error: unknown) => this.notifier.show(error),

@@ -32,10 +32,22 @@ async function render(stations: Station[] = [main, bar]) {
   return { fixture, host, http, messages: TestBed.inject(MessageService) };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
-  input.value = value;
-  input.dispatchEvent(new Event('input'));
+function field() {
+  return document.body.querySelector<HTMLInputElement>('#station-name')!;
+}
+
+function type(value: string) {
+  field().value = value;
+  field().dispatchEvent(new Event('input'));
+}
+
+function submit() {
+  document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
+}
+
+async function openAdd(fixture: { whenStable: () => Promise<unknown> }, host: HTMLElement) {
+  host.querySelector<HTMLButtonElement>('[data-testid="add-station"]')!.click();
+  await fixture.whenStable();
 }
 
 function rows(host: HTMLElement) {
@@ -58,8 +70,9 @@ describe('StationList', () => {
   it('creates a station and shows it in the list', async () => {
     const { fixture, host, http } = await render([main]);
 
-    type(host, '#station-name', 'Bar');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await openAdd(fixture, host);
+    type('Bar');
+    submit();
     const request = http.expectOne(STATIONS);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ name: 'Bar' });
@@ -67,17 +80,18 @@ describe('StationList', () => {
     await fixture.whenStable();
 
     expect(rows(host)).toHaveLength(2);
-    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('');
+    expect(document.body.querySelector('#station-name')).toBeNull();
   });
 
   it('does not send a blank name', async () => {
     const { fixture, host } = await render([main]);
 
-    type(host, '#station-name', '   ');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await openAdd(fixture, host);
+    type('   ');
+    submit();
     await fixture.whenStable();
 
-    expect(host.querySelector('#station-name')!.getAttribute('aria-invalid')).toBe('true');
+    expect(field().getAttribute('aria-invalid')).toBe('true');
   });
 
   it('renames a station with the version it was listed with', async () => {
@@ -85,9 +99,9 @@ describe('StationList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
     await fixture.whenStable();
-    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('Bar');
-    type(host, '#station-name', 'Cold bar');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    expect(field().value).toBe('Bar');
+    type('Cold bar');
+    submit();
     const request = http.expectOne(`${STATIONS}/s2`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.headers.get('If-Match')).toBe('"4"');
@@ -103,8 +117,8 @@ describe('StationList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
     await fixture.whenStable();
-    type(host, '#station-name', 'Cold bar');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    type('Cold bar');
+    submit();
     http.expectOne(`${STATIONS}/s2`).flush(
       { type: 'about:blank', status: 412, code: 'common.precondition-failed', correlationId: 'c-1' },
       { status: 412, statusText: 'Precondition Failed' },
@@ -124,8 +138,8 @@ describe('StationList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
     await fixture.whenStable();
-    type(host, '#station-name', 'Cold bar');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    type('Cold bar');
+    submit();
     http.expectOne(`${STATIONS}/s2`).flush(
       { type: 'about:blank', status: 412, code: 'common.precondition-failed', correlationId: 'c' },
       { status: 412, statusText: 'Precondition Failed' },
@@ -134,8 +148,8 @@ describe('StationList', () => {
     http.expectOne(STATIONS).flush([main, { ...bar, name: 'Juice bar', etag: '"5"' }]);
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('Juice bar');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    expect(field().value).toBe('Juice bar');
+    submit();
     const retry = http.expectOne(`${STATIONS}/s2`);
     expect(retry.request.headers.get('If-Match')).toBe('"5"');
     retry.flush({ ...bar, name: 'Juice bar', etag: '"6"' });
@@ -146,7 +160,7 @@ describe('StationList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-s2"]')!.click();
     await fixture.whenStable();
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    submit();
     http.expectOne(`${STATIONS}/s2`).flush(
       { type: 'about:blank', status: 404, code: 'common.not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -155,16 +169,16 @@ describe('StationList', () => {
     http.expectOne(STATIONS).flush([main]);
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('');
-    expect(host.querySelector('form [type="button"]')).toBeNull();
+    expect(document.body.querySelector('#station-name')).toBeNull();
   });
 
   it('shows a duplicate name as a notification and keeps what was typed', async () => {
     const { fixture, host, http, messages } = await render();
     const add = vi.spyOn(messages, 'add');
 
-    type(host, '#station-name', 'Main');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await openAdd(fixture, host);
+    type('Main');
+    submit();
     http.expectOne(STATIONS).flush(
       { type: 'about:blank', status: 409, code: 'catalog.station-name-already-used', correlationId: 'c-2' },
       { status: 409, statusText: 'Conflict' },
@@ -174,14 +188,15 @@ describe('StationList', () => {
     expect(add).toHaveBeenCalledWith(
       expect.objectContaining({ summary: expect.stringContaining('estación') }),
     );
-    expect(host.querySelector<HTMLInputElement>('#station-name')!.value).toBe('Main');
+    expect(field().value).toBe('Main');
   });
 
   it('marks the field the server rejected', async () => {
     const { fixture, host, http } = await render();
 
-    type(host, '#station-name', 'x');
-    host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await openAdd(fixture, host);
+    type('x');
+    submit();
     http.expectOne(STATIONS).flush(
       {
         type: 'about:blank',
@@ -194,6 +209,6 @@ describe('StationList', () => {
     );
     await fixture.whenStable();
 
-    expect(host.querySelector('#station-name')!.getAttribute('aria-invalid')).toBe('true');
+    expect(field().getAttribute('aria-invalid')).toBe('true');
   });
 });

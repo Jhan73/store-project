@@ -1,140 +1,131 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  IconDeviceFloppy,
-  IconPencil,
-  IconPlus,
-  IconX,
-  TablerIconComponent,
-} from '@tabler/icons-angular';
+import { IconPencil, IconPlus, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import type { Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
-import { CatalogApi } from './catalog-api';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { isStale, reportFailure } from '../admin-errors';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
+import { CatalogApi } from './catalog-api';
 
 @Component({
   selector: 'app-station-list',
-  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, InputText, TablerIconComponent, Tooltip],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    InputText,
+    TablerIconComponent,
+    Tooltip,
+    DataTable,
+    FormDialog,
+    FormField,
+    StatusTag,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
-    <h2 i18n="@@admin.catalog.stations.title">Estaciones</h2>
+    <div class="toolbar">
+      <h2 i18n="@@admin.catalog.stations.title">Estaciones</h2>
+      <button
+        pButton
+        type="button"
+        data-testid="add-station"
+        (click)="add()"
+        pTooltip="Agregar una estación de preparación nueva"
+        i18n-pTooltip="@@admin.catalog.stations.create.tooltip"
+        tooltipPosition="top"
+      >
+        <tabler-icon [icon]="icons.create" aria-hidden="true" />
+        <span i18n="@@admin.catalog.stations.create">Agregar estación</span>
+      </button>
+    </div>
+    <p class="muted" i18n="@@admin.catalog.stations.caption">Dónde se prepara cada categoría</p>
 
-    <app-table-scroll label="Listado de estaciones" i18n-label="@@admin.catalog.stations.tableScroll">
-      <table>
-      <caption class="muted" i18n="@@admin.catalog.stations.caption">
-        Dónde se prepara cada categoría
-      </caption>
-      <thead>
-        <tr>
-          <th i18n="@@admin.catalog.stations.name">Nombre</th>
-          <th><span class="sr-only" i18n="@@admin.catalog.actions">Acciones</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (station of stations(); track station.id) {
-          <tr>
-            <td>
-              {{ station.name }}
-              @if (station.defaultStation) {
-                <span class="badge" i18n="@@admin.catalog.stations.default">Predeterminada</span>
-              }
-            </td>
-            <td>
-              <button
-                pButton
-                type="button"
-                severity="secondary"
-                [size]="'small'"
-                [attr.data-testid]="'edit-' + station.id"
-                (click)="edit(station)"
-                pTooltip="Cambiar el nombre de esta estación"
-                i18n-pTooltip="@@admin.catalog.stations.edit.tooltip"
-                tooltipPosition="top"
-              >
-                <tabler-icon [icon]="icons.edit" aria-hidden="true" />
-                <span i18n="@@admin.catalog.stations.edit">Renombrar</span>
-              </button>
-            </td>
-          </tr>
-        }
-      </tbody>
-      </table>
-    </app-table-scroll>
-
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="field wide">
-        <label for="station-name" i18n="@@admin.catalog.stations.nameLabel">Nombre de la estación</label>
-        <input
-          pInputText
-          id="station-name"
-          formControlName="name"
-          autocomplete="off"
-          [attr.aria-invalid]="form.controls.name.invalid && form.controls.name.touched ? 'true' : null"
-          fluid
-        />
-        @if (form.controls.name.invalid && form.controls.name.touched) {
-          <small class="error" i18n="@@admin.catalog.stations.nameInvalid">Escribe un nombre válido.</small>
-        }
-      </div>
-      <div class="actions">
-        <button
-          pButton
-          type="submit"
-          [loading]="saving()"
-          [pTooltip]="editing() ? tips.save : tips.create"
-          tooltipPosition="top"
-        >
-          @if (editing()) {
-            @if (!saving()) {
-              <tabler-icon [icon]="icons.save" aria-hidden="true" />
-            }
-            <ng-container i18n="@@admin.catalog.stations.save">Guardar cambios</ng-container>
-          } @else {
-            @if (!saving()) {
-              <tabler-icon [icon]="icons.create" aria-hidden="true" />
-            }
-            <ng-container i18n="@@admin.catalog.stations.create">Agregar estación</ng-container>
+    <app-data-table
+      label="Listado de estaciones"
+      i18n-label="@@admin.catalog.stations.tableScroll"
+      [value]="stations()"
+      [columns]="columns"
+    >
+      <ng-template #row let-station>
+        <td>
+          {{ station.name }}
+          @if (station.defaultStation) {
+            <app-status-tag [value]="labels.default" severity="info" />
           }
-        </button>
-        @if (editing()) {
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            (click)="cancel()"
-            pTooltip="Descartar los cambios y cerrar el formulario"
-            i18n-pTooltip="@@admin.catalog.cancel.tooltip"
-            tooltipPosition="top"
-          >
-            <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-            <span i18n="@@admin.catalog.cancel">Cancelar</span>
-          </button>
-        }
+        </td>
+        <td class="actions">
+          <div class="row-actions">
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              [size]="'small'"
+              [attr.data-testid]="'edit-' + station.id"
+              (click)="edit(station)"
+              pTooltip="Cambiar el nombre de esta estación"
+              i18n-pTooltip="@@admin.catalog.stations.edit.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+              <span i18n="@@admin.catalog.stations.edit">Renombrar</span>
+            </button>
+          </div>
+        </td>
+      </ng-template>
+    </app-data-table>
+
+    <app-form-dialog
+      [header]="editing() ? labels.editHeader : labels.createHeader"
+      [visible]="open()"
+      [busy]="saving()"
+      (saved)="submit()"
+      (dismissed)="close()"
+    >
+      <div [formGroup]="form" class="dialog-fields">
+        <app-form-field
+          label="Nombre de la estación"
+          i18n-label="@@admin.catalog.stations.nameLabel"
+          controlId="station-name"
+          [error]="invalid() ? labels.nameInvalid : null"
+        >
+          <input
+            pInputText
+            id="station-name"
+            formControlName="name"
+            autocomplete="off"
+            maxlength="80"
+            [attr.aria-invalid]="invalid() ? 'true' : null"
+            fluid
+          />
+        </app-form-field>
       </div>
-    </form>
+    </app-form-dialog>
   `,
 })
 export class StationList {
-  protected readonly icons = {
-    edit: IconPencil,
-    save: IconDeviceFloppy,
-    create: IconPlus,
-    cancel: IconX,
+  protected readonly icons = { edit: IconPencil, create: IconPlus };
+  protected readonly labels = {
+    default: $localize`:@@admin.catalog.stations.default:Predeterminada`,
+    createHeader: $localize`:@@admin.catalog.stations.createHeader:Agregar estación`,
+    editHeader: $localize`:@@admin.catalog.stations.editHeader:Renombrar estación`,
+    nameInvalid: $localize`:@@admin.catalog.stations.nameInvalid:Escribe un nombre válido.`,
   };
-  protected readonly tips = {
-    save: $localize`:@@admin.catalog.stations.save.tooltip:Guardar el nuevo nombre de la estación`,
-    create: $localize`:@@admin.catalog.stations.create.tooltip:Agregar una estación de preparación nueva`,
-  };
+  protected readonly columns: readonly DataColumn[] = [
+    { field: 'name', header: $localize`:@@admin.catalog.stations.name:Nombre`, sortable: true, filter: true },
+    { field: '', header: $localize`:@@admin.catalog.actions:Acciones` },
+  ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 
   protected readonly stations = signal<readonly Station[]>([]);
   protected readonly editing = signal<Station | null>(null);
+  protected readonly open = signal(false);
   protected readonly saving = signal(false);
   protected readonly form = new FormGroup({
     name: new FormControl('', {
@@ -147,12 +138,25 @@ export class StationList {
     this.load();
   }
 
-  protected edit(station: Station): void {
-    this.editing.set(station);
-    this.form.setValue({ name: station.name });
+  protected invalid(): boolean {
+    const control = this.form.controls.name;
+    return control.invalid && control.touched;
   }
 
-  protected cancel(): void {
+  protected add(): void {
+    this.editing.set(null);
+    this.form.reset();
+    this.open.set(true);
+  }
+
+  protected edit(station: Station): void {
+    this.editing.set(station);
+    this.form.reset({ name: station.name });
+    this.open.set(true);
+  }
+
+  protected close(): void {
+    this.open.set(false);
     this.editing.set(null);
     this.form.reset();
   }
@@ -176,7 +180,7 @@ export class StationList {
         this.stations.update((list) =>
           target ? list.map((item) => (item.id === saved.id ? saved : item)) : [...list, saved],
         );
-        this.cancel();
+        this.close();
         this.saving.set(false);
       },
       error: (error: unknown) => {
@@ -196,9 +200,10 @@ export class StationList {
         const current = this.editing();
         const fresh = current && list.find((item) => item.id === current.id);
         if (fresh) {
-          this.edit(fresh);
+          this.editing.set(fresh);
+          this.form.reset({ name: fresh.name });
         } else if (current) {
-          this.cancel();
+          this.close();
         }
       },
       error: (error: unknown) => this.notifier.show(error),
