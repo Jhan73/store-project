@@ -1483,7 +1483,7 @@
     </unit>
     <unit id="admin.audit.range">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:78,79</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:79</note>
       </notes>
       <segment>
         <source>Fechas</source>
@@ -1491,23 +1491,15 @@
     </unit>
     <unit id="admin.audit.range.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:84,85</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:88,89</note>
       </notes>
       <segment>
         <source>dd/mm/aaaa - dd/mm/aaaa</source>
       </segment>
     </unit>
-    <unit id="admin.audit.range.order">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:94,96</note>
-      </notes>
-      <segment>
-        <source> La fecha inicial no puede ser posterior a la final. </source>
-      </segment>
-    </unit>
     <unit id="admin.audit.actor">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:99,101</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:97</note>
       </notes>
       <segment>
         <source>Persona</source>
@@ -1515,9 +1507,9 @@
     </unit>
     <unit id="shared.select.filterPlaceholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:111</note>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:134</note>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:173</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:109</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:133</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:169</note>
         <note category="location">src/app/features/admin/catalog/category-list.ts:173</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:160</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:277</note>
@@ -1529,15 +1521,14 @@
         <note category="location">src/app/features/admin/users/staff-list.ts:96</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:194</note>
         <note category="location">src/app/features/staff/board/board.ts:157</note>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:269</note>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:95</note>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:114</note>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:97</note>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:185</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:601</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:690</note>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:856</note>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:71</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:275</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:105</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:130</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:99</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:190</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:629</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:697</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:89</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -1545,7 +1536,7 @@
     </unit>
     <unit id="admin.audit.actor.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:113</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:111</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -1553,15 +1544,15 @@
     </unit>
     <unit id="admin.audit.entityType">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:121,123</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:118,119</note>
       </notes>
       <segment>
-        <source> Tipo de entidad </source>
+        <source>Tipo de entidad</source>
       </segment>
     </unit>
     <unit id="admin.audit.entityType.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:136</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:135</note>
       </notes>
       <segment>
         <source>Todos</source>
@@ -1569,23 +1560,15 @@
     </unit>
     <unit id="admin.audit.entityId">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:143,145</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:142,143</note>
       </notes>
       <segment>
         <source>Id de la entidad</source>
       </segment>
     </unit>
-    <unit id="admin.audit.entityId.invalid">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:156,158</note>
-      </notes>
-      <segment>
-        <source> Escribe un id válido (formato UUID). </source>
-      </segment>
-    </unit>
     <unit id="admin.audit.action">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:161,163</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:157</note>
       </notes>
       <segment>
         <source>Acción</source>
@@ -1593,7 +1576,7 @@
     </unit>
     <unit id="admin.audit.action.placeholder">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:175</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:171</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -1601,7 +1584,7 @@
     </unit>
     <unit id="admin.audit.search.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:186,187</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:182,183</note>
       </notes>
       <segment>
         <source>Buscar con estos filtros</source>
@@ -1609,7 +1592,7 @@
     </unit>
     <unit id="admin.audit.search">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:191,193</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:187,189</note>
       </notes>
       <segment>
         <source>Buscar</source>
@@ -1617,7 +1600,7 @@
     </unit>
     <unit id="admin.audit.clear.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:200,201</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:196,197</note>
       </notes>
       <segment>
         <source>Quitar todos los filtros y buscar de nuevo</source>
@@ -1625,7 +1608,7 @@
     </unit>
     <unit id="admin.audit.clear">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:205,207</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:201,203</note>
       </notes>
       <segment>
         <source>Limpiar</source>
@@ -1633,7 +1616,7 @@
     </unit>
     <unit id="admin.audit.count">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:213,216</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:209,212</note>
       </notes>
       <segment>
         <source> <ph id="0" equiv="ICU" disp="{current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}" subFlows="1260611991748454381"/> </source>
@@ -1641,23 +1624,15 @@
     </unit>
     <unit id="1813585563108443776">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:213</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:209</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =0 {Sin registros} =1 {1 registro} other {<ph id="0" equiv="INTERPOLATION"/> registros}}</source>
       </segment>
     </unit>
-    <unit id="admin.audit.loading">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:220,222</note>
-      </notes>
-      <segment>
-        <source>Cargando…</source>
-      </segment>
-    </unit>
     <unit id="admin.audit.error">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:224,226</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:216,218</note>
       </notes>
       <segment>
         <source>No se pudo cargar el registro de auditoría.</source>
@@ -1665,7 +1640,7 @@
     </unit>
     <unit id="admin.audit.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:231,232</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:223,224</note>
       </notes>
       <segment>
         <source>Volver a intentar la búsqueda</source>
@@ -1673,87 +1648,31 @@
     </unit>
     <unit id="admin.audit.retry">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:236,238</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:228,230</note>
       </notes>
       <segment>
         <source>Reintentar</source>
       </segment>
     </unit>
-    <unit id="admin.audit.empty">
+    <unit id="admin.audit.loading">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:243,245</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:233,235</note>
       </notes>
       <segment>
-        <source>No hay registros con estos filtros.</source>
+        <source>Cargando…</source>
       </segment>
     </unit>
     <unit id="admin.audit.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:245</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:237,238</note>
       </notes>
       <segment>
         <source>Registro de auditoría</source>
       </segment>
     </unit>
-    <unit id="admin.audit.caption">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:248,249</note>
-      </notes>
-      <segment>
-        <source> Cambios registrados, del más reciente al más antiguo </source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.when">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:252,253</note>
-      </notes>
-      <segment>
-        <source>Cuándo</source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.actor">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:253,254</note>
-      </notes>
-      <segment>
-        <source>Quién</source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.action">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:254,255</note>
-      </notes>
-      <segment>
-        <source>Acción</source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.entity">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:255,256</note>
-      </notes>
-      <segment>
-        <source>Entidad</source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.reason">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:256,257</note>
-      </notes>
-      <segment>
-        <source>Motivo</source>
-      </segment>
-    </unit>
-    <unit id="admin.audit.col.detail">
-      <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:257,258</note>
-      </notes>
-      <segment>
-        <source>Detalle</source>
-      </segment>
-    </unit>
     <unit id="admin.audit.detail.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:302,303</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:292,293</note>
       </notes>
       <segment>
         <source>Ver los valores antes y después del cambio</source>
@@ -1761,7 +1680,7 @@
     </unit>
     <unit id="admin.audit.detail">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:307,308</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:297,298</note>
       </notes>
       <segment>
         <source>Detalle</source>
@@ -1769,7 +1688,7 @@
     </unit>
     <unit id="admin.audit.detail.title">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:328,329</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:307,308</note>
       </notes>
       <segment>
         <source>Detalle del cambio</source>
@@ -1777,7 +1696,7 @@
     </unit>
     <unit id="admin.audit.detail.close.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:347,348</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:326,327</note>
       </notes>
       <segment>
         <source>Cerrar el detalle</source>
@@ -1785,15 +1704,111 @@
     </unit>
     <unit id="admin.audit.detail.close">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:352,354</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:331,333</note>
       </notes>
       <segment>
         <source>Cerrar</source>
       </segment>
     </unit>
+    <unit id="admin.audit.range.order">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:353</note>
+      </notes>
+      <segment>
+        <source>La fecha inicial no puede ser posterior a la final.</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityId.invalid">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:354</note>
+      </notes>
+      <segment>
+        <source>Escribe un id válido (formato UUID).</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.actor.aria">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:355</note>
+      </notes>
+      <segment>
+        <source>Persona</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entityType.aria">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:356</note>
+      </notes>
+      <segment>
+        <source>Tipo de entidad</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.action.aria">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:357</note>
+      </notes>
+      <segment>
+        <source>Acción</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.empty">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:359</note>
+      </notes>
+      <segment>
+        <source>No hay registros con estos filtros.</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.when">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:362</note>
+      </notes>
+      <segment>
+        <source>Cuándo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.actor">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:363</note>
+      </notes>
+      <segment>
+        <source>Quién</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.action">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:364</note>
+      </notes>
+      <segment>
+        <source>Acción</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.entity">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:365</note>
+      </notes>
+      <segment>
+        <source>Entidad</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.reason">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:366</note>
+      </notes>
+      <segment>
+        <source>Motivo</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.col.detail">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:367</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
+      </segment>
+    </unit>
     <unit id="admin.audit.detail.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:450</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:453</note>
       </notes>
       <segment>
         <source>Detalle del cambio <ph id="0" equiv="action" disp="entry.action"/> del <ph id="1" equiv="when" disp="this.when(entry)"/></source>
@@ -5855,9 +5870,17 @@
         <source>Todas las estaciones</source>
       </segment>
     </unit>
+    <unit id="staff.quickSale.removed">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:156</note>
+      </notes>
+      <segment>
+        <source>Se quitó &quot;<ph id="0" equiv="name" disp="line.name"/>&quot; de la venta</source>
+      </segment>
+    </unit>
     <unit id="staff.quickSale.registered">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:178</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:195</note>
       </notes>
       <segment>
         <source>Se registró la venta del ticket <ph id="0" equiv="number" disp="ticket.number"/>.</source>
@@ -5865,7 +5888,7 @@
     </unit>
     <unit id="staff.quickSale.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:49,51</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:53,56</note>
       </notes>
       <segment>
         <source>Venta rápida</source>
@@ -5873,7 +5896,7 @@
     </unit>
     <unit id="staff.quickSale.failed">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:53,55</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:57,59</note>
       </notes>
       <segment>
         <source>No se pudo cargar la venta rápida.</source>
@@ -5881,7 +5904,7 @@
     </unit>
     <unit id="staff.quickSale.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:59,60</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:63,64</note>
       </notes>
       <segment>
         <source>Volver a cargar los productos y el turno</source>
@@ -5889,7 +5912,7 @@
     </unit>
     <unit id="staff.quickSale.retry">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:65,67</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:69,71</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -5897,7 +5920,7 @@
     </unit>
     <unit id="staff.quickSale.noShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:72,74</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:76,78</note>
       </notes>
       <segment>
         <source>Necesitas un turno de caja abierto para vender.</source>
@@ -5905,7 +5928,7 @@
     </unit>
     <unit id="staff.quickSale.openShift.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:77,78</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:81,82</note>
       </notes>
       <segment>
         <source>Ir a Caja para abrir un turno</source>
@@ -5913,7 +5936,7 @@
     </unit>
     <unit id="staff.quickSale.openShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:82,85</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:86,90</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -5921,7 +5944,7 @@
     </unit>
     <unit id="staff.quickSale.done">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:89,90</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:93,94</note>
       </notes>
       <segment>
         <source>Venta registrada</source>
@@ -5929,7 +5952,7 @@
     </unit>
     <unit id="staff.quickSale.number">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:91,92</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:95,96</note>
       </notes>
       <segment>
         <source>Número</source>
@@ -5937,7 +5960,7 @@
     </unit>
     <unit id="staff.quickSale.total">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:95,96</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:99,100</note>
       </notes>
       <segment>
         <source>Total</source>
@@ -5945,7 +5968,7 @@
     </unit>
     <unit id="staff.quickSale.change">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:100,101</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:104,105</note>
       </notes>
       <segment>
         <source>Vuelto</source>
@@ -5953,7 +5976,7 @@
     </unit>
     <unit id="staff.quickSale.ticket.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:109,110</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:113,114</note>
       </notes>
       <segment>
         <source>Abrir la cuenta de esta venta, por ejemplo para anularla</source>
@@ -5961,7 +5984,7 @@
     </unit>
     <unit id="staff.quickSale.ticket">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:114,116</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:118,121</note>
       </notes>
       <segment>
         <source>Ver la cuenta</source>
@@ -5969,7 +5992,7 @@
     </unit>
     <unit id="staff.quickSale.new.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:120,121</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:124,125</note>
       </notes>
       <segment>
         <source>Empezar otra venta rápida</source>
@@ -5977,7 +6000,7 @@
     </unit>
     <unit id="staff.quickSale.new">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:126,128</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:130,132</note>
       </notes>
       <segment>
         <source>Nueva venta</source>
@@ -5985,7 +6008,7 @@
     </unit>
     <unit id="staff.quickSale.items">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:132,133</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:136,137</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -5993,7 +6016,7 @@
     </unit>
     <unit id="staff.quickSale.noItems">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:135,137</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:139,141</note>
       </notes>
       <segment>
         <source> No hay productos fijados para la venta rápida. </source>
@@ -6001,7 +6024,7 @@
     </unit>
     <unit id="staff.quickSale.item.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:148,149</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:152,153</note>
       </notes>
       <segment>
         <source>Agregar este producto a la venta</source>
@@ -6009,7 +6032,7 @@
     </unit>
     <unit id="staff.quickSale.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:159,160</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:163,165</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -6017,7 +6040,7 @@
     </unit>
     <unit id="staff.quickSale.notOnMenu">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:161,163</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:165,167</note>
       </notes>
       <segment>
         <source>No disponible</source>
@@ -6025,7 +6048,7 @@
     </unit>
     <unit id="staff.quickSale.cart">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:171,172</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:175,177</note>
       </notes>
       <segment>
         <source>Venta</source>
@@ -6033,7 +6056,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.downLabel">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:192,193</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:196,197</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -6041,7 +6064,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.down">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:194,195</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:198,199</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -6049,7 +6072,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.upLabel">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:207,208</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:211,212</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -6057,7 +6080,7 @@
     </unit>
     <unit id="staff.quickSale.quantity.up">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:209,210</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:213,214</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -6065,7 +6088,7 @@
     </unit>
     <unit id="staff.quickSale.remove.label">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:221,222</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:225,226</note>
       </notes>
       <segment>
         <source>Quitar el producto</source>
@@ -6073,7 +6096,7 @@
     </unit>
     <unit id="staff.quickSale.remove.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:223,224</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:227,228</note>
       </notes>
       <segment>
         <source>Quitar el producto de la venta</source>
@@ -6081,7 +6104,7 @@
     </unit>
     <unit id="staff.quickSale.cart.empty">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:233,236</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:237,240</note>
       </notes>
       <segment>
         <source>Elige productos para empezar la venta.</source>
@@ -6089,7 +6112,7 @@
     </unit>
     <unit id="staff.quickSale.estimated">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:238,239</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:242,243</note>
       </notes>
       <segment>
         <source>Total estimado</source>
@@ -6097,7 +6120,7 @@
     </unit>
     <unit id="staff.quickSale.name">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:245,247</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:249,250</note>
       </notes>
       <segment>
         <source>Nombre del cliente (opcional)</source>
@@ -6105,7 +6128,7 @@
     </unit>
     <unit id="staff.quickSale.method">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:257,259</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:263</note>
       </notes>
       <segment>
         <source>Método de pago</source>
@@ -6113,7 +6136,7 @@
     </unit>
     <unit id="staff.quickSale.received">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:276,278</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:282,283</note>
       </notes>
       <segment>
         <source>Efectivo recibido</source>
@@ -6121,7 +6144,7 @@
     </unit>
     <unit id="staff.quickSale.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:294,295</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:303,304</note>
       </notes>
       <segment>
         <source>Cobrar y registrar la venta</source>
@@ -6129,7 +6152,7 @@
     </unit>
     <unit id="staff.quickSale.submit">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:301,303</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:310,312</note>
       </notes>
       <segment>
         <source>Cobrar</source>
@@ -6137,7 +6160,7 @@
     </unit>
     <unit id="staff.quickSale.loading">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:307,311</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:316,320</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -6145,103 +6168,63 @@
     </unit>
     <unit id="staff.quickSale.configure.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:311,312</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:320,321</note>
       </notes>
       <segment>
         <source>Elegir las opciones</source>
       </segment>
     </unit>
+    <unit id="staff.quickSale.method.aria">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:353</note>
+      </notes>
+      <segment>
+        <source>Método de pago</source>
+      </segment>
+    </unit>
+    <unit id="staff.quickSale.why.received">
+      <notes>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:360</note>
+      </notes>
+      <segment>
+        <source>Escribe el efectivo recibido para cobrar.</source>
+      </segment>
+    </unit>
     <unit id="staff.register.movements.title">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:34,36</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:44,47</note>
       </notes>
       <segment>
         <source>Entradas y salidas de efectivo</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.empty">
+    <unit id="staff.register.movements.new.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:38,41</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:50,51</note>
       </notes>
       <segment>
-        <source> Este turno todavía no tiene movimientos de efectivo. </source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.scroll">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:41</note>
-      </notes>
-      <segment>
-        <source>Movimientos de efectivo</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.time">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:45,46</note>
-      </notes>
-      <segment>
-        <source>Hora</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.type">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:46,47</note>
-      </notes>
-      <segment>
-        <source>Tipo</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.amount">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:47,48</note>
-      </notes>
-      <segment>
-        <source>Monto</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.detail">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:48,49</note>
-      </notes>
-      <segment>
-        <source>Detalle</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.reference">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:49,52</note>
-      </notes>
-      <segment>
-        <source>Referencia</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.in">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:58,59</note>
-      </notes>
-      <segment>
-        <source>Entrada</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.movements.out">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:60,62</note>
-      </notes>
-      <segment>
-        <source>Salida</source>
+        <source>Registrar una entrada o una salida de efectivo</source>
       </segment>
     </unit>
     <unit id="staff.register.movements.new">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:81,83</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:56,60</note>
       </notes>
       <segment>
         <source>Registrar un movimiento</source>
       </segment>
     </unit>
+    <unit id="staff.register.movements.scroll">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:61,62</note>
+      </notes>
+      <segment>
+        <source>Movimientos de efectivo</source>
+      </segment>
+    </unit>
     <unit id="staff.register.movements.typeLabel">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:83,85</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:93</note>
       </notes>
       <segment>
         <source>Tipo</source>
@@ -6249,7 +6232,7 @@
     </unit>
     <unit id="staff.register.movements.reason">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:102,104</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:114</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -6257,23 +6240,15 @@
     </unit>
     <unit id="staff.register.movements.reason.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:115,116</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:131,132</note>
       </notes>
       <segment>
         <source>Elige un motivo</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.reasonsFailed">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:122,125</note>
-      </notes>
-      <segment>
-        <source>No se pudieron cargar los motivos.</source>
-      </segment>
-    </unit>
     <unit id="staff.register.movements.reasonsRetry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:129,130</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:144,145</note>
       </notes>
       <segment>
         <source>Volver a cargar los motivos de salida</source>
@@ -6281,23 +6256,15 @@
     </unit>
     <unit id="staff.register.movements.reasonsRetry">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:135,137</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:150,152</note>
       </notes>
       <segment>
         <source>Reintentar</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.noReasons">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:139,142</note>
-      </notes>
-      <segment>
-        <source>No hay motivos de salida configurados. Pide a un administrador que los agregue.</source>
-      </segment>
-    </unit>
     <unit id="staff.register.movements.amountLabel">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:145,148</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:158</note>
       </notes>
       <segment>
         <source>Monto</source>
@@ -6305,47 +6272,159 @@
     </unit>
     <unit id="staff.register.movements.noteLabel">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:157,159</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:166</note>
       </notes>
       <segment>
         <source>Nota</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.noteRequired">
-      <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:169,173</note>
-      </notes>
-      <segment>
-        <source>La nota es obligatoria para una entrada o para el motivo «Otro».</source>
-      </segment>
-    </unit>
     <unit id="staff.register.movements.referenceLabel">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:174,177</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:181,182</note>
       </notes>
       <segment>
         <source>Referencia (opcional)</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.submit.tooltip">
+    <unit id="staff.register.movements.dialog">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:191,192</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:204</note>
       </notes>
       <segment>
-        <source>Registrar el movimiento de efectivo</source>
+        <source>Registrar un movimiento</source>
       </segment>
     </unit>
     <unit id="staff.register.movements.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:198,202</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:205</note>
       </notes>
       <segment>
         <source>Registrar</source>
       </segment>
     </unit>
-    <unit id="staff.register.movements.kind.out">
+    <unit id="staff.register.movements.submit.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:206</note>
+      </notes>
+      <segment>
+        <source>Registrar el movimiento de efectivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.typeAria">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:207</note>
+      </notes>
+      <segment>
+        <source>Tipo de movimiento</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.reasonAria">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:208</note>
+      </notes>
+      <segment>
+        <source>Motivo de la salida</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.reasonsFailed">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:209</note>
+      </notes>
+      <segment>
+        <source>No se pudieron cargar los motivos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.noReasons">
       <notes>
         <note category="location">src/app/features/staff/register/cash-movements.ts:210</note>
+      </notes>
+      <segment>
+        <source>No hay motivos de salida configurados. Pide a un administrador que los agregue.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.amountInvalid">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:211</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 5 o 5.00.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.noteRequired">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:212</note>
+      </notes>
+      <segment>
+        <source>La nota es obligatoria para una entrada o para el motivo «Otro».</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.in">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:213</note>
+      </notes>
+      <segment>
+        <source>Entrada</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.out">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:214</note>
+      </notes>
+      <segment>
+        <source>Salida</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.empty">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:216</note>
+      </notes>
+      <segment>
+        <source>Este turno todavía no tiene movimientos de efectivo.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.time">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:220</note>
+      </notes>
+      <segment>
+        <source>Hora</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.type">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:224</note>
+      </notes>
+      <segment>
+        <source>Tipo</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.amount">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:227</note>
+      </notes>
+      <segment>
+        <source>Monto</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.detail">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:231</note>
+      </notes>
+      <segment>
+        <source>Detalle</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.reference">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:232</note>
+      </notes>
+      <segment>
+        <source>Referencia</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.kind.out">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:235</note>
       </notes>
       <segment>
         <source>Salida</source>
@@ -6353,15 +6432,39 @@
     </unit>
     <unit id="staff.register.movements.kind.in">
       <notes>
-        <note category="location">src/app/features/staff/register/cash-movements.ts:211</note>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:236</note>
       </notes>
       <segment>
         <source>Entrada</source>
       </segment>
     </unit>
+    <unit id="staff.register.movements.why.amount">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:282</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto mayor que cero.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.why.reason">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:285</note>
+      </notes>
+      <segment>
+        <source>Elige el motivo de la salida.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.why.note">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:288</note>
+      </notes>
+      <segment>
+        <source>Escribe la nota para registrar el movimiento.</source>
+      </segment>
+    </unit>
     <unit id="staff.register.close.title">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:31,32</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:34,35</note>
       </notes>
       <segment>
         <source>Cerrar turno</source>
@@ -6369,7 +6472,7 @@
     </unit>
     <unit id="staff.register.close.hint">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:44,46</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:51,53</note>
       </notes>
       <segment>
         <source> Cuenta el efectivo de la caja y escribe el monto. Después verás cuánto se esperaba. </source>
@@ -6377,7 +6480,7 @@
     </unit>
     <unit id="staff.register.close.count">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:47,49</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:54,55</note>
       </notes>
       <segment>
         <source>Efectivo contado</source>
@@ -6385,7 +6488,7 @@
     </unit>
     <unit id="staff.register.close.difference">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:61,62</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:68,69</note>
       </notes>
       <segment>
         <source>Diferencia:</source>
@@ -6393,7 +6496,7 @@
     </unit>
     <unit id="staff.register.close.noteHint">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:65,67</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:72,74</note>
       </notes>
       <segment>
         <source> La diferencia supera el umbral permitido. El monto contado ya no puede cambiar: escribe una nota para cerrar. </source>
@@ -6401,7 +6504,7 @@
     </unit>
     <unit id="staff.register.close.note">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:68,70</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:74</note>
       </notes>
       <segment>
         <source>Nota</source>
@@ -6409,7 +6512,7 @@
     </unit>
     <unit id="staff.register.close.locked">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:82,84</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:88,90</note>
       </notes>
       <segment>
         <source> El efectivo contado ya se mostró y no puede cambiar. Escribe el mismo monto de antes. </source>
@@ -6417,7 +6520,7 @@
     </unit>
     <unit id="staff.register.close.done.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:93,94</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:100,101</note>
       </notes>
       <segment>
         <source>Cerrar este resumen</source>
@@ -6425,7 +6528,7 @@
     </unit>
     <unit id="staff.register.close.done">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:99,101</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:106,108</note>
       </notes>
       <segment>
         <source>Listo</source>
@@ -6433,7 +6536,7 @@
     </unit>
     <unit id="staff.register.close.cancel.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:107,108</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:115,116</note>
       </notes>
       <segment>
         <source>Cerrar sin cerrar el turno</source>
@@ -6441,7 +6544,7 @@
     </unit>
     <unit id="staff.register.close.cancel">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:113,115</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:121,123</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -6449,7 +6552,7 @@
     </unit>
     <unit id="staff.register.close.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:123,124</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:135,136</note>
       </notes>
       <segment>
         <source>Cerrar el turno con este efectivo contado</source>
@@ -6457,15 +6560,39 @@
     </unit>
     <unit id="staff.register.close.confirm">
       <notes>
-        <note category="location">src/app/features/staff/register/close-shift.ts:130,133</note>
+        <note category="location">src/app/features/staff/register/close-shift.ts:142,145</note>
       </notes>
       <segment>
         <source>Cerrar turno</source>
       </segment>
     </unit>
+    <unit id="staff.register.close.countInvalid">
+      <notes>
+        <note category="location">src/app/features/staff/register/close-shift.ts:157</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 90 o 90.00.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.close.why.count">
+      <notes>
+        <note category="location">src/app/features/staff/register/close-shift.ts:168</note>
+      </notes>
+      <segment>
+        <source>Escribe el efectivo contado para cerrar el turno.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.close.why.note">
+      <notes>
+        <note category="location">src/app/features/staff/register/close-shift.ts:171</note>
+      </notes>
+      <segment>
+        <source>Escribe la nota de la diferencia para cerrar el turno.</source>
+      </segment>
+    </unit>
     <unit id="staff.register.shifts.title">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:32,35</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:36,39</note>
       </notes>
       <segment>
         <source>Turnos abiertos</source>
@@ -6473,7 +6600,7 @@
     </unit>
     <unit id="staff.register.shifts.failed">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:36,38</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:40,42</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los turnos.</source>
@@ -6481,7 +6608,7 @@
     </unit>
     <unit id="staff.register.shifts.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:43,44</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:47,48</note>
       </notes>
       <segment>
         <source>Volver a cargar los turnos abiertos</source>
@@ -6489,63 +6616,23 @@
     </unit>
     <unit id="staff.register.shifts.retry">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:48,51</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:52,55</note>
       </notes>
       <segment>
         <source>Reintentar</source>
       </segment>
     </unit>
-    <unit id="staff.register.shifts.empty">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:54,56</note>
-      </notes>
-      <segment>
-        <source> No hay turnos abiertos. </source>
-      </segment>
-    </unit>
     <unit id="staff.register.shifts.scroll">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:57</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:57,58</note>
       </notes>
       <segment>
         <source>Turnos abiertos</source>
       </segment>
     </unit>
-    <unit id="staff.register.shifts.cashier">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:61,62</note>
-      </notes>
-      <segment>
-        <source>Cajero</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.shifts.since">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:62,63</note>
-      </notes>
-      <segment>
-        <source>Desde</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.shifts.float">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:63,64</note>
-      </notes>
-      <segment>
-        <source>Fondo inicial</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.shifts.actions">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:64,66</note>
-      </notes>
-      <segment>
-        <source>Acciones</source>
-      </segment>
-    </unit>
     <unit id="staff.register.shifts.force.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:80,81</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:77,78</note>
       </notes>
       <segment>
         <source>Cerrar este turno sin contar la caja</source>
@@ -6553,7 +6640,7 @@
     </unit>
     <unit id="staff.register.shifts.force">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:86,88</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:83,85</note>
       </notes>
       <segment>
         <source>Cierre forzado</source>
@@ -6561,7 +6648,7 @@
     </unit>
     <unit id="staff.register.shifts.loading">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:96,100</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:90,94</note>
       </notes>
       <segment>
         <source>Cargando los turnos…</source>
@@ -6569,7 +6656,7 @@
     </unit>
     <unit id="staff.register.force.title">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:100,101</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:94,95</note>
       </notes>
       <segment>
         <source>Cierre forzado</source>
@@ -6577,7 +6664,7 @@
     </unit>
     <unit id="staff.register.force.who">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:110,111</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:111,112</note>
       </notes>
       <segment>
         <source>Turno de</source>
@@ -6585,47 +6672,15 @@
     </unit>
     <unit id="staff.register.force.reason">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:114,116</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:114</note>
       </notes>
       <segment>
         <source>Motivo</source>
       </segment>
     </unit>
-    <unit id="staff.register.force.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:132,133</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin forzar el cierre</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.force.cancel">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:138,140</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.force.confirm.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:146,147</note>
-      </notes>
-      <segment>
-        <source>Cerrar el turno con este motivo</source>
-      </segment>
-    </unit>
-    <unit id="staff.register.force.confirm">
-      <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:152,154</note>
-      </notes>
-      <segment>
-        <source>Forzar cierre</source>
-      </segment>
-    </unit>
     <unit id="staff.register.forced.title">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:158,159</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:130,131</note>
       </notes>
       <segment>
         <source>Turno cerrado</source>
@@ -6633,7 +6688,7 @@
     </unit>
     <unit id="staff.register.forced.done.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:174,175</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:146,147</note>
       </notes>
       <segment>
         <source>Cerrar este resumen</source>
@@ -6641,10 +6696,74 @@
     </unit>
     <unit id="staff.register.forced.done">
       <notes>
-        <note category="location">src/app/features/staff/register/open-shifts.ts:180,182</note>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:152,154</note>
       </notes>
       <segment>
         <source>Listo</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.force.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:163</note>
+      </notes>
+      <segment>
+        <source>Forzar cierre</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.force.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:164</note>
+      </notes>
+      <segment>
+        <source>Cerrar el turno con este motivo</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.force.why">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:165</note>
+      </notes>
+      <segment>
+        <source>Escribe el motivo para forzar el cierre.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.shifts.empty">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:167</note>
+      </notes>
+      <segment>
+        <source>No hay turnos abiertos.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.shifts.cashier">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:169</note>
+      </notes>
+      <segment>
+        <source>Cajero</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.shifts.since">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:170</note>
+      </notes>
+      <segment>
+        <source>Desde</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.shifts.float">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:171</note>
+      </notes>
+      <segment>
+        <source>Fondo inicial</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.shifts.actions">
+      <notes>
+        <note category="location">src/app/features/staff/register/open-shifts.ts:172</note>
+      </notes>
+      <segment>
+        <source>Acciones</source>
       </segment>
     </unit>
     <unit id="register.method.cash">
@@ -6681,7 +6800,7 @@
     </unit>
     <unit id="staff.register.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:30,32</note>
+        <note category="location">src/app/features/staff/register/register.ts:33,36</note>
       </notes>
       <segment>
         <source>Caja</source>
@@ -6689,7 +6808,7 @@
     </unit>
     <unit id="staff.register.failed">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:34,36</note>
+        <note category="location">src/app/features/staff/register/register.ts:37,39</note>
       </notes>
       <segment>
         <source>No se pudo cargar el turno de caja.</source>
@@ -6697,7 +6816,7 @@
     </unit>
     <unit id="staff.register.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:41,42</note>
+        <note category="location">src/app/features/staff/register/register.ts:44,45</note>
       </notes>
       <segment>
         <source>Volver a cargar el turno de caja</source>
@@ -6705,7 +6824,7 @@
     </unit>
     <unit id="staff.register.retry">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:46,48</note>
+        <note category="location">src/app/features/staff/register/register.ts:49,51</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -6713,7 +6832,7 @@
     </unit>
     <unit id="staff.register.loading">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:50,51</note>
+        <note category="location">src/app/features/staff/register/register.ts:53,54</note>
       </notes>
       <segment>
         <source>Cargando el turno…</source>
@@ -6721,7 +6840,7 @@
     </unit>
     <unit id="staff.register.open.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:53,56</note>
+        <note category="location">src/app/features/staff/register/register.ts:56,59</note>
       </notes>
       <segment>
         <source>Turno abierto</source>
@@ -6729,7 +6848,7 @@
     </unit>
     <unit id="staff.register.open.since">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:56,57</note>
+        <note category="location">src/app/features/staff/register/register.ts:59,60</note>
       </notes>
       <segment>
         <source>Desde</source>
@@ -6737,7 +6856,7 @@
     </unit>
     <unit id="staff.register.open.float">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:60,61</note>
+        <note category="location">src/app/features/staff/register/register.ts:63,64</note>
       </notes>
       <segment>
         <source>Fondo inicial</source>
@@ -6745,7 +6864,7 @@
     </unit>
     <unit id="staff.register.open.blind">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:65,67</note>
+        <note category="location">src/app/features/staff/register/register.ts:68,70</note>
       </notes>
       <segment>
         <source> El efectivo esperado se muestra al cerrar el turno, después de contar la caja. </source>
@@ -6753,7 +6872,7 @@
     </unit>
     <unit id="staff.register.open.close.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:73,74</note>
+        <note category="location">src/app/features/staff/register/register.ts:76,77</note>
       </notes>
       <segment>
         <source>Contar la caja y cerrar el turno</source>
@@ -6761,7 +6880,7 @@
     </unit>
     <unit id="staff.register.open.close">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:79,81</note>
+        <note category="location">src/app/features/staff/register/register.ts:82,84</note>
       </notes>
       <segment>
         <source>Cerrar turno</source>
@@ -6769,7 +6888,7 @@
     </unit>
     <unit id="staff.register.closed.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:86,87</note>
+        <note category="location">src/app/features/staff/register/register.ts:89,90</note>
       </notes>
       <segment>
         <source>Turno cerrado</source>
@@ -6777,7 +6896,7 @@
     </unit>
     <unit id="staff.register.closed.new.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:93,94</note>
+        <note category="location">src/app/features/staff/register/register.ts:96,97</note>
       </notes>
       <segment>
         <source>Volver a abrir un turno de caja</source>
@@ -6785,7 +6904,7 @@
     </unit>
     <unit id="staff.register.closed.new">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:99,101</note>
+        <note category="location">src/app/features/staff/register/register.ts:102,104</note>
       </notes>
       <segment>
         <source>Abrir un turno nuevo</source>
@@ -6793,7 +6912,7 @@
     </unit>
     <unit id="staff.register.none.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:105,106</note>
+        <note category="location">src/app/features/staff/register/register.ts:108,109</note>
       </notes>
       <segment>
         <source>No hay un turno abierto</source>
@@ -6801,7 +6920,7 @@
     </unit>
     <unit id="staff.register.none.hint">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:107,109</note>
+        <note category="location">src/app/features/staff/register/register.ts:110,112</note>
       </notes>
       <segment>
         <source> Abre un turno con el efectivo que dejas en la caja para cobrar. </source>
@@ -6809,23 +6928,15 @@
     </unit>
     <unit id="staff.register.none.float">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:110,112</note>
+        <note category="location">src/app/features/staff/register/register.ts:113,114</note>
       </notes>
       <segment>
         <source>Fondo inicial</source>
       </segment>
     </unit>
-    <unit id="staff.register.none.floatInvalid">
-      <notes>
-        <note category="location">src/app/features/staff/register/register.ts:122,125</note>
-      </notes>
-      <segment>
-        <source>Escribe un monto, como 50 o 50.00.</source>
-      </segment>
-    </unit>
     <unit id="staff.register.none.currencyFailed">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:129,131</note>
+        <note category="location">src/app/features/staff/register/register.ts:123,126</note>
       </notes>
       <segment>
         <source>No se pudo leer la moneda de la tienda, así que todavía no se puede abrir un turno.</source>
@@ -6833,7 +6944,7 @@
     </unit>
     <unit id="staff.register.none.currencyRetry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:137,138</note>
+        <note category="location">src/app/features/staff/register/register.ts:131,132</note>
       </notes>
       <segment>
         <source>Volver a leer la moneda de la tienda</source>
@@ -6841,7 +6952,7 @@
     </unit>
     <unit id="staff.register.none.currencyRetry">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:142,144</note>
+        <note category="location">src/app/features/staff/register/register.ts:136,139</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -6849,7 +6960,7 @@
     </unit>
     <unit id="staff.register.none.noCurrency">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:147,150</note>
+        <note category="location">src/app/features/staff/register/register.ts:141,144</note>
       </notes>
       <segment>
         <source> Todavía no hay productos en el menú, así que no se puede abrir un turno. </source>
@@ -6857,7 +6968,7 @@
     </unit>
     <unit id="staff.register.none.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:156,157</note>
+        <note category="location">src/app/features/staff/register/register.ts:150,151</note>
       </notes>
       <segment>
         <source>Abrir el turno con este fondo inicial</source>
@@ -6865,10 +6976,18 @@
     </unit>
     <unit id="staff.register.none.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:163,165</note>
+        <note category="location">src/app/features/staff/register/register.ts:157,160</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.none.floatInvalid">
+      <notes>
+        <note category="location">src/app/features/staff/register/register.ts:171</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 50 o 50.00.</source>
       </segment>
     </unit>
     <unit id="staff.register.result.opened">
@@ -7049,7 +7168,7 @@
     </unit>
     <unit id="staff.tables.title">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:18,20</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:19,21</note>
       </notes>
       <segment>
         <source>Salón</source>
@@ -7057,7 +7176,7 @@
     </unit>
     <unit id="staff.tables.failed">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:23,25</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:24,26</note>
       </notes>
       <segment>
         <source>No se pudieron cargar las mesas. Las acciones están deshabilitadas.</source>
@@ -7065,7 +7184,7 @@
     </unit>
     <unit id="staff.tables.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:31,32</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:32,33</note>
       </notes>
       <segment>
         <source>Volver a cargar las mesas</source>
@@ -7073,7 +7192,7 @@
     </unit>
     <unit id="staff.tables.retry">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:36,38</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:37,39</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7081,7 +7200,7 @@
     </unit>
     <unit id="staff.tables.offline">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:42,44</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:43,45</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
@@ -7089,7 +7208,7 @@
     </unit>
     <unit id="staff.tables.updating">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:48,50</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:49,51</note>
       </notes>
       <segment>
         <source>Actualizando las mesas. Las acciones se habilitan en unos segundos.</source>
@@ -7097,7 +7216,7 @@
     </unit>
     <unit id="staff.tables.tables">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:54,56</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:55,57</note>
       </notes>
       <segment>
         <source>Mesas</source>
@@ -7105,7 +7224,7 @@
     </unit>
     <unit id="staff.tables.open.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:66,67</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:67,68</note>
       </notes>
       <segment>
         <source>Abrir una cuenta en esta mesa</source>
@@ -7113,7 +7232,7 @@
     </unit>
     <unit id="staff.tables.status.free">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:77,79</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:78,80</note>
       </notes>
       <segment>
         <source>Libre</source>
@@ -7121,7 +7240,7 @@
     </unit>
     <unit id="staff.tables.view.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:87,88</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:88,89</note>
       </notes>
       <segment>
         <source>Abrir la cuenta de esta mesa</source>
@@ -7129,7 +7248,7 @@
     </unit>
     <unit id="staff.tables.status.waiting">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:99,101</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:100,102</note>
       </notes>
       <segment>
         <source>Esperando el pago</source>
@@ -7137,7 +7256,7 @@
     </unit>
     <unit id="staff.tables.status.occupied">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:102,104</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:103,105</note>
       </notes>
       <segment>
         <source>Ocupada</source>
@@ -7145,7 +7264,7 @@
     </unit>
     <unit id="staff.tables.elapsed">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:105,106</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:106,107</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="INTERPOLATION" disp="{{ tile.minutes }}"/> min</source>
@@ -7153,7 +7272,7 @@
     </unit>
     <unit id="staff.tables.empty">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:113,116</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:114,117</note>
       </notes>
       <segment>
         <source>Todavía no hay mesas configuradas.</source>
@@ -7161,7 +7280,7 @@
     </unit>
     <unit id="staff.tables.counter">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:120,121</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:121,122</note>
       </notes>
       <segment>
         <source>Mostrador</source>
@@ -7169,7 +7288,7 @@
     </unit>
     <unit id="staff.tables.counter.name">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:122,124</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:125,126</note>
       </notes>
       <segment>
         <source>Nombre del cliente</source>
@@ -7177,7 +7296,7 @@
     </unit>
     <unit id="staff.tables.counter.open.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:136,137</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:144,145</note>
       </notes>
       <segment>
         <source>Abrir una cuenta de mostrador para este cliente</source>
@@ -7185,7 +7304,7 @@
     </unit>
     <unit id="staff.tables.counter.open">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:141,143</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:149,152</note>
       </notes>
       <segment>
         <source>Abrir cuenta</source>
@@ -7193,7 +7312,7 @@
     </unit>
     <unit id="staff.tables.counter.view.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:152,153</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:160,161</note>
       </notes>
       <segment>
         <source>Abrir la cuenta de este cliente</source>
@@ -7201,7 +7320,7 @@
     </unit>
     <unit id="staff.tickets.pay.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:42,45</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:45,48</note>
       </notes>
       <segment>
         <source>Cobrar</source>
@@ -7209,7 +7328,7 @@
     </unit>
     <unit id="staff.tickets.pay.shiftFailed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:46,48</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:49,51</note>
       </notes>
       <segment>
         <source>No se pudo leer el turno de caja.</source>
@@ -7217,7 +7336,7 @@
     </unit>
     <unit id="staff.tickets.pay.shiftRetry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:52,53</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:55,56</note>
       </notes>
       <segment>
         <source>Volver a leer el turno de caja</source>
@@ -7225,7 +7344,7 @@
     </unit>
     <unit id="staff.tickets.pay.shiftRetry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:58,61</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:61,64</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7233,7 +7352,7 @@
     </unit>
     <unit id="staff.tickets.pay.noShift">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:63,65</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:66,68</note>
       </notes>
       <segment>
         <source>Necesitas un turno de caja abierto para cobrar.</source>
@@ -7241,7 +7360,7 @@
     </unit>
     <unit id="staff.tickets.pay.openShift.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:68,69</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:71,72</note>
       </notes>
       <segment>
         <source>Ir a Caja para abrir un turno</source>
@@ -7249,7 +7368,7 @@
     </unit>
     <unit id="staff.tickets.pay.openShift">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:73,76</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:76,80</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -7257,7 +7376,7 @@
     </unit>
     <unit id="staff.tickets.pay.unsent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:79,83</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:82,86</note>
       </notes>
       <segment>
         <source> Envía o elimina las líneas pendientes antes de cobrar. </source>
@@ -7265,7 +7384,7 @@
     </unit>
     <unit id="staff.tickets.pay.method">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:85,87</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:87</note>
       </notes>
       <segment>
         <source>Método de pago</source>
@@ -7273,7 +7392,7 @@
     </unit>
     <unit id="staff.tickets.pay.byItems">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:105,106</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:107,108</note>
       </notes>
       <segment>
         <source>Cobrar solo estas líneas (opcional)</source>
@@ -7281,7 +7400,7 @@
     </unit>
     <unit id="staff.tickets.pay.amount">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:124,126</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:126,127</note>
       </notes>
       <segment>
         <source>Monto a cobrar</source>
@@ -7289,7 +7408,7 @@
     </unit>
     <unit id="staff.tickets.pay.received">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:139,141</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:141,142</note>
       </notes>
       <segment>
         <source>Efectivo recibido</source>
@@ -7297,7 +7416,7 @@
     </unit>
     <unit id="staff.tickets.pay.submit.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:158,159</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:164,165</note>
       </notes>
       <segment>
         <source>Registrar el cobro de esta cuenta</source>
@@ -7305,7 +7424,7 @@
     </unit>
     <unit id="staff.tickets.pay.submit">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:165,168</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:171,175</note>
       </notes>
       <segment>
         <source>Registrar cobro</source>
@@ -7313,7 +7432,7 @@
     </unit>
     <unit id="staff.tickets.pay.split">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:170,171</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:176,177</note>
       </notes>
       <segment>
         <source>Dividir la cuenta</source>
@@ -7321,7 +7440,7 @@
     </unit>
     <unit id="staff.tickets.pay.parts">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:173,175</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:178</note>
       </notes>
       <segment>
         <source>Partes iguales</source>
@@ -7329,7 +7448,7 @@
     </unit>
     <unit id="staff.tickets.pay.parts.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:186,187</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:191,192</note>
       </notes>
       <segment>
         <source>Elige cuántas</source>
@@ -7337,7 +7456,7 @@
     </unit>
     <unit id="staff.tickets.pay.splitLoad.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:198,199</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:203,204</note>
       </notes>
       <segment>
         <source>Calcular las partes de lo que falta cobrar</source>
@@ -7345,7 +7464,7 @@
     </unit>
     <unit id="staff.tickets.pay.splitLoad">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:204,207</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:209,212</note>
       </notes>
       <segment>
         <source>Calcular</source>
@@ -7353,15 +7472,87 @@
     </unit>
     <unit id="staff.tickets.pay.part.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:217,218</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:222,223</note>
       </notes>
       <segment>
         <source>Usar esta parte como el monto a cobrar</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.pay.method.aria">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:246</note>
+      </notes>
+      <segment>
+        <source>Método de pago</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.parts.aria">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:247</note>
+      </notes>
+      <segment>
+        <source>Partes iguales</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.amountInvalid">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:248</note>
+      </notes>
+      <segment>
+        <source>Escribe un monto, como 12 o 12.50.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.receivedInvalid">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:249</note>
+      </notes>
+      <segment>
+        <source>Escribe el efectivo recibido, como 50 o 50.00.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.why.shift">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:322</note>
+      </notes>
+      <segment>
+        <source>Abre un turno de caja para cobrar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.why.amount">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:330</note>
+      </notes>
+      <segment>
+        <source>Escribe el monto a cobrar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.why.balance">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:335</note>
+      </notes>
+      <segment>
+        <source>El monto supera lo que falta cobrar.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.pay.why.received">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:340</note>
+      </notes>
+      <segment>
+        <source>El efectivo recibido debe cubrir el monto.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.removed">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:305</note>
+      </notes>
+      <segment>
+        <source>Se quitó &quot;<ph id="0" equiv="name" disp="line.productName"/>&quot; de la cuenta</source>
+      </segment>
+    </unit>
     <unit id="staff.ticket.mergedInto">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:439</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:465</note>
       </notes>
       <segment>
         <source>La cuenta <ph id="0" equiv="number" disp="ticket.number"/> se unió a otra. Seguimos en la cuenta que quedó.</source>
@@ -7369,7 +7560,7 @@
     </unit>
     <unit id="staff.ticket.moneyRegistered">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:498</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:524</note>
       </notes>
       <segment>
         <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
@@ -7377,7 +7568,7 @@
     </unit>
     <unit id="staff.tickets.back.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:68,69</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:72,73</note>
       </notes>
       <segment>
         <source>Volver al salón</source>
@@ -7385,7 +7576,7 @@
     </unit>
     <unit id="staff.tickets.back">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:73,75</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:77,79</note>
       </notes>
       <segment>
         <source>Salón</source>
@@ -7393,7 +7584,7 @@
     </unit>
     <unit id="staff.tickets.counterTitle">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:81,82</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:85,86</note>
       </notes>
       <segment>
         <source>Mostrador: <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.counterName }}"/></source>
@@ -7401,7 +7592,7 @@
     </unit>
     <unit id="staff.tickets.number">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:85,87</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:89,91</note>
       </notes>
       <segment>
         <source>Cuenta <ph id="0" equiv="INTERPOLATION" disp="{{ ticket.number }}"/></source>
@@ -7409,7 +7600,7 @@
     </unit>
     <unit id="staff.tickets.failed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:92,94</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:96,98</note>
       </notes>
       <segment>
         <source>No se pudo cargar la cuenta. Los cambios están deshabilitados.</source>
@@ -7417,7 +7608,7 @@
     </unit>
     <unit id="staff.tickets.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:100,101</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:104,105</note>
       </notes>
       <segment>
         <source>Volver a cargar la cuenta</source>
@@ -7425,7 +7616,7 @@
     </unit>
     <unit id="staff.tickets.retry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:105,107</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:109,111</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7433,7 +7624,7 @@
     </unit>
     <unit id="staff.tickets.offline">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:111,113</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:115,117</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Los cambios se habilitan al reconectar.</source>
@@ -7441,7 +7632,7 @@
     </unit>
     <unit id="staff.tickets.updating">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:117,119</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:121,123</note>
       </notes>
       <segment>
         <source>Actualizando la cuenta. Los cambios se habilitan en unos segundos.</source>
@@ -7449,7 +7640,7 @@
     </unit>
     <unit id="staff.tickets.missing">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:123,124</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:127,128</note>
       </notes>
       <segment>
         <source>La cuenta no existe.</source>
@@ -7457,7 +7648,7 @@
     </unit>
     <unit id="staff.tickets.merged">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:127,129</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:131,133</note>
       </notes>
       <segment>
         <source> La cuenta se unió a otra y ya no se puede modificar. </source>
@@ -7465,7 +7656,7 @@
     </unit>
     <unit id="staff.tickets.cancelled">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:131,133</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:135,137</note>
       </notes>
       <segment>
         <source> La cuenta fue cancelada y ya no se puede modificar. </source>
@@ -7473,7 +7664,7 @@
     </unit>
     <unit id="staff.tickets.closed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:135,138</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:139,143</note>
       </notes>
       <segment>
         <source> La cuenta está cerrada y ya no se puede modificar. </source>
@@ -7481,7 +7672,7 @@
     </unit>
     <unit id="staff.tickets.menu">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:142,143</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:146,147</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -7489,7 +7680,7 @@
     </unit>
     <unit id="staff.tickets.product.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:155,156</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:159,160</note>
       </notes>
       <segment>
         <source>Elegir las opciones de este producto</source>
@@ -7497,7 +7688,7 @@
     </unit>
     <unit id="staff.tickets.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:166,168</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:170,172</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -7505,7 +7696,7 @@
     </unit>
     <unit id="staff.tickets.lines">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:178,179</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:182,183</note>
       </notes>
       <segment>
         <source>Cuenta</source>
@@ -7513,15 +7704,23 @@
     </unit>
     <unit id="staff.tickets.allergy">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:198,200</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:203,205</note>
       </notes>
       <segment>
         <source>Alergia</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.removing">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:207,208</note>
+      </notes>
+      <segment>
+        <source> Se quitará de la cuenta; puedes deshacerlo. </source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.state.unsent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:204,205</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:214,216</note>
       </notes>
       <segment>
         <source>Sin enviar</source>
@@ -7529,7 +7728,7 @@
     </unit>
     <unit id="staff.tickets.state.sent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:207,208</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:217,218</note>
       </notes>
       <segment>
         <source>Enviada</source>
@@ -7537,7 +7736,7 @@
     </unit>
     <unit id="staff.tickets.state.ready">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:210,211</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:220,222</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -7545,7 +7744,7 @@
     </unit>
     <unit id="staff.tickets.state.comped">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:213,214</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:223,224</note>
       </notes>
       <segment>
         <source>Cortesía</source>
@@ -7553,7 +7752,7 @@
     </unit>
     <unit id="staff.tickets.state.voided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:219,220</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:229,230</note>
       </notes>
       <segment>
         <source>Anulada</source>
@@ -7561,7 +7760,7 @@
     </unit>
     <unit id="staff.tickets.void.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:233,234</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:243,244</note>
       </notes>
       <segment>
         <source>Anular esta línea con un motivo</source>
@@ -7569,7 +7768,7 @@
     </unit>
     <unit id="staff.tickets.void">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:239,240</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:249,250</note>
       </notes>
       <segment>
         <source>Anular</source>
@@ -7577,7 +7776,7 @@
     </unit>
     <unit id="staff.tickets.void.blocked">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:246,248</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:256,258</note>
       </notes>
       <segment>
         <source>Ya está lista: pide a un cajero que la anule.</source>
@@ -7585,7 +7784,7 @@
     </unit>
     <unit id="staff.tickets.comp.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:256,257</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:266,267</note>
       </notes>
       <segment>
         <source>Dar esta línea de cortesía: no se cobra</source>
@@ -7593,7 +7792,7 @@
     </unit>
     <unit id="staff.tickets.comp">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:262,263</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:272,273</note>
       </notes>
       <segment>
         <source>Cortesía</source>
@@ -7601,7 +7800,7 @@
     </unit>
     <unit id="staff.tickets.comp.blocked">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:269,271</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:279,281</note>
       </notes>
       <segment>
         <source>Para dar una cortesía, pide a un cajero.</source>
@@ -7609,7 +7808,7 @@
     </unit>
     <unit id="staff.tickets.quantity.downLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:284,285</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:295,296</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -7617,7 +7816,7 @@
     </unit>
     <unit id="staff.tickets.quantity.down">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:286,287</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:297,298</note>
       </notes>
       <segment>
         <source>Una unidad menos</source>
@@ -7625,7 +7824,7 @@
     </unit>
     <unit id="staff.tickets.quantity.upLabel">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:303,304</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:315,316</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -7633,7 +7832,7 @@
     </unit>
     <unit id="staff.tickets.quantity.up">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:305,306</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:317,318</note>
       </notes>
       <segment>
         <source>Una unidad más</source>
@@ -7641,7 +7840,7 @@
     </unit>
     <unit id="staff.tickets.remove.label">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:318,319</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:330,331</note>
       </notes>
       <segment>
         <source>Quitar la línea</source>
@@ -7649,7 +7848,7 @@
     </unit>
     <unit id="staff.tickets.remove.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:320,321</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:332,333</note>
       </notes>
       <segment>
         <source>Quitar la línea de la cuenta</source>
@@ -7657,7 +7856,7 @@
     </unit>
     <unit id="staff.tickets.empty">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:332,334</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:344,346</note>
       </notes>
       <segment>
         <source>La cuenta todavía no tiene líneas.</source>
@@ -7665,7 +7864,7 @@
     </unit>
     <unit id="staff.tickets.total">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:337,338</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:349,350</note>
       </notes>
       <segment>
         <source>Total</source>
@@ -7673,7 +7872,7 @@
     </unit>
     <unit id="staff.tickets.paid">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:343,344</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:355,356</note>
       </notes>
       <segment>
         <source>Pagado</source>
@@ -7681,7 +7880,7 @@
     </unit>
     <unit id="staff.tickets.balance">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:347,348</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:359,360</note>
       </notes>
       <segment>
         <source>Falta cobrar</source>
@@ -7689,7 +7888,7 @@
     </unit>
     <unit id="staff.tickets.payment.received">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:357,358</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:369,370</note>
       </notes>
       <segment>
         <source>Recibido</source>
@@ -7697,7 +7896,7 @@
     </unit>
     <unit id="staff.tickets.payment.change">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:359,360</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:371,372</note>
       </notes>
       <segment>
         <source>Vuelto</source>
@@ -7705,7 +7904,7 @@
     </unit>
     <unit id="staff.tickets.payment.voided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:364,365</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:376,377</note>
       </notes>
       <segment>
         <source>Anulado</source>
@@ -7713,7 +7912,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:374,375</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:386,387</note>
       </notes>
       <segment>
         <source>Anular este pago con un motivo</source>
@@ -7721,7 +7920,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:380,382</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:392,394</note>
       </notes>
       <segment>
         <source>Anular pago</source>
@@ -7729,7 +7928,7 @@
     </unit>
     <unit id="staff.tickets.note">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:390,391</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:403,404</note>
       </notes>
       <segment>
         <source>Nota de la cuenta</source>
@@ -7737,7 +7936,7 @@
     </unit>
     <unit id="staff.tickets.note.save.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:406,407</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:423,424</note>
       </notes>
       <segment>
         <source>Guardar la nota de la cuenta</source>
@@ -7745,7 +7944,7 @@
     </unit>
     <unit id="staff.tickets.note.save">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:412,414</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:429,431</note>
       </notes>
       <segment>
         <source>Guardar nota</source>
@@ -7753,7 +7952,7 @@
     </unit>
     <unit id="staff.tickets.send.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:423,424</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:440,441</note>
       </notes>
       <segment>
         <source>Enviar las líneas nuevas a cocina</source>
@@ -7761,7 +7960,7 @@
     </unit>
     <unit id="staff.tickets.send">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:429,430</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:446,448</note>
       </notes>
       <segment>
         <source>Enviar a cocina</source>
@@ -7769,7 +7968,7 @@
     </unit>
     <unit id="staff.tickets.repeat.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:439,440</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:456,457</note>
       </notes>
       <segment>
         <source>Agregar de nuevo las líneas de la última ronda enviada</source>
@@ -7777,7 +7976,7 @@
     </unit>
     <unit id="staff.tickets.repeat">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:445,447</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:462,464</note>
       </notes>
       <segment>
         <source>Repetir última ronda</source>
@@ -7785,7 +7984,7 @@
     </unit>
     <unit id="staff.tickets.billOff">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:460,461</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:477,479</note>
       </notes>
       <segment>
         <source>Quitar el pedido de cuenta</source>
@@ -7793,7 +7992,7 @@
     </unit>
     <unit id="staff.tickets.billOn">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:462,464</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:479,481</note>
       </notes>
       <segment>
         <source>Pedir la cuenta</source>
@@ -7801,7 +8000,7 @@
     </unit>
     <unit id="staff.tickets.transfer.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:471,472</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:488,489</note>
       </notes>
       <segment>
         <source>Mover la cuenta a una mesa libre</source>
@@ -7809,7 +8008,7 @@
     </unit>
     <unit id="staff.tickets.transfer">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:477,479</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:494,496</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
@@ -7817,7 +8016,7 @@
     </unit>
     <unit id="staff.tickets.merge.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:486,487</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:503,504</note>
       </notes>
       <segment>
         <source>Unir otra cuenta abierta a esta</source>
@@ -7825,7 +8024,7 @@
     </unit>
     <unit id="staff.tickets.merge">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:492,494</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:509,511</note>
       </notes>
       <segment>
         <source>Unir cuenta</source>
@@ -7833,7 +8032,7 @@
     </unit>
     <unit id="staff.tickets.cancel.open.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:501,502</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:518,519</note>
       </notes>
       <segment>
         <source>Descartar la cuenta si todavía no se cobró nada</source>
@@ -7841,7 +8040,7 @@
     </unit>
     <unit id="staff.tickets.cancel.open">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:507,509</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:524,526</note>
       </notes>
       <segment>
         <source>Cancelar cuenta</source>
@@ -7849,7 +8048,7 @@
     </unit>
     <unit id="staff.tickets.pay.open.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:516,517</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:533,534</note>
       </notes>
       <segment>
         <source>Mostrar u ocultar el cobro de esta cuenta</source>
@@ -7857,7 +8056,7 @@
     </unit>
     <unit id="staff.tickets.pay.open">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:522,524</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:539,541</note>
       </notes>
       <segment>
         <source>Cobrar</source>
@@ -7865,7 +8064,7 @@
     </unit>
     <unit id="staff.tickets.saleVoided">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:532,533</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:549,550</note>
       </notes>
       <segment>
         <source>Venta anulada:</source>
@@ -7873,7 +8072,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:543,544</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:560,561</note>
       </notes>
       <segment>
         <source>Anular toda la venta con un motivo</source>
@@ -7881,7 +8080,7 @@
     </unit>
     <unit id="staff.tickets.voidSale">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:549,551</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:566,568</note>
       </notes>
       <segment>
         <source>Anular venta</source>
@@ -7889,7 +8088,7 @@
     </unit>
     <unit id="staff.tickets.add.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:559,560</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:576,577</note>
       </notes>
       <segment>
         <source>Agregar producto</source>
@@ -7897,7 +8096,7 @@
     </unit>
     <unit id="staff.tickets.transfer.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:578,579</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:600,601</note>
       </notes>
       <segment>
         <source>Cambiar de mesa</source>
@@ -7905,7 +8104,7 @@
     </unit>
     <unit id="staff.tickets.transfer.table">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:588,591</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:614,615</note>
       </notes>
       <segment>
         <source>Mesa de destino</source>
@@ -7913,42 +8112,10 @@
     </unit>
     <unit id="staff.tickets.transfer.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:602,603</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:630,631</note>
       </notes>
       <segment>
         <source>Elige una mesa libre</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.transfer.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:614,615</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin mover la cuenta</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.transfer.cancel">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:620,622</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.transfer.confirm.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:627,628</note>
-      </notes>
-      <segment>
-        <source>Mover la cuenta a la mesa elegida</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.transfer.confirm">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:633,635</note>
-      </notes>
-      <segment>
-        <source>Mover</source>
       </segment>
     </unit>
     <unit id="staff.tickets.merge.title">
@@ -7961,7 +8128,7 @@
     </unit>
     <unit id="staff.tickets.merge.explain">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:648,650</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:654,656</note>
       </notes>
       <segment>
         <source> Las líneas de la cuenta elegida pasan a esta cuenta y esa cuenta queda unida a ella. </source>
@@ -7969,7 +8136,7 @@
     </unit>
     <unit id="staff.tickets.merge.failed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:652,654</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:658,660</note>
       </notes>
       <segment>
         <source>No se pudieron cargar las cuentas abiertas.</source>
@@ -7977,7 +8144,7 @@
     </unit>
     <unit id="staff.tickets.merge.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:658,659</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:664,665</note>
       </notes>
       <segment>
         <source>Volver a cargar las cuentas abiertas</source>
@@ -7985,7 +8152,7 @@
     </unit>
     <unit id="staff.tickets.merge.retry">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:664,666</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:670,672</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -7993,7 +8160,7 @@
     </unit>
     <unit id="staff.tickets.merge.loading">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:668,670</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:674,676</note>
       </notes>
       <segment>
         <source>Cargando las cuentas abiertas…</source>
@@ -8001,7 +8168,7 @@
     </unit>
     <unit id="staff.tickets.merge.empty">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:672,674</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:678,680</note>
       </notes>
       <segment>
         <source> No hay otras cuentas abiertas para unir. </source>
@@ -8009,7 +8176,7 @@
     </unit>
     <unit id="staff.tickets.merge.source">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:677,679</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:682,683</note>
       </notes>
       <segment>
         <source>Cuenta a unir</source>
@@ -8017,47 +8184,15 @@
     </unit>
     <unit id="staff.tickets.merge.placeholder">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:691,692</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:698,699</note>
       </notes>
       <segment>
         <source>Elige una cuenta</source>
       </segment>
     </unit>
-    <unit id="staff.tickets.merge.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:704,705</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin unir ninguna cuenta</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.merge.cancel">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:710,712</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.merge.confirm.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:717,718</note>
-      </notes>
-      <segment>
-        <source>Unir la cuenta elegida a esta</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.merge.confirm">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:723,725</note>
-      </notes>
-      <segment>
-        <source>Unir</source>
-      </segment>
-    </unit>
     <unit id="staff.tickets.cancel.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:729,730</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:709,710</note>
       </notes>
       <segment>
         <source>Cancelar cuenta</source>
@@ -8065,47 +8200,15 @@
     </unit>
     <unit id="staff.tickets.cancel.explain">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:738,741</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:724,727</note>
       </notes>
       <segment>
         <source> Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar libre y esto no se puede deshacer. </source>
       </segment>
     </unit>
-    <unit id="staff.tickets.cancel.back.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:747,748</note>
-      </notes>
-      <segment>
-        <source>Volver sin cancelar la cuenta</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.cancel.back">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:753,755</note>
-      </notes>
-      <segment>
-        <source>Volver</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.cancel.confirm.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:762,763</note>
-      </notes>
-      <segment>
-        <source>Cancelar la cuenta definitivamente</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.cancel.confirm">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:770,772</note>
-      </notes>
-      <segment>
-        <source>Cancelar cuenta</source>
-      </segment>
-    </unit>
     <unit id="staff.tickets.comp.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:789,790</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:743,744</note>
       </notes>
       <segment>
         <source>Dar de cortesía</source>
@@ -8113,111 +8216,7 @@
     </unit>
     <unit id="staff.tickets.void.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:808,809</note>
-      </notes>
-      <segment>
-        <source>Anular línea</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.failed">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:820,822</note>
-      </notes>
-      <segment>
-        <source>No se pudieron cargar los motivos.</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.retry.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:826,827</note>
-      </notes>
-      <segment>
-        <source>Volver a cargar los motivos de anulación</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.retry">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:832,834</note>
-      </notes>
-      <segment>
-        <source>Reintentar</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.noReasons">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:838,840</note>
-      </notes>
-      <segment>
-        <source> No hay motivos de anulación configurados. Pide a un administrador que los agregue. </source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.reason">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:843,845</note>
-      </notes>
-      <segment>
-        <source>Motivo</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.reason.placeholder">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:857,858</note>
-      </notes>
-      <segment>
-        <source>Elige un motivo</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.note">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:864,866</note>
-      </notes>
-      <segment>
-        <source>Nota</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.noteRequired">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:876,879</note>
-      </notes>
-      <segment>
-        <source>Para el motivo «Otro» la nota es obligatoria.</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.loading">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:881,884</note>
-      </notes>
-      <segment>
-        <source>Cargando los motivos…</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:890,891</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin anular la línea</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.cancel">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:896,898</note>
-      </notes>
-      <segment>
-        <source>Cancelar</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.confirm.tooltip">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:904,905</note>
-      </notes>
-      <segment>
-        <source>Anular la línea con este motivo</source>
-      </segment>
-    </unit>
-    <unit id="staff.tickets.void.confirm">
-      <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:910,912</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:762,763</note>
       </notes>
       <segment>
         <source>Anular línea</source>
@@ -8225,7 +8224,7 @@
     </unit>
     <unit id="staff.tickets.billOn.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:939</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:803</note>
       </notes>
       <segment>
         <source>Avisar que la mesa pidió la cuenta</source>
@@ -8233,15 +8232,127 @@
     </unit>
     <unit id="staff.tickets.billOff.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:940</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:804</note>
       </notes>
       <segment>
         <source>Quitar el aviso de que la mesa pidió la cuenta</source>
       </segment>
     </unit>
+    <unit id="staff.tickets.transfer.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:808</note>
+      </notes>
+      <segment>
+        <source>Mover</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:809</note>
+      </notes>
+      <segment>
+        <source>Mover la cuenta a la mesa elegida</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.why">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:810</note>
+      </notes>
+      <segment>
+        <source>Elige una mesa libre para mover la cuenta.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.transfer.aria">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:811</note>
+      </notes>
+      <segment>
+        <source>Mesa de destino</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.merge.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:812</note>
+      </notes>
+      <segment>
+        <source>Unir</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.merge.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:813</note>
+      </notes>
+      <segment>
+        <source>Unir la cuenta elegida a esta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.merge.why">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:814</note>
+      </notes>
+      <segment>
+        <source>Elige la cuenta que quieres unir a esta.</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.merge.aria">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:815</note>
+      </notes>
+      <segment>
+        <source>Cuenta a unir</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:816</note>
+      </notes>
+      <segment>
+        <source>Cancelar cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:817</note>
+      </notes>
+      <segment>
+        <source>Cancelar la cuenta definitivamente</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.back">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:818</note>
+      </notes>
+      <segment>
+        <source>Volver</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.cancel.back.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:819</note>
+      </notes>
+      <segment>
+        <source>Volver sin cancelar la cuenta</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.confirm">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:820</note>
+      </notes>
+      <segment>
+        <source>Anular línea</source>
+      </segment>
+    </unit>
+    <unit id="staff.tickets.void.confirm.tooltip">
+      <notes>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:821</note>
+      </notes>
+      <segment>
+        <source>Anular la línea con este motivo</source>
+      </segment>
+    </unit>
     <unit id="staff.tickets.voidSale.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:981</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:863</note>
       </notes>
       <segment>
         <source>Anular venta</source>
@@ -8249,7 +8360,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.title">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:982</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:864</note>
       </notes>
       <segment>
         <source>Anular pago</source>
@@ -8257,7 +8368,7 @@
     </unit>
     <unit id="staff.tickets.voidSale.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:986</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:868</note>
       </notes>
       <segment>
         <source>Anular toda la venta con el motivo elegido</source>
@@ -8265,7 +8376,7 @@
     </unit>
     <unit id="staff.tickets.voidPayment.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:987</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:869</note>
       </notes>
       <segment>
         <source>Anular este pago con el motivo elegido</source>
@@ -8273,7 +8384,7 @@
     </unit>
     <unit id="staff.tickets.comp.confirm">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:998</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:880</note>
       </notes>
       <segment>
         <source>Dar de cortesía</source>
@@ -8281,7 +8392,7 @@
     </unit>
     <unit id="staff.tickets.comp.confirm.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:999</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:881</note>
       </notes>
       <segment>
         <source>Dar la línea de cortesía con el motivo elegido</source>
@@ -8289,7 +8400,7 @@
     </unit>
     <unit id="staff.tickets.merge.option.table">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:1012</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:894</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="name" disp="candidate.tableName"/> · Cuenta <ph id="1" equiv="number" disp="candidate.number"/></source>
@@ -8297,7 +8408,7 @@
     </unit>
     <unit id="staff.tickets.merge.option.counter">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:1013</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:895</note>
       </notes>
       <segment>
         <source>Mostrador: <ph id="0" equiv="name" disp="candidate.counterName"/> · Cuenta <ph id="1" equiv="number" disp="candidate.number"/></source>
@@ -8932,42 +9043,42 @@
     </unit>
     <unit id="shared.dataTable.empty">
       <notes>
-        <note category="location">src/app/shared/ui/data-table/data-table.ts:145</note>
+        <note category="location">src/app/shared/ui/data-table/data-table.ts:148</note>
       </notes>
       <segment>
         <source>No hay resultados.</source>
       </segment>
     </unit>
-    <unit id="shared.formDialog.cancel.tooltip">
-      <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:37,38</note>
-      </notes>
-      <segment>
-        <source>Cerrar sin guardar</source>
-      </segment>
-    </unit>
     <unit id="shared.formDialog.cancel">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:43,45</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:49,51</note>
       </notes>
       <segment>
         <source>Cancelar</source>
       </segment>
     </unit>
+    <unit id="shared.formDialog.save">
+      <notes>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:70,72</note>
+      </notes>
+      <segment>
+        <source>Guardar</source>
+      </segment>
+    </unit>
     <unit id="shared.formDialog.save.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:52,53</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:100</note>
       </notes>
       <segment>
         <source>Guardar los cambios</source>
       </segment>
     </unit>
-    <unit id="shared.formDialog.save">
+    <unit id="shared.formDialog.cancel.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:59,61</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:101</note>
       </notes>
       <segment>
-        <source>Guardar</source>
+        <source>Cerrar sin guardar</source>
       </segment>
     </unit>
     <unit id="configurator.noChoice">
@@ -9140,7 +9251,7 @@
     </unit>
     <unit id="shared.voidDialog.failed">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:35,37</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:51,53</note>
       </notes>
       <segment>
         <source>No se pudieron cargar los motivos.</source>
@@ -9148,7 +9259,7 @@
     </unit>
     <unit id="shared.voidDialog.retry.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:41,42</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:57,58</note>
       </notes>
       <segment>
         <source>Volver a cargar los motivos</source>
@@ -9156,7 +9267,7 @@
     </unit>
     <unit id="shared.voidDialog.retry">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:47,49</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:63,65</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -9164,7 +9275,7 @@
     </unit>
     <unit id="shared.voidDialog.noReasons">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:53,56</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:69,72</note>
       </notes>
       <segment>
         <source> No hay motivos configurados. Pide a un administrador que los agregue. </source>
@@ -9172,7 +9283,7 @@
     </unit>
     <unit id="shared.voidDialog.reason">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:58,60</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:75</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -9180,7 +9291,7 @@
     </unit>
     <unit id="shared.voidDialog.reason.placeholder">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:72,73</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:90,91</note>
       </notes>
       <segment>
         <source>Elige un motivo</source>
@@ -9188,42 +9299,66 @@
     </unit>
     <unit id="shared.voidDialog.note">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:79,81</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:98</note>
       </notes>
       <segment>
         <source>Nota</source>
       </segment>
     </unit>
-    <unit id="shared.voidDialog.noteRequired">
-      <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:90,93</note>
-      </notes>
-      <segment>
-        <source>Para el motivo «Otro» la nota es obligatoria.</source>
-      </segment>
-    </unit>
     <unit id="shared.voidDialog.loading">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:94,96</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:114,117</note>
       </notes>
       <segment>
         <source>Cargando los motivos…</source>
       </segment>
     </unit>
-    <unit id="shared.voidDialog.cancel.tooltip">
+    <unit id="shared.voidDialog.reason.aria">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:102,103</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:151</note>
       </notes>
       <segment>
-        <source>Cerrar sin confirmar</source>
+        <source>Motivo</source>
       </segment>
     </unit>
-    <unit id="shared.voidDialog.cancel">
+    <unit id="shared.voidDialog.noteRequired">
       <notes>
-        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:108,110</note>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:152</note>
       </notes>
       <segment>
-        <source>Cancelar</source>
+        <source>Para el motivo «Otro» la nota es obligatoria.</source>
+      </segment>
+    </unit>
+    <unit id="shared.voidDialog.why.failed">
+      <notes>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:168</note>
+      </notes>
+      <segment>
+        <source>Carga los motivos para continuar.</source>
+      </segment>
+    </unit>
+    <unit id="shared.voidDialog.why.loading">
+      <notes>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:171</note>
+      </notes>
+      <segment>
+        <source>Esperando los motivos.</source>
+      </segment>
+    </unit>
+    <unit id="shared.voidDialog.why.reason">
+      <notes>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:174</note>
+      </notes>
+      <segment>
+        <source>Elige un motivo para continuar.</source>
+      </segment>
+    </unit>
+    <unit id="shared.voidDialog.why.note">
+      <notes>
+        <note category="location">src/app/shared/ui/void-dialog/void-dialog.ts:176</note>
+      </notes>
+      <segment>
+        <source>Escribe la nota para continuar.</source>
       </segment>
     </unit>
   </file>

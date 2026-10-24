@@ -100,7 +100,7 @@ import { ShiftResult } from './shift-result';
       [saveLabel]="labels.forceSave"
       [saveTooltip]="labels.forceTooltip"
       [saveIcon]="icons.force"
-      saveSeverity="danger"
+      [saveSeverity]="'danger'"
       [disabledReason]="needsReason() ? labels.forceWhy : null"
       (saved)="confirm()"
       (dismissed)="closeForce(false)"

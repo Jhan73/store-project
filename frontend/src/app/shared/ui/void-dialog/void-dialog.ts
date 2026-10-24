@@ -39,7 +39,7 @@ export interface VoidChoice {
       [saveLabel]="confirmLabel()"
       [saveTooltip]="confirmTooltip()"
       [saveIcon]="confirmIcon()"
-      saveSeverity="danger"
+      [saveSeverity]="'danger'"
       [disabledReason]="whyDisabled()"
       width="30rem"
       (saved)="confirm()"

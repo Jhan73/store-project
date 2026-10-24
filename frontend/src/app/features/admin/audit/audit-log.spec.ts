@@ -185,14 +185,39 @@ describe('AuditLog', () => {
       const { host } = await rendered();
 
       expect(host.querySelector('app-table-scroll')?.getAttribute('aria-label')).toBeTruthy();
-      expect(host.querySelector('table caption')?.textContent).toBeTruthy();
+    });
+
+    it('is the shared data table in lazy mode, with no sorting or search of its own because the API has neither', async () => {
+      const { host } = await rendered();
+
+      expect(host.querySelector('app-data-table')).not.toBeNull();
+      expect(host.querySelector('[data-testid="dt-search"]')).toBeNull();
+      expect(host.querySelector('th[aria-sort]')).toBeNull();
+      expect(host.querySelector('td.actions > .row-actions')).not.toBeNull();
+    });
+
+    it('does not ask for another page when the table starts on the page the URL named', async () => {
+      const { host, http, router, fixture } = await render('/audit?page=2&size=10');
+      const navigate = vi.spyOn(router, 'navigate');
+
+      http.expectOne(isSearch).flush(page([update], { page: 2, size: 10, totalElements: 45, totalPages: 5 }));
+      await fixture.whenStable();
+
+      expect(navigate).not.toHaveBeenCalled();
+      http.expectNone(isSearch);
+      expect(host.querySelector('.p-paginator-page-selected')?.textContent?.trim()).toBe('3');
+    });
+
+    it('offers the page sizes of the URL contract', async () => {
+      const { host } = await rendered('/audit', page([update], { totalElements: 45, totalPages: 3 }));
+
+      expect(host.querySelector('.p-paginator .p-select')).not.toBeNull();
     });
 
     it('says when nothing matches', async () => {
       const { host } = await rendered('/audit', page([], { totalElements: 0, totalPages: 0 }));
 
-      expect(host.textContent).toContain('No hay registros con estos filtros');
-      expect(host.querySelector('table')).toBeNull();
+      expect(host.querySelector('tbody')!.textContent).toContain('No hay registros con estos filtros');
     });
 
     it('shows a loading state until the answer arrives', async () => {
@@ -450,6 +475,22 @@ describe('AuditLog', () => {
       http.expectOne(isSearch).flush(page([update]));
     });
 
+    it('keeps every filter in a form field, so an error never moves the row', async () => {
+      const { host } = await rendered();
+
+      for (const id of ['audit-range', 'audit-actor', 'audit-entity-type', 'audit-entity-id', 'audit-action']) {
+        expect(host.querySelector(`app-form-field label[for="${id}"]`), id).not.toBeNull();
+      }
+      expect(host.querySelectorAll('.filters app-form-field .message')).toHaveLength(5);
+    });
+
+    it('lets the date range input fill its field instead of collapsing', async () => {
+      const { host } = await rendered();
+      const picker = host.querySelector('p-datepicker')!;
+
+      expect(getComputedStyle(picker).display).not.toBe('block');
+    });
+
     it('refuses a shared link whose range is reversed', async () => {
       const { host, http, fixture } = await render('/audit?from=2026-10-05&to=2026-10-01');
       await fixture.whenStable();
@@ -578,10 +619,10 @@ describe('AuditLog', () => {
       expect(host.textContent).toContain('No hay registros con estos filtros');
     });
 
-    it('has no paginator when there is nothing to page', async () => {
+    it('shows the empty text inside the table when there is nothing to page', async () => {
       const { host } = await rendered('/audit', page([], { totalElements: 0, totalPages: 0 }));
 
-      expect(host.querySelector('p-paginator')).toBeNull();
+      expect(host.querySelector('tbody')!.textContent).toContain('No hay registros con estos filtros');
     });
   });
 

@@ -42,7 +42,7 @@ import { ShiftStore } from './shift-store';
       [visible]="visible()"
       (visibleChange)="visibleChange($event)"
     >
-      <div class="close-body" (keydown.escape)="escape($event)">
+      <div class="close-body" tabindex="-1" (keydown.escape)="escape($event)">
         @if (store.closedShift(); as closed) {
           <app-shift-result [shift]="closed" [timeZone]="store.timeZone()" />
         } @else {

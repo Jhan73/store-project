@@ -584,7 +584,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       [visible]="configuring() !== null"
       (visibleChange)="closeAdd($event)"
     >
-      <div class="add-body" [attr.aria-busy]="adding()" (keydown.escape)="escapeAdd($event)">
+      <div class="add-body" tabindex="-1" [attr.aria-busy]="adding()" (keydown.escape)="escapeAdd($event)">
         @if (configuring(); as product) {
           <app-product-configurator
             [product]="product"
@@ -716,7 +716,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       [saveIcon]="icons.cancelTicket"
       [cancelLabel]="labels.back"
       [cancelTooltip]="labels.backTooltip"
-      saveSeverity="danger"
+      [saveSeverity]="'danger'"
       (saved)="cancelTicket()"
       (dismissed)="closeCancel(false)"
     >
