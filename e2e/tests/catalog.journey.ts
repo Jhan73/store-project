@@ -19,8 +19,12 @@ test('the admin builds a product with a modifier group', async ({ browser }) => 
   const page = await openAdminPage(browser, '/admin/catalog/categories');
 
   await test.step('create the category', async () => {
-    await page.getByLabel('Nombre de la categoría').fill(categoryName);
-    await page.getByRole('button', { name: 'Agregar categoría' }).click();
+    await page.getByTestId('add-category').click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Nombre de la categoría').fill(categoryName);
+    await dialog.getByTestId('fd-save').click();
+    await expect(dialog).toHaveCount(0);
+    await page.getByTestId('dt-search').fill(categoryName);
     const row = page.getByRole('row', { name: new RegExp(categoryName) });
     await expect(row).toContainText('Activa');
   });
@@ -44,6 +48,7 @@ test('the admin builds a product with a modifier group', async ({ browser }) => 
     }
     await page.getByRole('button', { name: 'Guardar grupo' }).click();
 
+    await page.getByTestId('dt-search').fill(groupName);
     const row = page.getByRole('row', { name: new RegExp(groupName) });
     await expect(row).toContainText('Obligatorio');
     await expect(row).toContainText('1 a 2');
@@ -69,6 +74,7 @@ test('the admin builds a product with a modifier group', async ({ browser }) => 
     // The form has its own Categoría select, which stays on screen until the lazy list replaces it.
     await expect(page.getByRole('heading', { name: 'Productos', exact: true })).toBeVisible();
     await pickOption(page, 'Categoría', categoryName);
+    await page.getByTestId('dt-search').fill(productName);
     const row = page.getByRole('row', { name: new RegExp(productName) });
     await expect(row).toContainText(categoryName);
     await expect(row).toContainText('Activo');

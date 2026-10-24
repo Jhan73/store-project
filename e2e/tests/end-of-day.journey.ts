@@ -39,35 +39,38 @@ test('end of day: cash out for the supplier, blind close and a justified differe
   const page = await openAdminPage(browser, '/staff/register');
 
   await test.step('the cashier opens a shift with a float', async () => {
-    await page.getByTestId('float').fill(amount(FLOAT));
+    await page.locator('#float').fill(amount(FLOAT));
     await page.getByTestId('open-submit').click();
     await expect(page.getByTestId('opening-float')).toContainText(amount(FLOAT));
   });
 
   await test.step('the cashier records a cash out for the fruit supplier', async () => {
+    await page.getByTestId('mv-open').click();
+    const movement = page.getByRole('dialog');
     await pickOption(page, 'Motivo', reasonCode);
-    await page.getByTestId('mv-amount').fill(amount(CASH_OUT));
-    await page.getByTestId('mv-reference').fill(reference);
-    await page.getByTestId('mv-submit').click();
+    await movement.locator('#mv-amount').fill(amount(CASH_OUT));
+    await movement.getByTestId('mv-reference').fill(reference);
+    await movement.getByTestId('fd-save').click();
+    await expect(movement).toHaveCount(0);
     const row = page.getByRole('row', { name: new RegExp(reference) });
     await expect(row).toContainText(amount(CASH_OUT));
     await expect(row).toContainText(reasonCode);
   });
 
-  const dialog = page.getByRole('dialog');
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Cerrar turno' });
 
   await test.step('the close is blind: the count is asked before any expected cash is shown', async () => {
     await page.getByTestId('close-open').click();
-    await expect(dialog.getByTestId('close-count')).toBeVisible();
+    await expect(dialog.locator('#close-count')).toBeVisible();
     await expect(dialog.getByTestId('expected-cash')).toHaveCount(0);
     await expect(dialog).not.toContainText('Efectivo esperado');
-    await dialog.getByTestId('close-count').fill(amount(counted));
+    await dialog.locator('#close-count').fill(amount(counted));
     await dialog.getByTestId('close-confirm').click();
   });
 
   await test.step('the difference is shown, the count is locked and the note is required', async () => {
     await expect(dialog.getByTestId('close-difference').locator('strong')).toHaveText(signed(gap, below));
-    await expect(dialog.getByTestId('close-count')).not.toBeEditable();
+    await expect(dialog.locator('#close-count')).not.toBeEditable();
     await expect(dialog.getByTestId('close-confirm')).toBeDisabled();
     await dialog.getByTestId('close-note').fill('e2e: missing small change');
     await dialog.getByTestId('close-confirm').click();
