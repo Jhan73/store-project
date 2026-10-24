@@ -2,7 +2,7 @@ import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { forkJoin, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import type {
   ActiveReason,
   CompLineRequest,
@@ -319,19 +319,18 @@ export class TicketEditorStore {
     const pendingId = `line:${lineId}`;
     this.pending.add(pendingId);
     this.removalsRunning.update((count) => count + 1);
-    this.removalGuard.track(this.api.removeLine(ticketId, lineId)).subscribe({
-      next: () => {
-        this.removalsRunning.update((count) => count - 1);
-        this.pending.delete(pendingId);
-        if (!this.destroyed && ticketId === this.ticketId) {
-          this.loadTicket();
-        }
-      },
-      error: (error: unknown) => {
-        this.removalsRunning.update((count) => count - 1);
-        this.commandFailed(pendingId, error);
-      },
-    });
+    this.removalGuard
+      .track(this.api.removeLine(ticketId, lineId))
+      .pipe(finalize(() => this.removalsRunning.update((count) => count - 1)))
+      .subscribe({
+        next: () => {
+          this.pending.delete(pendingId);
+          if (!this.destroyed && ticketId === this.ticketId) {
+            this.loadTicket();
+          }
+        },
+        error: (error: unknown) => this.commandFailed(pendingId, error),
+      });
   }
 
   send(): void {

@@ -9,7 +9,7 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, type ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { RecordPaymentRequest, Role, Ticket, TicketLine } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
@@ -749,6 +749,49 @@ describe('TicketEditorStore', () => {
       request.flush(null, { status: 204, statusText: 'No Content' });
       http.expectOne(TICKET).flush(ticket({ lines: [line('l3')] }));
       expect(store.canSend()).toBe(true);
+    });
+
+    it('can send again when the removal request completes without an answer', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      vi.spyOn(TestBed.inject(TicketsApi), 'removeLine').mockReturnValue(EMPTY);
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      expect(store.canSend()).toBe(true);
+    });
+
+    it('can send again when the removal request fails, and shows the failure', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      const shown = vi.spyOn(messages, 'add');
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      http.expectOne(`${TICKET}/lines/l2`).flush(null, { status: 500, statusText: 'Server Error' });
+      http.expectOne(TICKET).flush(ticket({ lines: [unsent] }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.canSend()).toBe(true);
+      expect(shown).toHaveBeenCalled();
+    });
+
+    it('does not reload a ticket the screen has already left when the removal is answered', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+      params.next(convertToParamMap({ id: 'k2' }));
+      http.expectOne(`${BASE}/tickets/k2`).flush(ticket({ id: 'k2' }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+      request.flush(null, { status: 204, statusText: 'No Content' });
+
+      http.expectNone(TICKET);
     });
 
     it('cannot send when only lines being removed are unsent', () => {

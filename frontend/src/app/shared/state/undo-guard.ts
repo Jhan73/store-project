@@ -26,7 +26,7 @@ export class UndoGuard {
 
   // Call when a command is queued.
   queued(): void {
-    void this.auth.ensureFresh(UNDO_WINDOW_MS + TOKEN_MARGIN_MS);
+    void this.auth.ensureFresh(UNDO_WINDOW_MS + TOKEN_MARGIN_MS).catch(() => undefined);
   }
 
   // Registers the request so a sign-out can wait for its answer.
