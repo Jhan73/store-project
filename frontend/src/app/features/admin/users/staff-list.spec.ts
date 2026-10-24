@@ -37,6 +37,11 @@ function page(content: StaffMember[], overrides: Partial<StaffPage> = {}): Staff
 }
 
 const ask = vi.fn(() => Promise.resolve(true));
+const adminAuth = {
+  session: signal({ userId: 'me', role: 'ADMIN' }),
+  onSignOut: () => () => undefined,
+  ensureFresh: () => Promise.resolve(),
+};
 
 async function render(first: StaffPage = page([ana, beto, me])) {
   TestBed.configureTestingModule({
@@ -46,7 +51,7 @@ async function render(first: StaffPage = page([ana, beto, me])) {
       MessageService,
       StaffApi,
       { provide: ConfirmAction, useValue: { ask } },
-      { provide: AuthStore, useValue: { session: signal({ userId: 'me', role: 'ADMIN' }) } },
+      { provide: AuthStore, useValue: adminAuth },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -121,7 +126,7 @@ describe('StaffList', () => {
         MessageService,
         StaffApi,
         { provide: ConfirmAction, useValue: { ask } },
-        { provide: AuthStore, useValue: { session: signal({ userId: 'me', role: 'ADMIN' }) } },
+        { provide: AuthStore, useValue: adminAuth },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
       ],
     });

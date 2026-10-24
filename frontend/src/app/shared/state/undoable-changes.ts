@@ -1,11 +1,14 @@
 import { signal } from '@angular/core';
 import type { Observable } from 'rxjs';
+import { UndoGuard } from './undo-guard';
 import { UndoNotice } from './undo-notice';
 import { UndoQueue } from './undo-queue';
 
 // A reversible edit shown at once and sent after the undo window; `pending` is the value to display meanwhile.
+// Create it in an injection context: it flushes on pagehide and at sign-out by itself.
 export class UndoableChanges<T> {
   private readonly queue = new UndoQueue();
+  private readonly guard = new UndoGuard(this.queue);
   private readonly values = signal<ReadonlyMap<string, T>>(new Map());
   private readonly running = signal<ReadonlySet<string>>(new Set());
 
@@ -28,7 +31,7 @@ export class UndoableChanges<T> {
   ): boolean {
     const scheduled = this.notice.schedule(this.queue, key, message, () => {
       this.running.update((keys) => new Set(keys).add(key));
-      run().subscribe({
+      this.guard.track(run()).subscribe({
         complete: () => this.finish(key),
         error: (error: unknown) => {
           this.finish(key);
@@ -38,6 +41,7 @@ export class UndoableChanges<T> {
     });
     if (scheduled) {
       this.values.update((map) => new Map(map).set(key, value));
+      this.guard.queued();
     }
     return scheduled;
   }
