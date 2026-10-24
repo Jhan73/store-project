@@ -7,7 +7,7 @@ import { UNDO_WINDOW_MS } from './undo-queue';
 import { UndoableChanges } from './undoable-changes';
 
 describe('UndoableChanges', () => {
-  let signOutHooks: Array<() => Promise<void> | void>;
+  let signOutHooks: (() => Promise<void> | void)[];
   let leaveSignOut: ReturnType<typeof vi.fn>;
   let ensureFresh: ReturnType<typeof vi.fn>;
   let owner: EnvironmentInjector;

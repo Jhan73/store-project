@@ -101,7 +101,7 @@ describe('TicketEditorStore', () => {
   let router: { navigate: ReturnType<typeof vi.fn> };
   let role: WritableSignal<Role | null>;
   let params: BehaviorSubject<ParamMap>;
-  let signOutHooks: Array<() => Promise<void> | void>;
+  let signOutHooks: (() => Promise<void> | void)[];
   let ensureFresh: ReturnType<typeof vi.fn>;
   let screen: EnvironmentInjector;
   let store: TicketEditorStore;

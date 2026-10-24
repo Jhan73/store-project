@@ -23,8 +23,9 @@ let nextId = 0;
       [dismissableMask]="false"
       [visible]="visible()"
       (visibleChange)="visibleChange($event)"
+      (keydown.escape)="escape($event)"
     >
-      <form [id]="formId" [attr.aria-busy]="busy()" novalidate (submit)="submit($event)" (keydown.escape)="escape($event)">
+      <form [id]="formId" [attr.aria-busy]="busy()" novalidate (submit)="submit($event)">
         <ng-content />
       </form>
       <ng-template #footer>

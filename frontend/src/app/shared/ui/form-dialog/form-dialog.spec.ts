@@ -103,6 +103,20 @@ describe('FormDialog', () => {
     expect(fixture.componentInstance.dismissals).toBe(1);
   });
 
+  it.each([
+    ['the footer buttons', '[data-testid="fd-cancel"]'],
+    ['the header close button', '.p-dialog-close-button'],
+  ])('closes on Escape pressed on %s when idle', async (_name, selector) => {
+    const fixture = await open();
+
+    dialog()!
+      .querySelector(selector)!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.dismissals).toBe(1);
+  });
+
   it('is not aria-busy when idle', async () => {
     await open();
 

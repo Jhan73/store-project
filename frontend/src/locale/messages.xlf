@@ -5872,7 +5872,7 @@
     </unit>
     <unit id="staff.quickSale.removed">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:156</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:159</note>
       </notes>
       <segment>
         <source>Se quitó &quot;<ph id="0" equiv="name" disp="line.name"/>&quot; de la venta</source>
@@ -5880,7 +5880,7 @@
     </unit>
     <unit id="staff.quickSale.registered">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:195</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale-store.ts:198</note>
       </notes>
       <segment>
         <source>Se registró la venta del ticket <ph id="0" equiv="number" disp="ticket.number"/>.</source>
@@ -6460,6 +6460,14 @@
       </notes>
       <segment>
         <source>Escribe la nota para registrar el movimiento.</source>
+      </segment>
+    </unit>
+    <unit id="staff.register.movements.why.currency">
+      <notes>
+        <note category="location">src/app/features/staff/register/cash-movements.ts:291</note>
+      </notes>
+      <segment>
+        <source>Todavía no se conoce la moneda de la tienda; vuelve a abrir la pantalla.</source>
       </segment>
     </unit>
     <unit id="staff.register.close.title">
@@ -7544,7 +7552,7 @@
     </unit>
     <unit id="staff.tickets.removed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:305</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:309</note>
       </notes>
       <segment>
         <source>Se quitó &quot;<ph id="0" equiv="name" disp="line.productName"/>&quot; de la cuenta</source>
@@ -7552,7 +7560,7 @@
     </unit>
     <unit id="staff.ticket.mergedInto">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:465</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:480</note>
       </notes>
       <segment>
         <source>La cuenta <ph id="0" equiv="number" disp="ticket.number"/> se unió a otra. Seguimos en la cuenta que quedó.</source>
@@ -7560,7 +7568,7 @@
     </unit>
     <unit id="staff.ticket.moneyRegistered">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:524</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:539</note>
       </notes>
       <segment>
         <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
@@ -9051,7 +9059,7 @@
     </unit>
     <unit id="shared.formDialog.cancel">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:49,51</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:50,52</note>
       </notes>
       <segment>
         <source>Cancelar</source>
@@ -9059,7 +9067,7 @@
     </unit>
     <unit id="shared.formDialog.save">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:70,72</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:71,73</note>
       </notes>
       <segment>
         <source>Guardar</source>
@@ -9067,7 +9075,7 @@
     </unit>
     <unit id="shared.formDialog.save.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:100</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:101</note>
       </notes>
       <segment>
         <source>Guardar los cambios</source>
@@ -9075,7 +9083,7 @@
     </unit>
     <unit id="shared.formDialog.cancel.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:101</note>
+        <note category="location">src/app/shared/ui/form-dialog/form-dialog.ts:102</note>
       </notes>
       <segment>
         <source>Cerrar sin guardar</source>
