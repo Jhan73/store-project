@@ -32,7 +32,7 @@ test('counter quick sale paid in cash shows the change and moves through the boa
     }
     await expect(cashier.getByTestId('cart-total')).toContainText('27.00');
     await cashier.getByTestId('customer-name').fill(customer);
-    await cashier.getByTestId('qs-received').fill('50');
+    await cashier.locator('#qs-received').fill('50');
     await cashier.getByTestId('qs-submit').click();
   });
 

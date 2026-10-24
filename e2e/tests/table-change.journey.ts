@@ -53,7 +53,7 @@ test('guests move to another table and the lines keep their state', async ({ bro
   await test.step('the server moves the ticket to table 7', async () => {
     await server.getByTestId('transfer-open').click();
     await pickOption(server, 'Mesa de destino', toName);
-    await server.getByTestId('transfer-confirm').click();
+    await server.getByRole('dialog').getByTestId('fd-save').click();
     await expect(server.getByTestId('ticket-title')).toContainText(toName);
   });
 

@@ -60,7 +60,7 @@ test('table service with a change: sent, voided, prepared on the board and paid 
   await test.step('the customer switches one mango to strawberry', async () => {
     await ticketLine(server, mangoName).first().getByRole('button', { name: 'Anular' }).click();
     await pickOption(server, 'Motivo', reasonCode);
-    await server.getByRole('button', { name: 'Anular línea' }).click();
+    await server.getByRole('dialog').getByTestId('fd-save').click();
     await expect(ticketLine(server, mangoName).filter({ hasText: 'Anulada' })).toHaveCount(1);
 
     await addToTicket(server, strawberry.id);
@@ -97,7 +97,7 @@ test('table service with a change: sent, voided, prepared on the board and paid 
     await cashier.getByTestId('split-load').click();
 
     await cashier.getByTestId('split-part-0').click();
-    await cashier.getByTestId('pay-received').fill('20');
+    await cashier.locator('#pay-received').fill('20');
     await cashier.getByTestId('pay-submit').click();
     await expect(cashier.getByTestId('ticket-paid')).toContainText('11.00');
     await expect(cashier.getByTestId(/^payment-/).first()).toContainText('9.00');
