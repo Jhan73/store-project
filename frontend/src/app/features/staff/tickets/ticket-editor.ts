@@ -435,7 +435,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 type="button"
                 data-testid="send"
                 [disabled]="
-                  !store.enabled() || store.pending.has('send') || store.unsent().length === 0
+                  !store.enabled() || store.pending.has('send') || !store.canSend()
                 "
                 pTooltip="Enviar las líneas nuevas a cocina"
                 i18n-pTooltip="@@staff.tickets.send.tooltip"

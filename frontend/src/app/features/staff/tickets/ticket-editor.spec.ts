@@ -208,7 +208,15 @@ describe('TicketEditor', () => {
         TicketsApi,
         RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
-        { provide: AuthStore, useValue: { role, session: () => null } },
+        {
+          provide: AuthStore,
+          useValue: {
+            role,
+            session: () => null,
+            ensureFresh: () => Promise.resolve(),
+            onSignOut: () => () => undefined,
+          },
+        },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
       ],
@@ -480,6 +488,19 @@ describe('TicketEditor', () => {
 
     expect(find(fixture, 'line-l1')!.classList.contains('removing')).toBe(false);
     expect(find<HTMLButtonElement>(fixture, 'remove-l1')!.disabled).toBe(false);
+  });
+
+  it('does not let a line being removed be sent to the kitchen, and sends again once it is undone', async () => {
+    const fixture = await ready();
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(false);
+
+    await press(fixture, 'remove-l1');
+
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(true);
+    const notice = TestBed.inject(UndoNotice);
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(false);
   });
 
   it('changes the quantity of an unsent line with its own choices', async () => {
