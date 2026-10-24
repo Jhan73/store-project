@@ -32,6 +32,8 @@ const COLUMNS: DataColumn[] = [
       [totalRecords]="total()"
       [searchDelay]="0"
       [emptyText]="emptyText()"
+      [searchable]="searchable()"
+      [pageSizes]="pageSizes()"
       (lazyLoad)="events.push($event)"
     >
       <ng-template #row let-item>
@@ -48,6 +50,8 @@ class Host {
   readonly lazy = signal(false);
   readonly emptyText = signal<string | null>(null);
   readonly total = signal(0);
+  readonly searchable = signal(true);
+  readonly pageSizes = signal<readonly number[]>([]);
   readonly columns = COLUMNS;
   readonly events: DataTableLazyEvent[] = [];
 }
@@ -176,5 +180,23 @@ describe('DataTable', () => {
     nameHeader.click();
     await fixture.whenStable();
     expect(host.events.at(-1)).toMatchObject({ sortField: 'name', sortOrder: 1 });
+  });
+
+  it('hides the search box when the owner turns it off', async () => {
+    const { root } = await render((host) => host.searchable.set(false));
+
+    expect(root.querySelector('[data-testid="dt-search"]')).toBeNull();
+  });
+
+  it('offers the page sizes the owner lists', async () => {
+    const { root } = await render((host) => host.pageSizes.set([10, 20, 50]));
+
+    expect(root.querySelector('.p-paginator .p-select')).not.toBeNull();
+  });
+
+  it('has no page size choice when none is listed', async () => {
+    const { root } = await render();
+
+    expect(root.querySelector('.p-paginator .p-select')).toBeNull();
   });
 });

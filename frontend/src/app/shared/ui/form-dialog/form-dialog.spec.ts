@@ -10,6 +10,11 @@ import { FormDialog } from './form-dialog';
       [visible]="visible()"
       [busy]="busy()"
       [saveDisabled]="saveDisabled()"
+      [saveLabel]="saveLabel()"
+      [saveTooltip]="saveTooltip()"
+      [saveSeverity]="severity()"
+      [cancelLabel]="cancelLabel()"
+      [disabledReason]="reason()"
       (saved)="saves = saves + 1"
       (dismissed)="dismissals = dismissals + 1; visible.set(false)"
     >
@@ -21,6 +26,11 @@ class Host {
   readonly visible = signal(true);
   readonly busy = signal(false);
   readonly saveDisabled = signal(false);
+  readonly saveLabel = signal<string | null>(null);
+  readonly saveTooltip = signal<string | null>(null);
+  readonly severity = signal<'primary' | 'danger'>('primary');
+  readonly cancelLabel = signal<string | null>(null);
+  readonly reason = signal<string | null>(null);
   saves = 0;
   dismissals = 0;
 }
@@ -97,5 +107,42 @@ describe('FormDialog', () => {
     await open();
 
     expect(dialog()!.querySelector('form')!.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('uses the labels the owner gives to the buttons and keeps the defaults otherwise', async () => {
+    const fixture = await open();
+    expect(byId('fd-save').textContent).toContain('Guardar');
+    expect(byId('fd-cancel').textContent).toContain('Cancelar');
+
+    fixture.componentInstance.saveLabel.set('Anular línea');
+    fixture.componentInstance.cancelLabel.set('Volver');
+    await fixture.whenStable();
+
+    expect(byId('fd-save').textContent).toContain('Anular línea');
+    expect(byId('fd-cancel').textContent).toContain('Volver');
+  });
+
+  it('marks a destructive save with the danger severity', async () => {
+    const fixture = await open();
+    expect(byId('fd-save').classList.contains('p-button-danger')).toBe(false);
+
+    fixture.componentInstance.severity.set('danger');
+    await fixture.whenStable();
+
+    expect(byId('fd-save').classList.contains('p-button-danger')).toBe(true);
+  });
+
+  it('says why the save is disabled and ties the text to the button', async () => {
+    const fixture = await open();
+    fixture.componentInstance.reason.set('Elige un motivo para continuar.');
+    await fixture.whenStable();
+    expect(dialog()!.querySelector('[data-testid="fd-reason"]')).toBeNull();
+
+    fixture.componentInstance.saveDisabled.set(true);
+    await fixture.whenStable();
+
+    const why = dialog()!.querySelector<HTMLElement>('[data-testid="fd-reason"]')!;
+    expect(why.textContent).toContain('Elige un motivo');
+    expect(byId('fd-save').getAttribute('aria-describedby')).toBe(why.id);
   });
 });

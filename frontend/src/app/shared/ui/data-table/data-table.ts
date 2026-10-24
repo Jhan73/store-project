@@ -61,6 +61,7 @@ export interface DataRowContext<T> {
         [lazy]="lazy()"
         [totalRecords]="totalRecords()"
         [rows]="rows()"
+        [rowsPerPageOptions]="pageSizes().length > 0 ? $any(pageSizes()) : undefined"
         [first]="first()"
         [paginator]="true"
         [loading]="loading()"
@@ -124,6 +125,8 @@ export class DataTable<T = unknown> {
   readonly value = input.required<readonly T[]>();
   readonly columns = input.required<readonly DataColumn[]>();
   readonly rows = input(10);
+  // Lets the person change the page size; empty means a fixed size.
+  readonly pageSizes = input<readonly number[]>([]);
   readonly first = input(0);
   readonly lazy = input(false);
   readonly totalRecords = input(0);
