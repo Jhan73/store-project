@@ -1,4 +1,12 @@
-import { addMoney, formatMoney, fromMinorUnits, parseAmount, toMinorUnits } from './money';
+import {
+  addMoney,
+  formatMoney,
+  formatMoneyOrDash,
+  fromMinorUnits,
+  parseAmount,
+  safeMinorUnits,
+  toMinorUnits,
+} from './money';
 
 describe('toMinorUnits', () => {
   it.each([
@@ -87,4 +95,30 @@ describe('parseAmount', () => {
       expect(parseAmount(typed)).toBeNull();
     },
   );
+});
+
+describe('safeMinorUnits', () => {
+  it('returns the minor units of a well-formed amount', () => {
+    expect(safeMinorUnits({ amount: '12.50', currency: 'PEN' })).toBe(1250);
+  });
+
+  it.each(['', 'abc', '1.5', '99999999999999999999.00'])('returns null instead of throwing for "%s"', (amount) => {
+    expect(safeMinorUnits({ amount, currency: 'PEN' })).toBeNull();
+  });
+
+  it('returns null when there is no amount', () => {
+    expect(safeMinorUnits(null)).toBeNull();
+    expect(safeMinorUnits(undefined)).toBeNull();
+  });
+});
+
+describe('formatMoneyOrDash', () => {
+  it('formats a well-formed amount', () => {
+    expect(formatMoneyOrDash({ amount: '3.50', currency: 'PEN' })).toContain('3.50');
+  });
+
+  it('shows a dash for a malformed or missing amount', () => {
+    expect(formatMoneyOrDash({ amount: 'x', currency: 'PEN' })).toBe('—');
+    expect(formatMoneyOrDash(null)).toBe('—');
+  });
 });

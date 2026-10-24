@@ -7512,7 +7512,7 @@
     </unit>
     <unit id="staff.ticket.mergedInto">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:429</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:439</note>
       </notes>
       <segment>
         <source>La cuenta <ph id="0" equiv="number" disp="ticket.number"/> se unió a otra. Seguimos en la cuenta que quedó.</source>
@@ -7520,7 +7520,7 @@
     </unit>
     <unit id="staff.ticket.moneyRegistered">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:488</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:498</note>
       </notes>
       <segment>
         <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
@@ -8456,7 +8456,7 @@
     </unit>
     <unit id="shell.logout.failed">
       <notes>
-        <note category="location">src/app/features/workspace/workspace-layout.ts:48</note>
+        <note category="location">src/app/features/workspace/workspace-layout.ts:52</note>
       </notes>
       <segment>
         <source>No se pudo cerrar la sesión. Inténtalo de nuevo.</source>
@@ -9191,6 +9191,22 @@
       </notes>
       <segment>
         <source>Elige entre <ph id="0" equiv="min" disp="min"/> y <ph id="1" equiv="max" disp="max"/> opciones</source>
+      </segment>
+    </unit>
+    <unit id="shared.undo.tooltip">
+      <notes>
+        <note category="location">src/app/shared/ui/undo-toast/undo-toast.ts:24,25</note>
+      </notes>
+      <segment>
+        <source>Deshacer y conservar el elemento</source>
+      </segment>
+    </unit>
+    <unit id="shared.undo.action">
+      <notes>
+        <note category="location">src/app/shared/ui/undo-toast/undo-toast.ts:30,32</note>
+      </notes>
+      <segment>
+        <source>Deshacer</source>
       </segment>
     </unit>
     <unit id="shared.voidDialog.failed">

@@ -17,7 +17,7 @@ import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { DeliveryZone, Money } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoney, parseAmount } from '../../../core/money/money';
-import { amountValidator, optionalAmountValidator } from '../amount-validator';
+import { amountValidator, optionalAmountValidator } from '../../../shared/forms/amount-validator';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
 import { PendingIds } from '../../../shared/state/pending-ids';

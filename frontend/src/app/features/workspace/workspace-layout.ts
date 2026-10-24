@@ -1,17 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { Toast } from 'primeng/toast';
 import { AuthStore } from '../../core/auth/auth-store';
 import { roleLabel } from '../../core/auth/role-label';
 import { SidebarStore } from '../../core/layout/sidebar-store';
 import { ThemeStore } from '../../core/theme/theme-store';
 import { AppShell } from '../../shared/ui/app-shell/app-shell';
+import { UndoToast } from '../../shared/ui/undo-toast/undo-toast';
 import { navFor } from './workspace-nav';
 
 @Component({
   selector: 'app-workspace-layout',
-  imports: [AppShell, RouterOutlet, Toast],
+  imports: [AppShell, RouterOutlet, Toast, ConfirmDialog, UndoToast],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-shell
@@ -29,6 +31,8 @@ import { navFor } from './workspace-nav';
       <router-outlet />
     </app-shell>
     <p-toast />
+    <p-confirmdialog />
+    <app-undo-toast />
   `,
 })
 export class WorkspaceLayout {

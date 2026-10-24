@@ -5,7 +5,7 @@ import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import { formatMoney, parseAmount } from '../../../core/money/money';
-import { amountValidator } from '../../admin/amount-validator';
+import { amountValidator } from '../../../shared/forms/amount-validator';
 import { CashMovements } from './cash-movements';
 import { CloseShift } from './close-shift';
 import { ShiftResult } from './shift-result';
