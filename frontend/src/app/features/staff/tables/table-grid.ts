@@ -6,11 +6,12 @@ import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import type { Ticket } from '../../../core/api/api-types';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { TableGridStore } from './table-grid-store';
 
 @Component({
   selector: 'app-table-grid',
-  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, InputText, TablerIconComponent, Tooltip],
+  imports: [ReactiveFormsModule, RouterLink, ButtonDirective, InputText, TablerIconComponent, Tooltip, FormField],
   providers: [TableGridStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './table-grid.scss',
@@ -119,15 +120,22 @@ import { TableGridStore } from './table-grid-store';
     <section [attr.aria-labelledby]="'counter-heading'">
       <h2 id="counter-heading" i18n="@@staff.tables.counter">Mostrador</h2>
       <form class="counter-form" (submit)="openCounter($event)">
-        <label for="counter-name" i18n="@@staff.tables.counter.name">Nombre del cliente</label>
-        <input
-          pInputText
-          id="counter-name"
-          data-testid="counter-name"
-          maxlength="100"
-          autocomplete="off"
-          [formControl]="counterName"
-        />
+        <app-form-field
+          class="counter-field"
+          label="Nombre del cliente"
+          i18n-label="@@staff.tables.counter.name"
+          controlId="counter-name"
+        >
+          <input
+            pInputText
+            id="counter-name"
+            data-testid="counter-name"
+            maxlength="100"
+            autocomplete="off"
+            [formControl]="counterName"
+            fluid
+          />
+        </app-form-field>
         <button
           pButton
           type="submit"

@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,6 +28,8 @@ import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UndoQueue } from '../../../shared/state/undo-queue';
 import { RegisterApi } from '../register/register-api';
 import { isShiftStateError } from '../register/shift-store';
 import { TicketsApi } from './tickets-api';
@@ -60,6 +63,8 @@ export class TicketEditorStore {
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
   private readonly keys = new IntentKeys();
+  private readonly undoNotice = inject(UndoNotice);
+  private readonly removals = new UndoQueue();
 
   private readonly current = signal<Ticket | null>(null);
   private readonly currentMenu = signal<Menu | null>(null);
@@ -129,7 +134,14 @@ export class TicketEditorStore {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => (this.destroyed = true));
+    const page = inject(DOCUMENT).defaultView;
+    const flushRemovals = () => this.removals.flush();
+    page?.addEventListener('pagehide', flushRemovals);
+    this.destroyRef.onDestroy(() => {
+      page?.removeEventListener('pagehide', flushRemovals);
+      this.destroyed = true;
+      this.removals.flush();
+    });
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.ticketId = params.get('id') ?? '';
       this.current.set(null);
@@ -281,19 +293,33 @@ export class TicketEditorStore {
     );
   }
 
-  removeLine(lineId: string): void {
+  // True while a removal waits out its undo window: the line stays listed, marked as going away.
+  isRemoving(lineId: string): boolean {
+    return this.removals.has(lineId);
+  }
+
+  removeLine(line: TicketLine): void {
+    this.undoNotice.schedule(
+      this.removals,
+      line.id,
+      $localize`:@@staff.tickets.removed:Se quitó "${line.productName}:name:" de la cuenta`,
+      () => this.sendRemoval(line.id),
+    );
+  }
+
+  // Not tied to the screen: a removal flushed while the screen closes must still go out.
+  private sendRemoval(lineId: string): void {
     const pendingId = `line:${lineId}`;
     this.pending.add(pendingId);
-    this.api
-      .removeLine(this.ticketId, lineId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.pending.delete(pendingId);
+    this.api.removeLine(this.ticketId, lineId).subscribe({
+      next: () => {
+        this.pending.delete(pendingId);
+        if (!this.destroyed) {
           this.loadTicket();
-        },
-        error: (error: unknown) => this.commandFailed(pendingId, error),
-      });
+        }
+      },
+      error: (error: unknown) => this.commandFailed(pendingId, error),
+    });
   }
 
   send(): void {

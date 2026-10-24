@@ -74,7 +74,19 @@ ul {
 
   @include bp.tablet-up {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
+    max-width: 40rem;
+  }
+}
+
+.counter-field {
+  flex: 1 1 auto;
+}
+
+// The field reserves a line for its message; the button sits level with the input, not with that line.
+.counter-form button {
+  @include bp.tablet-up {
+    margin-bottom: calc(1.25rem + var(--space-1));
   }
 }
 

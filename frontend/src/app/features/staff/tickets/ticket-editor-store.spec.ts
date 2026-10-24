@@ -15,6 +15,8 @@ import type { RecordPaymentRequest, Role, Ticket, TicketLine } from '../../../co
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UNDO_WINDOW_MS } from '../../../shared/state/undo-queue';
 import { pen, problem } from '../../../testing/register-fixtures';
 import { RegisterApi } from '../register/register-api';
 import { TicketEditorStore } from './ticket-editor-store';
@@ -601,6 +603,49 @@ describe('TicketEditorStore', () => {
 
       store.clearSplit();
       expect(store.splitParts()).toBeNull();
+    });
+  });
+
+  describe('removing a line', () => {
+    const unsent = line('l2');
+
+    afterEach(() => vi.useRealTimers());
+
+    it('waits out the undo window before it sends anything and shows an undo notice', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      expect(store.isRemoving('l2')).toBe(true);
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(1);
+      http.expectNone(`${TICKET}/lines/l2`);
+
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+      expect(request.request.method).toBe('DELETE');
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne(TICKET).flush(ticket());
+      expect(store.isRemoving('l2')).toBe(false);
+    });
+
+    it('sends nothing when the notice is undone', () => {
+      vi.useFakeTimers();
+      const notice = TestBed.inject(UndoNotice);
+      store.removeLine(unsent);
+
+      notice.undo(notice.active()[0]);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS * 2);
+
+      expect(store.isRemoving('l2')).toBe(false);
+      http.expectNone(`${TICKET}/lines/l2`);
+    });
+
+    it('sends a waiting removal when the screen is destroyed', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      screen.destroy();
+
+      http.expectOne(`${TICKET}/lines/l2`).flush(null, { status: 204, statusText: 'No Content' });
     });
   });
 });

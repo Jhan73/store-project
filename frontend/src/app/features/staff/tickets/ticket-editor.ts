@@ -30,8 +30,10 @@ import { Textarea } from 'primeng/textarea';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, TicketLine } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
-import { formatMoney } from '../../../core/money/money';
-import { reasonLabel, requiresNote } from '../../../core/reasons/reason-rules';
+import { formatMoneyOrDash } from '../../../core/money/money';
+import { reasonLabel } from '../../../core/reasons/reason-rules';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { VoidDialog, type VoidChoice } from '../../../shared/ui/void-dialog/void-dialog';
 import { methodLabel } from '../register/payment-methods';
@@ -50,6 +52,8 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
     Dialog,
     Select,
     Textarea,
+    FormDialog,
+    FormField,
     Tooltip,
     TablerIconComponent,
     ProductConfigurator,
@@ -182,6 +186,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 [attr.data-testid]="'line-' + line.id"
                 [class.voided]="line.state === 'VOIDED'"
                 [class.comped]="line.state === 'COMPED'"
+                [class.removing]="store.isRemoving(line.id)"
               >
                 <div class="line-main">
                   <span class="quantity">{{ line.quantity }} ×</span>
@@ -196,6 +201,11 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                 }
                 @if (line.allergy) {
                   <p class="detail warn" i18n="@@staff.tickets.allergy">Alergia</p>
+                }
+                @if (store.isRemoving(line.id)) {
+                  <p class="detail" role="status" data-testid="line-removing" i18n="@@staff.tickets.removing">
+                    Se quitará de la cuenta; puedes deshacerlo.
+                  </p>
                 }
                 <div class="line-foot">
                   <span class="state" [attr.data-testid]="'line-status-' + line.id">
@@ -279,6 +289,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         [disabled]="
                           !store.enabled() ||
                           store.pending.has('line:' + line.id) ||
+                          store.isRemoving(line.id) ||
                           line.quantity <= 1
                         "
                         aria-label="Una unidad menos"
@@ -298,6 +309,7 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         [disabled]="
                           !store.enabled() ||
                           store.pending.has('line:' + line.id) ||
+                          store.isRemoving(line.id) ||
                           line.quantity >= maxQuantity
                         "
                         aria-label="Una unidad más"
@@ -314,13 +326,13 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                         type="button"
                         severity="danger"
                         [attr.data-testid]="'remove-' + line.id"
-                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id)"
+                        [disabled]="!store.enabled() || store.pending.has('line:' + line.id) || store.isRemoving(line.id)"
                         aria-label="Quitar la línea"
                         i18n-aria-label="@@staff.tickets.remove.label"
                         pTooltip="Quitar la línea de la cuenta"
                         i18n-pTooltip="@@staff.tickets.remove.tooltip"
                         tooltipPosition="top"
-                        (click)="store.removeLine(line.id)"
+                        (click)="store.removeLine(line)"
                       >
                         <tabler-icon [icon]="icons.remove" aria-hidden="true" />
                       </button>
@@ -387,16 +399,21 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
 
           @if (store.isOpen()) {
             <div class="field">
-              <label for="ticket-note" i18n="@@staff.tickets.note">Nota de la cuenta</label>
-              <textarea
-                pTextarea
-                id="ticket-note"
-                data-testid="ticket-note"
-                [formControl]="noteControl"
-                maxlength="140"
-                rows="2"
-                fluid
-              ></textarea>
+              <app-form-field
+                label="Nota de la cuenta"
+                i18n-label="@@staff.tickets.note"
+                controlId="ticket-note"
+              >
+                <textarea
+                  pTextarea
+                  id="ticket-note"
+                  data-testid="ticket-note"
+                  [formControl]="noteControl"
+                  maxlength="140"
+                  rows="2"
+                  fluid
+                ></textarea>
+              </app-form-field>
               <button
                 pButton
                 type="button"
@@ -560,36 +577,47 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       i18n-header="@@staff.tickets.add.title"
       [modal]="true"
       [draggable]="false"
+      [closable]="!adding()"
+      [closeOnEscape]="false"
+      [dismissableMask]="false"
       [style]="{ width: 'min(40rem, calc(100vw - 1rem))' }"
       [visible]="configuring() !== null"
       (visibleChange)="closeAdd($event)"
     >
-      @if (configuring(); as product) {
-        <app-product-configurator
-          [product]="product"
-          [busy]="store.pending.has('add')"
-          (confirmed)="add($event)"
-          (cancelled)="configuring.set(null)"
-        />
-      }
+      <div class="add-body" [attr.aria-busy]="adding()" (keydown.escape)="escapeAdd($event)">
+        @if (configuring(); as product) {
+          <app-product-configurator
+            [product]="product"
+            [busy]="adding()"
+            (confirmed)="add($event)"
+            (cancelled)="closeAdd(false)"
+          />
+        }
+      </div>
     </p-dialog>
 
-    <p-dialog
+    <app-form-dialog
       header="Cambiar de mesa"
       i18n-header="@@staff.tickets.transfer.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      width="30rem"
       [visible]="transferring()"
-      (visibleChange)="closeTransfer($event)"
+      [busy]="store.pending.has('transfer')"
+      [saveDisabled]="!chosenTable()"
+      [saveLabel]="labels.transfer"
+      [saveTooltip]="labels.transferTooltip"
+      [saveIcon]="icons.confirm"
+      [disabledReason]="chosenTable() ? null : labels.transferWhy"
+      (saved)="transfer()"
+      (dismissed)="closeTransfer(false)"
     >
-      <div class="field">
-        <label for="transfer-table" id="transfer-table-label" i18n="@@staff.tickets.transfer.table"
-          >Mesa de destino</label
-        >
+      <app-form-field
+        label="Mesa de destino"
+        i18n-label="@@staff.tickets.transfer.table"
+        controlId="transfer-table"
+      >
         <p-select
           inputId="transfer-table"
-          [ariaLabelledBy]="'transfer-table-label'"
+          [ariaLabel]="labels.transferAria"
           [formControl]="target"
           optionLabel="name"
           optionValue="id"
@@ -604,173 +632,99 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
           [appendTo]="'body'"
           fluid
         />
-      </div>
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="transfer-cancel"
-          pTooltip="Cerrar sin mover la cuenta"
-          i18n-pTooltip="@@staff.tickets.transfer.cancel.tooltip"
-          tooltipPosition="top"
-          (click)="closeTransfer(false)"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@staff.tickets.transfer.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          data-testid="transfer-confirm"
-          [disabled]="!chosenTable() || store.pending.has('transfer')"
-          pTooltip="Mover la cuenta a la mesa elegida"
-          i18n-pTooltip="@@staff.tickets.transfer.confirm.tooltip"
-          tooltipPosition="top"
-          (click)="transfer()"
-        >
-          <tabler-icon [icon]="icons.confirm" aria-hidden="true" />
-          <span i18n="@@staff.tickets.transfer.confirm">Mover</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+      </app-form-field>
+    </app-form-dialog>
 
-    <p-dialog
+    <app-form-dialog
       header="Unir cuenta"
       i18n-header="@@staff.tickets.merge.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      width="30rem"
       [visible]="merging()"
-      (visibleChange)="closeMerge($event)"
+      [busy]="store.pending.has('merge')"
+      [saveDisabled]="!chosenSource()"
+      [saveLabel]="labels.merge"
+      [saveTooltip]="labels.mergeTooltip"
+      [saveIcon]="icons.merge"
+      [disabledReason]="chosenSource() ? null : labels.mergeWhy"
+      (saved)="merge()"
+      (dismissed)="closeMerge(false)"
     >
-      <p i18n="@@staff.tickets.merge.explain">
-        Las líneas de la cuenta elegida pasan a esta cuenta y esa cuenta queda unida a ella.
-      </p>
-      @if (store.mergeCandidatesFailed()) {
-        <div data-testid="merge-failed" role="status">
-          <p i18n="@@staff.tickets.merge.failed">No se pudieron cargar las cuentas abiertas.</p>
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            data-testid="merge-retry"
-            pTooltip="Volver a cargar las cuentas abiertas"
-            i18n-pTooltip="@@staff.tickets.merge.retry.tooltip"
-            tooltipPosition="top"
-            (click)="store.loadMergeCandidates()"
+      <div class="dialog-fields">
+        <p i18n="@@staff.tickets.merge.explain">
+          Las líneas de la cuenta elegida pasan a esta cuenta y esa cuenta queda unida a ella.
+        </p>
+        @if (store.mergeCandidatesFailed()) {
+          <div data-testid="merge-failed" role="status">
+            <p i18n="@@staff.tickets.merge.failed">No se pudieron cargar las cuentas abiertas.</p>
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              data-testid="merge-retry"
+              pTooltip="Volver a cargar las cuentas abiertas"
+              i18n-pTooltip="@@staff.tickets.merge.retry.tooltip"
+              tooltipPosition="top"
+              (click)="store.loadMergeCandidates()"
+            >
+              <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+              <span i18n="@@staff.tickets.merge.retry">Reintentar</span>
+            </button>
+          </div>
+        } @else if (!store.mergeCandidatesLoaded()) {
+          <p class="muted" i18n="@@staff.tickets.merge.loading">Cargando las cuentas abiertas…</p>
+        } @else {
+          @if (store.mergeCandidates().length === 0) {
+            <p data-testid="merge-empty" i18n="@@staff.tickets.merge.empty">
+              No hay otras cuentas abiertas para unir.
+            </p>
+          }
+          <app-form-field
+            label="Cuenta a unir"
+            i18n-label="@@staff.tickets.merge.source"
+            controlId="merge-source"
           >
-            <tabler-icon [icon]="icons.retry" aria-hidden="true" />
-            <span i18n="@@staff.tickets.merge.retry">Reintentar</span>
-          </button>
-        </div>
-      } @else if (!store.mergeCandidatesLoaded()) {
-        <p class="muted" i18n="@@staff.tickets.merge.loading">Cargando las cuentas abiertas…</p>
-      } @else {
-        @if (store.mergeCandidates().length === 0) {
-          <p data-testid="merge-empty" i18n="@@staff.tickets.merge.empty">
-            No hay otras cuentas abiertas para unir.
-          </p>
+            <p-select
+              inputId="merge-source"
+              [ariaLabel]="labels.mergeAria"
+              [formControl]="mergeSource"
+              optionLabel="label"
+              optionValue="id"
+              [options]="mergeOptions()"
+              [filter]="true"
+              filterBy="label"
+              [resetFilterOnHide]="true"
+              filterPlaceholder="Buscar"
+              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+              placeholder="Elige una cuenta"
+              i18n-placeholder="@@staff.tickets.merge.placeholder"
+              [appendTo]="'body'"
+              fluid
+            />
+          </app-form-field>
         }
-        <div class="field">
-          <label for="merge-source" id="merge-source-label" i18n="@@staff.tickets.merge.source"
-            >Cuenta a unir</label
-          >
-          <p-select
-            inputId="merge-source"
-            [ariaLabelledBy]="'merge-source-label'"
-            [formControl]="mergeSource"
-            optionLabel="label"
-            optionValue="id"
-            [options]="mergeOptions()"
-            [filter]="true"
-            filterBy="label"
-            [resetFilterOnHide]="true"
-            filterPlaceholder="Buscar"
-            i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
-            placeholder="Elige una cuenta"
-            i18n-placeholder="@@staff.tickets.merge.placeholder"
-            [appendTo]="'body'"
-            fluid
-          />
-        </div>
-      }
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="merge-cancel"
-          pTooltip="Cerrar sin unir ninguna cuenta"
-          i18n-pTooltip="@@staff.tickets.merge.cancel.tooltip"
-          tooltipPosition="top"
-          (click)="closeMerge(false)"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@staff.tickets.merge.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          data-testid="merge-confirm"
-          [disabled]="!chosenSource() || store.pending.has('merge')"
-          pTooltip="Unir la cuenta elegida a esta"
-          i18n-pTooltip="@@staff.tickets.merge.confirm.tooltip"
-          tooltipPosition="top"
-          (click)="merge()"
-        >
-          <tabler-icon [icon]="icons.merge" aria-hidden="true" />
-          <span i18n="@@staff.tickets.merge.confirm">Unir</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+      </div>
+    </app-form-dialog>
 
-    <p-dialog
+    <app-form-dialog
       header="Cancelar cuenta"
       i18n-header="@@staff.tickets.cancel.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      width="30rem"
       [visible]="cancelling()"
-      (visibleChange)="closeCancel($event)"
+      [busy]="store.pending.has('cancel')"
+      [saveLabel]="labels.cancelTicket"
+      [saveTooltip]="labels.cancelTicketTooltip"
+      [saveIcon]="icons.cancelTicket"
+      [cancelLabel]="labels.back"
+      [cancelTooltip]="labels.backTooltip"
+      saveSeverity="danger"
+      (saved)="cancelTicket()"
+      (dismissed)="closeCancel(false)"
     >
       <p data-testid="cancel-explain" i18n="@@staff.tickets.cancel.explain">
         Se descartan las líneas sin enviar y la cuenta queda cancelada. La mesa vuelve a quedar
         libre y esto no se puede deshacer.
       </p>
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="cancel-back"
-          pTooltip="Volver sin cancelar la cuenta"
-          i18n-pTooltip="@@staff.tickets.cancel.back.tooltip"
-          tooltipPosition="top"
-          (click)="closeCancel(false)"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@staff.tickets.cancel.back">Volver</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          severity="danger"
-          data-testid="cancel-confirm"
-          [loading]="store.pending.has('cancel')"
-          [disabled]="store.pending.has('cancel')"
-          pTooltip="Cancelar la cuenta definitivamente"
-          i18n-pTooltip="@@staff.tickets.cancel.confirm.tooltip"
-          tooltipPosition="top"
-          (click)="cancelTicket()"
-        >
-          @if (!store.pending.has('cancel')) {
-            <tabler-icon [icon]="icons.cancelTicket" aria-hidden="true" />
-          }
-          <span i18n="@@staff.tickets.cancel.confirm">Cancelar cuenta</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+    </app-form-dialog>
 
     <app-void-dialog
       [header]="registerVoidTitle()"
@@ -804,113 +758,23 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
       }
     </app-void-dialog>
 
-    <p-dialog
+    <app-void-dialog
       header="Anular línea"
       i18n-header="@@staff.tickets.void.title"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
+      [confirmLabel]="labels.voidLine"
+      [confirmTooltip]="labels.voidLineTooltip"
       [visible]="voiding() !== null"
-      (visibleChange)="closeVoid($event)"
+      [reasons]="store.reasons()"
+      [failed]="store.reasonsLoadFailed()"
+      [busy]="voidBusy()"
+      (confirmed)="confirmVoid($event)"
+      (dismissed)="voiding.set(null)"
+      (retried)="store.loadVoidReasons()"
     >
       @if (voiding(); as line) {
         <p class="detail">{{ line.quantity }} × {{ line.productName }}</p>
-        @if (store.reasonsLoadFailed()) {
-          <div data-testid="void-reasons-failed" role="status">
-            <p i18n="@@staff.tickets.void.failed">No se pudieron cargar los motivos.</p>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              data-testid="void-retry"
-              pTooltip="Volver a cargar los motivos de anulación"
-              i18n-pTooltip="@@staff.tickets.void.retry.tooltip"
-              tooltipPosition="top"
-              (click)="store.loadVoidReasons()"
-            >
-              <tabler-icon [icon]="icons.retry" aria-hidden="true" />
-              <span i18n="@@staff.tickets.void.retry">Reintentar</span>
-            </button>
-          </div>
-        } @else if (store.reasons(); as reasons) {
-          @if (reasons.length === 0) {
-            <p data-testid="void-no-reasons" i18n="@@staff.tickets.void.noReasons">
-              No hay motivos de anulación configurados. Pide a un administrador que los agregue.
-            </p>
-          }
-          <div class="field" data-testid="void-reason-box">
-            <label for="void-reason" id="void-reason-label" i18n="@@staff.tickets.void.reason"
-              >Motivo</label
-            >
-            <p-select
-              inputId="void-reason"
-              [ariaLabelledBy]="'void-reason-label'"
-              [formControl]="voidReason"
-              optionLabel="label"
-              optionValue="code"
-              [options]="reasonOptions()"
-              [filter]="true"
-              filterBy="label"
-              [resetFilterOnHide]="true"
-              filterPlaceholder="Buscar"
-              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
-              placeholder="Elige un motivo"
-              i18n-placeholder="@@staff.tickets.void.reason.placeholder"
-              [appendTo]="'body'"
-              fluid
-            />
-          </div>
-          <div class="field">
-            <label for="void-note" i18n="@@staff.tickets.void.note">Nota</label>
-            <textarea
-              pTextarea
-              id="void-note"
-              data-testid="void-note"
-              [formControl]="voidNote"
-              maxlength="280"
-              rows="3"
-              fluid
-            ></textarea>
-            @if (noteRequired()) {
-              <small i18n="@@staff.tickets.void.noteRequired"
-                >Para el motivo «Otro» la nota es obligatoria.</small
-              >
-            }
-          </div>
-        } @else {
-          <p class="muted" i18n="@@staff.tickets.void.loading">Cargando los motivos…</p>
-        }
       }
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="void-cancel"
-          pTooltip="Cerrar sin anular la línea"
-          i18n-pTooltip="@@staff.tickets.void.cancel.tooltip"
-          tooltipPosition="top"
-          (click)="closeVoid(false)"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@staff.tickets.void.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          severity="danger"
-          data-testid="void-confirm"
-          [disabled]="!canConfirmVoid()"
-          pTooltip="Anular la línea con este motivo"
-          i18n-pTooltip="@@staff.tickets.void.confirm.tooltip"
-          tooltipPosition="top"
-          (click)="confirmVoid()"
-        >
-          <tabler-icon [icon]="icons.void" aria-hidden="true" />
-          <span i18n="@@staff.tickets.void.confirm">Anular línea</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+    </app-void-dialog>
   `,
 })
 export class TicketEditor {
@@ -940,7 +804,25 @@ export class TicketEditor {
     billOff: $localize`:@@staff.tickets.billOff.tooltip:Quitar el aviso de que la mesa pidió la cuenta`,
   };
   protected readonly maxQuantity = MAX_LINE_QUANTITY;
-  protected readonly money = formatMoney;
+  protected readonly labels = {
+    transfer: $localize`:@@staff.tickets.transfer.confirm:Mover`,
+    transferTooltip: $localize`:@@staff.tickets.transfer.confirm.tooltip:Mover la cuenta a la mesa elegida`,
+    transferWhy: $localize`:@@staff.tickets.transfer.why:Elige una mesa libre para mover la cuenta.`,
+    transferAria: $localize`:@@staff.tickets.transfer.aria:Mesa de destino`,
+    merge: $localize`:@@staff.tickets.merge.confirm:Unir`,
+    mergeTooltip: $localize`:@@staff.tickets.merge.confirm.tooltip:Unir la cuenta elegida a esta`,
+    mergeWhy: $localize`:@@staff.tickets.merge.why:Elige la cuenta que quieres unir a esta.`,
+    mergeAria: $localize`:@@staff.tickets.merge.aria:Cuenta a unir`,
+    cancelTicket: $localize`:@@staff.tickets.cancel.confirm:Cancelar cuenta`,
+    cancelTicketTooltip: $localize`:@@staff.tickets.cancel.confirm.tooltip:Cancelar la cuenta definitivamente`,
+    back: $localize`:@@staff.tickets.cancel.back:Volver`,
+    backTooltip: $localize`:@@staff.tickets.cancel.back.tooltip:Volver sin cancelar la cuenta`,
+    voidLine: $localize`:@@staff.tickets.void.confirm:Anular línea`,
+    voidLineTooltip: $localize`:@@staff.tickets.void.confirm.tooltip:Anular la línea con este motivo`,
+  };
+  protected readonly adding = computed(() => this.store.pending.has('add'));
+
+  protected readonly money = formatMoneyOrDash;
   protected readonly method = methodLabel;
   private readonly auth = inject(AuthStore);
   private readonly shifts = inject(ShiftStore);
@@ -1020,23 +902,9 @@ export class TicketEditor {
   protected readonly transferring = signal(false);
   protected readonly target = new FormControl<string | null>(null);
   protected readonly label = reasonLabel;
-  protected readonly reasonOptions = computed(() =>
-    (this.store.reasons() ?? []).map((reason) => ({
-      code: reason.code,
-      label: reasonLabel(reason.code),
-    })),
-  );
   protected readonly voiding = signal<TicketLine | null>(null);
-  protected readonly voidReason = new FormControl<string | null>(null);
-  protected readonly voidNote = new FormControl('', { nonNullable: true });
-  private readonly chosenReason = toSignal(this.voidReason.valueChanges, { initialValue: null });
-  private readonly typedNote = toSignal(this.voidNote.valueChanges, { initialValue: '' });
-  protected readonly noteRequired = computed(() => requiresNote(this.chosenReason()));
-  protected readonly canConfirmVoid = computed(
-    () =>
-      this.chosenReason() !== null &&
-      (!this.noteRequired() || this.typedNote().trim() !== '') &&
-      !this.store.pending.has(`void:${this.voiding()?.id}`),
+  protected readonly voidBusy = computed(() =>
+    this.store.pending.has(`void:${this.voiding()?.id}`),
   );
   protected readonly chosenTable = toSignal(this.target.valueChanges, { initialValue: null });
 
@@ -1049,8 +917,15 @@ export class TicketEditor {
   }
 
   protected closeAdd(visible: boolean): void {
-    if (!visible) {
+    if (!visible && !this.adding()) {
       this.configuring.set(null);
+    }
+  }
+
+  // p-dialog reads closeOnEscape once, so Escape is handled here and ignored while the line is added.
+  protected escapeAdd(event: Event): void {
+    if (!event.defaultPrevented) {
+      this.closeAdd(false);
     }
   }
 
@@ -1119,26 +994,14 @@ export class TicketEditor {
   }
 
   protected startVoid(line: TicketLine): void {
-    this.voidReason.reset();
-    this.voidNote.reset();
     this.store.loadVoidReasons();
     this.voiding.set(line);
   }
 
-  protected closeVoid(visible: boolean): void {
-    if (!visible) {
-      this.voiding.set(null);
-    }
-  }
-
-  protected confirmVoid(): void {
+  protected confirmVoid(choice: VoidChoice): void {
     const line = this.voiding();
-    const reason = this.voidReason.value;
-    if (line && reason !== null && this.canConfirmVoid()) {
-      const note = this.voidNote.value.trim();
-      this.store.voidLine(line, { reason, note: note === '' ? null : note }, () =>
-        this.voiding.set(null),
-      );
+    if (line) {
+      this.store.voidLine(line, choice, () => this.voiding.set(null));
     }
   }
 
