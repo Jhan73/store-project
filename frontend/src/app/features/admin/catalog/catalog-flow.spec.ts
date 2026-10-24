@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from '../../../app.routes';
 import { API_ORIGIN } from '../../../core/api/api-config';
@@ -67,6 +67,7 @@ describe('admin catalog flow', () => {
         provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
         provideHttpClientTesting(),
         MessageService,
+        ConfirmationService,
         providePrimeNG({ theme: { preset: AppPreset } }),
         { provide: API_ORIGIN, useValue: 'http://api.test' },
       ],

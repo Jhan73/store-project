@@ -1,24 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  IconCheck,
-  IconPencil,
-  IconPlus,
-  IconTrash,
-  IconX,
-  TablerIconComponent,
-} from '@tabler/icons-angular';
+import { IconPencil, IconPlus, IconTrash, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Tooltip } from 'primeng/tooltip';
 import type { ModifierGroup } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
 import { isStale } from '../admin-errors';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
 
 @Component({
   selector: 'app-modifier-group-list',
-  imports: [TableScroll, RouterLink, ButtonDirective, TablerIconComponent, Tooltip],
+  imports: [RouterLink, ButtonDirective, TablerIconComponent, Tooltip, DataTable, StatusTag],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
   template: `
@@ -36,120 +31,101 @@ import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
       </a>
     </div>
 
-    <app-table-scroll label="Listado de grupos de modificadores" i18n-label="@@admin.catalog.groups.tableScroll">
-      <table>
-      <thead>
-        <tr>
-          <th i18n="@@admin.catalog.groups.name">Nombre</th>
-          <th i18n="@@admin.catalog.groups.rule">Elección</th>
-          <th i18n="@@admin.catalog.groups.options">Opciones</th>
-          <th><span class="sr-only" i18n="@@admin.catalog.actions">Acciones</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (group of groups(); track group.id) {
-          <tr>
-            <td>{{ group.name }}</td>
-            <td>
-              @if (group.required) {
-                <ng-container i18n="@@admin.catalog.groups.required">Obligatorio</ng-container>
-              } @else {
-                <ng-container i18n="@@admin.catalog.groups.optional">Opcional</ng-container>
-              }
-              <span class="muted" i18n="@@admin.catalog.groups.range"
-                >{{ group.minChoices }} a {{ group.maxChoices }}</span
-              >
-            </td>
-            <td i18n="@@admin.catalog.groups.optionCount">
-              {group.options.length, plural, =1 {1 opción} other {{{ group.options.length }} opciones}}
-            </td>
-            <td class="actions">
-              @if (confirming() === group.id) {
-                <button
-                  pButton
-                  type="button"
-                  severity="danger"
-                  [size]="'small'"
-                  [attr.data-testid]="'confirm-delete-' + group.id"
-                  (click)="remove(group)"
-                  pTooltip="Eliminar el grupo de forma definitiva"
-                  i18n-pTooltip="@@admin.catalog.groups.confirmDelete.tooltip"
-                  tooltipPosition="top"
-                >
-                  <tabler-icon [icon]="icons.confirm" aria-hidden="true" />
-                  <span i18n="@@admin.catalog.groups.confirmDelete">Confirmar eliminación</span>
-                </button>
-                <button
-                  pButton
-                  type="button"
-                  severity="secondary"
-                  [size]="'small'"
-                  [attr.data-testid]="'cancel-delete-' + group.id"
-                  (click)="confirming.set(null)"
-                  pTooltip="Conservar el grupo y no eliminarlo"
-                  i18n-pTooltip="@@admin.catalog.groups.cancelDelete.tooltip"
-                  tooltipPosition="top"
-                >
-                  <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-                  <span i18n="@@admin.catalog.cancel">Cancelar</span>
-                </button>
-              } @else {
-                <a
-                  pButton
-                  severity="secondary"
-                  [size]="'small'"
-                  [routerLink]="['/admin/catalog/modifier-groups', group.id]"
-                  pTooltip="Editar este grupo de modificadores"
-                  i18n-pTooltip="@@admin.catalog.groups.edit.tooltip"
-                  tooltipPosition="top"
-                >
-                  <tabler-icon [icon]="icons.edit" aria-hidden="true" />
-                  <span i18n="@@admin.catalog.edit">Editar</span>
-                </a>
-                <button
-                  pButton
-                  type="button"
-                  severity="danger"
-                  [outlined]="true"
-                  [size]="'small'"
-                  [attr.data-testid]="'delete-' + group.id"
-                  (click)="confirming.set(group.id)"
-                  pTooltip="Eliminar este grupo de modificadores"
-                  i18n-pTooltip="@@admin.catalog.groups.delete.tooltip"
-                  tooltipPosition="top"
-                >
-                  <tabler-icon [icon]="icons.delete" aria-hidden="true" />
-                  <span i18n="@@admin.catalog.groups.delete">Eliminar</span>
-                </button>
-              }
-            </td>
-          </tr>
-        }
-      </tbody>
-      </table>
-    </app-table-scroll>
+    <app-data-table
+      label="Listado de grupos de modificadores"
+      i18n-label="@@admin.catalog.groups.tableScroll"
+      [value]="rowsView()"
+      [columns]="columns"
+    >
+      <ng-template #row let-group>
+        <td>{{ group.name }}</td>
+        <td>
+          <app-status-tag
+            [value]="group.requiredLabel"
+            [severity]="group.required ? 'warn' : 'secondary'"
+          />
+          <app-status-tag [value]="group.rangeLabel" severity="info" />
+        </td>
+        <td><app-status-tag [value]="group.optionsLabel" severity="secondary" /></td>
+        <td class="actions">
+          <div class="row-actions">
+            <a
+              pButton
+              severity="secondary"
+              [size]="'small'"
+              [routerLink]="['/admin/catalog/modifier-groups', group.id]"
+              pTooltip="Editar este grupo de modificadores"
+              i18n-pTooltip="@@admin.catalog.groups.edit.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+              <span i18n="@@admin.catalog.edit">Editar</span>
+            </a>
+            <button
+              pButton
+              type="button"
+              severity="danger"
+              [outlined]="true"
+              [size]="'small'"
+              [attr.data-testid]="'delete-' + group.id"
+              (click)="remove(group)"
+              pTooltip="Eliminar este grupo de modificadores"
+              i18n-pTooltip="@@admin.catalog.groups.delete.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+              <span i18n="@@admin.catalog.groups.delete">Eliminar</span>
+            </button>
+          </div>
+        </td>
+      </ng-template>
+    </app-data-table>
   `,
 })
 export class ModifierGroupList {
-  protected readonly icons = {
-    create: IconPlus,
-    edit: IconPencil,
-    delete: IconTrash,
-    confirm: IconCheck,
-    cancel: IconX,
-  };
+  protected readonly icons = { create: IconPlus, edit: IconPencil, delete: IconTrash };
+  protected readonly columns: readonly DataColumn[] = [
+    { field: 'name', header: $localize`:@@admin.catalog.groups.name:Nombre`, sortable: true, filter: true },
+    { field: 'requiredLabel', header: $localize`:@@admin.catalog.groups.rule:Elección`, sortable: true },
+    { field: 'optionCount', header: $localize`:@@admin.catalog.groups.options:Opciones`, sortable: true },
+    { field: '', header: $localize`:@@admin.catalog.actions:Acciones` },
+  ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
   protected readonly groups = signal<readonly ModifierGroup[]>([]);
-  protected readonly confirming = signal<string | null>(null);
+  protected readonly rowsView = computed(() =>
+    this.groups().map((group) => {
+      const count = group.options.length;
+      return {
+        ...group,
+        optionCount: count,
+        requiredLabel: group.required
+          ? $localize`:@@admin.catalog.groups.required:Obligatorio`
+          : $localize`:@@admin.catalog.groups.optional:Opcional`,
+        rangeLabel: $localize`:@@admin.catalog.groups.range:${group.minChoices}:min: a ${group.maxChoices}:max:`,
+        optionsLabel:
+          count === 1
+            ? $localize`:@@admin.catalog.groups.optionCount.one:1 opción`
+            : $localize`:@@admin.catalog.groups.optionCount.other:${count}:count: opciones`,
+      };
+    }),
+  );
 
   constructor() {
     this.load();
   }
 
-  protected remove(group: ModifierGroup): void {
-    this.confirming.set(null);
+  protected async remove(group: ModifierGroup): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.catalog.groups.delete.header:Eliminar grupo`,
+      message: $localize`:@@admin.catalog.groups.delete.confirm:Se eliminará el grupo "${group.name}:name:" de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.catalog.groups.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
     this.api.deleteModifierGroup(group.id, group.etag).subscribe({
       next: () => this.groups.update((list) => list.filter((item) => item.id !== group.id)),
       error: (error: unknown) => {

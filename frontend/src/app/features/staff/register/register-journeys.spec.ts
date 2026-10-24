@@ -81,7 +81,7 @@ describe('register journeys', () => {
     await click(fixture, root, '[data-testid="item-b"]');
     await click(fixture, root, '[data-testid="item-c"]');
     type(root, '[data-testid="customer-name"]', 'Ana');
-    type(root, '[data-testid="qs-received"]', '50');
+    type(root, '#qs-received', '50');
     await fixture.whenStable();
     await click(fixture, root, '[data-testid="qs-submit"]');
 
@@ -138,11 +138,12 @@ describe('register journeys', () => {
     http.expectOne(`${BASE}/reasons?type=CASH_OUT`).flush([{ type: 'CASH_OUT', code: 'Supplier' }]);
     await fixture.whenStable();
 
-    await chooseOption(fixture, root, 'mv-reason', 'Supplier');
-    type(root, '[data-testid="mv-amount"]', '40');
-    type(root, '[data-testid="mv-reference"]', 'Fruteria Lola');
+    await click(fixture, root, '[data-testid="mv-open"]');
+    await chooseOption(fixture, document.body, 'mv-reason', 'Supplier');
+    type(document.body, '[role="dialog"] #mv-amount', '40');
+    type(document.body, '[role="dialog"] [data-testid="mv-reference"]', 'Fruteria Lola');
     await fixture.whenStable();
-    await click(fixture, root, '[data-testid="mv-submit"]');
+    await click(fixture, document.body, '[role="dialog"] [data-testid="fd-save"]');
     const movement = http.expectOne(`${BASE}/shifts/s1/cash-movements`);
     expect(movement.request.body).toMatchObject({ type: 'OUT', reasonCode: 'Supplier', reference: 'Fruteria Lola' });
     movement.flush({}, { status: 201, statusText: 'Created' });
@@ -152,7 +153,7 @@ describe('register journeys', () => {
     await click(fixture, root, '[data-testid="close-open"]');
     const body = document.body;
     expect(body.textContent).not.toContain('Efectivo esperado');
-    type(body, '[role="dialog"] [data-testid="close-count"]', '90');
+    type(body, '[role="dialog"] #close-count', '90');
     await fixture.whenStable();
     await click(fixture, body, '[role="dialog"] [data-testid="close-confirm"]');
     http

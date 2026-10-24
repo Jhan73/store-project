@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { expand, map, Observable, reduce } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-config';
 import type {
   Allergen,
@@ -16,6 +16,8 @@ import type {
   Station,
   UpdateCategoryRequest,
 } from '../../../core/api/api-types';
+
+const ALL_PAGE_SIZE = 100;
 
 export interface ProductQuery {
   readonly categoryId?: string;
@@ -118,6 +120,18 @@ export class CatalogApi {
     }
     params = params.set('page', query.page).set('size', query.size);
     return this.http.get<ProductPage>(`${this.base}/admin/products`, { params });
+  }
+
+  // The admin lists filter, sort and page the whole catalog in the browser.
+  allProducts(): Observable<Product[]> {
+    const read = (page: number) =>
+      this.http.get<ProductPage>(`${this.base}/admin/products`, {
+        params: new HttpParams().set('page', page).set('size', ALL_PAGE_SIZE),
+      });
+    return read(0).pipe(
+      expand((result) => (result.page + 1 < result.totalPages ? read(result.page + 1) : [])),
+      reduce<ProductPage, Product[]>((all, result) => [...all, ...result.content], []),
+    );
   }
 
   product(id: string): Observable<Product> {

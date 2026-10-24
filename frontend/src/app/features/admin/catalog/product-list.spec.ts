@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
 import { ProductList } from './product-list';
@@ -37,12 +38,12 @@ const categories: Category[] = [
 const page = (content: Product[], number = 0, totalPages = 1): ProductPage => ({
   content,
   page: number,
-  size: 20,
+  size: 100,
   totalElements: content.length,
   totalPages,
 });
 
-async function render(first: ProductPage = page([product('p1', 'Orange juice'), product('p2', 'Beet shot')])) {
+function setup() {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
@@ -55,9 +56,14 @@ async function render(first: ProductPage = page([product('p1', 'Orange juice'), 
   });
   const fixture = TestBed.createComponent(ProductList);
   const http = TestBed.inject(HttpTestingController);
+  return { fixture, http };
+}
+
+async function render(first: ProductPage = page([product('p1', 'Orange juice'), product('p2', 'Beet shot')])) {
+  const { fixture, http } = setup();
   await fixture.whenStable();
   http.expectOne(`${API}/admin/categories`).flush(categories);
-  http.expectOne(`${API}/admin/products?page=0&size=20`).flush(first);
+  http.expectOne(`${API}/admin/products?page=0&size=100`).flush(first);
   await fixture.whenStable();
   return {
     fixture,
@@ -73,6 +79,7 @@ const click = (host: HTMLElement, testId: string) =>
   host.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!.click();
 const switchOf = (host: HTMLElement, testId: string) =>
   host.querySelector<HTMLInputElement>(`p-toggleswitch[data-testid="${testId}"] input`)!;
+const mixed = () => page([product('p1', 'Orange juice'), product('p3', 'Chips', { categoryId: 'c2' })]);
 
 describe('ProductList', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
@@ -109,15 +116,11 @@ describe('ProductList', () => {
     expect(image.getAttribute('alt')).toBe('Orange juice');
   });
 
-  it('filters by category and goes back to the first page', async () => {
-    const { fixture, host, http } = await render();
+  it('filters by category without asking the server again', async () => {
+    const { fixture, host } = await render(mixed());
 
     expect(selectedLabel(host, 'product-category-filter')).toBe('Todas');
     await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
-    http
-      .expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`)
-      .flush(page([product('p3', 'Chips', { categoryId: 'c2' })]));
-    await fixture.whenStable();
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Chips');
@@ -125,67 +128,50 @@ describe('ProductList', () => {
   });
 
   it('searches the categories before filtering by one', async () => {
-    const { fixture, host, http } = await render();
+    const { fixture, host } = await render(mixed());
 
-    expect(await filterOptions(fixture, host, 'product-category-filter', 'snack')).toEqual([
-      'Snacks',
-    ]);
+    expect(await filterOptions(fixture, host, 'product-category-filter', 'snack')).toEqual(['Snacks']);
     await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
-    http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`).flush(page([]));
-    await fixture.whenStable();
 
-    expect(selectedLabel(host, 'product-category-filter')).toBe('Snacks');
+    expect(rows(host)).toHaveLength(1);
   });
 
   it('clears the category filter to list every category again', async () => {
-    const { fixture, host, http } = await render();
+    const { fixture, host } = await render(mixed());
     await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
-    http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`).flush(page([]));
-    await fixture.whenStable();
 
     host.querySelector<SVGElement>('p-select .p-select-clear-icon')!.dispatchEvent(new Event('click'));
-    http
-      .expectOne(`${API}/admin/products?page=0&size=20`)
-      .flush(page([product('p1', 'Orange juice')]));
     await fixture.whenStable();
 
-    expect(rows(host)[0]).toContain('Orange juice');
+    expect(rows(host)).toHaveLength(2);
     expect(selectedLabel(host, 'product-category-filter')).toBe('Todas');
   });
 
-  it('keeps the latest filter when an earlier response arrives late', async () => {
-    const { fixture, host, http } = await render();
-
-    await chooseOption(fixture, host, 'product-category-filter', 'Juices');
-    const early = http.expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`);
-    await chooseOption(fixture, host, 'product-category-filter', 'Snacks');
-    const late = http.expectOne(`${API}/admin/products?categoryId=c2&page=0&size=20`);
-
-    late.flush(page([product('p3', 'Chips', { categoryId: 'c2' })]));
-    early.flush(page([product('p1', 'Orange juice')]));
+  it('reads every page of the catalog', async () => {
+    const { fixture, http } = setup();
     await fixture.whenStable();
-
-    expect(rows(host)).toHaveLength(1);
-    expect(rows(host)[0]).toContain('Chips');
-  });
-
-  it('moves between pages', async () => {
-    const { fixture, host, http } = await render(page([product('p1', 'Orange juice')], 0, 2));
-    expect(host.textContent).toContain('Página 1 de 2');
-
-    click(host, 'next-page');
+    http.expectOne(`${API}/admin/categories`).flush(categories);
     http
-      .expectOne(`${API}/admin/products?page=1&size=20`)
+      .expectOne(`${API}/admin/products?page=0&size=100`)
+      .flush(page([product('p1', 'Orange juice')], 0, 2));
+    await fixture.whenStable();
+    http
+      .expectOne(`${API}/admin/products?page=1&size=100`)
       .flush(page([product('p9', 'Zesty shot')], 1, 2));
     await fixture.whenStable();
-    expect(host.textContent).toContain('Página 2 de 2');
-    expect(rows(host)[0]).toContain('Zesty shot');
-    expect(host.querySelector<HTMLButtonElement>('[data-testid="next-page"]')!.disabled).toBe(true);
 
-    click(host, 'previous-page');
-    http.expectOne(`${API}/admin/products?page=0&size=20`).flush(page([product('p1', 'Orange juice')], 0, 2));
+    expect(rows(fixture.nativeElement as HTMLElement)).toHaveLength(2);
+  });
+
+  it('pages the rows in the table', async () => {
+    const many = Array.from({ length: 25 }, (_, n) => product(`p${n}`, `Juice ${n}`));
+    const { fixture, host } = await render(page(many));
+
+    expect(rows(host)).toHaveLength(20);
+    host.querySelector<HTMLElement>('.p-paginator-next')!.click();
     await fixture.whenStable();
-    expect(rows(host)[0]).toContain('Orange juice');
+
+    expect(rows(host)).toHaveLength(5);
   });
 
   it('marks a product sold out right away without saving the product', async () => {
@@ -225,69 +211,74 @@ describe('ProductList', () => {
     await fixture.whenStable();
     expect(box().disabled).toBe(true);
     box().click();
-    const request = http.expectOne(`${API}/catalog/products/p1/availability`);
-    request.flush({ id: 'p1', available: false });
+    http.expectOne(`${API}/catalog/products/p1/availability`).flush({ id: 'p1', available: false });
     await fixture.whenStable();
 
     expect(box().disabled).toBe(false);
     expect(box().checked).toBe(false);
   });
 
-  it('puts the switch back to the value the list holds now, not the one it had at the click', async () => {
+  it('shows a deactivated product as inactive at once and sends the change after the undo window', async () => {
     const { fixture, host, http } = await render();
-    const box = () => switchOf(host, 'available-p1');
-
-    box().click();
-    const availability = http.expectOne(`${API}/catalog/products/p1/availability`);
-    await chooseOption(fixture, host, 'product-category-filter', 'Juices');
-    http
-      .expectOne(`${API}/admin/products?categoryId=c1&page=0&size=20`)
-      .flush(page([product('p1', 'Orange juice', { available: false })]));
-    await fixture.whenStable();
-
-    availability.flush(
-      { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
-      { status: 500, statusText: 'Server Error' },
-    );
-    await fixture.whenStable();
-
-    expect(box().checked).toBe(false);
-  });
-
-  it('deactivates an active product and reactivates an inactive one with their versions', async () => {
-    const { fixture, host, http } = await render(
-      page([product('p1', 'Orange juice'), product('p2', 'Beet shot', { active: false, etag: '"5"' })]),
-    );
+    vi.useFakeTimers();
 
     click(host, 'toggle-p1');
+    vi.advanceTimersByTime(5_000);
+    vi.useRealTimers();
     const deactivate = http.expectOne(`${API}/admin/products/p1/deactivate`);
     expect(deactivate.request.headers.get('If-Match')).toBe('"2"');
     deactivate.flush(product('p1', 'Orange juice', { active: false, etag: '"3"' }));
     await fixture.whenStable();
+
     expect(rows(host)[0]).toContain('Inactivo');
+  });
+
+  it('undoing a deactivation sends nothing and keeps the product active', async () => {
+    const { fixture, host } = await render();
+    const notice = TestBed.inject(UndoNotice);
+
+    click(host, 'toggle-p1');
+    await fixture.whenStable();
+    expect(rows(host)[0]).toContain('Inactivo');
+    expect(notice.active()).toHaveLength(1);
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).not.toContain('Inactivo');
+  });
+
+  it('reactivates an inactive product straight away with its version', async () => {
+    const { fixture, host, http } = await render(
+      page([product('p2', 'Beet shot', { active: false, etag: '"5"' })]),
+    );
 
     click(host, 'toggle-p2');
     const reactivate = http.expectOne(`${API}/admin/products/p2/reactivate`);
     expect(reactivate.request.headers.get('If-Match')).toBe('"5"');
     reactivate.flush(product('p2', 'Beet shot', { etag: '"6"' }));
     await fixture.whenStable();
-    expect(rows(host)[1]).toContain('Activo');
+
+    expect(rows(host)[0]).not.toContain('Inactivo');
   });
 
-  it('reloads the current page when a product changed in the meantime', async () => {
+  it('reloads the list when a product changed in the meantime', async () => {
     const { fixture, host, http } = await render();
+    vi.useFakeTimers();
 
     click(host, 'toggle-p1');
+    vi.advanceTimersByTime(5_000);
+    vi.useRealTimers();
     http.expectOne(`${API}/admin/products/p1/deactivate`).flush(
       { type: 'about:blank', status: 412, code: 'common.precondition-failed', correlationId: 'c' },
       { status: 412, statusText: 'Precondition Failed' },
     );
     await fixture.whenStable();
     http
-      .expectOne(`${API}/admin/products?page=0&size=20`)
+      .expectOne(`${API}/admin/products?page=0&size=100`)
       .flush(page([product('p1', 'Fresh orange juice', { etag: '"9"' })]));
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('Fresh orange juice');
+    expect(rows(host)[0]).not.toContain('Inactivo');
   });
 });

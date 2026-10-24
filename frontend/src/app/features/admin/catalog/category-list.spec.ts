@@ -11,6 +11,7 @@ import {
   selectedLabel,
   typeNumber,
 } from '../../../testing/primeng-controls';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { CatalogApi } from './catalog-api';
 import { CategoryList } from './category-list';
 
@@ -30,6 +31,13 @@ const juices: Category = {
 };
 const snacks: Category = { ...juices, id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's2' };
 
+const ask = vi.fn(() => Promise.resolve(true));
+
+async function openAdd(fixture: { whenStable: () => Promise<unknown> }, host: HTMLElement) {
+  host.querySelector<HTMLButtonElement>('[data-testid="add-category"]')!.click();
+  await fixture.whenStable();
+}
+
 async function render(categories: Category[] = [juices, snacks]) {
   TestBed.configureTestingModule({
     providers: [
@@ -37,6 +45,7 @@ async function render(categories: Category[] = [juices, snacks]) {
       provideHttpClientTesting(),
       MessageService,
       CatalogApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -49,14 +58,14 @@ async function render(categories: Category[] = [juices, snacks]) {
   return { fixture, host: fixture.nativeElement as HTMLElement, http };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
+function type(selector: string, value: string) {
+  const input = document.body.querySelector<HTMLInputElement>(selector)!;
   input.value = value;
   input.dispatchEvent(new Event('input'));
 }
 
-function submit(host: HTMLElement) {
-  host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+function submit() {
+  document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
 }
 
 function rows(host: HTMLElement) {
@@ -64,6 +73,7 @@ function rows(host: HTMLElement) {
 }
 
 describe('CategoryList', () => {
+  beforeEach(() => ask.mockClear());
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('lists the categories with their station and state', async () => {
@@ -80,10 +90,11 @@ describe('CategoryList', () => {
 
   it('creates a category on the default station when none is chosen', async () => {
     const { fixture, host, http } = await render([]);
+    await openAdd(fixture, host);
 
-    type(host, '#category-name', 'Salads');
-    typeNumber(host, 'category-order', '3');
-    submit(host);
+    type('#category-name', 'Salads');
+    typeNumber(document.body, 'category-order', '3');
+    submit();
     const request = http.expectOne(`${ADMIN}/categories`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ name: 'Salads', displayOrder: 3 });
@@ -96,12 +107,13 @@ describe('CategoryList', () => {
 
   it('creates a category on the chosen station', async () => {
     const { fixture, host, http } = await render([]);
+    await openAdd(fixture, host);
 
-    expect(selectedLabel(host, 'category-station')).toBe('Estación predeterminada');
-    type(host, '#category-name', 'Shots');
-    typeNumber(host, 'category-order', '1');
-    await chooseOption(fixture, host, 'category-station', 'Bar');
-    submit(host);
+    expect(selectedLabel(document.body, 'category-station')).toBe('Estación predeterminada');
+    type('#category-name', 'Shots');
+    typeNumber(document.body, 'category-order', '1');
+    await chooseOption(fixture, document.body, 'category-station', 'Bar');
+    submit();
 
     expect(http.expectOne(`${ADMIN}/categories`).request.body).toEqual({
       name: 'Shots',
@@ -112,12 +124,13 @@ describe('CategoryList', () => {
 
   it('searches the stations before choosing one', async () => {
     const { fixture, host, http } = await render([]);
+    await openAdd(fixture, host);
 
-    type(host, '#category-name', 'Shots');
-    typeNumber(host, 'category-order', '1');
-    expect(await filterOptions(fixture, host, 'category-station', 'ba')).toEqual(['Bar']);
-    await chooseOption(fixture, host, 'category-station', 'Bar');
-    submit(host);
+    type('#category-name', 'Shots');
+    typeNumber(document.body, 'category-order', '1');
+    expect(await filterOptions(fixture, document.body, 'category-station', 'ba')).toEqual(['Bar']);
+    await chooseOption(fixture, document.body, 'category-station', 'Bar');
+    submit();
 
     expect(http.expectOne(`${ADMIN}/categories`).request.body.stationId).toBe('s2');
   });
@@ -127,11 +140,11 @@ describe('CategoryList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-c2"]')!.click();
     await fixture.whenStable();
-    expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Snacks');
-    expect(selectedLabel(host, 'category-station')).toBe('Bar');
-    expect(host.querySelector('p-select .p-select-clear-icon')).toBeNull();
-    type(host, '#category-name', 'Bites');
-    submit(host);
+    expect(document.body.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Snacks');
+    expect(selectedLabel(document.body, 'category-station')).toBe('Bar');
+    expect(document.body.querySelector('[role="dialog"] p-select .p-select-clear-icon')).toBeNull();
+    type('#category-name', 'Bites');
+    submit();
     const request = http.expectOne(`${ADMIN}/categories/c2`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.headers.get('If-Match')).toBe('"2"');
@@ -146,6 +159,8 @@ describe('CategoryList', () => {
     const { fixture, host, http } = await render([juices, { ...snacks, active: false }]);
 
     host.querySelector<HTMLButtonElement>('[data-testid="toggle-c1"]')!.click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Juices') }));
     const deactivate = http.expectOne(`${ADMIN}/categories/c1/deactivate`);
     expect(deactivate.request.headers.get('If-Match')).toBe('"2"');
     deactivate.flush({ ...juices, active: false, etag: '"3"' });
@@ -164,6 +179,7 @@ describe('CategoryList', () => {
     const { fixture, host, http } = await render();
 
     host.querySelector<HTMLButtonElement>('[data-testid="toggle-c1"]')!.click();
+    await fixture.whenStable();
     http.expectOne(`${ADMIN}/categories/c1/deactivate`).flush(
       { type: 'about:blank', status: 412, code: 'common.precondition-failed', correlationId: 'c' },
       { status: 412, statusText: 'Precondition Failed' },
@@ -187,8 +203,8 @@ describe('CategoryList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
     await fixture.whenStable();
-    type(host, '#category-name', 'Mine');
-    submit(host);
+    type('#category-name', 'Mine');
+    submit();
     http
       .expectOne(`${ADMIN}/categories/c1`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -198,8 +214,8 @@ describe('CategoryList', () => {
       .flush([{ ...juices, name: 'Fresh juices', etag: '"9"' }, snacks]);
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Fresh juices');
-    submit(host);
+    expect(document.body.querySelector<HTMLInputElement>('#category-name')!.value).toBe('Fresh juices');
+    submit();
     const retry = http.expectOne(`${ADMIN}/categories/c1`);
     expect(retry.request.headers.get('If-Match')).toBe('"9"');
     retry.flush({ ...juices, name: 'Fresh juices', etag: '"10"' });
@@ -210,7 +226,7 @@ describe('CategoryList', () => {
 
     host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
     await fixture.whenStable();
-    submit(host);
+    submit();
     http.expectOne(`${ADMIN}/categories/c1`).flush(
       { type: 'about:blank', status: 404, code: 'common.not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -219,22 +235,14 @@ describe('CategoryList', () => {
     http.expectOne(`${ADMIN}/categories`).flush([snacks]);
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('#category-name')!.value).toBe('');
-    expect(host.querySelector('form [type="button"]')).toBeNull();
+    expect(document.body.querySelector('#category-name')).toBeNull();
   });
 
-  it('saves with the version returned by a toggle of the category being edited', async () => {
-    const { fixture, host, http } = await render();
+  it('does not deactivate when the confirmation is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host } = await render();
 
-    host.querySelector<HTMLButtonElement>('[data-testid="edit-c1"]')!.click();
-    await fixture.whenStable();
     host.querySelector<HTMLButtonElement>('[data-testid="toggle-c1"]')!.click();
-    http
-      .expectOne(`${ADMIN}/categories/c1/deactivate`)
-      .flush({ ...juices, active: false, etag: '"7"' });
     await fixture.whenStable();
-    submit(host);
-
-    expect(http.expectOne(`${ADMIN}/categories/c1`).request.headers.get('If-Match')).toBe('"7"');
   });
 });

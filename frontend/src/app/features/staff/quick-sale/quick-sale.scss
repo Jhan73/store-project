@@ -98,13 +98,6 @@ ul {
   font-size: 1.25rem;
 }
 
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
 .result {
   padding: var(--space-4);
   background: var(--muted);
@@ -126,4 +119,8 @@ ul {
   color: var(--warning-foreground);
   background: var(--warning);
   font-weight: 600;
+}
+
+.why {
+  color: var(--muted-foreground);
 }

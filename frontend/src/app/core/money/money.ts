@@ -40,6 +40,22 @@ export function formatMoney(money: Money, locale = 'es-PE'): string {
   );
 }
 
+// For templates and computed(): a malformed amount must render as a dash, never throw.
+export function safeMinorUnits(money: Money | null | undefined): number | null {
+  if (!money) {
+    return null;
+  }
+  try {
+    return toMinorUnits(money);
+  } catch {
+    return null;
+  }
+}
+
+export function formatMoneyOrDash(money: Money | null | undefined, locale = 'es-PE'): string {
+  return safeMinorUnits(money) === null ? '—' : formatMoney(money as Money, locale);
+}
+
 const TYPED_AMOUNT = /^(\d{1,10})(?:[.,](\d{1,2}))?$/;
 
 // Turns what a person typed ("9", "9,5") into the API's two-decimal string, or null when it is not an amount.

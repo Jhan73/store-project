@@ -19,7 +19,9 @@ import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { LineRequest, MenuProduct, PaymentMethod, QuickSaleItem } from '../../../core/api/api-types';
-import { formatMoney, parseAmount } from '../../../core/money/money';
+import { formatMoneyOrDash, parseAmount } from '../../../core/money/money';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { methodLabel, PAYMENT_METHODS } from '../register/payment-methods';
 import { QuickSaleStore } from './quick-sale-store';
@@ -41,6 +43,8 @@ interface Configuring {
     Tooltip,
     TablerIconComponent,
     ProductConfigurator,
+    FormField,
+    MoneyInput,
   ],
   providers: [QuickSaleStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -223,7 +227,7 @@ interface Configuring {
                     pTooltip="Quitar el producto de la venta"
                     i18n-pTooltip="@@staff.quickSale.remove.tooltip"
                     tooltipPosition="top"
-                    (click)="store.remove(line.key)"
+                    (click)="store.remove(line)"
                   >
                     <tabler-icon [icon]="icons.remove" aria-hidden="true" />
                   </button>
@@ -241,8 +245,11 @@ interface Configuring {
           }
 
           <form (submit)="submit($event)" [attr.aria-labelledby]="'cart-heading'">
-            <div class="field">
-              <label for="customer-name" i18n="@@staff.quickSale.name">Nombre del cliente (opcional)</label>
+            <app-form-field
+              label="Nombre del cliente (opcional)"
+              i18n-label="@@staff.quickSale.name"
+              controlId="customer-name"
+            >
               <input
                 pInputText
                 id="customer-name"
@@ -252,12 +259,11 @@ interface Configuring {
                 autocomplete="off"
                 fluid
               />
-            </div>
-            <div class="field">
-              <label for="qs-method" id="qs-method-label" i18n="@@staff.quickSale.method">Método de pago</label>
+            </app-form-field>
+            <app-form-field label="Método de pago" i18n-label="@@staff.quickSale.method" controlId="qs-method">
               <p-select
                 inputId="qs-method"
-                [ariaLabelledBy]="'qs-method-label'"
+                [ariaLabel]="labels.method"
                 [formControl]="method"
                 optionLabel="label"
                 optionValue="value"
@@ -270,25 +276,28 @@ interface Configuring {
                 [appendTo]="'body'"
                 fluid
               />
-            </div>
+            </app-form-field>
             @if (chosenMethod() === 'CASH') {
-              <div class="field">
-                <label for="qs-received" i18n="@@staff.quickSale.received">Efectivo recibido</label>
-                <input
-                  pInputText
-                  id="qs-received"
-                  data-testid="qs-received"
+              <app-form-field
+                label="Efectivo recibido"
+                i18n-label="@@staff.quickSale.received"
+                controlId="qs-received"
+              >
+                <app-money-input
+                  inputId="qs-received"
                   [formControl]="received"
-                  [attr.inputmode]="'decimal'"
-                  autocomplete="off"
-                  fluid
+                  [currency]="store.estimatedTotal()?.currency ?? null"
                 />
-              </div>
+              </app-form-field>
+            }
+            @if (why(); as reason) {
+              <small class="why" data-testid="qs-why" id="qs-why">{{ reason }}</small>
             }
             <button
               pButton
               type="submit"
               data-testid="qs-submit"
+              [attr.aria-describedby]="why() ? 'qs-why' : null"
               [loading]="selling()"
               [disabled]="!canSell() || selling()"
               pTooltip="Cobrar y registrar la venta"
@@ -339,7 +348,18 @@ export class QuickSale {
     retry: IconRefresh,
     openShift: IconLockOpen,
   };
-  protected readonly money = formatMoney;
+  protected readonly money = formatMoneyOrDash;
+  protected readonly labels = {
+    method: $localize`:@@staff.quickSale.method.aria:Método de pago`,
+  };
+  protected readonly why = computed<string | null>(() => {
+    if (this.store.estimatedTotal() === null || !this.store.hasShift()) {
+      return null;
+    }
+    return this.chosenMethod() === 'CASH' && parseAmount(this.typedReceived()) === null
+      ? $localize`:@@staff.quickSale.why.received:Escribe el efectivo recibido para cobrar.`
+      : null;
+  });
   protected readonly maxQuantity = 99;
   protected readonly methods = PAYMENT_METHODS.map((value) => ({ value, label: methodLabel(value) }));
   protected readonly customerName = new FormControl('', { nonNullable: true });

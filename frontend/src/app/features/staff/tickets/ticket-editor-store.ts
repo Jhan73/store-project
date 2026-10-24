@@ -2,7 +2,7 @@ import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { forkJoin, Observable } from 'rxjs';
+import { finalize, forkJoin, Observable } from 'rxjs';
 import type {
   ActiveReason,
   CompLineRequest,
@@ -27,6 +27,9 @@ import { ReasonsApi } from '../../../core/reasons/reasons-api';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { UndoGuard } from '../../../shared/state/undo-guard';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UndoQueue } from '../../../shared/state/undo-queue';
 import { RegisterApi } from '../register/register-api';
 import { isShiftStateError } from '../register/shift-store';
 import { TicketsApi } from './tickets-api';
@@ -60,6 +63,11 @@ export class TicketEditorStore {
   private readonly destroyRef = inject(DestroyRef);
   private readonly sync = new LiveSync(this.realtime);
   private readonly keys = new IntentKeys();
+  private readonly undoNotice = inject(UndoNotice);
+  private readonly removals = new UndoQueue();
+  private readonly removalGuard = new UndoGuard(this.removals);
+  private readonly removalsRunning = signal(0);
+  private readonly removalsBusy = computed(() => this.removals.keys().size > 0 || this.removalsRunning() > 0);
 
   private readonly current = signal<Ticket | null>(null);
   private readonly currentMenu = signal<Menu | null>(null);
@@ -116,6 +124,10 @@ export class TicketEditorStore {
   readonly unsent = computed(
     () => this.current()?.lines.filter((line) => line.state === 'UNSENT') ?? [],
   );
+  // What may reach the kitchen: a line waiting out its removal never does.
+  readonly sendable = computed(() => this.unsent().filter((line) => !this.removals.has(line.id)));
+  // A send waits for every removal to be answered: the kitchen must not get a line that is on its way out.
+  readonly canSend = computed(() => this.sendable().length > 0 && !this.removalsBusy());
   // The lines that went out together in the latest send, minus those voided since.
   readonly lastRound = computed(() => {
     const sent = (this.current()?.lines ?? []).filter(
@@ -129,7 +141,10 @@ export class TicketEditorStore {
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => (this.destroyed = true));
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      this.removals.flush();
+    });
     this.route.paramMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.ticketId = params.get('id') ?? '';
       this.current.set(null);
@@ -281,22 +296,47 @@ export class TicketEditorStore {
     );
   }
 
-  removeLine(lineId: string): void {
+  // True while a removal waits out its undo window: the line stays listed, marked as going away.
+  isRemoving(lineId: string): boolean {
+    return this.removals.has(lineId);
+  }
+
+  removeLine(line: TicketLine): void {
+    const ticketId = this.ticketId;
+    const scheduled = this.undoNotice.schedule(
+      this.removals,
+      line.id,
+      $localize`:@@staff.tickets.removed:Se quitó "${line.productName}:name:" de la cuenta`,
+      () => this.sendRemoval(ticketId, line.id),
+    );
+    if (scheduled) {
+      this.removalGuard.queued();
+    }
+  }
+
+  // Not tied to the screen: a removal flushed while the screen closes must still go out.
+  private sendRemoval(ticketId: string, lineId: string): void {
     const pendingId = `line:${lineId}`;
     this.pending.add(pendingId);
-    this.api
-      .removeLine(this.ticketId, lineId)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    this.removalsRunning.update((count) => count + 1);
+    this.removalGuard
+      .track(this.api.removeLine(ticketId, lineId))
+      .pipe(finalize(() => this.removalsRunning.update((count) => count - 1)))
       .subscribe({
         next: () => {
           this.pending.delete(pendingId);
-          this.loadTicket();
+          if (!this.destroyed && ticketId === this.ticketId) {
+            this.loadTicket();
+          }
         },
         error: (error: unknown) => this.commandFailed(pendingId, error),
       });
   }
 
   send(): void {
+    if (this.removalsBusy()) {
+      return;
+    }
     this.command('send', this.api.send(this.ticketId), () => this.loadBoard());
   }
 

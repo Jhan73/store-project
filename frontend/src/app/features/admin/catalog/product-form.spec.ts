@@ -243,6 +243,25 @@ describe('ProductForm', () => {
       expect(selectIsInvalid(host, 'product-category')).toBe(true);
     });
 
+    it('shows the price error below the field and the currency beside it', async () => {
+      const { fixture, host } = await render();
+
+      type(host, '#product-price', '0');
+      submit(host);
+      await fixture.whenStable();
+
+      const field = host.querySelector('app-form-field [id="product-price"]')!.closest('app-form-field')!;
+      expect(field.querySelector('.message.error')?.textContent).toContain('mayor que cero');
+      expect(field.querySelector('.suffix')?.textContent).toContain('PEN');
+    });
+
+    it('limits the name and the description to what the API accepts', async () => {
+      const { host } = await render();
+
+      expect(host.querySelector('#product-name')!.getAttribute('maxlength')).toBe('120');
+      expect(host.querySelector('#product-description')!.getAttribute('maxlength')).toBe('500');
+    });
+
     it('tells the admin that the image comes after the first save', async () => {
       const { host } = await render();
 

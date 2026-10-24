@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormControl, FormsModule, NgModel, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { tap } from 'rxjs';
 import {
-  IconChevronLeft,
-  IconChevronRight,
   IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
@@ -14,19 +13,20 @@ import { ButtonDirective } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
-import type { Category, Product, ProductPage } from '../../../core/api/api-types';
+import type { Category, Product } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
-import { formatMoney } from '../../../core/money/money';
+import { formatMoneyOrDash, safeMinorUnits } from '../../../core/money/money';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UndoableChanges } from '../../../shared/state/undoable-changes';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
 import { isStale } from '../admin-errors';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
-
-const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-product-list',
   imports: [
-    TableScroll,
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
@@ -35,6 +35,9 @@ const PAGE_SIZE = 20;
     ToggleSwitch,
     TablerIconComponent,
     Tooltip,
+    DataTable,
+    FormField,
+    StatusTag,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './catalog.scss',
@@ -53,16 +56,14 @@ const PAGE_SIZE = 20;
       </a>
     </div>
 
-    <div class="field">
-      <label
-        for="product-category-filter"
-        id="product-category-filter-label"
-        i18n="@@admin.catalog.products.filter"
-        >Categoría</label
-      >
+    <app-form-field
+      label="Categoría"
+      i18n-label="@@admin.catalog.products.filter"
+      controlId="product-category-filter"
+    >
       <p-select
         inputId="product-category-filter"
-        [ariaLabelledBy]="'product-category-filter-label'"
+        [ariaLabel]="labels.category"
         placeholder="Todas"
         i18n-placeholder="@@admin.catalog.products.allCategories"
         optionLabel="name"
@@ -75,129 +76,88 @@ const PAGE_SIZE = 20;
         i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
         [showClear]="true"
         [formControl]="categoryFilter"
-        (onChange)="filter($event.value)"
+        (onChange)="categoryId.set($event.value ?? '')"
       />
-    </div>
+    </app-form-field>
 
-    @if (current().content.length === 0) {
-      <p class="muted" i18n="@@admin.catalog.products.empty">Todavía no hay productos.</p>
-    } @else {
-      <app-table-scroll label="Listado de productos" i18n-label="@@admin.catalog.products.tableScroll">
-        <table>
-        <thead>
-          <tr>
-            <th><span class="sr-only" i18n="@@admin.catalog.products.image">Imagen</span></th>
-            <th i18n="@@admin.catalog.products.name">Nombre</th>
-            <th i18n="@@admin.catalog.products.category">Categoría</th>
-            <th i18n="@@admin.catalog.products.price">Precio</th>
-            <th i18n="@@admin.catalog.products.state">Estado</th>
-            <th i18n="@@admin.catalog.products.available">Disponible</th>
-            <th><span class="sr-only" i18n="@@admin.catalog.actions">Acciones</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (product of current().content; track product.id) {
-            <tr>
-              <td>
-                @if (product.imageUrl) {
-                  <img [src]="product.imageUrl" [alt]="product.name" width="48" height="48" [attr.loading]="'lazy'" />
-                }
-              </td>
-              <td>{{ product.name }}</td>
-              <td>{{ categoryName(product.categoryId) }}</td>
-              <td>{{ price(product) }}</td>
-              <td>
-                @if (product.active) {
-                  <span i18n="@@admin.catalog.products.active">Activo</span>
-                } @else {
-                  <span class="muted" i18n="@@admin.catalog.products.inactive">Inactivo</span>
-                }
-              </td>
-              <td>
-                <p-toggleswitch
-                  #availability="ngModel"
-                  [ngModel]="product.available"
-                  [disabled]="savingAvailability().has(product.id)"
-                  [attr.data-testid]="'available-' + product.id"
-                  [ariaLabel]="product.name"
-                  (onChange)="setAvailability(product, $event.checked, availability)"
-                />
-              </td>
-              <td class="actions">
-                <a
-                  pButton
-                  severity="secondary"
-                  [size]="'small'"
-                  [routerLink]="['/admin/catalog/products', product.id]"
-                  pTooltip="Editar los datos de este producto"
-                  i18n-pTooltip="@@admin.catalog.products.edit.tooltip"
-                  tooltipPosition="top"
-                >
-                  <tabler-icon [icon]="icons.edit" aria-hidden="true" />
-                  <span i18n="@@admin.catalog.edit">Editar</span>
-                </a>
-                <button
-                  pButton
-                  type="button"
-                  severity="secondary"
-                  [outlined]="true"
-                  [size]="'small'"
-                  [attr.data-testid]="'toggle-' + product.id"
-                  (click)="toggle(product)"
-                  [pTooltip]="product.active ? tips.deactivate : tips.reactivate"
-                  tooltipPosition="top"
-                >
-                  @if (product.active) {
-                    <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                    <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
-                  } @else {
-                    <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                    <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
-                  }
-                </button>
-              </td>
-            </tr>
+    <app-data-table
+      label="Listado de productos"
+      i18n-label="@@admin.catalog.products.tableScroll"
+      emptyText="Todavía no hay productos."
+      i18n-emptyText="@@admin.catalog.products.empty"
+      [value]="rowsView()"
+      [columns]="columns"
+      [rows]="20"
+    >
+      <ng-template #row let-product>
+        <td>
+          @if (product.imageUrl) {
+            <img
+              [src]="product.imageUrl"
+              [alt]="product.name"
+              width="48"
+              height="48"
+              [attr.loading]="'lazy'"
+            />
           }
-        </tbody>
-        </table>
-      </app-table-scroll>
-    }
-
-    @if (current().totalPages > 1) {
-      <nav class="toolbar" aria-label="Paginación" i18n-aria-label="@@admin.catalog.products.paging">
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="previous-page"
-          [disabled]="current().page === 0"
-          (click)="go(current().page - 1)"
-          pTooltip="Ir a la página anterior"
-          i18n-pTooltip="@@admin.catalog.products.previous.tooltip"
-          tooltipPosition="top"
-        >
-          <tabler-icon [icon]="icons.previous" aria-hidden="true" />
-          <span i18n="@@admin.catalog.products.previous">Anterior</span>
-        </button>
-        <span i18n="@@admin.catalog.products.pageOf"
-          >Página {{ current().page + 1 }} de {{ current().totalPages }}</span
-        >
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="next-page"
-          [disabled]="current().page + 1 >= current().totalPages"
-          (click)="go(current().page + 1)"
-          pTooltip="Ir a la página siguiente"
-          i18n-pTooltip="@@admin.catalog.products.next.tooltip"
-          tooltipPosition="top"
-        >
-          <tabler-icon [icon]="icons.next" aria-hidden="true" />
-          <span i18n="@@admin.catalog.products.next">Siguiente</span>
-        </button>
-      </nav>
-    }
+        </td>
+        <td>{{ product.name }}</td>
+        <td>{{ product.categoryName }}</td>
+        <td>{{ product.priceText }}</td>
+        <td>
+          <app-status-tag
+            [value]="product.stateLabel"
+            [severity]="product.shownActive ? 'success' : 'secondary'"
+          />
+        </td>
+        <td>
+          <p-toggleswitch
+            #availability="ngModel"
+            [ngModel]="product.available"
+            [disabled]="savingAvailability().has(product.id)"
+            [attr.data-testid]="'available-' + product.id"
+            [ariaLabel]="product.name"
+            (onChange)="setAvailability(product, $event.checked, availability)"
+          />
+        </td>
+        <td class="actions">
+          <div class="row-actions">
+            <a
+              pButton
+              severity="secondary"
+              [size]="'small'"
+              [routerLink]="['/admin/catalog/products', product.id]"
+              pTooltip="Editar los datos de este producto"
+              i18n-pTooltip="@@admin.catalog.products.edit.tooltip"
+              tooltipPosition="top"
+            >
+              <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+              <span i18n="@@admin.catalog.edit">Editar</span>
+            </a>
+            <button
+              pButton
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              [size]="'small'"
+              [attr.data-testid]="'toggle-' + product.id"
+              [disabled]="changes.has(product.id)"
+              (click)="toggle(product)"
+              [pTooltip]="product.shownActive ? tips.deactivate : tips.reactivate"
+              tooltipPosition="top"
+            >
+              @if (product.shownActive) {
+                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
+              } @else {
+                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
+              }
+            </button>
+          </div>
+        </td>
+      </ng-template>
+    </app-data-table>
   `,
 })
 export class ProductList {
@@ -206,74 +166,72 @@ export class ProductList {
     edit: IconPencil,
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
-    previous: IconChevronLeft,
-    next: IconChevronRight,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.catalog.products.deactivate.tooltip:Ocultar este producto del menú`,
     reactivate: $localize`:@@admin.catalog.products.reactivate.tooltip:Volver a mostrar este producto en el menú`,
   };
+  protected readonly labels = {
+    category: $localize`:@@admin.catalog.products.filter:Categoría`,
+    active: $localize`:@@admin.catalog.products.active:Activo`,
+    inactive: $localize`:@@admin.catalog.products.inactive:Inactivo`,
+  };
+  protected readonly columns: readonly DataColumn[] = [
+    { field: '', header: $localize`:@@admin.catalog.products.image:Imagen` },
+    { field: 'name', header: $localize`:@@admin.catalog.products.name:Nombre`, sortable: true, filter: true },
+    {
+      field: 'categoryName',
+      header: $localize`:@@admin.catalog.products.category:Categoría`,
+      sortable: true,
+      filter: true,
+    },
+    {
+      field: 'priceMinor',
+      header: $localize`:@@admin.catalog.products.price:Precio`,
+      sortable: true,
+      searchable: false,
+    },
+    { field: 'stateLabel', header: $localize`:@@admin.catalog.products.state:Estado`, sortable: true },
+    { field: '', header: $localize`:@@admin.catalog.products.available:Disponible` },
+    { field: '', header: $localize`:@@admin.catalog.actions:Acciones` },
+  ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
 
+  protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly categoryOptions = computed(() => [...this.categories()]);
   protected readonly categoryId = signal('');
   protected readonly categoryFilter = new FormControl<string | null>(null);
-  protected readonly current = signal<ProductPage>({
-    content: [],
-    page: 0,
-    size: PAGE_SIZE,
-    totalElements: 0,
-    totalPages: 0,
-  });
+  protected readonly products = signal<readonly Product[]>([]);
   protected readonly savingAvailability = signal<ReadonlySet<string>>(new Set());
   private lastRequest = 0;
   private readonly categoryNames = computed(
     () => new Map(this.categories().map((category) => [category.id, category.name])),
   );
+  protected readonly rowsView = computed(() =>
+    this.products()
+      .filter((product) => !this.categoryId() || product.categoryId === this.categoryId())
+      .map((product) => {
+        const shownActive = this.changes.pending(product.id) ?? product.active;
+        return {
+          ...product,
+          categoryName: this.categoryNames().get(product.categoryId) ?? '',
+          priceText: formatMoneyOrDash(product.price),
+          priceMinor: safeMinorUnits(product.price) ?? 0,
+          shownActive,
+          stateLabel: shownActive ? this.labels.active : this.labels.inactive,
+        };
+      }),
+  );
 
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.changes.flush());
     this.api.categories().subscribe({
       next: (list) => this.categories.set(list),
       error: (error: unknown) => this.notifier.show(error),
     });
-    this.go(0);
-  }
-
-  protected categoryName(id: string): string {
-    return this.categoryNames().get(id) ?? '';
-  }
-
-  protected price(product: Product): string {
-    return formatMoney(product.price);
-  }
-
-  protected filter(categoryId: string | null): void {
-    this.categoryId.set(categoryId ?? '');
-    this.go(0);
-  }
-
-  protected go(page: number): void {
-    const request = ++this.lastRequest;
-    this.api
-      .products({
-        ...(this.categoryId() && { categoryId: this.categoryId() }),
-        page,
-        size: PAGE_SIZE,
-      })
-      .subscribe({
-        next: (result) => {
-          if (request === this.lastRequest) {
-            this.current.set(result);
-          }
-        },
-        error: (error: unknown) => {
-          if (request === this.lastRequest) {
-            this.notifier.show(error);
-          }
-        },
-      });
+    this.load();
   }
 
   protected setAvailability(product: Product, available: boolean, control: NgModel): void {
@@ -286,7 +244,7 @@ export class ProductList {
       error: (error: unknown) => {
         this.markSaving(product.id, false);
         // The switch already flipped on screen; put it back to what the list holds now.
-        const held = this.current().content.find((item) => item.id === product.id);
+        const held = this.products().find((item) => item.id === product.id);
         control.control.setValue(held?.available ?? product.available);
         this.notifier.show(error);
       },
@@ -294,18 +252,46 @@ export class ProductList {
   }
 
   protected toggle(product: Product): void {
-    const request = product.active
-      ? this.api.deactivateProduct(product.id, product.etag)
-      : this.api.reactivateProduct(product.id, product.etag);
-    request.subscribe({
-      next: (saved) => this.replace(saved),
+    if (!product.active) {
+      this.api.reactivateProduct(product.id, product.etag).subscribe({
+        next: (saved) => this.replace(saved),
+        error: (error: unknown) => this.fail(error),
+      });
+      return;
+    }
+    this.changes.schedule(
+      product.id,
+      false,
+      $localize`:@@admin.catalog.products.deactivated:Producto "${product.name}:name:" desactivado`,
+      () =>
+        this.api
+          .deactivateProduct(product.id, product.etag)
+          .pipe(tap((saved) => this.replace(saved))),
+      (error) => this.fail(error),
+    );
+  }
+
+  private load(): void {
+    const request = ++this.lastRequest;
+    this.api.allProducts().subscribe({
+      next: (list) => {
+        if (request === this.lastRequest) {
+          this.products.set(list);
+        }
+      },
       error: (error: unknown) => {
-        this.notifier.show(error);
-        if (isStale(error)) {
-          this.go(this.current().page);
+        if (request === this.lastRequest) {
+          this.notifier.show(error);
         }
       },
     });
+  }
+
+  private fail(error: unknown): void {
+    this.notifier.show(error);
+    if (isStale(error)) {
+      this.load();
+    }
   }
 
   private markSaving(id: string, saving: boolean): void {
@@ -321,16 +307,10 @@ export class ProductList {
   }
 
   private patch(id: string, changes: Partial<Product>): void {
-    this.current.update((page) => ({
-      ...page,
-      content: page.content.map((item) => (item.id === id ? { ...item, ...changes } : item)),
-    }));
+    this.products.update((list) => list.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   }
 
   private replace(saved: Product): void {
-    this.current.update((page) => ({
-      ...page,
-      content: page.content.map((item) => (item.id === saved.id ? saved : item)),
-    }));
+    this.products.update((list) => list.map((item) => (item.id === saved.id ? saved : item)));
   }
 }

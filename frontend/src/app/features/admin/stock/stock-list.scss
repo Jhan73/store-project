@@ -1,12 +1,3 @@
-.low {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--destructive);
-  border-color: var(--destructive);
-  font-weight: 600;
-}
-
 .state {
   display: flex;
   flex-direction: column;

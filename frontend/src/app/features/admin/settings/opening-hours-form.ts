@@ -13,13 +13,13 @@ import {
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
-import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import type { DayOfWeek, OpeningHour } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
 import { SettingsApi, Versioned } from './settings-api';
 import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
+import { TimeInput } from '../../../shared/ui/time-input/time-input';
 
 const WEEK: readonly DayOfWeek[] = [
   'MONDAY',
@@ -86,9 +86,9 @@ function buildRow(hour: OpeningHour): DayRow {
 
 @Component({
   selector: 'app-opening-hours-form',
-  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, Checkbox, InputText, TablerIconComponent, Tooltip],
+  imports: [TableScroll, ReactiveFormsModule, ButtonDirective, Checkbox, TimeInput, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: '../admin-section.scss',
+  styleUrls: ['../admin-section.scss', './opening-hours-form.scss'],
   template: `
     <h2 i18n="@@admin.settings.hours.title">Horario de atención</h2>
     <p class="muted" i18n="@@admin.settings.hours.hint">
@@ -98,7 +98,7 @@ function buildRow(hour: OpeningHour): DayRow {
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <app-table-scroll label="Horario de atención por día" i18n-label="@@admin.settings.hours.tableScroll">
-        <table formArrayName="days">
+        <table formArrayName="days" class="hours">
         <thead>
           <tr>
             <th i18n="@@admin.settings.hours.day">Día</th>
@@ -120,29 +120,33 @@ function buildRow(hour: OpeningHour): DayRow {
                 />
               </td>
               <td>
-                <input
-                  pInputText
-                  type="time"
+                <app-time-input
                   formControlName="opensAt"
-                  [id]="'hours-' + row.controls.day.value + '-opens'"
-                  [attr.aria-label]="opensLabel(row.controls.day.value)"
-                  [attr.aria-invalid]="invalid(row.controls.opensAt) ? 'true' : null"
+                  [inputId]="'hours-' + row.controls.day.value + '-opens'"
+                  [ariaLabel]="opensLabel(row.controls.day.value)"
+                  [invalid]="invalid(row.controls.opensAt)"
                 />
+                <small class="row-note error" [attr.data-testid]="'opens-error-' + row.controls.day.value">{{
+                  invalid(row.controls.opensAt) ? labels.timeInvalid : ''
+                }}</small>
               </td>
               <td>
-                <input
-                  pInputText
-                  type="time"
+                <app-time-input
                   formControlName="closesAt"
-                  [id]="'hours-' + row.controls.day.value + '-closes'"
-                  [attr.aria-label]="closesLabel(row.controls.day.value)"
-                  [attr.aria-invalid]="invalid(row.controls.closesAt) ? 'true' : null"
+                  [inputId]="'hours-' + row.controls.day.value + '-closes'"
+                  [ariaLabel]="closesLabel(row.controls.day.value)"
+                  [invalid]="invalid(row.controls.closesAt)"
                 />
-                @if (overnight(row)) {
-                  <small class="muted" [attr.data-testid]="'overnight-' + row.controls.day.value" i18n="@@admin.settings.hours.overnight"
-                    >Cierra al día siguiente</small
-                  >
-                }
+                <small
+                  class="row-note"
+                  [class.error]="invalid(row.controls.closesAt)"
+                  [attr.data-testid]="'closes-note-' + row.controls.day.value"
+                  >@if (invalid(row.controls.closesAt)) {
+                    {{ labels.timeInvalid }}
+                  } @else if (overnight(row)) {
+                    <span [attr.data-testid]="'overnight-' + row.controls.day.value">{{ labels.overnight }}</span>
+                  }</small
+                >
               </td>
             </tr>
           }
@@ -173,6 +177,10 @@ function buildRow(hour: OpeningHour): DayRow {
 })
 export class OpeningHoursForm {
   protected readonly icons = { save: IconDeviceFloppy };
+  protected readonly labels = {
+    timeInvalid: $localize`:@@admin.settings.hours.timeInvalid:Escribe una hora válida, como 08:30.`,
+    overnight: $localize`:@@admin.settings.hours.overnight:Cierra al día siguiente`,
+  };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 

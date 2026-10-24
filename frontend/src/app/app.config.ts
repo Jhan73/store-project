@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { provideClientHydration, withIncrementalHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from './app.routes';
@@ -30,6 +30,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(withIncrementalHydration()),
     { provide: LOCALE_ID, useValue: 'es-PE' },
     MessageService,
+    ConfirmationService,
     providePrimeNG({
       theme: { preset: AppPreset, options: { darkModeSelector: `.${DARK_CLASS}` } },
       translation: primeTranslation,

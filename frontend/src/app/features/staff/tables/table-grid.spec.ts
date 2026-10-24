@@ -214,6 +214,15 @@ describe('TableGrid', () => {
     expect(element(fixture, 'counter-k5').getAttribute('href')).toBe('/staff/tickets/k5');
   });
 
+  it('labels the counter name with the form field, which keeps the room of its message', async () => {
+    const fixture = await open();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('app-form-field label[for="counter-name"]')).not.toBeNull();
+    expect(root.querySelector('app-form-field .message')).not.toBeNull();
+    expect(element(fixture, 'counter-name').closest('app-form-field')).not.toBeNull();
+  });
+
   it('opens a counter ticket only with a customer name', async () => {
     const fixture = await ready();
     const router = TestBed.inject(Router);

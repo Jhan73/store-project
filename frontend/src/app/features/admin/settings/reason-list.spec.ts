@@ -5,7 +5,9 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Reason } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
+import { clickPastUndo } from '../../../testing/undo-window';
 import { ReasonList } from './reason-list';
 import { SettingsApi } from './settings-api';
 
@@ -39,8 +41,8 @@ async function render(reasons: Reason[] = [spilled, mistake]) {
   return { fixture, host: fixture.nativeElement as HTMLElement, http };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
+function type(selector: string, value: string) {
+  const input = document.body.querySelector<HTMLInputElement>(selector)!;
   input.value = value;
   input.dispatchEvent(new Event('input'));
 }
@@ -51,9 +53,16 @@ const chooseType = (
   label: string,
 ) => chooseOption(fixture, host, 'reason-type', label);
 
-function submit(host: HTMLElement) {
-  host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+function submit() {
+  document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
 }
+
+async function openAdd(fixture: { whenStable(): Promise<unknown> }, host: HTMLElement) {
+  host.querySelector<HTMLButtonElement>('[data-testid="add-reason"]')!.click();
+  await fixture.whenStable();
+}
+
+const dialogInput = () => document.body.querySelector<HTMLInputElement>('#reason-code');
 
 function rows(host: HTMLElement) {
   return Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
@@ -120,8 +129,9 @@ describe('ReasonList', () => {
     await chooseType(fixture, host, 'Cortesías');
     http.expectOne(`${ADMIN}/reasons?type=COMP`).flush([]);
     await fixture.whenStable();
-    type(host, '#reason-code', ' Birthday ');
-    submit(host);
+    await openAdd(fixture, host);
+    type('#reason-code', ' Birthday ');
+    submit();
     const request = http.expectOne(`${ADMIN}/reasons`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ type: 'COMP', code: 'Birthday' });
@@ -130,79 +140,83 @@ describe('ReasonList', () => {
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Birthday');
-    expect(host.querySelector<HTMLInputElement>('#reason-code')!.value).toBe('');
+    expect(dialogInput()).toBeNull();
   });
 
   it('does not send a blank code', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#reason-code', '   ');
-    submit(host);
+    await openAdd(fixture, host);
+    type('#reason-code', '   ');
+    submit();
     await fixture.whenStable();
 
     http.expectNone(`${ADMIN}/reasons`);
-    expect(host.querySelector('#reason-code')!.getAttribute('aria-invalid')).toBe('true');
+    expect(dialogInput()!.getAttribute('aria-invalid')).toBe('true');
   });
 
   it('keeps the typed code and tells the user when the code is already used', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#reason-code', 'Spilled');
-    submit(host);
+    await openAdd(fixture, host);
+    type('#reason-code', 'Spilled');
+    submit();
     http.expectOne(`${ADMIN}/reasons`).flush(
       { type: 'about:blank', status: 409, code: 'store.reason-code-already-used', correlationId: 'c' },
       { status: 409, statusText: 'Conflict' },
     );
     await fixture.whenStable();
 
-    expect(host.querySelector<HTMLInputElement>('#reason-code')!.value).toBe('Spilled');
-    expect(rows(host)).toHaveLength(0);
+    expect(dialogInput()!.value).toBe('Spilled');
+    expect(rows(host)).toEqual(['Todavía no hay motivos en esta lista.']);
   });
 
-  it('deactivates and reactivates with the version of the reason and blocks the button meanwhile', async () => {
+  it('shows a deactivated reason as inactive at once and sends it with its version after the undo window', async () => {
     const { fixture, host, http } = await render();
     const button = (id: string) =>
       host.querySelector<HTMLButtonElement>(`[data-testid="toggle-${id}"]`)!;
 
-    button('r1').click();
+    clickPastUndo(button('r1'));
     await fixture.whenStable();
+    expect(rows(host)[0]).toContain('Inactivo');
     expect(button('r1').disabled).toBe(true);
-    button('r1').click();
     const off = http.expectOne(`${ADMIN}/reasons/r1/deactivate`);
     expect(off.request.headers.get('If-Match')).toBe('"1"');
     off.flush({ ...spilled, active: false, etag: '"2"' });
     await fixture.whenStable();
+
     expect(rows(host)[0]).toContain('Inactivo');
     expect(button('r1').disabled).toBe(false);
+  });
 
-    button('r2').click();
+  it('undoing a deactivation sends nothing', async () => {
+    const { fixture, host } = await render();
+    const notice = TestBed.inject(UndoNotice);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-r1"]')!.click();
+    await fixture.whenStable();
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).not.toContain('Inactivo');
+  });
+
+  it('reactivates straight away with the version of the reason', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-r2"]')!.click();
     const on = http.expectOne(`${ADMIN}/reasons/r2/reactivate`);
     expect(on.request.headers.get('If-Match')).toBe('"4"');
     on.flush({ ...mistake, active: true, etag: '"5"' });
     await fixture.whenStable();
-    expect(rows(host)[1]).toContain('Activo');
+
+    expect(rows(host)[1]).not.toContain('Inactivo');
   });
 
-  it('uses the version returned by the last toggle on the next one', async () => {
-    const { fixture, host, http } = await render();
-    const button = host.querySelector<HTMLButtonElement>('[data-testid="toggle-r1"]')!;
-
-    button.click();
-    http
-      .expectOne(`${ADMIN}/reasons/r1/deactivate`)
-      .flush({ ...spilled, active: false, etag: '"2"' });
-    await fixture.whenStable();
-    button.click();
-
-    expect(http.expectOne(`${ADMIN}/reasons/r1/reactivate`).request.headers.get('If-Match')).toBe(
-      '"2"',
-    );
-  });
-
-  it('re-enables the button and reloads the current type when a toggle is stale', async () => {
+  it('re-enables the button and reloads the current type when a deactivation is stale', async () => {
     const { fixture, host, http } = await render();
 
-    host.querySelector<HTMLButtonElement>('[data-testid="toggle-r1"]')!.click();
+    clickPastUndo(host.querySelector<HTMLButtonElement>('[data-testid="toggle-r1"]')!);
     http
       .expectOne(`${ADMIN}/reasons/r1/deactivate`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -213,6 +227,7 @@ describe('ReasonList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('Fresh');
+    expect(rows(host)[0]).not.toContain('Inactivo');
     expect(host.querySelector<HTMLButtonElement>('[data-testid="toggle-r1"]')!.disabled).toBe(false);
   });
 });

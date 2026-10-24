@@ -7,14 +7,16 @@ import {
   type WritableSignal,
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, type ParamMap, Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
-import { Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { RecordPaymentRequest, Role, Ticket, TicketLine } from '../../../core/api/api-types';
 import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UNDO_WINDOW_MS } from '../../../shared/state/undo-queue';
 import { pen, problem } from '../../../testing/register-fixtures';
 import { RegisterApi } from '../register/register-api';
 import { TicketEditorStore } from './ticket-editor-store';
@@ -98,6 +100,9 @@ describe('TicketEditorStore', () => {
   let realtime: FakeRealtime;
   let router: { navigate: ReturnType<typeof vi.fn> };
   let role: WritableSignal<Role | null>;
+  let params: BehaviorSubject<ParamMap>;
+  let signOutHooks: (() => Promise<void> | void)[];
+  let ensureFresh: ReturnType<typeof vi.fn>;
   let screen: EnvironmentInjector;
   let store: TicketEditorStore;
 
@@ -105,6 +110,9 @@ describe('TicketEditorStore', () => {
     realtime = new FakeRealtime();
     role = signal<Role | null>('CASHIER');
     router = { navigate: vi.fn().mockResolvedValue(true) };
+    params = new BehaviorSubject(convertToParamMap({ id: 'k1' }));
+    signOutHooks = [];
+    ensureFresh = vi.fn().mockResolvedValue(undefined);
     TestBed.configureTestingModule({
       providers: [
         { provide: Router, useValue: router },
@@ -114,9 +122,20 @@ describe('TicketEditorStore', () => {
         TicketsApi,
         RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
-        { provide: AuthStore, useValue: { role, session: () => null } },
+        {
+          provide: AuthStore,
+          useValue: {
+            role,
+            session: () => null,
+            ensureFresh,
+            onSignOut: (hook: () => Promise<void> | void) => {
+              signOutHooks.push(hook);
+              return () => undefined;
+            },
+          },
+        },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
+        { provide: ActivatedRoute, useValue: { paramMap: params } },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -601,6 +620,186 @@ describe('TicketEditorStore', () => {
 
       store.clearSplit();
       expect(store.splitParts()).toBeNull();
+    });
+  });
+
+  describe('removing a line', () => {
+    const unsent = line('l2');
+
+    afterEach(() => vi.useRealTimers());
+
+    it('waits out the undo window before it sends anything and shows an undo notice', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      expect(store.isRemoving('l2')).toBe(true);
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(1);
+      http.expectNone(`${TICKET}/lines/l2`);
+
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+      expect(request.request.method).toBe('DELETE');
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne(TICKET).flush(ticket());
+      expect(store.isRemoving('l2')).toBe(false);
+    });
+
+    it('sends nothing when the notice is undone', () => {
+      vi.useFakeTimers();
+      const notice = TestBed.inject(UndoNotice);
+      store.removeLine(unsent);
+
+      notice.undo(notice.active()[0]);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS * 2);
+
+      expect(store.isRemoving('l2')).toBe(false);
+      http.expectNone(`${TICKET}/lines/l2`);
+    });
+
+    it('sends a waiting removal when the screen is destroyed', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      screen.destroy();
+
+      http.expectOne(`${TICKET}/lines/l2`).flush(null, { status: 204, statusText: 'No Content' });
+    });
+    it('sends the removal to the ticket it was queued on even if the screen moved to another one', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      params.next(convertToParamMap({ id: 'k2' }));
+      http.expectOne(`${BASE}/tickets/k2`).flush(ticket({ id: 'k2' }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      http.expectOne(`${TICKET}/lines/l2`).flush(null, { status: 204, statusText: 'No Content' });
+    });
+
+    it('renews a token that would expire inside the undo window', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      expect(ensureFresh).toHaveBeenCalledWith(UNDO_WINDOW_MS + 30_000);
+    });
+
+    it('sends a waiting removal at sign-out and resolves once it was answered', async () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      let drained = false;
+      const draining = Promise.resolve(signOutHooks[0]()).then(() => (drained = true));
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+      await Promise.resolve();
+      expect(drained).toBe(false);
+
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne(TICKET).flush(ticket());
+      await draining;
+      expect(drained).toBe(true);
+    });
+  });
+
+  describe('sending to the kitchen while a line is being removed', () => {
+    const unsent = line('l2');
+    const other = line('l3');
+
+    function withUnsent(): void {
+      store.load();
+      http.expectOne(TICKET).flush(ticket({ lines: [line('l1', { state: 'SENT', sentAt: '2026-10-13T10:05:00Z' }), unsent, other] }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+    }
+
+    afterEach(() => vi.useRealTimers());
+
+    it('never offers a line that is being removed to the kitchen', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      store.removeLine(unsent);
+
+      expect(store.sendable().map((candidate) => candidate.id)).toEqual(['l3']);
+      expect(store.unsent()).toHaveLength(2);
+    });
+
+    it('cannot send while a removal waits, and can again once it is undone', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      const notice = TestBed.inject(UndoNotice);
+      store.removeLine(unsent);
+
+      expect(store.canSend()).toBe(false);
+      store.send();
+      http.expectNone(`${TICKET}/send`);
+
+      notice.undo(notice.active()[0]);
+      expect(store.canSend()).toBe(true);
+    });
+
+    it('cannot send while the removal request is in flight, and can once it is answered', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+
+      expect(store.canSend()).toBe(false);
+      request.flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne(TICKET).flush(ticket({ lines: [line('l3')] }));
+      expect(store.canSend()).toBe(true);
+    });
+
+    it('can send again when the removal request completes without an answer', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      vi.spyOn(TestBed.inject(TicketsApi), 'removeLine').mockReturnValue(EMPTY);
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      expect(store.canSend()).toBe(true);
+    });
+
+    it('can send again when the removal request fails, and shows the failure', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      const shown = vi.spyOn(messages, 'add');
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      http.expectOne(`${TICKET}/lines/l2`).flush(null, { status: 500, statusText: 'Server Error' });
+      http.expectOne(TICKET).flush(ticket({ lines: [unsent] }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+
+      expect(store.canSend()).toBe(true);
+      expect(shown).toHaveBeenCalled();
+    });
+
+    it('does not reload a ticket the screen has already left when the removal is answered', () => {
+      vi.useFakeTimers();
+      withUnsent();
+      store.removeLine(unsent);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+      const request = http.expectOne(`${TICKET}/lines/l2`);
+      params.next(convertToParamMap({ id: 'k2' }));
+      http.expectOne(`${BASE}/tickets/k2`).flush(ticket({ id: 'k2' }));
+      http.expectOne(`${BASE}/board/tickets`).flush([]);
+      http.expectOne(`${BASE}/board/ready`).flush([]);
+      http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+
+      request.flush(null, { status: 204, statusText: 'No Content' });
+
+      http.expectNone(TICKET);
+    });
+
+    it('cannot send when only lines being removed are unsent', () => {
+      vi.useFakeTimers();
+      store.removeLine(unsent);
+
+      expect(store.sendable()).toEqual([]);
+      expect(store.canSend()).toBe(false);
     });
   });
 });

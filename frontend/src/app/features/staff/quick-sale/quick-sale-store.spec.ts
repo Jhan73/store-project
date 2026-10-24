@@ -7,6 +7,8 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Menu, QuickSaleItem } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { pen, problem, shift } from '../../../testing/register-fixtures';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UNDO_WINDOW_MS } from '../../../shared/state/undo-queue';
 import { RegisterApi } from '../register/register-api';
 import { QuickSaleStore } from './quick-sale-store';
 
@@ -187,8 +189,77 @@ describe('QuickSaleStore', () => {
     store.changeQuantity(first, 500);
     expect(store.cart()[0].quantity).toBe(99);
 
-    store.remove(first);
+    vi.useFakeTimers();
+    try {
+      store.remove(store.cart()[0]);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+    } finally {
+      vi.useRealTimers();
+    }
     expect(store.cart()).toHaveLength(1);
+    expect(store.cart()[0].key).not.toBe(first);
+  });
+
+  describe('removing a line', () => {
+    afterEach(() => vi.useRealTimers());
+
+    it('hides the line and its price at once and lists an undo notice', () => {
+      vi.useFakeTimers();
+      load();
+      store.addPlain(items[0]);
+      store.addPlain(items[1]);
+
+      store.remove(store.cart()[0]);
+
+      expect(store.cart()).toHaveLength(1);
+      expect(store.estimatedTotal()).toEqual(pen('10.00'));
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(1);
+    });
+
+    it('brings the line back when the notice is undone, even after the window', () => {
+      vi.useFakeTimers();
+      load();
+      store.addPlain(items[0]);
+      const notice = TestBed.inject(UndoNotice);
+
+      store.remove(store.cart()[0]);
+      notice.undo(notice.active()[0]);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS * 2);
+
+      expect(store.cart()).toHaveLength(1);
+      expect(notice.active()).toHaveLength(0);
+    });
+
+    it('starts a fresh line when the same product is added while its removal waits', () => {
+      vi.useFakeTimers();
+      load();
+      store.addPlain(items[0]);
+      store.changeQuantity(store.cart()[0].key, 2);
+
+      store.remove(store.cart()[0]);
+      store.addPlain(items[0]);
+      vi.advanceTimersByTime(UNDO_WINDOW_MS);
+
+      expect(store.cart()).toHaveLength(1);
+      expect(store.cart()[0].quantity).toBe(1);
+    });
+  });
+
+  it('leaves no undo notice behind when the screen is destroyed inside the window', () => {
+    vi.useFakeTimers();
+    try {
+      const screen = createEnvironmentInjector([QuickSaleStore], TestBed.inject(EnvironmentInjector));
+      const own = screen.get(QuickSaleStore);
+      own.addPlain(items[0]);
+      own.remove(own.cart()[0]);
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(1);
+
+      screen.destroy();
+
+      expect(TestBed.inject(UndoNotice).active()).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   describe('selling', () => {

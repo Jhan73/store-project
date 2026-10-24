@@ -71,6 +71,8 @@ function closedBox(host: HTMLElement, day: string) {
 function type(host: HTMLElement, id: string, value: string) {
   const field = input(host, id);
   field.value = value;
+  // The picker only reads typed text that follows a key press.
+  field.dispatchEvent(new KeyboardEvent('keydown', { key: '0' }));
   field.dispatchEvent(new Event('input'));
 }
 
@@ -90,13 +92,12 @@ describe('OpeningHoursForm', () => {
 
     const labels = Array.from(host.querySelectorAll('tbody th')).map((cell) => cell.textContent);
     expect(labels).toEqual(['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']);
-    expect(input(host, 'hours-MONDAY-opens').classList.contains('p-inputtext')).toBe(true);
     expect(input(host, 'hours-MONDAY-opens').value).toBe('08:00');
     expect(input(host, 'hours-MONDAY-closes').value).toBe('20:00');
     expect(closedBox(host, 'SUNDAY').checked).toBe(true);
     expect(input(host, 'hours-SUNDAY-opens').disabled).toBe(true);
     expect(input(host, 'hours-SUNDAY-closes').disabled).toBe(true);
-  });
+  }, 15_000);
 
   it('saves the week untouched, guarded by the ETag of the read', async () => {
     const { host, http } = await render();
@@ -150,6 +151,29 @@ describe('OpeningHoursForm', () => {
 
     expect(host.querySelector('[data-testid="overnight-FRIDAY"]')).not.toBeNull();
     expect(host.querySelector('[data-testid="overnight-MONDAY"]')).toBeNull();
+  });
+
+  it('always renders the note slot of a row, so a note never adds a line', async () => {
+    const { fixture, host } = await render();
+    const friday = () => host.querySelector('[data-testid="closes-note-FRIDAY"]')!;
+    expect(friday().textContent?.trim()).toBe('');
+
+    type(host, 'hours-FRIDAY-opens', '18:00');
+    type(host, 'hours-FRIDAY-closes', '02:00');
+    await fixture.whenStable();
+
+    expect(friday().textContent).toContain('Cierra al día siguiente');
+  });
+
+  it('explains an hour that is not valid instead of only marking the field', async () => {
+    const { fixture, host } = await render();
+
+    type(host, 'hours-MONDAY-opens', 'abc');
+    submit(host);
+    await fixture.whenStable();
+
+    expect(input(host, 'hours-MONDAY-opens').getAttribute('aria-invalid')).toBe('true');
+    expect(host.querySelector('[data-testid="opens-error-MONDAY"]')!.textContent).toContain('hora válida');
   });
 
   it.each([

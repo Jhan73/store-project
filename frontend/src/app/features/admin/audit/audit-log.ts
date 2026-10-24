@@ -15,7 +15,6 @@ import { ButtonDirective } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
-import { Paginator, type PaginatorState } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { AuditEntry, AuditPage, StaffMember } from '../../../core/api/api-types';
@@ -23,7 +22,8 @@ import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { dateToDay, dayToDate } from '../../../core/time/store-day';
 import { formatInStoreZone } from '../../../core/time/store-time';
 import { datePickerAriaInvalid } from '../../../shared/forms/aria-invalid';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
+import { DataColumn, DataTable, type DataTableLazyEvent } from '../../../shared/ui/data-table/data-table';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { AuditApi } from './audit-api';
 import { AuditDetail } from './audit-detail';
 import {
@@ -61,10 +61,10 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
     DatePicker,
     Dialog,
     InputText,
-    Paginator,
     Select,
     TablerIconComponent,
-    TableScroll,
+    DataTable,
+    FormField,
     Tooltip,
     AuditDetail,
   ],
@@ -74,8 +74,12 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
     <h1 i18n="@@admin.audit.title">Auditoría</h1>
 
     <form class="filters" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="field">
-        <label for="audit-range" i18n="@@admin.audit.range">Fechas</label>
+      <app-form-field
+        label="Fechas"
+        i18n-label="@@admin.audit.range"
+        controlId="audit-range"
+        [error]="errors().range ? labels.rangeOrder : null"
+      >
         <p-datepicker
           inputId="audit-range"
           formControlName="range"
@@ -89,18 +93,12 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
           [appendTo]="'body'"
           fluid
         />
-        @if (errors().range) {
-          <small class="error" i18n="@@admin.audit.range.order">
-            La fecha inicial no puede ser posterior a la final.
-          </small>
-        }
-      </div>
-      <div class="field">
-        <label for="audit-actor" id="audit-actor-label" i18n="@@admin.audit.actor">Persona</label>
+      </app-form-field>
+      <app-form-field label="Persona" i18n-label="@@admin.audit.actor" controlId="audit-actor">
         <p-select
           inputId="audit-actor"
           formControlName="actorId"
-          [ariaLabelledBy]="'audit-actor-label'"
+          [ariaLabel]="labels.actor"
           optionLabel="label"
           optionValue="value"
           [options]="actorOptions()"
@@ -115,15 +113,16 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
           [appendTo]="'body'"
           fluid
         />
-      </div>
-      <div class="field">
-        <label for="audit-entity-type" id="audit-entity-type-label" i18n="@@admin.audit.entityType">
-          Tipo de entidad
-        </label>
+      </app-form-field>
+      <app-form-field
+        label="Tipo de entidad"
+        i18n-label="@@admin.audit.entityType"
+        controlId="audit-entity-type"
+      >
         <p-select
           inputId="audit-entity-type"
           formControlName="entityType"
-          [ariaLabelledBy]="'audit-entity-type-label'"
+          [ariaLabel]="labels.entityType"
           optionLabel="label"
           optionValue="value"
           [options]="entityTypeOptions()"
@@ -138,9 +137,13 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
           [appendTo]="'body'"
           fluid
         />
-      </div>
-      <div class="field">
-        <label for="audit-entity-id" i18n="@@admin.audit.entityId">Id de la entidad</label>
+      </app-form-field>
+      <app-form-field
+        label="Id de la entidad"
+        i18n-label="@@admin.audit.entityId"
+        controlId="audit-entity-id"
+        [error]="errors().entityId ? labels.entityIdInvalid : null"
+      >
         <input
           pInputText
           id="audit-entity-id"
@@ -148,21 +151,14 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
           autocomplete="off"
           maxlength="36"
           [attr.aria-invalid]="errors().entityId ? 'true' : null"
-          [attr.aria-describedby]="errors().entityId ? 'audit-entity-id-error' : null"
           fluid
         />
-        @if (errors().entityId) {
-          <small class="error" id="audit-entity-id-error" i18n="@@admin.audit.entityId.invalid">
-            Escribe un id válido (formato UUID).
-          </small>
-        }
-      </div>
-      <div class="field">
-        <label for="audit-action" id="audit-action-label" i18n="@@admin.audit.action">Acción</label>
+      </app-form-field>
+      <app-form-field label="Acción" i18n-label="@@admin.audit.action" controlId="audit-action">
         <p-select
           inputId="audit-action"
           formControlName="action"
-          [ariaLabelledBy]="'audit-action-label'"
+          [ariaLabel]="labels.action"
           optionLabel="label"
           optionValue="value"
           [options]="actionOptions()"
@@ -177,8 +173,8 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
           [appendTo]="'body'"
           fluid
         />
-      </div>
-      <div class="actions">
+      </app-form-field>
+      <div class="actions filter-actions">
         <button
           pButton
           type="submit"
@@ -215,112 +211,95 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
       }
     </p>
 
-    @switch (status()) {
-      @case ('loading') {
+    @if (status() === 'error') {
+      <div class="state" role="alert">
+        <p i18n="@@admin.audit.error">No se pudo cargar el registro de auditoría.</p>
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          data-testid="retry"
+          (click)="retry()"
+          pTooltip="Volver a intentar la búsqueda"
+          i18n-pTooltip="@@admin.audit.retry.tooltip"
+          tooltipPosition="top"
+        >
+          <tabler-icon [icon]="icons.retry" aria-hidden="true" />
+          <span i18n="@@admin.audit.retry">Reintentar</span>
+        </button>
+      </div>
+    } @else {
+      @if (status() === 'loading') {
         <p class="muted" i18n="@@admin.audit.loading">Cargando…</p>
       }
-      @case ('error') {
-        <div class="state" role="alert">
-          <p i18n="@@admin.audit.error">No se pudo cargar el registro de auditoría.</p>
-          <button
-            pButton
-            type="button"
-            severity="secondary"
-            data-testid="retry"
-            (click)="retry()"
-            pTooltip="Volver a intentar la búsqueda"
-            i18n-pTooltip="@@admin.audit.retry.tooltip"
-            tooltipPosition="top"
-          >
-            <tabler-icon [icon]="icons.retry" aria-hidden="true" />
-            <span i18n="@@admin.audit.retry">Reintentar</span>
-          </button>
-        </div>
-      }
-      @case ('ready') {
-        @if (result(); as current) {
-          @if (current.content.length === 0) {
-            <p class="muted" i18n="@@admin.audit.empty">No hay registros con estos filtros.</p>
-          } @else {
-            <app-table-scroll label="Registro de auditoría" i18n-label="@@admin.audit.tableScroll">
-              <table>
-                <caption class="sr-only" i18n="@@admin.audit.caption">
-                  Cambios registrados, del más reciente al más antiguo
-                </caption>
-                <thead>
-                  <tr>
-                    <th i18n="@@admin.audit.col.when">Cuándo</th>
-                    <th i18n="@@admin.audit.col.actor">Quién</th>
-                    <th i18n="@@admin.audit.col.action">Acción</th>
-                    <th i18n="@@admin.audit.col.entity">Entidad</th>
-                    <th i18n="@@admin.audit.col.reason">Motivo</th>
-                    <th><span class="sr-only" i18n="@@admin.audit.col.detail">Detalle</span></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (entry of current.content; track entry.id) {
-                    <tr>
-                      <td>
-                        <time [attr.datetime]="entry.occurredAt">{{ when(entry) }}</time>
-                      </td>
-                      <td>
-                        @if (actorEmail(entry); as email) {
-                          <span>{{ email }}</span>
-                        } @else if (entry.actorId) {
-                          <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
-                            short(entry.actorId)
-                          }}</code>
-                        } @else {
-                          <span>{{ roleName(entry) }}</span>
-                        }
-                        @if (entry.actorId) {
-                          <small class="muted">{{ roleName(entry) }}</small>
-                        }
-                      </td>
-                      <td>
-                        <code>{{ entry.action }}</code>
-                      </td>
-                      <td>
-                        <span>{{ typeName(entry) }}</span>
-                        <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
-                          short(entry.entityId)
-                        }}</code>
-                      </td>
-                      <td>{{ entry.reason ?? '—' }}</td>
-                      <td class="actions">
-                        <button
-                          pButton
-                          type="button"
-                          severity="secondary"
-                          [size]="'small'"
-                          [outlined]="true"
-                          [attr.aria-haspopup]="'dialog'"
-                          [attr.aria-expanded]="selected()?.id === entry.id"
-                          [attr.aria-label]="detailLabel(entry)"
-                          [attr.data-testid]="'detail-' + entry.id"
-                          (click)="open(entry)"
-                          pTooltip="Ver los valores antes y después del cambio"
-                          i18n-pTooltip="@@admin.audit.detail.tooltip"
-                          tooltipPosition="top"
-                        >
-                          <tabler-icon [icon]="icons.detail" aria-hidden="true" />
-                          <span i18n="@@admin.audit.detail">Detalle</span>
-                        </button>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </app-table-scroll>
-            <p-paginator
-              [first]="current.page * current.size"
-              [rows]="current.size"
-              [totalRecords]="current.totalElements"
-              [rowsPerPageOptions]="pageSizes"
-              (onPageChange)="goTo($event)"
-            />
-          }
-        }
+      @if (started()) {
+        <app-data-table
+          label="Registro de auditoría"
+          i18n-label="@@admin.audit.tableScroll"
+          [value]="result()?.content ?? []"
+          [columns]="columns"
+          [lazy]="true"
+          [searchable]="false"
+          [rows]="tableSize()"
+          [first]="tableFirst()"
+          [totalRecords]="result()?.totalElements ?? 0"
+          [pageSizes]="pageSizes"
+          [loading]="status() === 'loading'"
+          [emptyText]="emptyText"
+          (lazyLoad)="tableChanged($event)"
+        >
+          <ng-template #row let-entry>
+            <td>
+              <time [attr.datetime]="entry.occurredAt">{{ when(entry) }}</time>
+            </td>
+            <td>
+              @if (actorEmail(entry); as email) {
+                <span>{{ email }}</span>
+              } @else if (entry.actorId) {
+                <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
+                  short(entry.actorId)
+                }}</code>
+              } @else {
+                <span>{{ roleName(entry) }}</span>
+              }
+              @if (entry.actorId) {
+                <small class="muted">{{ roleName(entry) }}</small>
+              }
+            </td>
+            <td>
+              <code>{{ entry.action }}</code>
+            </td>
+            <td>
+              <span>{{ typeName(entry) }}</span>
+              <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
+                short(entry.entityId)
+              }}</code>
+            </td>
+            <td>{{ entry.reason ?? '—' }}</td>
+            <td class="actions">
+              <div class="row-actions">
+                <button
+                  pButton
+                  type="button"
+                  severity="secondary"
+                  [size]="'small'"
+                  [outlined]="true"
+                  [attr.aria-haspopup]="'dialog'"
+                  [attr.aria-expanded]="selected()?.id === entry.id"
+                  [attr.aria-label]="detailLabel(entry)"
+                  [attr.data-testid]="'detail-' + entry.id"
+                  (click)="open(entry)"
+                  pTooltip="Ver los valores antes y después del cambio"
+                  i18n-pTooltip="@@admin.audit.detail.tooltip"
+                  tooltipPosition="top"
+                >
+                  <tabler-icon [icon]="icons.detail" aria-hidden="true" />
+                  <span i18n="@@admin.audit.detail">Detalle</span>
+                </button>
+              </div>
+            </td>
+          </ng-template>
+        </app-data-table>
       }
     }
 
@@ -370,6 +349,24 @@ export class AuditLog {
     close: IconX,
   };
   protected readonly pageSizes = [...PAGE_SIZES];
+  protected readonly labels = {
+    rangeOrder: $localize`:@@admin.audit.range.order:La fecha inicial no puede ser posterior a la final.`,
+    entityIdInvalid: $localize`:@@admin.audit.entityId.invalid:Escribe un id válido (formato UUID).`,
+    actor: $localize`:@@admin.audit.actor.aria:Persona`,
+    entityType: $localize`:@@admin.audit.entityType.aria:Tipo de entidad`,
+    action: $localize`:@@admin.audit.action.aria:Acción`,
+  };
+  protected readonly emptyText = $localize`:@@admin.audit.empty:No hay registros con estos filtros.`;
+  // The API takes no sort, so the columns stay as the server returns them.
+  protected readonly columns: readonly DataColumn[] = [
+    { field: '', header: $localize`:@@admin.audit.col.when:Cuándo` },
+    { field: '', header: $localize`:@@admin.audit.col.actor:Quién` },
+    { field: '', header: $localize`:@@admin.audit.col.action:Acción` },
+    { field: '', header: $localize`:@@admin.audit.col.entity:Entidad` },
+    { field: '', header: $localize`:@@admin.audit.col.reason:Motivo` },
+    { field: '', header: $localize`:@@admin.audit.col.detail:Acciones` },
+  ];
+
 
   protected readonly form = new FormGroup({
     range: new FormControl<Date[] | null>(null),
@@ -383,6 +380,8 @@ export class AuditLog {
   protected readonly result = signal<AuditPage | null>(null);
   protected readonly errors = signal<AuditFilterErrors>({});
   protected readonly selected = signal<AuditEntry | null>(null);
+  // The table is built after the URL was read, so its first event never overrides the page in the URL.
+  protected readonly started = signal(false);
   private readonly applied = signal<AuditFilters>(EMPTY_FILTERS);
   private readonly timeZone = signal('');
   private readonly staff = signal<readonly StaffMember[]>([]);
@@ -409,6 +408,10 @@ export class AuditLog {
   );
   protected readonly actionOptions = computed<Option[]>(() =>
     withExtra(AUDIT_ACTIONS, this.applied().action).map((value) => ({ value, label: value })),
+  );
+  protected readonly tableSize = computed(() => this.result()?.size ?? this.applied().size);
+  protected readonly tableFirst = computed(
+    () => (this.result()?.page ?? this.applied().page) * this.tableSize(),
   );
   protected readonly rangeAria = computed(() => datePickerAriaInvalid(!!this.errors().range));
 
@@ -478,9 +481,13 @@ export class AuditLog {
     this.navigate({});
   }
 
-  protected goTo(event: PaginatorState): void {
-    const size = event.rows ?? this.applied().size;
-    this.navigate(filtersToParams({ ...this.applied(), page: event.page ?? 0, size }));
+  protected tableChanged(event: DataTableLazyEvent): void {
+    const size = event.rows ?? this.tableSize();
+    const page = Math.floor((event.first ?? 0) / size);
+    if (page * size === this.tableFirst() && size === this.tableSize()) {
+      return;
+    }
+    this.navigate(filtersToParams({ ...this.applied(), page, size }));
   }
 
   protected retry(): void {
@@ -545,6 +552,7 @@ export class AuditLog {
 
   private apply(filters: AuditFilters): void {
     this.applied.set(filters);
+    this.started.set(true);
     const from = filters.from ? dayToDate(filters.from) : null;
     const to = filters.to ? dayToDate(filters.to) : null;
     this.form.setValue(

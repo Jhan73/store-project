@@ -52,6 +52,7 @@ module.exports = defineConfig([
             "optionValue",
             "filterBy",
             "inputId",
+            "controlId",
             "ariaCurrentWhenActive",
             "data-testid",
             "tooltipPosition",

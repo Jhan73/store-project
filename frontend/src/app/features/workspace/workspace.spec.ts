@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { EMPTY } from 'rxjs';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 import { routes } from '../../app.routes';
 import { API_ORIGIN } from '../../core/api/api-config';
@@ -32,6 +32,7 @@ describe('staff and admin area', () => {
         provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
         provideHttpClientTesting(),
         MessageService,
+        ConfirmationService,
         providePrimeNG({ theme: { preset: AppPreset } }),
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: RealtimeClient, useValue: { isConnected: signal(false), refetch: () => EMPTY } },
@@ -347,8 +348,8 @@ describe('staff and admin area', () => {
 
     await harness.navigateByUrl('/admin/users');
     http
-      .expectOne('http://api.test/api/v1/staff?page=0&size=20')
-      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+      .expectOne('http://api.test/api/v1/staff?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     http
       .expectOne('http://api.test/api/v1/admin/settings')
       .flush({ timeZone: 'America/Lima', currency: 'PEN' });
@@ -503,8 +504,8 @@ describe('staff and admin area', () => {
     await harness.navigateByUrl('/admin/catalog');
     http.expectOne('http://api.test/api/v1/admin/categories').flush([]);
     http
-      .expectOne('http://api.test/api/v1/admin/products?page=0&size=20')
-      .flush({ content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
+      .expectOne('http://api.test/api/v1/admin/products?page=0&size=100')
+      .flush({ content: [], page: 0, size: 100, totalElements: 0, totalPages: 0 });
     await harness.fixture.whenStable();
 
     expect(url()).toBe('/admin/catalog/products');

@@ -97,7 +97,7 @@ describe('StockEntryDialog', () => {
     await quantity(fixture, '25');
     note('  Proveedor Lima ');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     const request = http.expectOne(ENTRY);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({ quantity: 25, note: 'Proveedor Lima' });
@@ -113,7 +113,7 @@ describe('StockEntryDialog', () => {
     await quantity(fixture, '3');
     note('   ');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
 
     const request = http.expectOne(ENTRY);
     expect(request.request.body).toEqual({ quantity: 3, note: null });
@@ -129,7 +129,7 @@ describe('StockEntryDialog', () => {
   it('refuses an empty quantity and marks the field', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     await fixture.whenStable();
 
     http.expectNone(ENTRY);
@@ -142,7 +142,7 @@ describe('StockEntryDialog', () => {
       const fixture = await open();
       await quantity(fixture, value);
 
-      inDialog<HTMLButtonElement>('entry-save').click();
+      inDialog<HTMLButtonElement>('fd-save').click();
       await fixture.whenStable();
 
       http.expectNone(ENTRY);
@@ -154,7 +154,7 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '1000000');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
 
     const request = http.expectOne(ENTRY);
     expect(request.request.body.quantity).toBe(1000000);
@@ -165,12 +165,12 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '5');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     const first = http.expectOne(ENTRY);
     const key = first.request.headers.get('Idempotency-Key');
     first.flush(...refused);
     await fixture.whenStable();
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     const second = http.expectOne(ENTRY);
 
     expect(second.request.headers.get('Idempotency-Key')).toBe(key);
@@ -182,13 +182,13 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '5');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     const first = http.expectOne(ENTRY);
     const key = first.request.headers.get('Idempotency-Key');
     first.flush(...refused);
     await fixture.whenStable();
     await quantity(fixture, '6');
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     const second = http.expectOne(ENTRY);
 
     expect(second.request.headers.get('Idempotency-Key')).not.toBe(key);
@@ -199,7 +199,7 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '5');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     http.expectOne(ENTRY).flush(
       { type: 'about:blank', status: 409, code: 'inventory.product-not-tracked', correlationId: 'c' },
       { status: 409, statusText: 'Conflict' },
@@ -214,8 +214,8 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '5');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
 
     http.expectOne(ENTRY).flush(item);
   });
@@ -224,10 +224,10 @@ describe('StockEntryDialog', () => {
     const fixture = await open();
     await quantity(fixture, '5');
 
-    inDialog<HTMLButtonElement>('entry-save').click();
+    inDialog<HTMLButtonElement>('fd-save').click();
     await fixture.whenStable();
 
-    expect(inDialog<HTMLButtonElement>('entry-cancel').disabled).toBe(true);
+    expect(inDialog<HTMLButtonElement>('fd-cancel').disabled).toBe(true);
     expect(dialog().querySelector('.p-dialog-close-button')).toBeNull();
     http.expectOne(ENTRY).flush(item);
   });
@@ -235,7 +235,7 @@ describe('StockEntryDialog', () => {
   it('asks to be dismissed on cancel', async () => {
     const fixture = await open();
 
-    inDialog<HTMLButtonElement>('entry-cancel').click();
+    inDialog<HTMLButtonElement>('fd-cancel').click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.visible()).toBe(false);

@@ -7,6 +7,8 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Menu, QuickSaleItem, Ticket } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { chooseOption } from '../../../testing/primeng-controls';
+import { clickPastUndo } from '../../../testing/undo-window';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { pen, problem, shift } from '../../../testing/register-fixtures';
 import { RegisterApi } from '../register/register-api';
 import { QuickSale } from './quick-sale';
@@ -107,8 +109,9 @@ describe('QuickSale', () => {
   afterEach(() => http.verify());
 
   const host = (fixture: ComponentFixture<QuickSale>) => fixture.nativeElement as HTMLElement;
+  // The money field is a shared component: it carries an id, not a test id.
   const find = <T extends HTMLElement>(fixture: ComponentFixture<QuickSale>, testId: string) =>
-    host(fixture).querySelector<T>(`[data-testid="${testId}"]`);
+    host(fixture).querySelector<T>(testId === 'qs-received' ? '#qs-received' : `[data-testid="${testId}"]`);
   const text = (fixture: ComponentFixture<QuickSale>, testId: string) => find(fixture, testId)?.textContent ?? '';
   const press = async (fixture: ComponentFixture<QuickSale>, testId: string) => {
     find<HTMLButtonElement>(fixture, testId)!.click();
@@ -159,6 +162,33 @@ describe('QuickSale', () => {
 
     await press(fixture, 'remove-0');
     expect(find(fixture, 'cart-line-0')).toBeNull();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it('removes a line without asking and brings it back when the notice is undone', async () => {
+    const fixture = await open();
+    await press(fixture, 'item-p1');
+    await press(fixture, 'remove-0');
+
+    expect(find(fixture, 'cart-line-0')).toBeNull();
+    const notice = TestBed.inject(UndoNotice);
+    expect(notice.active()).toHaveLength(1);
+
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(text(fixture, 'cart-line-0')).toContain('Naranja');
+  });
+
+  it('keeps the line gone once the undo window has passed', async () => {
+    const fixture = await open();
+    await press(fixture, 'item-p1');
+
+    clickPastUndo(find<HTMLButtonElement>(fixture, 'remove-0')!);
+    await fixture.whenStable();
+
+    expect(find(fixture, 'cart-line-0')).toBeNull();
+    expect(TestBed.inject(UndoNotice).active()).toHaveLength(0);
   });
 
   it('opens the configurator for an item with a required choice and adds what was chosen', async () => {
@@ -212,6 +242,22 @@ describe('QuickSale', () => {
     await press(fixture, 'new-sale');
     expect(find(fixture, 'sale-number')).toBeNull();
     expect(find(fixture, 'cart-line-0')).toBeNull();
+  });
+
+  it('labels the checkout fields and says why the sell button is off', async () => {
+    const fixture = await open();
+    await press(fixture, 'item-p1');
+
+    expect(host(fixture).querySelector('label[for="qs-received"]')).not.toBeNull();
+    expect(find(fixture, 'qs-received')!.closest('app-form-field')).not.toBeNull();
+    expect(find(fixture, 'customer-name')!.closest('app-form-field')).not.toBeNull();
+    const why = host(fixture).querySelector<HTMLElement>('[data-testid="qs-why"]')!;
+    expect(why.textContent).toContain('recibido');
+    expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.getAttribute('aria-describedby')).toBe(why.id);
+
+    type(fixture, 'qs-received', '20');
+    await fixture.whenStable();
+    expect(host(fixture).querySelector('[data-testid="qs-why"]')).toBeNull();
   });
 
   it('needs a valid amount received, and leaves judging it against the total to the API', async () => {

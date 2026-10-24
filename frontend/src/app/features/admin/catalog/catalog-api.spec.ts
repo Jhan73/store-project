@@ -143,6 +143,19 @@ describe('CatalogApi', () => {
       http.expectOne(`${BASE}/admin/products?categoryId=c1&page=0&size=20`).flush(empty);
     });
 
+    it('reads every page of the catalog into one list', () => {
+      let all: { id: string }[] = [];
+      api.allProducts().subscribe((list) => (all = list));
+      http
+        .expectOne(`${BASE}/admin/products?page=0&size=100`)
+        .flush({ ...empty, content: [{ id: 'p1' }], totalPages: 2 });
+      http
+        .expectOne(`${BASE}/admin/products?page=1&size=100`)
+        .flush({ ...empty, page: 1, content: [{ id: 'p2' }], totalPages: 2 });
+
+      expect(all.map((product) => product.id)).toEqual(['p1', 'p2']);
+    });
+
     it('reads, creates and replaces with the product version', () => {
       api.product('p1').subscribe();
       expectRequest('GET', '/admin/products/p1').flush({});

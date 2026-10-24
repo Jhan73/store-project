@@ -1,0 +1,125 @@
+@use './breakpoints' as bp;
+
+// Layout rules shared by the admin and register views: component styles are encapsulated,
+// so each view includes this mixin instead of repeating the rules.
+@mixin section($gap: var(--space-4)) {
+  :host {
+    display: flex;
+    flex-direction: column;
+    gap: $gap;
+  }
+
+  h2,
+  h3 {
+    margin: 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  // A table cell must stay a table cell; the flex layout goes in an inner `.row-actions`.
+  td.actions {
+    display: table-cell;
+    white-space: nowrap;
+  }
+
+  td.actions > * + * {
+    margin-inline-start: var(--space-2);
+  }
+
+  .row-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+
+  .dialog-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  // A note field grows vertically up to a limit and never past its container.
+  textarea {
+    max-width: 100%;
+    max-height: 12rem;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--touch-target);
+  }
+
+  .muted {
+    color: var(--muted-foreground);
+  }
+
+  .error {
+    color: var(--destructive);
+  }
+
+  @include bp.tablet-up {
+    form {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      padding: var(--space-4);
+    }
+
+    .field.wide {
+      flex: 1 1 18rem;
+    }
+  }
+}

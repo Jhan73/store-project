@@ -43,6 +43,20 @@ describe('StaffApi', () => {
     request.flush({ content: [member], page: 2, size: 20, totalElements: 41, totalPages: 3 });
   });
 
+  it('reads every page of staff accounts into one list', async () => {
+    const all = firstValueFrom(api.all());
+
+    http
+      .expectOne(`${BASE}/staff?page=0&size=100`)
+      .flush({ content: [member], page: 0, size: 100, totalElements: 2, totalPages: 2 });
+    await Promise.resolve();
+    http
+      .expectOne(`${BASE}/staff?page=1&size=100`)
+      .flush({ content: [{ ...member, id: 'u2' }], page: 1, size: 100, totalElements: 2, totalPages: 2 });
+
+    expect((await all).map((item) => item.id)).toEqual(['u1', 'u2']);
+  });
+
   it('invites an account by email and role, without any password', () => {
     api.create({ email: 'ana@juguera.pe', role: 'SERVER' }).subscribe();
 

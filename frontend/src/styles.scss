@@ -5,6 +5,7 @@
   --bp-desktop: #{bp.$desktop};
   --touch-target: 2.75rem;
   --page-padding: var(--space-3);
+  --data-row-height: 3.5rem;
 
   @include bp.tablet-up {
     --page-padding: var(--space-6);
@@ -57,8 +58,23 @@ a[pButton]:focus {
 }
 
 // A wide table scrolls inside app-table-scroll instead of squashing its columns.
-app-table-scroll > table {
+app-table-scroll > table,
+app-table-scroll .p-datatable-table {
   min-width: 36rem;
+}
+
+// Every row of a data table has the same height, whatever its cells hold.
+app-data-table .p-datatable-tbody > tr > td {
+  height: var(--data-row-height);
+}
+
+// Controls inside a form field fill it, so inputs, selects and pickers line up.
+app-form-field :is(.p-inputtext, .p-select, .p-inputnumber, .p-password, .p-datepicker, .p-textarea) {
+  width: 100%;
+}
+
+textarea {
+  resize: vertical;
 }
 
 app-table-scroll th,

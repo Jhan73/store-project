@@ -19,6 +19,8 @@ import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { chooseOption, optionLabels, selectedLabel } from '../../../testing/primeng-controls';
+import { clickPastUndo } from '../../../testing/undo-window';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { shift } from '../../../testing/register-fixtures';
 import { RegisterApi } from '../register/register-api';
 import { TicketEditor } from './ticket-editor';
@@ -206,7 +208,15 @@ describe('TicketEditor', () => {
         TicketsApi,
         RegisterApi,
         { provide: RealtimeClient, useValue: realtime },
-        { provide: AuthStore, useValue: { role, session: () => null } },
+        {
+          provide: AuthStore,
+          useValue: {
+            role,
+            session: () => null,
+            ensureFresh: () => Promise.resolve(),
+            onSignOut: () => () => undefined,
+          },
+        },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
         { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ id: 'k1' })) } },
       ],
@@ -253,8 +263,10 @@ describe('TicketEditor', () => {
   }
 
   const host = (fixture: ComponentFixture<TicketEditor>) => fixture.nativeElement as HTMLElement;
+  // The money fields are shared components: they carry an id, not a test id.
+  const BY_ID = ['pay-amount', 'pay-received'];
   const find = <T extends HTMLElement>(fixture: ComponentFixture<TicketEditor>, testId: string) =>
-    host(fixture).querySelector<T>(`[data-testid="${testId}"]`);
+    host(fixture).querySelector<T>(BY_ID.includes(testId) ? `#${testId}` : `[data-testid="${testId}"]`);
   const text = (fixture: ComponentFixture<TicketEditor>, testId: string) =>
     find(fixture, testId)?.textContent ?? '';
   const press = async (fixture: ComponentFixture<TicketEditor>, testId: string) => {
@@ -402,6 +414,23 @@ describe('TicketEditor', () => {
     second.flush(ticket([line('l1')]), { status: 201, statusText: 'Created' });
   });
 
+  it('keeps the add dialog aria-busy and open while the line is being added', async () => {
+    const fixture = await ready();
+    await press(fixture, 'product-p1');
+    inDialog<HTMLInputElement>('[data-testid="option-small"] input')!.click();
+    await fixture.whenStable();
+    inDialog<HTMLButtonElement>('[data-testid="submit"]')!.click();
+    await fixture.whenStable();
+
+    expect(inDialog('.add-body')!.getAttribute('aria-busy')).toBe('true');
+    expect(document.body.querySelector('[role="dialog"] .p-dialog-close-button')).toBeNull();
+    inDialog('.add-body')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await fixture.whenStable();
+    expect(inDialog('[data-testid="submit"]')).not.toBeNull();
+
+    http.expectOne(`${TICKET}/lines`).flush(ticket([line('l1')]), { status: 201, statusText: 'Created' });
+  });
+
   it('closes the add dialog on cancel without calling the API', async () => {
     const fixture = await ready();
     await press(fixture, 'product-p1');
@@ -427,10 +456,12 @@ describe('TicketEditor', () => {
     expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(true);
   });
 
-  it('removes an unsent line and reads the ticket again', async () => {
+  it('removes an unsent line without asking, after an undo window, and reads the ticket again', async () => {
     const fixture = await ready();
 
-    await press(fixture, 'remove-l1');
+    clickPastUndo(find<HTMLButtonElement>(fixture, 'remove-l1')!);
+    await fixture.whenStable();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     const request = http.expectOne(`${TICKET}/lines/l1`);
     expect(request.request.method).toBe('DELETE');
     request.flush(null, { status: 204, statusText: 'No Content' });
@@ -439,6 +470,37 @@ describe('TicketEditor', () => {
     await fixture.whenStable();
 
     expect(find(fixture, 'line-l1')).toBeNull();
+  });
+
+  it('keeps a removed line listed, marked and locked, until the undo window ends, and lets it be undone', async () => {
+    const fixture = await ready();
+
+    await press(fixture, 'remove-l1');
+
+    expect(find(fixture, 'line-l1')!.classList.contains('removing')).toBe(true);
+    expect(find<HTMLButtonElement>(fixture, 'remove-l1')!.disabled).toBe(true);
+    http.expectNone(`${TICKET}/lines/l1`);
+    const notice = TestBed.inject(UndoNotice);
+    expect(notice.active()).toHaveLength(1);
+
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(find(fixture, 'line-l1')!.classList.contains('removing')).toBe(false);
+    expect(find<HTMLButtonElement>(fixture, 'remove-l1')!.disabled).toBe(false);
+  });
+
+  it('does not let a line being removed be sent to the kitchen, and sends again once it is undone', async () => {
+    const fixture = await ready();
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(false);
+
+    await press(fixture, 'remove-l1');
+
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(true);
+    const notice = TestBed.inject(UndoNotice);
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+    expect(find<HTMLButtonElement>(fixture, 'send')!.disabled).toBe(false);
   });
 
   it('changes the quantity of an unsent line with its own choices', async () => {
@@ -533,6 +595,17 @@ describe('TicketEditor', () => {
     expect(find(fixture, 'transfer-open')).toBeNull();
   });
 
+  it('says why Mover is off until a free table is chosen', async () => {
+    const fixture = await ready();
+
+    await press(fixture, 'transfer-open');
+    http.expectOne(TABLES).flush([freeTable('t2', 'Mesa 2')]);
+    await fixture.whenStable();
+
+    expect(inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.disabled).toBe(true);
+    expect(inDialog('[data-testid="fd-reason"]')!.textContent).toContain('mesa');
+  });
+
   it('moves the ticket to a free table', async () => {
     const fixture = await ready();
 
@@ -546,7 +619,7 @@ describe('TicketEditor', () => {
     await fixture.whenStable();
     const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
     await chooseOption(fixture, dialog, 'transfer-table', 'Mesa 4');
-    inDialog<HTMLButtonElement>('[data-testid="transfer-confirm"]')!.click();
+    inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
     await fixture.whenStable();
 
     const request = http.expectOne(`${TICKET}/transfer`);
@@ -555,7 +628,7 @@ describe('TicketEditor', () => {
     await fixture.whenStable();
 
     expect(text(fixture, 'ticket-title')).toContain('Mesa 4');
-    expect(inDialog('[data-testid="transfer-confirm"]')).toBeNull();
+    expect(inDialog('[data-testid="fd-save"]')).toBeNull();
   });
 
   describe('comping a sent line', () => {
@@ -611,7 +684,7 @@ describe('TicketEditor', () => {
       ]);
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Staff meal');
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       const request = http.expectOne(`${TICKET}/lines/l1/comp`);
@@ -641,7 +714,7 @@ describe('TicketEditor', () => {
       expect(text(fixture, 'ticket-total')).toContain('10.00');
       expect(find(fixture, 'comp-l1')).toBeNull();
       expect(find(fixture, 'void-l1')).toBeNull();
-      expect(inDialog('[data-testid="vd-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
 
     it('needs a note for the reason "Other" and sends it', async () => {
@@ -650,13 +723,13 @@ describe('TicketEditor', () => {
       http.expectOne(COMP_REASONS).flush([{ type: 'COMP', code: 'Other' }]);
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Otro');
-      expect(inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.disabled).toBe(true);
+      expect(inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.disabled).toBe(true);
 
       const note = inDialog<HTMLTextAreaElement>('[data-testid="vd-note"]')!;
       note.value = 'Tasting';
       note.dispatchEvent(new Event('input'));
       await fixture.whenStable();
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       const request = http.expectOne(`${TICKET}/lines/l1/comp`);
@@ -671,7 +744,7 @@ describe('TicketEditor', () => {
       http.expectOne(COMP_REASONS).flush([{ type: 'COMP', code: 'Staff meal' }]);
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Staff meal');
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       http
@@ -688,7 +761,7 @@ describe('TicketEditor', () => {
       expect(added).toHaveBeenCalledWith(
         expect.objectContaining({ severity: 'error', summary: expect.stringContaining('Anula primero el pago') }),
       );
-      expect(inDialog('[data-testid="vd-confirm"]')).not.toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).not.toBeNull();
     });
   });
 
@@ -715,6 +788,13 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       return fixture;
     }
+
+    it('says why Unir is off until a ticket is chosen', async () => {
+      await openMerge([summary('k2', 13, 'Mesa 2')]);
+
+      expect(inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.disabled).toBe(true);
+      expect(inDialog('[data-testid="fd-reason"]')!.textContent).toContain('cuenta');
+    });
 
     it('offers the action to floor staff on an open ticket, even a server', async () => {
       role.set('SERVER');
@@ -744,13 +824,13 @@ describe('TicketEditor', () => {
       await openMerge([summary('k1', 12, 'Mesa 1')]);
 
       expect(inDialog('[data-testid="merge-empty"]')).not.toBeNull();
-      expect(inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.disabled).toBe(true);
+      expect(inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.disabled).toBe(true);
     });
 
     it('merges the chosen ticket, shows the surviving ticket from the answer and closes the dialog', async () => {
       const fixture = await openMerge([summary('k2', 13, 'Mesa 2')]);
       await chooseOption(fixture, dialog(), 'merge-source', 'Mesa 2 · Cuenta 13');
-      inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       const request = http.expectOne(`${TICKET}/merge`);
@@ -760,14 +840,14 @@ describe('TicketEditor', () => {
 
       expect(text(fixture, 'ticket-total')).toContain('50.00');
       expect(find(fixture, 'line-l9')).not.toBeNull();
-      expect(inDialog('[data-testid="merge-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
 
     it('keeps the dialog and shows the refusal when the other ticket has payments', async () => {
       const added = vi.spyOn(messages, 'add');
       const fixture = await openMerge([summary('k2', 13, 'Mesa 2')]);
       await chooseOption(fixture, dialog(), 'merge-source', 'Mesa 2 · Cuenta 13');
-      inDialog<HTMLButtonElement>('[data-testid="merge-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       http
@@ -784,7 +864,7 @@ describe('TicketEditor', () => {
       expect(added).toHaveBeenCalledWith(
         expect.objectContaining({ severity: 'error', summary: expect.stringContaining('tiene pagos') }),
       );
-      expect(inDialog('[data-testid="merge-confirm"]')).not.toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).not.toBeNull();
     });
 
     it('offers a retry when the open tickets cannot be read', async () => {
@@ -851,7 +931,7 @@ describe('TicketEditor', () => {
       expect(inDialog('[data-testid="cancel-explain"]')?.textContent).toContain('mesa');
       http.expectNone(`${TICKET}/cancel`);
 
-      inDialog<HTMLButtonElement>('[data-testid="cancel-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
       const request = http.expectOne(`${TICKET}/cancel`);
       expect(request.request.method).toBe('POST');
@@ -861,15 +941,29 @@ describe('TicketEditor', () => {
       expect(navigated).toHaveBeenCalledWith('/staff/tables');
     });
 
+    it('marks the cancel as destructive and locks the dialog while it runs', async () => {
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+      const fixture = await ready(ticket([line('l1')]));
+
+      await press(fixture, 'cancel-open');
+      expect(inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.classList.contains('p-button-danger')).toBe(true);
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
+      await fixture.whenStable();
+
+      expect(inDialog('form')!.getAttribute('aria-busy')).toBe('true');
+      expect(inDialog<HTMLButtonElement>('[data-testid="fd-cancel"]')!.disabled).toBe(true);
+      http.expectOne(`${TICKET}/cancel`).flush(ticket([], { status: 'CANCELLED' }));
+    });
+
     it('keeps the ticket when the question is dismissed', async () => {
       const fixture = await ready(ticket([line('l1')]));
 
       await press(fixture, 'cancel-open');
-      inDialog<HTMLButtonElement>('[data-testid="cancel-back"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-cancel"]')!.click();
       await fixture.whenStable();
 
       http.expectNone(`${TICKET}/cancel`);
-      expect(inDialog('[data-testid="cancel-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
 
     it('says a cancelled ticket was cancelled, not closed', async () => {
@@ -882,6 +976,14 @@ describe('TicketEditor', () => {
 
   describe('the ticket note', () => {
     const field = (fixture: ComponentFixture<TicketEditor>) => find<HTMLTextAreaElement>(fixture, 'ticket-note')!;
+
+    it('wraps the note in a form field with its label', async () => {
+      const fixture = await ready(ticket([line('l1')]));
+
+      expect(field(fixture).closest('app-form-field')).not.toBeNull();
+      expect(host(fixture).querySelector('label[for="ticket-note"]')).not.toBeNull();
+    });
+
 
     async function typeNote(fixture: ComponentFixture<TicketEditor>, value: string) {
       field(fixture).value = value;
@@ -948,7 +1050,7 @@ describe('TicketEditor', () => {
       return fixture;
     }
 
-    const confirm = () => inDialog<HTMLButtonElement>('[data-testid="void-confirm"]')!;
+    const confirm = () => inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!;
 
     it('offers the void on a sent line only, not on an unsent or a voided one', async () => {
       const fixture = await ready(
@@ -987,7 +1089,7 @@ describe('TicketEditor', () => {
       expect(confirm().disabled).toBe(true);
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
 
-      await chooseOption(fixture, dialog, 'void-reason', 'Error');
+      await chooseOption(fixture, dialog, 'void-dialog-reason', 'Error');
       expect(confirm().disabled).toBe(false);
       confirm().click();
       await fixture.whenStable();
@@ -1000,16 +1102,16 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
 
       expect(text(fixture, 'line-status-l1')).toContain('Anulada');
-      expect(inDialog('[data-testid="void-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
 
     it('needs a note for the reason "Other" and sends it', async () => {
       const fixture = await openVoid();
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
 
-      await chooseOption(fixture, dialog, 'void-reason', 'Otro');
+      await chooseOption(fixture, dialog, 'void-dialog-reason', 'Otro');
       expect(confirm().disabled).toBe(true);
-      const note = inDialog<HTMLTextAreaElement>('[data-testid="void-note"]')!;
+      const note = inDialog<HTMLTextAreaElement>('[data-testid="vd-note"]')!;
       expect(note.getAttribute('maxlength')).toBe('280');
       note.value = '  Cliente se fue ';
       note.dispatchEvent(new Event('input'));
@@ -1027,7 +1129,7 @@ describe('TicketEditor', () => {
       const fixture = await openVoid();
       const added = vi.spyOn(messages, 'add');
       const dialog = document.body.querySelector('[role="dialog"]') as HTMLElement;
-      await chooseOption(fixture, dialog, 'void-reason', 'Error');
+      await chooseOption(fixture, dialog, 'void-dialog-reason', 'Error');
 
       confirm().click();
       await fixture.whenStable();
@@ -1043,7 +1145,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
 
       expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-      expect(selectedLabel(dialog, 'void-reason')).toBe('Error');
+      expect(selectedLabel(dialog, 'void-dialog-reason')).toBe('Error');
       confirm().click();
       await fixture.whenStable();
       const second = http.expectOne(`${TICKET}/lines/l1/void`);
@@ -1069,27 +1171,27 @@ describe('TicketEditor', () => {
       );
       await fixture.whenStable();
 
-      expect(inDialog('[data-testid="void-reasons-failed"]')?.textContent).toContain(
+      expect(inDialog('[data-testid="vd-failed"]')?.textContent).toContain(
         'No se pudieron cargar los motivos',
       );
-      expect(inDialog('[data-testid="void-reason-box"]')).toBeNull();
+      expect(inDialog('[data-testid="vd-reason-box"]')).toBeNull();
 
-      inDialog<HTMLButtonElement>('[data-testid="void-retry"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="vd-retry"]')!.click();
       await fixture.whenStable();
       http.expectOne(REASONS).flush([{ type: 'VOID', code: 'Error' }]);
       await fixture.whenStable();
 
-      expect(inDialog('[data-testid="void-reasons-failed"]')).toBeNull();
-      expect(inDialog('[data-testid="void-reason-box"]')).not.toBeNull();
+      expect(inDialog('[data-testid="vd-failed"]')).toBeNull();
+      expect(inDialog('[data-testid="vd-reason-box"]')).not.toBeNull();
     });
 
     it('closes the dialog on cancel without calling the API', async () => {
       const fixture = await openVoid();
 
-      inDialog<HTMLButtonElement>('[data-testid="void-cancel"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-cancel"]')!.click();
       await fixture.whenStable();
 
-      expect(inDialog('[data-testid="void-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
   });
 
@@ -1204,6 +1306,26 @@ describe('TicketEditor', () => {
       expect(text(fixture, 'closed-notice')).toContain('La cuenta está cerrada');
       expect(text(fixture, 'payment-p1')).toContain('20.00');
       expect(find(fixture, 'pay-submit')).toBeNull();
+    });
+
+    it('labels the money fields with the form field and says what is wrong with the cash received', async () => {
+      const fixture = await openPanel();
+      expect(find(fixture, 'pay-amount')!.closest('app-form-field')).not.toBeNull();
+      expect(host(fixture).querySelector('label[for="pay-received"]')).not.toBeNull();
+
+      type(fixture, 'pay-received', '10');
+      await fixture.whenStable();
+
+      expect(host(fixture).querySelector('[data-testid="pay-why"]')!.textContent).toContain('recibido');
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.getAttribute('aria-describedby')).toBe(
+        host(fixture).querySelector('[data-testid="pay-why"]')!.id,
+      );
+    });
+
+    it('says why the payment is blocked when no shift is open', async () => {
+      const fixture = await openPanel(sent(), false);
+
+      expect(host(fixture).querySelector('[data-testid="pay-why"]')!.textContent).toContain('turno');
     });
 
     it('does not let the cash received be less than the amount', async () => {
@@ -1454,7 +1576,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
 
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       const request = http.expectOne(`${TICKET}/payments/p1/void`);
@@ -1472,7 +1594,7 @@ describe('TicketEditor', () => {
 
       expect(text(fixture, 'payment-p1')).toContain('Anulado');
       expect(find(fixture, 'void-payment-p1')).toBeNull();
-      expect(inDialog('[data-testid="vd-confirm"]')).toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).toBeNull();
     });
 
     it('offers the sale void on a closed ticket and voids it with a reason', async () => {
@@ -1482,7 +1604,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
 
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
 
       const request = http.expectOne(`${TICKET}/void`);
@@ -1521,7 +1643,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
 
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
       http.expectOne(`${TICKET}/payments/p1/void`).flush(
         { type: 'about:blank', status: 409, code: 'instore.no-open-shift', correlationId: 'c' },
@@ -1546,7 +1668,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
 
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
       http.expectOne(`${TICKET}/void`).flush(
         { type: 'about:blank', status: 409, code: 'instore.no-open-shift', correlationId: 'c' },
@@ -1566,7 +1688,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
       await chooseOption(fixture, dialog(), 'void-dialog-reason', 'Error');
 
-      inDialog<HTMLButtonElement>('[data-testid="vd-confirm"]')!.click();
+      inDialog<HTMLButtonElement>('[data-testid="fd-save"]')!.click();
       await fixture.whenStable();
       http.expectOne(`${TICKET}/void`).flush(
         { type: 'about:blank', status: 403, code: 'instore.sale-void-not-permitted', correlationId: 'c' },
@@ -1578,7 +1700,7 @@ describe('TicketEditor', () => {
       await fixture.whenStable();
 
       expect(added).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
-      expect(inDialog('[data-testid="vd-confirm"]')).not.toBeNull();
+      expect(inDialog('[data-testid="fd-save"]')).not.toBeNull();
     });
   });
 

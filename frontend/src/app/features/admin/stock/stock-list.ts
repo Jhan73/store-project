@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule, NgModel } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import {
   IconAdjustmentsHorizontal,
-  IconAlertTriangle,
   IconListDetails,
   IconPackageImport,
   IconPencil,
@@ -16,8 +15,12 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import type { Product, StockItem } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { tap } from 'rxjs';
 import { PendingIds } from '../../../shared/state/pending-ids';
-import { TableScroll } from '../../../shared/ui/table-scroll/table-scroll';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UndoableChanges } from '../../../shared/state/undoable-changes';
+import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { shortId } from '../audit/audit-labels';
 import { StockAdjustmentDialog } from './stock-adjustment-dialog';
 import { StockApi } from './stock-api';
@@ -44,7 +47,8 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
     StockEntryDialog,
     StockMovementsDialog,
     StockTrackDialog,
-    TableScroll,
+    DataTable,
+    StatusTag,
     TablerIconComponent,
     ToggleSwitch,
     Tooltip,
@@ -131,112 +135,97 @@ const NUMBERS = new Intl.NumberFormat('es-PE');
             }
           </p>
         } @else {
-          <app-table-scroll label="Inventario de productos" i18n-label="@@admin.stock.tableScroll">
-            <table>
-              <thead>
-                <tr>
-                  <th i18n="@@admin.stock.col.product">Producto</th>
-                  <th i18n="@@admin.stock.col.available">Disponible</th>
-                  <th i18n="@@admin.stock.col.onHand">En existencia</th>
-                  <th i18n="@@admin.stock.col.reserved">Reservado</th>
-                  <th i18n="@@admin.stock.col.threshold">Umbral de stock bajo</th>
-                  <th i18n="@@admin.stock.col.state">Estado</th>
-                  <th i18n="@@admin.stock.col.tracked">Controlado</th>
-                  <th><span class="sr-only" i18n="@@admin.stock.col.actions">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of rows(); track row.item.productId) {
-                  <tr>
-                    <td>{{ row.name }}</td>
-                    <td>{{ count(row.item.available) }}</td>
-                    <td>{{ count(row.item.onHand) }}</td>
-                    <td>{{ count(row.item.reserved) }}</td>
-                    <td>{{ count(row.item.lowStockThreshold) }}</td>
-                    <td>
-                      @if (row.item.low) {
-                        <span class="badge low" data-testid="low-badge">
-                          <tabler-icon [icon]="icons.low" aria-hidden="true" />
-                          <span i18n="@@admin.stock.low">Stock bajo</span>
-                        </span>
-                      } @else {
-                        <span class="muted" i18n="@@admin.stock.normal">Normal</span>
-                      }
-                    </td>
-                    <td>
-                      <p-toggleswitch
-                        #tracked="ngModel"
-                        [ngModel]="row.item.tracked"
-                        [disabled]="pending.has(row.item.productId)"
-                        [attr.data-testid]="'tracked-' + row.item.productId"
-                        [ariaLabel]="trackedLabel(row.name)"
-                        (onChange)="setTracked(row.item, $event.checked, tracked)"
-                      />
-                    </td>
-                    <td class="actions">
-                      <button
-                        pButton
-                        type="button"
-                        [size]="'small'"
-                        [attr.data-testid]="'entry-' + row.item.productId"
-                        (click)="openEntry(row.item)"
-                        pTooltip="Registrar unidades que entraron de un proveedor"
-                        i18n-pTooltip="@@admin.stock.entry.tooltip"
-                        tooltipPosition="top"
-                      >
-                        <tabler-icon [icon]="icons.entry" aria-hidden="true" />
-                        <span i18n="@@admin.stock.entry">Entrada</span>
-                      </button>
-                      <button
-                        pButton
-                        type="button"
-                        severity="secondary"
-                        [size]="'small'"
-                        [attr.data-testid]="'adjust-' + row.item.productId"
-                        (click)="openAdjustment(row.item)"
-                        pTooltip="Corregir las unidades de este producto con un motivo"
-                        i18n-pTooltip="@@admin.stock.adjust.tooltip"
-                        tooltipPosition="top"
-                      >
-                        <tabler-icon [icon]="icons.adjust" aria-hidden="true" />
-                        <span i18n="@@admin.stock.adjust">Ajustar</span>
-                      </button>
-                      <button
-                        pButton
-                        type="button"
-                        severity="secondary"
-                        [outlined]="true"
-                        [size]="'small'"
-                        [attr.data-testid]="'movements-' + row.item.productId"
-                        (click)="openMovements(row.item)"
-                        pTooltip="Ver los movimientos de este producto"
-                        i18n-pTooltip="@@admin.stock.movements.tooltip"
-                        tooltipPosition="top"
-                      >
-                        <tabler-icon [icon]="icons.movements" aria-hidden="true" />
-                        <span i18n="@@admin.stock.movements">Movimientos</span>
-                      </button>
-                      <button
-                        pButton
-                        type="button"
-                        severity="secondary"
-                        [outlined]="true"
-                        [size]="'small'"
-                        [attr.data-testid]="'threshold-' + row.item.productId"
-                        (click)="openTrack(row.item)"
-                        pTooltip="Cambiar el umbral de stock bajo de este producto"
-                        i18n-pTooltip="@@admin.stock.threshold.tooltip"
-                        tooltipPosition="top"
-                      >
-                        <tabler-icon [icon]="icons.edit" aria-hidden="true" />
-                        <span i18n="@@admin.stock.threshold">Umbral</span>
-                      </button>
-                    </td>
-                  </tr>
+          <app-data-table
+            label="Inventario de productos"
+            i18n-label="@@admin.stock.tableScroll"
+            [value]="tableRows()"
+            [columns]="columns"
+          >
+            <ng-template #row let-row>
+              <td>{{ row.name }}</td>
+              <td>{{ count(row.item.available) }}</td>
+              <td>{{ count(row.item.onHand) }}</td>
+              <td>{{ count(row.item.reserved) }}</td>
+              <td>{{ count(row.item.lowStockThreshold) }}</td>
+              <td>
+                @if (row.item.low) {
+                  <app-status-tag data-testid="low-badge" [value]="labels.low" severity="warn" />
+                } @else {
+                  <app-status-tag [value]="labels.normal" severity="secondary" />
                 }
-              </tbody>
-            </table>
-          </app-table-scroll>
+              </td>
+              <td>
+                <p-toggleswitch
+                  [ngModel]="row.shownTracked"
+                  [disabled]="pending.has(row.item.productId) || changes.has(row.item.productId)"
+                  [attr.data-testid]="'tracked-' + row.item.productId"
+                  [ariaLabel]="trackedLabel(row.name)"
+                  (onChange)="setTracked(row.item, $event.checked)"
+                />
+              </td>
+              <td class="actions">
+                <div class="row-actions">
+                  <button
+                    pButton
+                    type="button"
+                    [size]="'small'"
+                    [attr.data-testid]="'entry-' + row.item.productId"
+                    (click)="openEntry(row.item)"
+                    pTooltip="Registrar unidades que entraron de un proveedor"
+                    i18n-pTooltip="@@admin.stock.entry.tooltip"
+                    tooltipPosition="top"
+                  >
+                    <tabler-icon [icon]="icons.entry" aria-hidden="true" />
+                    <span i18n="@@admin.stock.entry">Entrada</span>
+                  </button>
+                  <button
+                    pButton
+                    type="button"
+                    severity="secondary"
+                    [size]="'small'"
+                    [attr.data-testid]="'adjust-' + row.item.productId"
+                    (click)="openAdjustment(row.item)"
+                    pTooltip="Corregir las unidades de este producto con un motivo"
+                    i18n-pTooltip="@@admin.stock.adjust.tooltip"
+                    tooltipPosition="top"
+                  >
+                    <tabler-icon [icon]="icons.adjust" aria-hidden="true" />
+                    <span i18n="@@admin.stock.adjust">Ajustar</span>
+                  </button>
+                  <button
+                    pButton
+                    type="button"
+                    severity="secondary"
+                    [outlined]="true"
+                    [size]="'small'"
+                    [attr.data-testid]="'movements-' + row.item.productId"
+                    (click)="openMovements(row.item)"
+                    pTooltip="Ver los movimientos de este producto"
+                    i18n-pTooltip="@@admin.stock.movements.tooltip"
+                    tooltipPosition="top"
+                  >
+                    <tabler-icon [icon]="icons.movements" aria-hidden="true" />
+                    <span i18n="@@admin.stock.movements">Movimientos</span>
+                  </button>
+                  <button
+                    pButton
+                    type="button"
+                    severity="secondary"
+                    [outlined]="true"
+                    [size]="'small'"
+                    [attr.data-testid]="'threshold-' + row.item.productId"
+                    (click)="openTrack(row.item)"
+                    pTooltip="Cambiar el umbral de stock bajo de este producto"
+                    i18n-pTooltip="@@admin.stock.threshold.tooltip"
+                    tooltipPosition="top"
+                  >
+                    <tabler-icon [icon]="icons.edit" aria-hidden="true" />
+                    <span i18n="@@admin.stock.threshold">Umbral</span>
+                  </button>
+                </div>
+              </td>
+            </ng-template>
+          </app-data-table>
         }
       }
     }
@@ -283,13 +272,32 @@ export class StockList {
 
   protected readonly icons = {
     retry: IconRefresh,
-    low: IconAlertTriangle,
     create: IconPlus,
     edit: IconPencil,
     entry: IconPackageImport,
     adjust: IconAdjustmentsHorizontal,
     movements: IconListDetails,
   };
+  protected readonly labels = {
+    low: $localize`:@@admin.stock.low:Stock bajo`,
+    normal: $localize`:@@admin.stock.normal:Normal`,
+  };
+  protected readonly columns: readonly DataColumn[] = [
+    { field: 'name', header: $localize`:@@admin.stock.col.product:Producto`, sortable: true, filter: true },
+    { field: 'item.available', header: $localize`:@@admin.stock.col.available:Disponible`, sortable: true, searchable: false },
+    { field: 'item.onHand', header: $localize`:@@admin.stock.col.onHand:En existencia`, sortable: true, searchable: false },
+    { field: 'item.reserved', header: $localize`:@@admin.stock.col.reserved:Reservado`, sortable: true, searchable: false },
+    {
+      field: 'item.lowStockThreshold',
+      header: $localize`:@@admin.stock.col.threshold:Umbral de stock bajo`,
+      sortable: true,
+      searchable: false,
+    },
+    { field: 'stateLabel', header: $localize`:@@admin.stock.col.state:Estado`, sortable: true },
+    { field: '', header: $localize`:@@admin.stock.col.tracked:Controlado` },
+    { field: '', header: $localize`:@@admin.stock.col.actions:Acciones` },
+  ];
+  protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
   protected readonly status = signal<Status>('loading');
   protected readonly lowOnly = signal(false);
   protected readonly movementsOpen = signal(false);
@@ -318,6 +326,14 @@ export class StockList {
     return this.lowOnly() ? rows : rows.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   });
 
+  protected readonly tableRows = computed(() =>
+    this.rows().map((row) => ({
+      ...row,
+      shownTracked: this.changes.pending(row.item.productId) ?? row.item.tracked,
+      stateLabel: row.item.low ? this.labels.low : this.labels.normal,
+    })),
+  );
+
   protected readonly movementsName = computed(() => {
     const target = this.movementsTarget();
     return target ? this.nameOf(target.productId) : '';
@@ -337,6 +353,7 @@ export class StockList {
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.changes.flush());
     this.load();
     this.loadProducts();
   }
@@ -417,32 +434,35 @@ export class StockList {
     this.load(true);
   }
 
-  // The list only holds tracked items, so turning the switch off drops the row.
-  protected setTracked(item: StockItem, tracked: boolean, control: NgModel): void {
+  // The list only holds tracked items, so the row goes once the change is sent.
+  protected setTracked(item: StockItem, tracked: boolean): void {
     if (tracked) {
       return;
     }
     const id = item.productId;
-    this.pending.add(id);
-    this.api
-      .track(id, { tracked: false, lowStockThreshold: item.lowStockThreshold })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.pending.delete(id);
-          // An older read still in flight would bring the row back.
-          this.lastRequest++;
-          this.items.update((items) => items.filter((entry) => entry.productId !== id));
-          if (this.status() === 'loading') {
-            this.load();
-          }
-        },
-        error: (error: unknown) => {
-          this.pending.delete(id);
-          control.control.setValue(true);
-          this.notifier.show(error);
-        },
-      });
+    this.changes.schedule(
+      id,
+      false,
+      $localize`:@@admin.stock.untracked:Se dejó de controlar el stock de ${this.nameOf(id)}:name:`,
+      () => {
+        this.pending.add(id);
+        return this.api.track(id, { tracked: false, lowStockThreshold: item.lowStockThreshold }).pipe(
+          tap({
+            next: () => {
+              this.pending.delete(id);
+              // An older read still in flight would bring the row back.
+              this.lastRequest++;
+              this.items.update((items) => items.filter((entry) => entry.productId !== id));
+              if (this.status() === 'loading') {
+                this.load();
+              }
+            },
+            error: () => this.pending.delete(id),
+          }),
+        );
+      },
+      (error) => this.notifier.show(error),
+    );
   }
 
   protected retry(): void {

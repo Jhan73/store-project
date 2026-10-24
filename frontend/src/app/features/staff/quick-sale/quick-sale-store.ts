@@ -11,9 +11,11 @@ import type {
   Ticket,
 } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
-import { fromMinorUnits, toMinorUnits } from '../../../core/money/money';
+import { fromMinorUnits, safeMinorUnits } from '../../../core/money/money';
 import { IntentKeys } from '../../../shared/state/intent-keys';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { UndoNotice } from '../../../shared/state/undo-notice';
+import { UndoQueue } from '../../../shared/state/undo-queue';
 import { unitPriceOf } from '../../../shared/ui/product-configurator/configurator-rules';
 import { RegisterApi } from '../register/register-api';
 import { isShiftStateError } from '../register/shift-store';
@@ -48,6 +50,8 @@ export class QuickSaleStore {
   private readonly messages = inject(MessageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly keys = new IntentKeys();
+  private readonly undoNotice = inject(UndoNotice);
+  private readonly removals = new UndoQueue();
 
   private readonly pinned = signal<QuickSaleItem[] | null>(null);
   private readonly products = signal<ReadonlyMap<string, MenuProduct>>(new Map());
@@ -59,22 +63,33 @@ export class QuickSaleStore {
 
   readonly items = this.pinned.asReadonly();
   readonly failed = this.loadFailed.asReadonly();
-  readonly cart = this.lines.asReadonly();
+  // A line waiting out its removal is already out of the cart, the total and the sale.
+  readonly cart = computed(() => this.lines().filter((line) => !this.removals.has(line.key)));
   readonly sold = this.lastSale.asReadonly();
   readonly pending = new PendingIds();
   readonly hasShift = computed(() => this.shiftState() === 'open');
   readonly loaded = computed(() => this.pinned() !== null && this.shiftState() !== 'unknown');
   readonly estimatedTotal = computed<Money | null>(() => {
-    const lines = this.lines();
+    const lines = this.cart();
     if (lines.length === 0) {
       return null;
     }
-    const minor = lines.reduce((sum, line) => sum + toMinorUnits(line.unitPrice) * line.quantity, 0);
+    let minor = 0;
+    for (const line of lines) {
+      const unit = safeMinorUnits(line.unitPrice);
+      if (unit === null) {
+        return null;
+      }
+      minor += unit * line.quantity;
+    }
     return fromMinorUnits(minor, lines[0].unitPrice.currency);
   });
 
   constructor() {
-    this.destroyRef.onDestroy(() => (this.destroyed = true));
+    this.destroyRef.onDestroy(() => {
+      this.destroyed = true;
+      this.removals.flush();
+    });
   }
 
   load(): void {
@@ -137,13 +152,18 @@ export class QuickSaleStore {
     );
   }
 
-  remove(key: string): void {
-    this.lines.update((lines) => lines.filter((line) => line.key !== key));
+  remove(line: CartLine): void {
+    this.undoNotice.schedule(
+      this.removals,
+      line.key,
+      $localize`:@@staff.quickSale.removed:Se quitó "${line.name}:name:" de la venta`,
+      () => this.lines.update((lines) => lines.filter((candidate) => candidate.key !== line.key)),
+    );
   }
 
   sell(input: SellInput): void {
     const currency = this.estimatedTotal()?.currency;
-    const lines = this.lines();
+    const lines = this.cart();
     if (lines.length === 0 || currency === undefined) {
       return;
     }
@@ -180,7 +200,7 @@ export class QuickSaleStore {
             return;
           }
           this.lastSale.set(ticket);
-          this.lines.set([]);
+          this.clearCart();
         },
         error: (error: unknown) => {
           this.pending.delete('sell');
@@ -194,7 +214,7 @@ export class QuickSaleStore {
 
   newSale(): void {
     this.lastSale.set(null);
-    this.lines.set([]);
+    this.clearCart();
   }
 
   loadShift(): void {
@@ -210,10 +230,19 @@ export class QuickSaleStore {
       });
   }
 
+  private clearCart(): void {
+    this.removals.flush();
+    this.lines.set([]);
+  }
+
   private add(item: QuickSaleItem, line: LineRequest): void {
     const options = [...(line.modifierOptionIds ?? [])].sort();
     const note = line.note ?? null;
     const key = [item.productId, options.join(','), note ?? '', line.allergy].join('|');
+    // Adding what is being removed starts that line again instead of reviving the old quantity.
+    if (this.removals.cancel(key)) {
+      this.lines.update((lines) => lines.filter((candidate) => candidate.key !== key));
+    }
     const product = this.productOf(item);
     const unitPrice = product ? unitPriceOf(product, options) : item.price;
     const names =

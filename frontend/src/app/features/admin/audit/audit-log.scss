@@ -3,7 +3,14 @@
 .filters {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  align-items: end;
+  align-items: start;
+}
+
+// The buttons sit level with the inputs, not with the room each field keeps for its label.
+.filter-actions {
+  align-items: center;
+  align-self: start;
+  margin-top: calc(1.5rem + var(--space-1));
 }
 
 .count {
@@ -35,10 +42,6 @@ code {
 
 code.id {
   margin-left: var(--space-1);
-}
-
-p-datepicker {
-  display: block;
 }
 
 @include bp.tablet-up {

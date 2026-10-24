@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -11,11 +12,12 @@ import {
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
-import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { PaymentMethod, RecordPaymentRequest, Ticket, TicketLine } from '../../../core/api/api-types';
-import { addMoney, formatMoney, parseAmount, toMinorUnits } from '../../../core/money/money';
+import { addMoney, formatMoneyOrDash, parseAmount, safeMinorUnits, toMinorUnits } from '../../../core/money/money';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { methodLabel, PAYMENT_METHODS } from '../register/payment-methods';
 import { ShiftStore } from '../register/shift-store';
 import { TicketEditorStore } from './ticket-editor-store';
@@ -31,8 +33,9 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
     RouterLink,
     ButtonDirective,
     Checkbox,
-    InputText,
     Select,
+    FormField,
+    MoneyInput,
     Tooltip,
     TablerIconComponent,
   ],
@@ -81,11 +84,10 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
     }
 
     <form (submit)="submit($event)" [attr.aria-labelledby]="'pay-heading'">
-      <div class="field">
-        <label for="pay-method" id="pay-method-label" i18n="@@staff.tickets.pay.method">Método de pago</label>
+      <app-form-field label="Método de pago" i18n-label="@@staff.tickets.pay.method" controlId="pay-method">
         <p-select
           inputId="pay-method"
-          [ariaLabelledBy]="'pay-method-label'"
+          [ariaLabel]="labels.method"
           [formControl]="method"
           optionLabel="label"
           optionValue="value"
@@ -98,7 +100,7 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
           [appendTo]="'body'"
           fluid
         />
-      </div>
+      </app-form-field>
 
       @if (payableLines().length > 0) {
         <fieldset>
@@ -120,39 +122,43 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
         </fieldset>
       }
 
-      <div class="field">
-        <label for="pay-amount" i18n="@@staff.tickets.pay.amount">Monto a cobrar</label>
-        <input
-          pInputText
-          id="pay-amount"
-          data-testid="pay-amount"
+      <app-form-field
+        label="Monto a cobrar"
+        i18n-label="@@staff.tickets.pay.amount"
+        controlId="pay-amount"
+        [error]="amountError() ? labels.amountInvalid : null"
+      >
+        <app-money-input
+          inputId="pay-amount"
           [formControl]="amount"
-          [attr.inputmode]="'decimal'"
-          autocomplete="off"
+          [currency]="ticket().total.currency"
           (input)="partIndex.set(null)"
-          fluid
         />
-      </div>
+      </app-form-field>
 
       @if (chosenMethod() === 'CASH') {
-        <div class="field">
-          <label for="pay-received" i18n="@@staff.tickets.pay.received">Efectivo recibido</label>
-          <input
-            pInputText
-            id="pay-received"
-            data-testid="pay-received"
+        <app-form-field
+          label="Efectivo recibido"
+          i18n-label="@@staff.tickets.pay.received"
+          controlId="pay-received"
+          [error]="receivedError() ? labels.receivedInvalid : null"
+        >
+          <app-money-input
+            inputId="pay-received"
             [formControl]="received"
-            [attr.inputmode]="'decimal'"
-            autocomplete="off"
-            fluid
+            [currency]="ticket().total.currency"
           />
-        </div>
+        </app-form-field>
       }
 
+      @if (!canPay() && why(); as reason) {
+        <small class="why" data-testid="pay-why" id="pay-why">{{ reason }}</small>
+      }
       <button
         pButton
         type="submit"
         data-testid="pay-submit"
+        [attr.aria-describedby]="!canPay() && why() ? 'pay-why' : null"
         [loading]="paying()"
         [disabled]="!canPay() || paying()"
         pTooltip="Registrar el cobro de esta cuenta"
@@ -169,11 +175,10 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
     <div class="split">
       <h4 i18n="@@staff.tickets.pay.split">Dividir la cuenta</h4>
       <div class="split-controls">
-        <div class="field">
-          <label for="pay-parts" id="pay-parts-label" i18n="@@staff.tickets.pay.parts">Partes iguales</label>
+        <app-form-field label="Partes iguales" i18n-label="@@staff.tickets.pay.parts" controlId="pay-parts">
           <p-select
             inputId="pay-parts"
-            [ariaLabelledBy]="'pay-parts-label'"
+            [ariaLabel]="labels.parts"
             [formControl]="parts"
             optionLabel="label"
             optionValue="value"
@@ -188,7 +193,7 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
             [appendTo]="'body'"
             fluid
           />
-        </div>
+        </app-form-field>
         <button
           pButton
           type="button"
@@ -236,7 +241,13 @@ export class PaymentPanel {
   readonly ticket = input.required<Ticket>();
 
   protected readonly icons = { pay: IconCash, split: IconDivide, retry: IconRefresh, openShift: IconLockOpen };
-  protected readonly money = formatMoney;
+  protected readonly money = formatMoneyOrDash;
+  protected readonly labels = {
+    method: $localize`:@@staff.tickets.pay.method.aria:Método de pago`,
+    parts: $localize`:@@staff.tickets.pay.parts.aria:Partes iguales`,
+    amountInvalid: $localize`:@@staff.tickets.pay.amountInvalid:Escribe un monto, como 12 o 12.50.`,
+    receivedInvalid: $localize`:@@staff.tickets.pay.receivedInvalid:Escribe el efectivo recibido, como 50 o 50.00.`,
+  };
   protected readonly methods = PAYMENT_METHODS.map((value) => ({ value, label: methodLabel(value) }));
   protected readonly partOptions = SPLIT_PARTS.map((value) => ({ value, label: String(value) }));
   protected readonly method = new FormControl<PaymentMethod>('CASH', { nonNullable: true });
@@ -269,8 +280,20 @@ export class PaymentPanel {
       return null;
     }
     const currency = this.ticket().total.currency;
-    return chosen.reduce((sum, line) => addMoney(sum, line.lineTotal), { amount: '0.00', currency }).amount;
+    try {
+      return chosen.reduce((sum, line) => addMoney(sum, line.lineTotal), { amount: '0.00', currency }).amount;
+    } catch {
+      return null;
+    }
   });
+  protected readonly amountError = toSignal(
+    this.amount.events.pipe(map(() => this.amount.invalid && this.amount.touched)),
+    { initialValue: false },
+  );
+  protected readonly receivedError = toSignal(
+    this.received.events.pipe(map(() => this.received.invalid && this.received.touched)),
+    { initialValue: false },
+  );
   protected readonly paying = computed(() => this.store.pending.has('pay'));
   protected readonly canPay = computed(() => {
     const currency = this.ticket().total.currency;
@@ -282,7 +305,8 @@ export class PaymentPanel {
       return false;
     }
     const minor = toMinorUnits({ amount, currency });
-    if (minor > toMinorUnits(this.ticket().balance)) {
+    const balance = safeMinorUnits(this.ticket().balance);
+    if (balance === null || minor > balance) {
       return false;
     }
     if (this.chosenMethod() === 'CASH') {
@@ -290,6 +314,33 @@ export class PaymentPanel {
       return received !== null && toMinorUnits({ amount: received, currency }) >= minor;
     }
     return true;
+  });
+
+  // Why the payment button is off, in words; null when something else explains it (unsent lines have their own notice).
+  protected readonly why = computed<string | null>(() => {
+    if (this.shifts.loaded() && this.shifts.shift() === null) {
+      return $localize`:@@staff.tickets.pay.why.shift:Abre un turno de caja para cobrar.`;
+    }
+    if (this.store.unsent().length > 0) {
+      return null;
+    }
+    const currency = this.ticket().total.currency;
+    const amount = parseAmount(this.typedAmount());
+    if (amount === null || amount === '0.00') {
+      return $localize`:@@staff.tickets.pay.why.amount:Escribe el monto a cobrar.`;
+    }
+    const minor = toMinorUnits({ amount, currency });
+    const balance = safeMinorUnits(this.ticket().balance);
+    if (balance === null || minor > balance) {
+      return $localize`:@@staff.tickets.pay.why.balance:El monto supera lo que falta cobrar.`;
+    }
+    if (this.chosenMethod() === 'CASH') {
+      const received = parseAmount(this.typedReceived());
+      if (received === null || toMinorUnits({ amount: received, currency }) < minor) {
+        return $localize`:@@staff.tickets.pay.why.received:El efectivo recibido debe cubrir el monto.`;
+      }
+    }
+    return null;
   });
 
   constructor() {

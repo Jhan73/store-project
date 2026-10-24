@@ -12,15 +12,16 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IconDeviceFloppy, IconRefresh, IconX, TablerIconComponent } from '@tabler/icons-angular';
+import { IconRefresh, TablerIconComponent } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { Tooltip } from 'primeng/tooltip';
 import type { Product, StockItem } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria-invalid';
+import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
+import { FormField } from '../../../shared/ui/form-field/form-field';
 import { reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
 import { shortId } from '../audit/audit-labels';
@@ -31,9 +32,25 @@ const MAX_THRESHOLD = 1_000_000;
 // Starts tracking a product (picked from the untracked ones) or edits the threshold of a tracked one.
 @Component({
   selector: 'app-stock-track-dialog',
-  imports: [ReactiveFormsModule, ButtonDirective, Dialog, InputNumber, Select, TablerIconComponent, Tooltip],
+  imports: [
+    ReactiveFormsModule,
+    ButtonDirective,
+    FormDialog,
+    FormField,
+    InputNumber,
+    Select,
+    TablerIconComponent,
+    Tooltip,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
+    .dialog-fields {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      margin-top: var(--space-3);
+    }
+
     .field {
       display: flex;
       flex-direction: column;
@@ -54,21 +71,19 @@ const MAX_THRESHOLD = 1_000_000;
     }
   `,
   template: `
-    <p-dialog
+    <app-form-dialog
       [header]="header()"
-      [modal]="true"
-      [draggable]="false"
-      [style]="{ width: 'min(30rem, calc(100vw - 1rem))' }"
-      [closable]="!saving()"
-      [closeOnEscape]="!saving()"
+      width="30rem"
       [visible]="visible()"
-      (visibleChange)="visibleChange($event)"
+      [busy]="saving()"
+      (saved)="submit()"
+      (dismissed)="dismissed.emit()"
     >
       <p class="muted" i18n="@@admin.stock.track.help">
         Al controlar un producto sin unidades disponibles, deja de estar disponible en el menú. Marcarlo
         como agotado a mano sigue siendo independiente.
       </p>
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div [formGroup]="form" class="dialog-fields">
         @if (target(); as current) {
           <div class="field">
             <span i18n="@@admin.stock.track.product">Producto</span>
@@ -121,13 +136,15 @@ const MAX_THRESHOLD = 1_000_000;
             Todos los productos del catálogo ya tienen control de stock.
           </p>
         } @else {
-          <div class="field">
-            <label for="stock-track-product" id="stock-track-product-label" i18n="@@admin.stock.track.productLabel"
-              >Producto</label
-            >
+          <app-form-field
+            label="Producto"
+            i18n-label="@@admin.stock.track.productLabel"
+            controlId="stock-track-product"
+            [error]="invalid('productId') ? labels.productInvalid : null"
+          >
             <p-select
               inputId="stock-track-product"
-              [ariaLabelledBy]="'stock-track-product-label'"
+              [ariaLabel]="labels.product"
               formControlName="productId"
               optionLabel="name"
               optionValue="id"
@@ -145,61 +162,26 @@ const MAX_THRESHOLD = 1_000_000;
               [appendTo]="'body'"
               fluid
             />
-            @if (invalid('productId')) {
-              <small class="error" i18n="@@admin.stock.track.product.invalid">Elige un producto.</small>
-            }
-          </div>
+          </app-form-field>
         }
-        <div class="field">
-          <label for="stock-threshold" i18n="@@admin.stock.track.threshold">Avisar cuando queden</label>
+        <app-form-field
+          label="Avisar cuando queden"
+          i18n-label="@@admin.stock.track.threshold"
+          controlId="stock-threshold"
+          [error]="invalid('lowStockThreshold') ? labels.thresholdInvalid : null"
+          [hint]="labels.thresholdHint"
+        >
           <p-inputnumber
             inputId="stock-threshold"
             formControlName="lowStockThreshold"
             [useGrouping]="false"
             [invalid]="invalid('lowStockThreshold')"
             [pt]="numberAriaInvalid(invalid('lowStockThreshold'))"
+            fluid
           />
-          <small class="muted" i18n="@@admin.stock.track.threshold.hint">
-            Unidades disponibles o menos; con 0 solo avisa cuando se agota.
-          </small>
-          @if (invalid('lowStockThreshold')) {
-            <small class="error" i18n="@@admin.stock.track.threshold.invalid">
-              Escribe un número entero entre 0 y 1000000.
-            </small>
-          }
-        </div>
-      </form>
-      <ng-template #footer>
-        <button
-          pButton
-          type="button"
-          severity="secondary"
-          data-testid="track-cancel"
-          [disabled]="saving()"
-          (click)="dismissed.emit()"
-          pTooltip="Cerrar sin guardar"
-          i18n-pTooltip="@@admin.stock.track.cancel.tooltip"
-          tooltipPosition="top"
-        >
-          <tabler-icon [icon]="icons.cancel" aria-hidden="true" />
-          <span i18n="@@admin.stock.track.cancel">Cancelar</span>
-        </button>
-        <button
-          pButton
-          type="button"
-          data-testid="track-save"
-          [loading]="saving()"
-          (click)="submit()"
-          [pTooltip]="target() ? tips.edit : tips.create"
-          tooltipPosition="top"
-        >
-          @if (!saving()) {
-            <tabler-icon [icon]="icons.save" aria-hidden="true" />
-          }
-          <span>{{ target() ? labels.edit : labels.create }}</span>
-        </button>
-      </ng-template>
-    </p-dialog>
+        </app-form-field>
+      </div>
+    </app-form-dialog>
   `,
 })
 export class StockTrackDialog {
@@ -216,14 +198,12 @@ export class StockTrackDialog {
   private readonly notifier = inject(ErrorNotifier);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly icons = { save: IconDeviceFloppy, cancel: IconX, retry: IconRefresh };
-  protected readonly tips = {
-    create: $localize`:@@admin.stock.track.create.tooltip:Empezar a controlar el stock de este producto`,
-    edit: $localize`:@@admin.stock.track.edit.tooltip:Guardar el nuevo umbral de stock bajo`,
-  };
+  protected readonly icons = { retry: IconRefresh };
   protected readonly labels = {
-    create: $localize`:@@admin.stock.track.create:Controlar stock`,
-    edit: $localize`:@@admin.stock.track.edit:Guardar umbral`,
+    product: $localize`:@@admin.stock.track.productLabel:Producto`,
+    productInvalid: $localize`:@@admin.stock.track.product.invalid:Elige un producto.`,
+    thresholdHint: $localize`:@@admin.stock.track.threshold.hint:Unidades disponibles o menos; con 0 solo avisa cuando se agota.`,
+    thresholdInvalid: $localize`:@@admin.stock.track.threshold.invalid:Escribe un número entero entre 0 y 1000000.`,
   };
   protected readonly selectAriaInvalid = selectAriaInvalid;
   protected readonly numberAriaInvalid = numberAriaInvalid;
@@ -279,12 +259,6 @@ export class StockTrackDialog {
   protected invalid(name: string): boolean {
     const control = this.form.get(name);
     return !!control && control.invalid && control.touched;
-  }
-
-  protected visibleChange(visible: boolean): void {
-    if (!visible && !this.saving()) {
-      this.dismissed.emit();
-    }
   }
 
   protected loadTracked(): void {

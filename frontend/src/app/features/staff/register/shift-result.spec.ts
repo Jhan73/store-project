@@ -72,4 +72,13 @@ describe('ShiftResult', () => {
     expect(text(root, 'expected-cash')).toContain('150.00');
     expect(root.querySelector('[data-testid="counted-cash"]')).toBeNull();
   });
+
+  it('shows a dash instead of throwing when an amount is malformed', async () => {
+    const root = await render((host) => {
+      host.shift = shift({ status: 'CLOSED', closeKind: 'COUNTED', countedCash: pen('abc'), expectedCash: pen('150.00') });
+    });
+
+    expect(text(root, 'counted-cash')).toContain('—');
+    expect(text(root, 'expected-cash')).toContain('150.00');
+  });
 });
