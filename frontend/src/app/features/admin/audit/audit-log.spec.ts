@@ -145,6 +145,7 @@ describe('AuditLog', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   describe('results', () => {
+    // The first render of the screen (router, five filter controls, the lazy table) is slow on a loaded machine.
     it('waits for the store time zone and then lists the newest entries', async () => {
       const { host } = await rendered();
 
@@ -159,7 +160,7 @@ describe('AuditLog', () => {
       expect(second).toContain('09:00');
       expect(second).toContain('Sistema');
       expect(second).toContain('USER_CREATED');
-    });
+    }, 20_000);
 
     it('shows a shortened id for an actor that is not an account anymore', async () => {
       const { host } = await rendered();

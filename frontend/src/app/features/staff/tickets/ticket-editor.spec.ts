@@ -921,6 +921,7 @@ describe('TicketEditor', () => {
     });
 
     it('marks the cancel as destructive and locks the dialog while it runs', async () => {
+      vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
       const fixture = await ready(ticket([line('l1')]));
 
       await press(fixture, 'cancel-open');

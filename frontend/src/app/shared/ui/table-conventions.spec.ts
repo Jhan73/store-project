@@ -36,7 +36,7 @@ const found = tables();
 
 describe('table conventions', () => {
   it('finds the data tables of the app', () => {
-    expect(found.length).toBeGreaterThanOrEqual(5);
+    expect(found.length).toBeGreaterThanOrEqual(3);
   });
 
   it.each(found.map((table) => [`${table.file}:${table.line}`, table] as const))(

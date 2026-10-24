@@ -81,7 +81,7 @@ describe('register journeys', () => {
     await click(fixture, root, '[data-testid="item-b"]');
     await click(fixture, root, '[data-testid="item-c"]');
     type(root, '[data-testid="customer-name"]', 'Ana');
-    type(root, '[data-testid="qs-received"]', '50');
+    type(root, '#qs-received', '50');
     await fixture.whenStable();
     await click(fixture, root, '[data-testid="qs-submit"]');
 
