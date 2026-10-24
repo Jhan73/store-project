@@ -5,7 +5,9 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { DeliveryZone } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { UndoNotice } from '../../../shared/state/undo-notice';
 import { numberIsInvalid, typeNumber } from '../../../testing/primeng-controls';
+import { clickPastUndo } from '../../../testing/undo-window';
 import { SettingsApi } from './settings-api';
 import { ZoneList } from './zone-list';
 
@@ -56,26 +58,33 @@ async function render(zones: DeliveryZone[] = [centro, norte]) {
   return { fixture, host: fixture.nativeElement as HTMLElement, http };
 }
 
-function type(host: HTMLElement, selector: string, value: string) {
-  const input = host.querySelector<HTMLInputElement>(selector)!;
+const body = () => document.body;
+
+function type(selector: string, value: string) {
+  const input = body().querySelector<HTMLInputElement>(selector)!;
   input.value = value;
   input.dispatchEvent(new Event('input'));
 }
 
-function submit(host: HTMLElement) {
-  host.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+function submit() {
+  body().querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit'));
 }
 
-function click(host: HTMLElement, testId: string) {
-  host.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`)!.click();
+function button(host: HTMLElement, testId: string) {
+  return host.querySelector<HTMLButtonElement>(`[data-testid="${testId}"]`)!;
+}
+
+async function open(fixture: { whenStable(): Promise<unknown> }, host: HTMLElement, testId: string) {
+  button(host, testId).click();
+  await fixture.whenStable();
 }
 
 function rows(host: HTMLElement) {
   return Array.from(host.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
 }
 
-function value(host: HTMLElement, selector: string) {
-  return host.querySelector<HTMLInputElement>(selector)!.value;
+function value(selector: string) {
+  return body().querySelector<HTMLInputElement>(selector)!.value;
 }
 
 describe('ZoneList', () => {
@@ -95,13 +104,14 @@ describe('ZoneList', () => {
     expect(second).toContain('Inactiva');
   });
 
-  it('creates a zone with the store currency and leaves the optional amounts out', async () => {
+  it('opens the form in a dialog and creates a zone with the store currency', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#zone-name', ' Sur ');
-    type(host, '#zone-fee', '5,5');
-    typeNumber(host, 'zone-minutes', '45');
-    submit(host);
+    await open(fixture, host, 'add-zone');
+    type('#zone-name', ' Sur ');
+    type('#zone-fee', '5,5');
+    typeNumber(body(), 'zone-minutes', '45');
+    submit();
     const request = http.expectOne(`${ADMIN}/delivery-zones`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual({
@@ -116,18 +126,19 @@ describe('ZoneList', () => {
 
     expect(rows(host)).toHaveLength(1);
     expect(rows(host)[0]).toContain('Sur');
-    expect(value(host, '#zone-name')).toBe('');
+    expect(body().querySelector('#zone-name')).toBeNull();
   });
 
   it('sends the optional amounts when they are filled in', async () => {
-    const { host, http } = await render([]);
+    const { fixture, host, http } = await render([]);
 
-    type(host, '#zone-name', 'Sur');
-    type(host, '#zone-fee', '0');
-    typeNumber(host, 'zone-minutes', '45');
-    type(host, '#zone-minimum', '20');
-    type(host, '#zone-free', '60,5');
-    submit(host);
+    await open(fixture, host, 'add-zone');
+    type('#zone-name', 'Sur');
+    type('#zone-fee', '0');
+    typeNumber(body(), 'zone-minutes', '45');
+    type('#zone-minimum', '20');
+    type('#zone-free', '60,5');
+    submit();
 
     expect(http.expectOne(`${ADMIN}/delivery-zones`).request.body).toEqual({
       name: 'Sur',
@@ -141,31 +152,34 @@ describe('ZoneList', () => {
   it('does not send a zone with a bad name, fee, time or optional amount', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#zone-name', '   ');
-    type(host, '#zone-fee', 'abc');
-    typeNumber(host, 'zone-minutes', '0');
-    type(host, '#zone-minimum', 'x');
-    submit(host);
+    await open(fixture, host, 'add-zone');
+    type('#zone-name', '   ');
+    type('#zone-fee', 'abc');
+    typeNumber(body(), 'zone-minutes', '0');
+    type('#zone-minimum', 'x');
+    submit();
     await fixture.whenStable();
 
     http.expectNone(`${ADMIN}/delivery-zones`);
-    expect(numberIsInvalid(host, 'zone-minutes')).toBe(true);
+    expect(numberIsInvalid(body(), 'zone-minutes')).toBe(true);
     for (const id of ['name', 'fee', 'minimum']) {
-      expect(host.querySelector(`#zone-${id}`)!.getAttribute('aria-invalid')).toBe('true');
+      expect(body().querySelector(`#zone-${id}`)!.getAttribute('aria-invalid')).toBe('true');
     }
+    expect(body().querySelector('#zone-fee')!.closest('app-form-field')!.textContent).toContain(
+      'Escribe un monto',
+    );
   });
 
   it('edits a zone with the version it was listed with and can clear an optional amount', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    expect(value(host, '#zone-name')).toBe('Centro');
-    expect(value(host, '#zone-fee')).toBe('4.00');
-    expect(value(host, '#zone-minimum')).toBe('15.00');
-    type(host, '#zone-minimum', '');
-    typeNumber(host, 'zone-minutes', '35');
-    submit(host);
+    await open(fixture, host, 'edit-z1');
+    expect(value('#zone-name')).toBe('Centro');
+    expect(value('#zone-fee')).toBe('4.00');
+    expect(value('#zone-minimum')).toBe('15.00');
+    type('#zone-minimum', '');
+    typeNumber(body(), 'zone-minutes', '35');
+    submit();
     const request = http.expectOne(`${ADMIN}/delivery-zones/z1`);
     expect(request.request.method).toBe('PATCH');
     expect(request.request.headers.get('If-Match')).toBe('"2"');
@@ -180,35 +194,58 @@ describe('ZoneList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('35');
-    expect(value(host, '#zone-name')).toBe('');
+    expect(body().querySelector('#zone-name')).toBeNull();
   });
 
-  it('deactivates and reactivates with the version of the zone and blocks the button meanwhile', async () => {
-    const { fixture, host, http } = await render([centro, { ...norte, active: false }]);
+  it('shows a deactivated zone as inactive at once and sends it with its version after the undo window', async () => {
+    const { fixture, host, http } = await render();
 
-    click(host, 'toggle-z1');
+    clickPastUndo(button(host, 'toggle-z1'));
     await fixture.whenStable();
-    expect(host.querySelector<HTMLButtonElement>('[data-testid="toggle-z1"]')!.disabled).toBe(true);
-    click(host, 'toggle-z1');
+    expect(rows(host)[0]).toContain('Inactiva');
+    expect(button(host, 'toggle-z1').disabled).toBe(true);
     const off = http.expectOne(`${ADMIN}/delivery-zones/z1/deactivate`);
     expect(off.request.headers.get('If-Match')).toBe('"2"');
     off.flush({ ...centro, active: false, etag: '"3"' });
     await fixture.whenStable();
-    expect(rows(host)[0]).toContain('Inactiva');
-    expect(host.querySelector<HTMLButtonElement>('[data-testid="toggle-z1"]')!.disabled).toBe(false);
 
-    click(host, 'toggle-z2');
+    expect(rows(host)[0]).toContain('Inactiva');
+    expect(button(host, 'toggle-z1').disabled).toBe(false);
+  });
+
+  it('undoing a deactivation sends nothing', async () => {
+    const { fixture, host } = await render();
+    const notice = TestBed.inject(UndoNotice);
+
+    button(host, 'toggle-z1').click();
+    await fixture.whenStable();
+    expect(rows(host)[0]).toContain('Inactiva');
+    notice.undo(notice.active()[0]);
+    await fixture.whenStable();
+
+    expect(rows(host)[0]).toContain('Activa');
+    expect(rows(host)[0]).not.toContain('Inactiva');
+  });
+
+  it('reactivates straight away with the version of the zone and blocks the button meanwhile', async () => {
+    const { fixture, host, http } = await render([centro, { ...norte, active: false }]);
+
+    button(host, 'toggle-z2').click();
+    await fixture.whenStable();
+    expect(button(host, 'toggle-z2').disabled).toBe(true);
     const on = http.expectOne(`${ADMIN}/delivery-zones/z2/reactivate`);
     expect(on.request.headers.get('If-Match')).toBe('"2"');
     on.flush({ ...norte, active: true, etag: '"3"' });
     await fixture.whenStable();
+
     expect(rows(host)[1]).toContain('Activa');
+    expect(rows(host)[1]).not.toContain('Inactiva');
   });
 
-  it('re-enables the button and reloads when a toggle is stale', async () => {
+  it('reloads when a deactivation is stale and shows the zone as the server has it', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'toggle-z1');
+    clickPastUndo(button(host, 'toggle-z1'));
     http
       .expectOne(`${ADMIN}/delivery-zones/z1/deactivate`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -217,16 +254,16 @@ describe('ZoneList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).toContain('Fresh');
-    expect(host.querySelector<HTMLButtonElement>('[data-testid="toggle-z1"]')!.disabled).toBe(false);
+    expect(rows(host)[0]).not.toContain('Inactiva');
+    expect(button(host, 'toggle-z1').disabled).toBe(false);
   });
 
   it('retries a stale save with the refreshed version and shows the current values', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    type(host, '#zone-name', 'Mine');
-    submit(host);
+    await open(fixture, host, 'edit-z1');
+    type('#zone-name', 'Mine');
+    submit();
     http
       .expectOne(`${ADMIN}/delivery-zones/z1`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -234,19 +271,18 @@ describe('ZoneList', () => {
     http.expectOne(`${ADMIN}/delivery-zones`).flush([{ ...centro, name: 'Fresh', etag: '"9"' }, norte]);
     await fixture.whenStable();
 
-    expect(value(host, '#zone-name')).toBe('Fresh');
-    submit(host);
+    expect(value('#zone-name')).toBe('Fresh');
+    submit();
     const retry = http.expectOne(`${ADMIN}/delivery-zones/z1`);
     expect(retry.request.headers.get('If-Match')).toBe('"9"');
     retry.flush({ ...centro, name: 'Fresh', etag: '"10"' });
   });
 
-  it('leaves edit mode when the zone no longer exists after a failed save', async () => {
+  it('closes the dialog when the zone no longer exists after a failed save', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    submit(host);
+    await open(fixture, host, 'edit-z1');
+    submit();
     http.expectOne(`${ADMIN}/delivery-zones/z1`).flush(
       { type: 'about:blank', status: 404, code: 'store.delivery-zone-not-found', correlationId: 'c' },
       { status: 404, statusText: 'Not Found' },
@@ -255,84 +291,27 @@ describe('ZoneList', () => {
     http.expectOne(`${ADMIN}/delivery-zones`).flush([norte]);
     await fixture.whenStable();
 
-    expect(value(host, '#zone-name')).toBe('');
-    expect(host.querySelector('form [type="button"]')).toBeNull();
+    expect(body().querySelector('#zone-name')).toBeNull();
   });
 
-  it('saves with the version returned by a toggle of the zone being edited', async () => {
+  it('blocks the buttons while a save is in flight', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'edit-z1');
+    await open(fixture, host, 'edit-z1');
+    submit();
     await fixture.whenStable();
-    click(host, 'toggle-z1');
-    http
-      .expectOne(`${ADMIN}/delivery-zones/z1/deactivate`)
-      .flush({ ...centro, active: false, etag: '"7"' });
-    await fixture.whenStable();
-    submit(host);
-
-    expect(http.expectOne(`${ADMIN}/delivery-zones/z1`).request.headers.get('If-Match')).toBe('"7"');
-  });
-
-  it('keeps unsaved typing when an unrelated zone goes stale', async () => {
-    const { fixture, host, http } = await render();
-
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    type(host, '#zone-name', 'Mine');
-    click(host, 'toggle-z2');
-    http
-      .expectOne(`${ADMIN}/delivery-zones/z2/deactivate`)
-      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
-    await fixture.whenStable();
-    http.expectOne(`${ADMIN}/delivery-zones`).flush([centro, { ...norte, name: 'Fresh', etag: '"9"' }]);
+    expect(button(host, 'edit-z2').disabled).toBe(true);
+    http.expectOne(`${ADMIN}/delivery-zones/z1`).flush({ ...centro, etag: '"3"' });
     await fixture.whenStable();
 
-    expect(rows(host)[1]).toContain('Fresh');
-    expect(value(host, '#zone-name')).toBe('Mine');
-  });
-
-  it('re-points the form when a toggle of the zone being edited goes stale', async () => {
-    const { fixture, host, http } = await render();
-
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    type(host, '#zone-name', 'Mine');
-    click(host, 'toggle-z1');
-    http
-      .expectOne(`${ADMIN}/delivery-zones/z1/deactivate`)
-      .flush(stale, { status: 412, statusText: 'Precondition Failed' });
-    await fixture.whenStable();
-    http.expectOne(`${ADMIN}/delivery-zones`).flush([{ ...centro, name: 'Fresh', etag: '"9"' }, norte]);
-    await fixture.whenStable();
-
-    expect(value(host, '#zone-name')).toBe('Fresh');
-  });
-
-  it('blocks the edit buttons while a save is in flight', async () => {
-    const { fixture, host, http } = await render();
-    const edit = (id: string) => host.querySelector<HTMLButtonElement>(`[data-testid="edit-${id}"]`)!;
-
-    click(host, 'edit-z1');
-    await fixture.whenStable();
-    submit(host);
-    await fixture.whenStable();
-    expect(edit('z2').disabled).toBe(true);
-    edit('z2').click();
-    http
-      .expectOne(`${ADMIN}/delivery-zones/z1`)
-      .flush({ ...centro, etag: '"3"' });
-    await fixture.whenStable();
-
-    expect(edit('z2').disabled).toBe(false);
-    expect(value(host, '#zone-name')).toBe('');
+    expect(button(host, 'edit-z2').disabled).toBe(false);
   });
 
   it('applies only the latest reload when answers arrive out of order', async () => {
     const { fixture, host, http } = await render();
 
-    click(host, 'toggle-z1');
-    click(host, 'toggle-z2');
+    clickPastUndo(button(host, 'toggle-z1'));
+    clickPastUndo(button(host, 'toggle-z2'));
     http
       .expectOne(`${ADMIN}/delivery-zones/z1/deactivate`)
       .flush(stale, { status: 412, statusText: 'Precondition Failed' });
@@ -352,10 +331,11 @@ describe('ZoneList', () => {
   it('marks the field the server rejected', async () => {
     const { fixture, host, http } = await render([]);
 
-    type(host, '#zone-name', 'Sur');
-    type(host, '#zone-fee', '5');
-    typeNumber(host, 'zone-minutes', '45');
-    submit(host);
+    await open(fixture, host, 'add-zone');
+    type('#zone-name', 'Sur');
+    type('#zone-fee', '5');
+    typeNumber(body(), 'zone-minutes', '45');
+    submit();
     http.expectOne(`${ADMIN}/delivery-zones`).flush(
       {
         type: 'about:blank',
@@ -368,6 +348,6 @@ describe('ZoneList', () => {
     );
     await fixture.whenStable();
 
-    expect(host.querySelector('#zone-name')!.getAttribute('aria-invalid')).toBe('true');
+    expect(body().querySelector('#zone-name')!.getAttribute('aria-invalid')).toBe('true');
   });
 });

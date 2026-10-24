@@ -1,0 +1,16 @@
+// The note slot is always there, so a message never changes the height of its row.
+.hours tbody tr {
+  height: 4.5rem;
+}
+
+.row-note {
+  display: block;
+  min-height: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground);
+}
+
+.row-note.error {
+  color: var(--destructive);
+}

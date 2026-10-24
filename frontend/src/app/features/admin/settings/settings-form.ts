@@ -30,6 +30,8 @@ import { numberAriaInvalid, selectAriaInvalid } from '../../../shared/forms/aria
 import type { StoreSettings } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { parseAmount } from '../../../core/money/money';
+import { FormField } from '../../../shared/ui/form-field/form-field';
+import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
 import { SettingsApi, Versioned } from './settings-api';
@@ -118,6 +120,8 @@ function timeZoneOptions(current: string): string[] {
     InputText,
     Select,
     NgTemplateOutlet,
+    FormField,
+    MoneyInput,
     TablerIconComponent,
     Tooltip,
   ],
@@ -128,33 +132,34 @@ function timeZoneOptions(current: string): string[] {
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <ng-template #numberInput let-field>
-        <div class="field">
-          <label [for]="'settings-' + field.name">{{ field.label }}</label>
+        <app-form-field
+          class="field"
+          [label]="field.label"
+          [controlId]="'settings-' + field.name"
+          [error]="invalid(field.name) ? numberInvalid(field) : null"
+        >
           <p-inputnumber
             [inputId]="'settings-' + field.name"
             [formControlName]="field.name"
             [useGrouping]="false"
             [invalid]="invalid(field.name)"
             [pt]="numberAriaInvalid(invalid(field.name))"
+            fluid
           />
-          @if (invalid(field.name)) {
-            <small class="error">{{ numberInvalid(field) }}</small>
-          }
-        </div>
+        </app-form-field>
       </ng-template>
 
       <fieldset>
         <legend i18n="@@admin.settings.general.regional">Región</legend>
-        <div class="field">
-          <label
-            for="settings-timeZone"
-            id="settings-timeZone-label"
-            i18n="@@admin.settings.general.timeZone"
-            >Zona horaria</label
-          >
+        <app-form-field
+          class="field"
+          label="Zona horaria"
+          i18n-label="@@admin.settings.general.timeZone"
+          controlId="settings-timeZone"
+        >
           <p-select
             inputId="settings-timeZone"
-            [ariaLabelledBy]="'settings-timeZone-label'"
+            [ariaLabel]="labels.timeZone"
             formControlName="timeZone"
             [options]="timeZones()"
             [filter]="true"
@@ -163,10 +168,17 @@ function timeZoneOptions(current: string): string[] {
             i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
             [invalid]="invalid('timeZone')"
             [pt]="selectAriaInvalid(invalid('timeZone'))"
+            fluid
           />
-        </div>
-        <div class="field">
-          <label for="settings-currency" i18n="@@admin.settings.general.currency">Moneda (ISO 4217)</label>
+        </app-form-field>
+        <app-form-field
+          class="field"
+          label="Moneda (ISO 4217)"
+          i18n-label="@@admin.settings.general.currency"
+          controlId="settings-currency"
+          [error]="invalid('currency') ? labels.currencyInvalid : null"
+          [hint]="currencyChanged() ? labels.currencyChange : null"
+        >
           <input
             pInputText
             id="settings-currency"
@@ -174,19 +186,9 @@ function timeZoneOptions(current: string): string[] {
             maxlength="3"
             autocomplete="off"
             [attr.aria-invalid]="invalid('currency') ? 'true' : null"
+            fluid
           />
-          @if (invalid('currency')) {
-            <small class="error" i18n="@@admin.settings.general.currencyInvalid"
-              >Escribe un código de tres letras, como PEN.</small
-            >
-          }
-          @if (currencyChanged()) {
-            <small id="settings-currency-warning" role="note" i18n="@@admin.settings.general.currencyChangeWarning"
-              >Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para
-              actualizarla.</small
-            >
-          }
-        </div>
+        </app-form-field>
       </fieldset>
 
       <fieldset>
@@ -210,24 +212,19 @@ function timeZoneOptions(current: string): string[] {
 
       <fieldset>
         <legend i18n="@@admin.settings.general.cash">Caja y excepciones</legend>
-        <div class="field">
-          <label for="settings-registerDifferenceThreshold" i18n="@@admin.settings.general.registerDifference"
-            >Diferencia de caja permitida ({{ currency() }})</label
-          >
-          <input
-            pInputText
-            id="settings-registerDifferenceThreshold"
+        <app-form-field
+          class="field"
+          label="Diferencia de caja permitida"
+          i18n-label="@@admin.settings.general.registerDifference"
+          controlId="settings-registerDifferenceThreshold"
+          [error]="invalid('registerDifferenceThreshold') ? labels.registerDifferenceInvalid : null"
+        >
+          <app-money-input
+            inputId="settings-registerDifferenceThreshold"
             formControlName="registerDifferenceThreshold"
-            [attr.inputmode]="'decimal'"
-            autocomplete="off"
-            [attr.aria-invalid]="invalid('registerDifferenceThreshold') ? 'true' : null"
+            [currency]="currency()"
           />
-          @if (invalid('registerDifferenceThreshold')) {
-            <small class="error" i18n="@@admin.settings.general.registerDifferenceInvalid"
-              >Escribe un monto, como 5.00.</small
-            >
-          }
-        </div>
+        </app-form-field>
         <ng-container *ngTemplateOutlet="numberInput; context: { $implicit: exceptionField }" />
       </fieldset>
 
@@ -254,6 +251,12 @@ function timeZoneOptions(current: string): string[] {
 })
 export class SettingsForm {
   protected readonly icons = { save: IconDeviceFloppy };
+  protected readonly labels = {
+    timeZone: $localize`:@@admin.settings.general.timeZone:Zona horaria`,
+    currencyInvalid: $localize`:@@admin.settings.general.currencyInvalid:Escribe un código de tres letras, como PEN.`,
+    currencyChange: $localize`:@@admin.settings.general.currencyChangeWarning:Las zonas de reparto existentes conservan la moneda anterior; guarda cada una de nuevo para actualizarla.`,
+    registerDifferenceInvalid: $localize`:@@admin.settings.general.registerDifferenceInvalid:Escribe un monto, como 5.00.`,
+  };
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
 

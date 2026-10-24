@@ -28,9 +28,11 @@ export function toTimeText(date: Date | null): string {
   template: `
     <p-datepicker
       [inputId]="inputId()"
+      [ariaLabel]="ariaLabel() ?? undefined"
       [timeOnly]="true"
       hourFormat="24"
       [ngModel]="date()"
+      [ngModelOptions]="{ standalone: true }"
       [disabled]="disabled()"
       [invalid]="invalid()"
       [pt]="ariaInvalid(invalid())"
@@ -43,6 +45,7 @@ export function toTimeText(date: Date | null): string {
 export class TimeInput implements ControlValueAccessor {
   readonly inputId = input.required<string>();
   readonly invalid = input(false);
+  readonly ariaLabel = input<string | null>(null);
 
   protected readonly ariaInvalid = datePickerAriaInvalid;
   protected readonly date = signal<Date | null>(null);

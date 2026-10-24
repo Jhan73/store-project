@@ -138,7 +138,10 @@ describe('SettingsForm', () => {
 
   it('warns about delivery zones only while the currency differs from the saved one', async () => {
     const { fixture, host, http } = await render();
-    const warning = () => host.querySelector('#settings-currency-warning');
+    const warning = () => {
+      const message = host.querySelector('#settings-currency')!.closest('app-form-field')!.querySelector('.message');
+      return message?.textContent?.trim() ? message : null;
+    };
 
     expect(warning()).toBeNull();
     type(host, '#settings-currency', 'usd');
