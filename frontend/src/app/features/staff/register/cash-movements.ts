@@ -284,8 +284,11 @@ export class CashMovements {
     if (value.kind === 'OUT' && value.reason === null) {
       return $localize`:@@staff.register.movements.why.reason:Elige el motivo de la salida.`;
     }
-    return this.noteRequired() && value.note.trim() === ''
-      ? $localize`:@@staff.register.movements.why.note:Escribe la nota para registrar el movimiento.`
+    if (this.noteRequired() && value.note.trim() === '') {
+      return $localize`:@@staff.register.movements.why.note:Escribe la nota para registrar el movimiento.`;
+    }
+    return this.store.currency() === null
+      ? $localize`:@@staff.register.movements.why.currency:Todavía no se conoce la moneda de la tienda; vuelve a abrir la pantalla.`
       : null;
   });
   protected readonly valid = computed(() => this.whyDisabled() === null);

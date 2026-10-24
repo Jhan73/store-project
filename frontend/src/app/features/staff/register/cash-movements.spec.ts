@@ -6,7 +6,7 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { CashMovement } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { chooseOption } from '../../../testing/primeng-controls';
-import { pen, shift } from '../../../testing/register-fixtures';
+import { pen, problem, shift } from '../../../testing/register-fixtures';
 import { CashMovements } from './cash-movements';
 import { RegisterApi } from './register-api';
 import { ShiftStore } from './shift-store';
@@ -191,6 +191,27 @@ describe('CashMovements', () => {
     await fixture.whenStable();
 
     expect(save().disabled).toBe(true);
+  });
+
+  it('says why it cannot save while the store currency is unknown', async () => {
+    const store = TestBed.inject(ShiftStore);
+    store.load();
+    http
+      .expectOne(`${BASE}/shifts/current`)
+      .flush(problem(404, 'instore.shift-not-found'), { status: 404, statusText: 'Not Found' });
+    http.expectOne(`${BASE}/store/board-thresholds`).flush({ timeZone: 'America/Lima' });
+    http.expectOne(`${BASE}/catalog/menu`).flush({ categories: [] });
+    const fixture = TestBed.createComponent(CashMovements);
+    await fixture.whenStable();
+    http.expectOne(`${BASE}/reasons?type=CASH_OUT`).flush([{ code: 'Change' }]);
+    await fixture.whenStable();
+    await openForm(fixture);
+    await chooseOption(fixture, body(), 'mv-reason', 'Change');
+    type('#mv-amount', '5');
+    await fixture.whenStable();
+
+    expect(save().disabled).toBe(true);
+    expect(inDialog('[data-testid="fd-reason"]')!.textContent).toContain('moneda');
   });
 
   it('is aria-busy and keeps the dialog while the movement is being recorded', async () => {
