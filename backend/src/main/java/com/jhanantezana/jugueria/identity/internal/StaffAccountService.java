@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.NestedExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,8 +37,6 @@ import com.jhanantezana.jugueria.shared.StaffChangeGuard;
 
 @Service
 public class StaffAccountService {
-
-	private static final String USERNAME_INDEX = "user_account_username_active_key";
 
 	private final UserAccountRepository accounts;
 
@@ -220,7 +217,8 @@ public class StaffAccountService {
 			.collect(Collectors.toSet());
 	}
 
-	// Holding the account row keeps a set-password link from being consumed between the check and the delete.
+	// Account row first, then its tokens: setPassword takes them in the same order, and holding the row keeps a link
+	// from being consumed between the check and the delete.
 	@Transactional
 	public void delete(UUID id) {
 		activeAdminLock.acquire();
@@ -269,8 +267,7 @@ public class StaffAccountService {
 	}
 
 	private static boolean isUsernameViolation(DataIntegrityViolationException e) {
-		var message = NestedExceptionUtils.getMostSpecificCause(e).getMessage();
-		return message != null && message.contains(USERNAME_INDEX);
+		return Constraints.violated(e, Constraints.USERNAME);
 	}
 
 	private UserAccount findStaffOrThrow(UUID id) {

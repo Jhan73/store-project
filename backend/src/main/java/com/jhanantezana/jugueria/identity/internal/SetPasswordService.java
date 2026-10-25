@@ -44,7 +44,8 @@ public class SetPasswordService {
 		}
 		var now = Instant.now(clock);
 		var token = tokens.findByTokenHash(RefreshTokens.hash(rawToken)).orElseThrow(SetPasswordService::invalidToken);
-		var account = accounts.findById(token.getUserId()).orElseThrow(SetPasswordService::invalidToken);
+		// Account row before token row, the order the staff delete takes them in, so the two never wait on each other.
+		var account = accounts.findForUpdateById(token.getUserId()).orElseThrow(SetPasswordService::invalidToken);
 		if (!account.isActive()) {
 			throw invalidToken();
 		}
