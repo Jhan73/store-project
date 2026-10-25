@@ -13,13 +13,15 @@ import { API_ORIGIN } from '../../../core/api/api-config';
 import type { AuditEntry, AuditPage, StaffMember } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { primeTranslation } from '../../../core/theme/prime-translation';
-import { chooseOption, selectedLabel } from '../../../testing/primeng-controls';
+import { chooseOption, optionLabels, selectedLabel } from '../../../testing/primeng-controls';
 import { AuditApi } from './audit-api';
 import { AuditLog } from './audit-log';
 
 const API = 'http://api.test/api/v1';
 const ANA = '0199f3a2-0000-7000-8000-00000000000a';
 const BETO = '0199f3a2-0000-7000-8000-00000000000b';
+const CARLA = '0199f3a2-0000-7000-8000-00000000000c';
+const DANI = '0199f3a2-0000-7000-8000-00000000000d';
 const ENTITY = '0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c';
 
 function staff(id: string, email: string, username: string | null = null): StaffMember {
@@ -378,13 +380,36 @@ describe('AuditLog', () => {
     it('offers the staff accounts as actors and sends the chosen id', async () => {
       const { host, http, fixture, router } = await rendered();
 
-      await chooseOption(fixture, host, 'audit-actor', 'beto@juguera.pe');
+      await chooseOption(fixture, host, 'audit-actor', '0199f3a2…');
       await press(fixture, host, 'search');
 
       const request = http.expectOne(isSearch);
       expect(sent(request)['actorId']).toBe(BETO);
       expect(router.url).toBe(`/audit?actorId=${BETO}`);
       request.flush(page([]));
+    });
+
+    it('labels the actors by username or shortened id, never by email', async () => {
+      const { host, fixture } = await rendered();
+
+      const labels = await optionLabels(fixture, host, 'audit-actor');
+
+      expect(labels.length).toBeGreaterThan(0);
+      expect(labels.some((label) => label.includes('@'))).toBe(false);
+      expect(labels).toEqual(expect.arrayContaining(['Ana', '0199f3a2…']));
+    });
+
+    it('tells apart actors that share a username or an id prefix', async () => {
+      const oldAna: StaffMember = { ...staff(CARLA, 'ana.old@juguera.pe', 'Ana'), active: false };
+      const context = await render('/audit', [ana, oldAna, beto, staff(DANI, 'dani@juguera.pe')]);
+      context.http.expectOne(isSearch).flush(page([update]));
+      await context.fixture.whenStable();
+
+      const labels = await optionLabels(context.fixture, context.host, 'audit-actor');
+
+      expect(new Set(labels).size).toBe(labels.length);
+      expect(labels.filter((label) => label.startsWith('Ana'))).toHaveLength(2);
+      expect(labels.some((label) => label.includes('@'))).toBe(false);
     });
 
     it('filters by entity type, entity id and action', async () => {

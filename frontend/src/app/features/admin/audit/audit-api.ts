@@ -32,7 +32,7 @@ export class AuditApi {
     return this.http.get<AuditPage>(`${this.base}/audit-entries`, { params });
   }
 
-  // The audit rows carry only an actor id; the accounts turn it into an email.
+  // The audit rows carry only an actor id; the accounts turn it into a username.
   staffAccounts(): Observable<StaffMember[]> {
     const read = (page: number) =>
       this.http.get<StaffPage>(`${this.base}/staff`, {

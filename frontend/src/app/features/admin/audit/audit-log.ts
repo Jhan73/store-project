@@ -409,8 +409,17 @@ export class AuditLog {
   private actorsLoaded = false;
 
   protected readonly actorOptions = computed<Option[]>(() => {
-    const options = this.staff()
-      .map((member) => ({ value: member.id, label: member.username ?? member.email }))
+    const named = this.staff().map((member) => ({
+      value: member.id,
+      label: member.username ?? shortId(member.id),
+    }));
+    const taken = new Map<string, number>();
+    named.forEach(({ label }) => taken.set(label, (taken.get(label) ?? 0) + 1));
+    const options = named
+      .map(({ value, label }) => ({
+        value,
+        label: (taken.get(label) ?? 0) > 1 ? `${label} · ${value.slice(-4)}` : label,
+      }))
       .sort((a, b) => a.label.localeCompare(b.label));
     const chosen = this.applied().actorId;
     return chosen && !this.staffById().has(chosen)
