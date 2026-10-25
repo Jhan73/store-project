@@ -17,12 +17,21 @@ import { numberAriaInvalid } from '../../../shared/forms/aria-invalid';
 import type { Category, Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { ConfirmAction } from '../../../shared/state/confirm-action';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
 import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
 import { FormField } from '../../../shared/ui/form-field/form-field';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
+import { ApiError } from '../../../core/errors/api-error';
 import { isStale, reportFailure } from '../admin-errors';
+
+// The station a category points at changed since the stations were read.
+const STATION_CODES: ReadonlySet<string> = new Set([
+  'catalog.station-inactive',
+  'catalog.unknown-station',
+  'catalog.station-not-found',
+]);
 
 @Component({
   selector: 'app-category-list',
@@ -119,6 +128,7 @@ import { isStale, reportFailure } from '../admin-errors';
                 [size]="'small'"
                 [outlined]="true"
                 [attr.data-testid]="'delete-' + category.id"
+                [disabled]="removing.has(category.id)"
                 (click)="remove(category)"
                 pTooltip="Eliminar esta categoría, que no tiene productos"
                 i18n-pTooltip="@@admin.catalog.categories.delete.tooltip"
@@ -242,6 +252,7 @@ export class CategoryList {
   protected readonly editing = signal<Category | null>(null);
   protected readonly open = signal(false);
   protected readonly saving = signal(false);
+  protected readonly removing = new PendingIds();
   protected readonly numberAriaInvalid = numberAriaInvalid;
   // A category can only be placed on an active station; the one it already has stays so it can be shown.
   protected readonly stationOptions = computed(() => {
@@ -269,10 +280,7 @@ export class CategoryList {
 
   constructor() {
     this.load();
-    this.api.stations().subscribe({
-      next: (list) => this.stations.set(list),
-      error: (error: unknown) => this.notifier.show(error),
-    });
+    this.loadStations();
   }
 
   protected invalid(name: 'name' | 'displayOrder'): boolean {
@@ -319,6 +327,9 @@ export class CategoryList {
   }
 
   protected async remove(category: Category): Promise<void> {
+    if (this.removing.has(category.id)) {
+      return;
+    }
     const confirmed = await this.confirm.ask({
       header: $localize`:@@admin.catalog.categories.delete.header:Eliminar categoría`,
       message: $localize`:@@admin.catalog.categories.delete.confirm:Se eliminará la categoría "${category.name}:name:" de forma definitiva y no se puede deshacer.`,
@@ -327,14 +338,19 @@ export class CategoryList {
     if (!confirmed) {
       return;
     }
+    this.removing.add(category.id);
     this.api.deleteCategory(category.id, category.etag).subscribe({
       next: () => {
+        this.removing.delete(category.id);
         this.categories.update((list) => list.filter((item) => item.id !== category.id));
         if (this.editing()?.id === category.id) {
           this.close();
         }
       },
-      error: (error: unknown) => this.fail(error),
+      error: (error: unknown) => {
+        this.removing.delete(category.id);
+        this.fail(error);
+      },
     });
   }
 
@@ -394,9 +410,20 @@ export class CategoryList {
 
   private fail(error: unknown, form?: FormGroup): void {
     reportFailure(this.notifier, error, form);
-    if (isStale(error)) {
+    const stationChanged = error instanceof ApiError && STATION_CODES.has(error.code ?? '');
+    if (isStale(error) || stationChanged) {
       this.load();
     }
+    if (stationChanged) {
+      this.loadStations();
+    }
+  }
+
+  private loadStations(): void {
+    this.api.stations().subscribe({
+      next: (list) => this.stations.set(list),
+      error: (error: unknown) => this.notifier.show(error),
+    });
   }
 
   private load(): void {

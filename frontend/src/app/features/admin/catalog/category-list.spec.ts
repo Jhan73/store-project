@@ -210,6 +210,56 @@ describe('CategoryList', () => {
     expect(rows(host)[0]).toContain('Snacks');
   });
 
+  it('disables Delete while the request is in flight so a double click sends one DELETE', async () => {
+    const { fixture, host, http } = await render([{ ...juices, deletable: true }]);
+    const button = () => host.querySelector<HTMLButtonElement>('[data-testid="delete-c1"]')!;
+
+    button().click();
+    await fixture.whenStable();
+    const request = http.expectOne(`${ADMIN}/categories/c1`);
+    expect(button().disabled).toBe(true);
+    button().click();
+    await fixture.whenStable();
+    http.expectNone(`${ADMIN}/categories/c1`);
+
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+    expect(host.querySelector('[data-testid="delete-c1"]')).toBeNull();
+  });
+
+  it('enables Delete again when the request fails', async () => {
+    const { fixture, host, http } = await render([{ ...juices, deletable: true }]);
+    const button = () => host.querySelector<HTMLButtonElement>('[data-testid="delete-c1"]')!;
+
+    button().click();
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/categories/c1`).flush(
+      { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
+      { status: 500, statusText: 'Server Error' },
+    );
+    await fixture.whenStable();
+
+    expect(button().disabled).toBe(false);
+  });
+
+  it('reads the stations again when a category cannot go back on a station that was retired', async () => {
+    const { fixture, host, http } = await render([{ ...juices, active: false, deletable: false }]);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-c1"]')!.click();
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/categories/c1/reactivate`).flush(
+      { type: 'about:blank', status: 409, code: 'catalog.station-inactive', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+
+    http.expectOne(`${ADMIN}/categories`).flush([{ ...juices, active: false }]);
+    http.expectOne(`${ADMIN}/stations`).flush([{ ...stations[0], active: false }, stations[1]]);
+    await fixture.whenStable();
+    await openAdd(fixture, host);
+    expect(await optionLabels(fixture, document.body, 'category-station')).toEqual(['Bar']);
+  });
+
   it('sends nothing when the deletion is declined', async () => {
     ask.mockResolvedValueOnce(false);
     const { fixture, host, http } = await render([{ ...juices, deletable: true }]);

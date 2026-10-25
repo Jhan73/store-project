@@ -24,6 +24,7 @@ import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table'
 import { FormField } from '../../../shared/ui/form-field/form-field';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { isStale } from '../admin-errors';
 
 @Component({
@@ -167,7 +168,7 @@ import { isStale } from '../admin-errors';
                 [outlined]="true"
                 [size]="'small'"
                 [attr.data-testid]="'delete-' + product.id"
-                [disabled]="changes.has(product.id)"
+                [disabled]="changes.has(product.id) || removing.has(product.id)"
                 (click)="remove(product)"
                 pTooltip="Eliminar este producto, que nunca se usó en una cuenta"
                 i18n-pTooltip="@@admin.catalog.products.delete.tooltip"
@@ -224,6 +225,7 @@ export class ProductList {
   private readonly confirm = inject(ConfirmAction);
 
   protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
+  protected readonly removing = new PendingIds();
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly categoryOptions = computed(() => [...this.categories()]);
   protected readonly categoryId = signal('');
@@ -277,7 +279,7 @@ export class ProductList {
   }
 
   protected async remove(product: Product): Promise<void> {
-    if (this.changes.has(product.id)) {
+    if (this.changes.has(product.id) || this.removing.has(product.id)) {
       return;
     }
     const confirmed = await this.confirm.ask({
@@ -288,9 +290,16 @@ export class ProductList {
     if (!confirmed) {
       return;
     }
+    this.removing.add(product.id);
     this.api.deleteProduct(product.id, product.etag).subscribe({
-      next: () => this.products.update((list) => list.filter((item) => item.id !== product.id)),
-      error: (error: unknown) => this.fail(error),
+      next: () => {
+        this.removing.delete(product.id);
+        this.products.update((list) => list.filter((item) => item.id !== product.id));
+      },
+      error: (error: unknown) => {
+        this.removing.delete(product.id);
+        this.fail(error);
+      },
     });
   }
 

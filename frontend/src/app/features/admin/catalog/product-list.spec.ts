@@ -277,6 +277,39 @@ describe('ProductList', () => {
     expect(host.querySelector('[data-testid="toggle-p2"]')).toBeTruthy();
   });
 
+  it('disables Delete while the request is in flight so a double click sends one DELETE', async () => {
+    ask.mockClear();
+    const { fixture, host, http } = await render(page([product('p1', 'Orange juice', { deletable: true })]));
+    const button = () => host.querySelector<HTMLButtonElement>('[data-testid="delete-p1"]')!;
+
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+    const request = http.expectOne(`${API}/admin/products/p1`);
+    expect(button().disabled).toBe(true);
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+    http.expectNone(`${API}/admin/products/p1`);
+
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+    expect(host.querySelector('[data-testid="delete-p1"]')).toBeNull();
+  });
+
+  it('enables Delete again when the request fails', async () => {
+    ask.mockClear();
+    const { fixture, host, http } = await render(page([product('p1', 'Orange juice', { deletable: true })]));
+
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+    http.expectOne(`${API}/admin/products/p1`).flush(
+      { type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' },
+      { status: 500, statusText: 'Server Error' },
+    );
+    await fixture.whenStable();
+
+    expect(host.querySelector<HTMLButtonElement>('[data-testid="delete-p1"]')!.disabled).toBe(false);
+  });
+
   it('asks before deleting, sends the version and drops the row', async () => {
     ask.mockClear();
     const { fixture, host, http } = await render(
