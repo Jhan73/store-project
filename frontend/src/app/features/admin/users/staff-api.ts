@@ -51,6 +51,10 @@ export class StaffApi {
     return this.http.post<StaffMember>(`${this.base}/staff/${id}/reactivate`, null);
   }
 
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/staff/${id}`);
+  }
+
   resendSetPasswordLink(id: string): Observable<void> {
     return this.http.post<void>(`${this.base}/staff/${id}/set-password-link`, null);
   }

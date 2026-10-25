@@ -28,6 +28,7 @@ const ana: StaffMember = {
   email: 'ana@juguera.pe',
   role: 'SERVER',
   active: true,
+  deletable: false,
   createdAt: '2026-01-01T03:30:00Z',
 };
 const beto: StaffMember = {
@@ -484,6 +485,57 @@ describe('StaffList', () => {
 
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
     expect(rows(host)[1]).toContain('Inactiva');
+  });
+
+  it('offers Delete instead of Deactivate for an invitation nobody accepted', async () => {
+    const { host } = await render(page([{ ...ana, deletable: true }, me]));
+
+    expect(button(host, 'delete-u1')).toBeTruthy();
+    expect(button(host, 'toggle-u1')).toBeNull();
+    expect(button(host, 'delete-me')).toBeNull();
+    expect(button(host, 'toggle-me')).toBeTruthy();
+  });
+
+  it('asks before deleting an invitation, then drops the row', async () => {
+    const { fixture, host, http } = await render(page([{ ...ana, deletable: true }, me]));
+
+    button(host, 'delete-u1')!.click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledTimes(1);
+    const request = http.expectOne(`${API}/staff/u1`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(button(host, 'delete-u1')).toBeNull();
+    expect(host.textContent).not.toContain('ana@juguera.pe');
+  });
+
+  it('sends nothing when the deletion is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host, http } = await render(page([{ ...ana, deletable: true }, me]));
+
+    button(host, 'delete-u1')!.click();
+    await fixture.whenStable();
+
+    http.expectNone(`${API}/staff/u1`);
+  });
+
+  it('reloads the list when the account signed in since it was listed', async () => {
+    const { fixture, host, http } = await render(page([{ ...ana, deletable: true }, me]));
+
+    button(host, 'delete-u1')!.click();
+    await fixture.whenStable();
+    http.expectOne(`${API}/staff/u1`).flush(
+      { type: 'about:blank', status: 409, code: 'identity.staff-account-in-use', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    http.expectOne(LIST).flush(page([{ ...ana, deletable: false }, me]));
+    await fixture.whenStable();
+
+    expect(button(host, 'toggle-u1')).toBeTruthy();
+    expect(button(host, 'delete-u1')).toBeNull();
   });
 
   it('resends the set-password link of an active account and confirms without showing it', async () => {

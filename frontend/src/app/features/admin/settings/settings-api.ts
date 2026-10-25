@@ -95,6 +95,10 @@ export class SettingsApi {
     );
   }
 
+  deleteZone(id: string, etag: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/delivery-zones/${id}`, ifMatch(etag));
+  }
+
   reactivateZone(id: string, etag: string): Observable<DeliveryZone> {
     return this.http.post<DeliveryZone>(
       `${this.base}/delivery-zones/${id}/reactivate`,

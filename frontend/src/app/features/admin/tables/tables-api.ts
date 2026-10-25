@@ -33,6 +33,10 @@ export class TablesApi {
     return this.http.post<AdminTable>(`${this.base}/${id}/deactivate`, null, ifMatch(etag));
   }
 
+  delete(id: string, etag: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${id}`, ifMatch(etag));
+  }
+
   reactivate(id: string, etag: string): Observable<AdminTable> {
     return this.http.post<AdminTable>(`${this.base}/${id}/reactivate`, null, ifMatch(etag));
   }

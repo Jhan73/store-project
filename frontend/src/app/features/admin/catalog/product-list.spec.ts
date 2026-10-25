@@ -6,6 +6,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Category, Product, ProductPage } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { chooseOption, filterOptions, selectedLabel } from '../../../testing/primeng-controls';
 import { CatalogApi } from './catalog-api';
@@ -26,14 +27,17 @@ const product = (id: string, name: string, overrides: Partial<Product> = {}): Pr
   imageUrl: null,
   active: true,
   available: true,
+  deletable: false,
   etag: '"2"',
   ...overrides,
 });
 
 const categories: Category[] = [
-  { id: 'c1', name: 'Juices', displayOrder: 1, stationId: 's1', active: true, etag: '"1"' },
-  { id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's1', active: true, etag: '"1"' },
+  { id: 'c1', name: 'Juices', displayOrder: 1, stationId: 's1', active: true, deletable: false, etag: '"1"' },
+  { id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's1', active: true, deletable: false, etag: '"1"' },
 ];
+
+const ask = vi.fn(() => Promise.resolve(true));
 
 const page = (content: Product[], number = 0, totalPages = 1): ProductPage => ({
   content,
@@ -51,6 +55,7 @@ function setup() {
       provideHttpClientTesting(),
       MessageService,
       CatalogApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -259,6 +264,65 @@ describe('ProductList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[0]).not.toContain('Inactivo');
+  });
+
+  it('offers Delete instead of Deactivate for a product that was never used', async () => {
+    const { host } = await render(
+      page([product('p1', 'Orange juice', { deletable: true }), product('p2', 'Beet shot')]),
+    );
+
+    expect(host.querySelector('[data-testid="delete-p1"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="toggle-p1"]')).toBeNull();
+    expect(host.querySelector('[data-testid="delete-p2"]')).toBeNull();
+    expect(host.querySelector('[data-testid="toggle-p2"]')).toBeTruthy();
+  });
+
+  it('asks before deleting, sends the version and drops the row', async () => {
+    ask.mockClear();
+    const { fixture, host, http } = await render(
+      page([product('p1', 'Orange juice', { deletable: true }), product('p2', 'Beet shot')]),
+    );
+
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Orange juice') }));
+    const request = http.expectOne(`${API}/admin/products/p1`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('If-Match')).toBe('"2"');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Beet shot');
+  });
+
+  it('sends nothing when the deletion is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host, http } = await render(page([product('p1', 'Orange juice', { deletable: true })]));
+
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+
+    http.expectNone(`${API}/admin/products/p1`);
+  });
+
+  it('reloads the list when the product was sold since it was listed', async () => {
+    const { fixture, host, http } = await render(page([product('p1', 'Orange juice', { deletable: true })]));
+
+    click(host, 'delete-p1');
+    await fixture.whenStable();
+    http.expectOne(`${API}/admin/products/p1`).flush(
+      { type: 'about:blank', status: 409, code: 'catalog.product-in-use', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    http
+      .expectOne(`${API}/admin/products?page=0&size=100`)
+      .flush(page([product('p1', 'Orange juice', { deletable: false })]));
+    await fixture.whenStable();
+
+    expect(host.querySelector('[data-testid="toggle-p1"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="delete-p1"]')).toBeNull();
   });
 
   it('reloads the list when a product changed in the meantime', async () => {

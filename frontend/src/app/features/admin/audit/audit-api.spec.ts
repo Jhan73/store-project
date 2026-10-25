@@ -9,7 +9,7 @@ import { AuditApi } from './audit-api';
 const BASE = 'http://api.test/api/v1';
 
 function member(id: string): StaffMember {
-  return { id, username: null, email: `${id}@juguera.pe`, role: 'SERVER', active: true, createdAt: '2026-01-01T00:00:00Z' };
+  return { id, username: null, email: `${id}@juguera.pe`, role: 'SERVER', active: true, deletable: false, createdAt: '2026-01-01T00:00:00Z' };
 }
 
 describe('AuditApi', () => {

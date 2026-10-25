@@ -14,6 +14,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconSend,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -148,26 +149,46 @@ function usernameControl(): FormControl<string> {
               <tabler-icon [icon]="icons.rename" aria-hidden="true" />
               <span i18n="@@admin.users.rename">Nombre</span>
             </button>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              [size]="'small'"
-              [outlined]="true"
-              [disabled]="pending.has(member.id) || isOwn(member)"
-              [attr.data-testid]="'toggle-' + member.id"
-              (click)="toggle(member)"
-              [pTooltip]="member.active ? tips.deactivate : tips.reactivate"
-              tooltipPosition="top"
-            >
-              @if (member.active) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.users.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.users.reactivate">Reactivar</ng-container>
-              }
-            </button>
+            @if (!member.deletable || !member.active) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(member.id) || isOwn(member)"
+                [attr.data-testid]="'toggle-' + member.id"
+                (click)="toggle(member)"
+                [pTooltip]="member.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (member.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.users.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.users.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (member.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(member.id) || isOwn(member)"
+                [attr.data-testid]="'delete-' + member.id"
+                (click)="remove(member)"
+                pTooltip="Eliminar esta invitación, que nadie aceptó"
+                i18n-pTooltip="@@admin.users.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.users.delete">Eliminar</span>
+              </button>
+            }
             @if (member.active) {
               <button
                 pButton
@@ -297,6 +318,7 @@ export class StaffList {
     resend: IconSend,
     invite: IconMail,
     rename: IconPencil,
+    delete: IconTrash,
   };
   protected readonly usernameMax = USERNAME_MAX;
   protected readonly tips = {
@@ -469,6 +491,21 @@ export class StaffList {
       ? this.api.deactivate(member.id)
       : this.api.reactivate(member.id);
     this.run(member, request, (saved) => this.replace(saved));
+  }
+
+  protected async remove(member: StaffMember): Promise<void> {
+    const name = member.username ?? member.email;
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.users.delete.header:Eliminar invitación`,
+      message: $localize`:@@admin.users.delete.confirm:Se eliminará la cuenta de "${name}:name:" y su enlace de invitación de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.users.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.run(member, this.api.delete(member.id), () =>
+      this.members.update((list) => list.filter((item) => item.id !== member.id)),
+    );
   }
 
   protected resend(member: StaffMember): void {

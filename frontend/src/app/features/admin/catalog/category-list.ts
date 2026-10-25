@@ -5,6 +5,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -89,25 +90,44 @@ import { isStale, reportFailure } from '../admin-errors';
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.catalog.edit">Editar</span>
             </button>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              [size]="'small'"
-              [outlined]="true"
-              [attr.data-testid]="'toggle-' + category.id"
-              (click)="toggle(category)"
-              [pTooltip]="category.active ? tips.deactivate : tips.reactivate"
-              tooltipPosition="top"
-            >
-              @if (category.active) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
-              }
-            </button>
+            @if (!category.deletable || !category.active) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [attr.data-testid]="'toggle-' + category.id"
+                (click)="toggle(category)"
+                [pTooltip]="category.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (category.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (category.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [outlined]="true"
+                [attr.data-testid]="'delete-' + category.id"
+                (click)="remove(category)"
+                pTooltip="Eliminar esta categoría, que no tiene productos"
+                i18n-pTooltip="@@admin.catalog.categories.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.catalog.categories.delete">Eliminar</span>
+              </button>
+            }
           </div>
         </td>
       </ng-template>
@@ -186,6 +206,7 @@ export class CategoryList {
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
     create: IconPlus,
+    delete: IconTrash,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.catalog.categories.deactivate.tooltip:Ocultar esta categoría del menú`,
@@ -222,7 +243,11 @@ export class CategoryList {
   protected readonly open = signal(false);
   protected readonly saving = signal(false);
   protected readonly numberAriaInvalid = numberAriaInvalid;
-  protected readonly stationOptions = computed(() => [...this.stations()]);
+  // A category can only be placed on an active station; the one it already has stays so it can be shown.
+  protected readonly stationOptions = computed(() => {
+    const current = this.editing()?.stationId;
+    return this.stations().filter((station) => station.active || station.id === current);
+  });
   private readonly stationNames = computed(
     () => new Map(this.stations().map((station) => [station.id, station.name])),
   );
@@ -289,6 +314,26 @@ export class CategoryList {
       : this.api.reactivateCategory(category.id, category.etag);
     request.subscribe({
       next: (saved) => this.replace(saved),
+      error: (error: unknown) => this.fail(error),
+    });
+  }
+
+  protected async remove(category: Category): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.catalog.categories.delete.header:Eliminar categoría`,
+      message: $localize`:@@admin.catalog.categories.delete.confirm:Se eliminará la categoría "${category.name}:name:" de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.catalog.categories.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.api.deleteCategory(category.id, category.etag).subscribe({
+      next: () => {
+        this.categories.update((list) => list.filter((item) => item.id !== category.id));
+        if (this.editing()?.id === category.id) {
+          this.close();
+        }
+      },
       error: (error: unknown) => this.fail(error),
     });
   }

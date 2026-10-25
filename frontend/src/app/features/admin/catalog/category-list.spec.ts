@@ -8,6 +8,7 @@ import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import {
   chooseOption,
   filterOptions,
+  optionLabels,
   selectedLabel,
   typeNumber,
 } from '../../../testing/primeng-controls';
@@ -18,8 +19,9 @@ import { CategoryList } from './category-list';
 const ADMIN = 'http://api.test/api/v1/admin';
 
 const stations: Station[] = [
-  { id: 's1', name: 'Main', defaultStation: true, etag: '"1"' },
-  { id: 's2', name: 'Bar', defaultStation: false, etag: '"1"' },
+  { id: 's1', name: 'Main', defaultStation: true, active: true, etag: '"1"' },
+  { id: 's2', name: 'Bar', defaultStation: false, active: true, etag: '"1"' },
+  { id: 's3', name: 'Retired', defaultStation: false, active: false, etag: '"1"' },
 ];
 const juices: Category = {
   id: 'c1',
@@ -27,6 +29,7 @@ const juices: Category = {
   displayOrder: 1,
   stationId: 's1',
   active: true,
+  deletable: false,
   etag: '"2"',
 };
 const snacks: Category = { ...juices, id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's2' };
@@ -105,6 +108,13 @@ describe('CategoryList', () => {
     expect(rows(host)[0]).toContain('Salads');
   });
 
+  it('offers only active stations for a category', async () => {
+    const { fixture, host } = await render([]);
+    await openAdd(fixture, host);
+
+    expect(await optionLabels(fixture, document.body, 'category-station')).toEqual(['Main', 'Bar']);
+  });
+
   it('creates a category on the chosen station', async () => {
     const { fixture, host, http } = await render([]);
     await openAdd(fixture, host);
@@ -173,6 +183,58 @@ describe('CategoryList', () => {
     reactivate.flush({ ...snacks, active: true, etag: '"3"' });
     await fixture.whenStable();
     expect(rows(host)[1]).toContain('Activa');
+  });
+
+  it('offers Delete instead of Deactivate for an empty category', async () => {
+    const { host } = await render([{ ...juices, deletable: true }, snacks]);
+
+    expect(host.querySelector('[data-testid="delete-c1"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="toggle-c1"]')).toBeNull();
+    expect(host.querySelector('[data-testid="delete-c2"]')).toBeNull();
+    expect(host.querySelector('[data-testid="toggle-c2"]')).toBeTruthy();
+  });
+
+  it('asks before deleting, sends the version and drops the row', async () => {
+    const { fixture, host, http } = await render([{ ...juices, deletable: true }, snacks]);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="delete-c1"]')!.click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Juices') }));
+    const request = http.expectOne(`${ADMIN}/categories/c1`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('If-Match')).toBe('"2"');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Snacks');
+  });
+
+  it('sends nothing when the deletion is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host, http } = await render([{ ...juices, deletable: true }]);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="delete-c1"]')!.click();
+    await fixture.whenStable();
+
+    http.expectNone(`${ADMIN}/categories/c1`);
+  });
+
+  it('reloads the list when the category got products since it was listed', async () => {
+    const { fixture, host, http } = await render([{ ...juices, deletable: true }]);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="delete-c1"]')!.click();
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/categories/c1`).flush(
+      { type: 'about:blank', status: 409, code: 'catalog.category-in-use', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/categories`).flush([{ ...juices, deletable: false }]);
+    await fixture.whenStable();
+
+    expect(host.querySelector('[data-testid="toggle-c1"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="delete-c1"]')).toBeNull();
   });
 
   it('reloads the list when the category changed in the meantime', async () => {

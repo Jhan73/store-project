@@ -14,6 +14,7 @@ const member: StaffMember = {
   email: 'ana@juguera.pe',
   role: 'SERVER',
   active: true,
+  deletable: false,
   createdAt: '2026-01-01T03:30:00Z',
 };
 
@@ -97,6 +98,14 @@ describe('StaffApi', () => {
     const link = http.expectOne(`${BASE}/staff/u1/set-password-link`);
     expect(link.request.method).toBe('POST');
     link.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('deletes an account with no version header', () => {
+    api.delete('u1').subscribe();
+    const remove = http.expectOne(`${BASE}/staff/u1`);
+    expect(remove.request.method).toBe('DELETE');
+    expect(remove.request.headers.has('If-Match')).toBe(false);
+    remove.flush(null);
   });
 
   it('reads the store time zone from the settings', async () => {

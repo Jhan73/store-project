@@ -23,7 +23,7 @@ const BETO = '0199f3a2-0000-7000-8000-00000000000b';
 const ENTITY = '0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c';
 
 function staff(id: string, email: string, username: string | null = null): StaffMember {
-  return { id, username, email, role: 'ADMIN', active: true, createdAt: '2026-01-01T00:00:00Z' };
+  return { id, username, email, role: 'ADMIN', active: true, deletable: false, createdAt: '2026-01-01T00:00:00Z' };
 }
 
 const ana = staff(ANA, 'ana@juguera.pe', 'Ana');

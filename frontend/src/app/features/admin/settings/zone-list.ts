@@ -5,6 +5,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -19,6 +20,7 @@ import { formatMoneyOrDash, parseAmount, safeMinorUnits } from '../../../core/mo
 import { amountValidator, optionalAmountValidator } from '../../../shared/forms/amount-validator';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { UndoableChanges } from '../../../shared/state/undoable-changes';
@@ -99,26 +101,46 @@ import { SettingsApi } from './settings-api';
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.settings.edit">Editar</span>
             </button>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              [size]="'small'"
-              [outlined]="true"
-              [disabled]="pending.has(zone.id) || changes.has(zone.id)"
-              [attr.data-testid]="'toggle-' + zone.id"
-              (click)="toggle(zone)"
-              [pTooltip]="zone.shownActive ? tips.deactivate : tips.reactivate"
-              tooltipPosition="top"
-            >
-              @if (zone.shownActive) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.settings.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.settings.reactivate">Reactivar</ng-container>
-              }
-            </button>
+            @if (!zone.deletable || !zone.shownActive) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(zone.id) || changes.has(zone.id)"
+                [attr.data-testid]="'toggle-' + zone.id"
+                (click)="toggle(zone)"
+                [pTooltip]="zone.shownActive ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (zone.shownActive) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.settings.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.settings.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (zone.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(zone.id) || changes.has(zone.id)"
+                [attr.data-testid]="'delete-' + zone.id"
+                (click)="remove(zone)"
+                pTooltip="Eliminar esta zona, que no tiene pedidos"
+                i18n-pTooltip="@@admin.settings.zones.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.settings.zones.delete">Eliminar</span>
+              </button>
+            }
           </div>
         </td>
       </ng-template>
@@ -208,6 +230,7 @@ export class ZoneList {
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
     create: IconPlus,
+    delete: IconTrash,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.settings.deactivate.tooltip:Dejar de usar esta zona de entrega`,
@@ -239,6 +262,7 @@ export class ZoneList {
   ];
   private readonly api = inject(SettingsApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
   protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
   protected readonly zones = signal<readonly DeliveryZone[]>([]);
@@ -329,6 +353,34 @@ export class ZoneList {
       next: (saved) => {
         this.pending.delete(zone.id);
         this.replace(saved);
+      },
+      error: (error: unknown) => {
+        this.pending.delete(zone.id);
+        this.fail(error, undefined, zone.id);
+      },
+    });
+  }
+
+  protected async remove(zone: DeliveryZone): Promise<void> {
+    if (this.pending.has(zone.id) || this.changes.has(zone.id)) {
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.settings.zones.delete.header:Eliminar zona`,
+      message: $localize`:@@admin.settings.zones.delete.confirm:Se eliminará la zona "${zone.name}:name:" de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.settings.zones.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.pending.add(zone.id);
+    this.api.deleteZone(zone.id, zone.etag).subscribe({
+      next: () => {
+        this.pending.delete(zone.id);
+        this.zones.update((list) => list.filter((item) => item.id !== zone.id));
+        if (this.editing()?.id === zone.id) {
+          this.close();
+        }
       },
       error: (error: unknown) => {
         this.pending.delete(zone.id);

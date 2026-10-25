@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { AdminTable } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { numberIsInvalid, numberText, typeNumber } from '../../../testing/primeng-controls';
 import { clickPastUndo } from '../../../testing/undo-window';
@@ -19,9 +20,12 @@ const one: AdminTable = {
   area: 'Terraza',
   displayOrder: 1,
   active: true,
+  deletable: false,
   etag: '"2"',
 };
 const two: AdminTable = { ...one, id: 't2', name: 'Mesa 2', area: null, displayOrder: 2 };
+
+const ask = vi.fn(() => Promise.resolve(true));
 
 const stale = {
   type: 'about:blank',
@@ -37,6 +41,7 @@ async function render(tables: AdminTable[] = [one, two]) {
       provideHttpClientTesting(),
       MessageService,
       TablesApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -250,6 +255,66 @@ describe('TableList', () => {
     await fixture.whenStable();
 
     expect(rows(host)[1]).not.toContain('Inactiva');
+  });
+
+  it('offers Delete instead of Deactivate for a table that never had a ticket', async () => {
+    const { host } = await render([{ ...one, deletable: true }, two]);
+
+    expect(button(host, 'delete-t1')).toBeTruthy();
+    expect(button(host, 'toggle-t1')).toBeNull();
+    expect(button(host, 'delete-t2')).toBeNull();
+    expect(button(host, 'toggle-t2')).toBeTruthy();
+  });
+
+  it('keeps Reactivate next to Delete for an inactive table with no tickets', async () => {
+    const { host } = await render([{ ...one, deletable: true, active: false }]);
+
+    expect(button(host, 'delete-t1')).toBeTruthy();
+    expect(button(host, 'toggle-t1')).toBeTruthy();
+  });
+
+  it('asks before deleting, sends the version and drops the row', async () => {
+    const { fixture, host, http } = await render([{ ...one, deletable: true }, two]);
+
+    button(host, 'delete-t1').click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledTimes(1);
+    const request = http.expectOne(`${ADMIN}/t1`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('If-Match')).toBe('"2"');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Mesa 2');
+  });
+
+  it('sends nothing when the deletion is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host, http } = await render([{ ...one, deletable: true }]);
+
+    button(host, 'delete-t1').click();
+    await fixture.whenStable();
+
+    http.expectNone(`${ADMIN}/t1`);
+    expect(rows(host)).toHaveLength(1);
+  });
+
+  it('reloads the list when the table was used since it was listed', async () => {
+    const { fixture, host, http } = await render([{ ...one, deletable: true }]);
+
+    button(host, 'delete-t1').click();
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/t1`).flush(
+      { type: 'about:blank', status: 409, code: 'instore.table-in-use', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    http.expectOne(ADMIN).flush([{ ...one, deletable: false }]);
+    await fixture.whenStable();
+
+    expect(button(host, 'toggle-t1')).toBeTruthy();
+    expect(button(host, 'delete-t1')).toBeNull();
   });
 
   it('re-enables the button and reloads when a deactivation is stale', async () => {

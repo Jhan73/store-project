@@ -61,21 +61,25 @@ import { isStale } from '../admin-errors';
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.catalog.edit">Editar</span>
             </a>
-            <button
-              pButton
-              type="button"
-              severity="danger"
-              [outlined]="true"
-              [size]="'small'"
-              [attr.data-testid]="'delete-' + group.id"
-              (click)="remove(group)"
-              pTooltip="Eliminar este grupo de modificadores"
-              i18n-pTooltip="@@admin.catalog.groups.delete.tooltip"
-              tooltipPosition="top"
-            >
-              <tabler-icon [icon]="icons.delete" aria-hidden="true" />
-              <span i18n="@@admin.catalog.groups.delete">Eliminar</span>
-            </button>
+            @if (group.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [outlined]="true"
+                [size]="'small'"
+                [attr.data-testid]="'delete-' + group.id"
+                (click)="remove(group)"
+                pTooltip="Eliminar este grupo de modificadores"
+                i18n-pTooltip="@@admin.catalog.groups.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.catalog.groups.delete">Eliminar</span>
+              </button>
+            } @else {
+              <app-status-tag [value]="labels.inUse" severity="info" />
+            }
           </div>
         </td>
       </ng-template>
@@ -84,6 +88,9 @@ import { isStale } from '../admin-errors';
 })
 export class ModifierGroupList {
   protected readonly icons = { create: IconPlus, edit: IconPencil, delete: IconTrash };
+  protected readonly labels = {
+    inUse: $localize`:@@admin.catalog.groups.inUse:En uso`,
+  };
   protected readonly columns: readonly DataColumn[] = [
     { field: 'name', header: $localize`:@@admin.catalog.groups.name:Nombre`, sortable: true, filter: true },
     { field: 'requiredLabel', header: $localize`:@@admin.catalog.groups.rule:Elección`, sortable: true },

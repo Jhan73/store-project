@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { DeliveryZone } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { numberIsInvalid, typeNumber } from '../../../testing/primeng-controls';
 import { clickPastUndo } from '../../../testing/undo-window';
@@ -21,6 +22,7 @@ const centro: DeliveryZone = {
   minimumOrder: { amount: '15.00', currency: 'PEN' },
   freeDeliveryThreshold: null,
   active: true,
+  deletable: false,
   etag: '"2"',
 };
 const norte: DeliveryZone = {
@@ -31,6 +33,8 @@ const norte: DeliveryZone = {
   minimumOrder: null,
   freeDeliveryThreshold: { amount: '50.00', currency: 'PEN' },
 };
+
+const ask = vi.fn(() => Promise.resolve(true));
 
 const stale = {
   type: 'about:blank',
@@ -46,6 +50,7 @@ async function render(zones: DeliveryZone[] = [centro, norte]) {
       provideHttpClientTesting(),
       MessageService,
       SettingsApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -240,6 +245,59 @@ describe('ZoneList', () => {
 
     expect(rows(host)[1]).toContain('Activa');
     expect(rows(host)[1]).not.toContain('Inactiva');
+  });
+
+  it('offers Delete instead of Deactivate for a zone nothing refers to', async () => {
+    const { host } = await render([{ ...centro, deletable: true }, norte]);
+
+    expect(button(host, 'delete-z1')).toBeTruthy();
+    expect(button(host, 'toggle-z1')).toBeNull();
+    expect(button(host, 'delete-z2')).toBeNull();
+    expect(button(host, 'toggle-z2')).toBeTruthy();
+  });
+
+  it('asks before deleting, sends the version and drops the row', async () => {
+    const { fixture, host, http } = await render([{ ...centro, deletable: true }, norte]);
+
+    button(host, 'delete-z1').click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledTimes(1);
+    const request = http.expectOne(`${ADMIN}/delivery-zones/z1`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get('If-Match')).toBe('"2"');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await fixture.whenStable();
+
+    expect(rows(host)).toHaveLength(1);
+    expect(rows(host)[0]).toContain('Norte');
+  });
+
+  it('sends nothing when the deletion is declined', async () => {
+    ask.mockResolvedValueOnce(false);
+    const { fixture, host, http } = await render([{ ...centro, deletable: true }]);
+
+    button(host, 'delete-z1').click();
+    await fixture.whenStable();
+
+    http.expectNone(`${ADMIN}/delivery-zones/z1`);
+    expect(rows(host)).toHaveLength(1);
+  });
+
+  it('reloads the list when the zone was used since it was listed', async () => {
+    const { fixture, host, http } = await render([{ ...centro, deletable: true }]);
+
+    button(host, 'delete-z1').click();
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/delivery-zones/z1`).flush(
+      { type: 'about:blank', status: 409, code: 'store.delivery-zone-in-use', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+    http.expectOne(`${ADMIN}/delivery-zones`).flush([{ ...centro, deletable: false }]);
+    await fixture.whenStable();
+
+    expect(button(host, 'toggle-z1')).toBeTruthy();
+    expect(button(host, 'delete-z1')).toBeNull();
   });
 
   it('reloads when a deactivation is stale and shows the zone as the server has it', async () => {

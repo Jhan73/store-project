@@ -13,6 +13,7 @@ const table: AdminTable = {
   area: 'Terraza',
   displayOrder: 1,
   active: true,
+  deletable: false,
   etag: '"2"',
 };
 
@@ -50,6 +51,14 @@ describe('TablesApi', () => {
     expect(change.request.method).toBe('PUT');
     expect(change.request.headers.get('If-Match')).toBe('"2"');
     change.flush(table);
+  });
+
+  it('deletes guarded by the version of the item', () => {
+    api.delete('t1', '"2"').subscribe();
+    const remove = http.expectOne(`${ADMIN}/t1`);
+    expect(remove.request.method).toBe('DELETE');
+    expect(remove.request.headers.get('If-Match')).toBe('"2"');
+    remove.flush(null);
   });
 
   it('deactivates and reactivates guarded by the version of the item', () => {

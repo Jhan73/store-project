@@ -1,11 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IconPencil, IconPlus, TablerIconComponent } from '@tabler/icons-angular';
+import {
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  TablerIconComponent,
+} from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Tooltip } from 'primeng/tooltip';
 import type { Station } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
 import { FormDialog } from '../../../shared/ui/form-dialog/form-dialog';
 import { FormField } from '../../../shared/ui/form-field/form-field';
@@ -59,6 +67,12 @@ import { CatalogApi } from './catalog-api';
             <app-status-tag [value]="labels.default" severity="info" />
           }
         </td>
+        <td>
+          <app-status-tag
+            [value]="station.active ? labels.active : labels.inactive"
+            [severity]="station.active ? 'success' : 'secondary'"
+          />
+        </td>
         <td class="actions">
           <div class="row-actions">
             <button
@@ -75,6 +89,28 @@ import { CatalogApi } from './catalog-api';
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.catalog.stations.edit">Renombrar</span>
             </button>
+            @if (!station.defaultStation) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(station.id)"
+                [attr.data-testid]="'toggle-' + station.id"
+                (click)="toggle(station)"
+                [pTooltip]="station.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (station.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.stations.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.stations.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
           </div>
         </td>
       </ng-template>
@@ -109,8 +145,19 @@ import { CatalogApi } from './catalog-api';
   `,
 })
 export class StationList {
-  protected readonly icons = { edit: IconPencil, create: IconPlus };
+  protected readonly icons = {
+    edit: IconPencil,
+    create: IconPlus,
+    deactivate: IconPlayerPause,
+    reactivate: IconPlayerPlay,
+  };
+  protected readonly tips = {
+    deactivate: $localize`:@@admin.catalog.stations.deactivate.tooltip:Dejar de usar esta estación`,
+    reactivate: $localize`:@@admin.catalog.stations.reactivate.tooltip:Volver a usar esta estación`,
+  };
   protected readonly labels = {
+    active: $localize`:@@admin.catalog.stations.active:Activa`,
+    inactive: $localize`:@@admin.catalog.stations.inactive:Inactiva`,
     default: $localize`:@@admin.catalog.stations.default:Predeterminada`,
     createHeader: $localize`:@@admin.catalog.stations.createHeader:Agregar estación`,
     editHeader: $localize`:@@admin.catalog.stations.editHeader:Renombrar estación`,
@@ -118,11 +165,14 @@ export class StationList {
   };
   protected readonly columns: readonly DataColumn[] = [
     { field: 'name', header: $localize`:@@admin.catalog.stations.name:Nombre`, sortable: true, filter: true },
+    { field: 'active', header: $localize`:@@admin.catalog.stations.state:Estado`, sortable: true },
     { field: '', header: $localize`:@@admin.catalog.actions:Acciones` },
   ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
+  protected readonly pending = new PendingIds();
   protected readonly stations = signal<readonly Station[]>([]);
   protected readonly editing = signal<Station | null>(null);
   protected readonly open = signal(false);
@@ -159,6 +209,39 @@ export class StationList {
     this.open.set(false);
     this.editing.set(null);
     this.form.reset();
+  }
+
+  protected async toggle(station: Station): Promise<void> {
+    if (this.pending.has(station.id)) {
+      return;
+    }
+    if (station.active) {
+      const confirmed = await this.confirm.ask({
+        header: $localize`:@@admin.catalog.stations.deactivate.header:Desactivar estación`,
+        message: $localize`:@@admin.catalog.stations.deactivate.confirm:La estación "${station.name}:name:" dejará de ofrecerse en el tablero de cocina y para nuevas categorías.`,
+        acceptLabel: $localize`:@@admin.catalog.stations.deactivate:Desactivar`,
+      });
+      if (!confirmed) {
+        return;
+      }
+    }
+    this.pending.add(station.id);
+    const request = station.active
+      ? this.api.deactivateStation(station.id, station.etag)
+      : this.api.reactivateStation(station.id, station.etag);
+    request.subscribe({
+      next: (saved) => {
+        this.pending.delete(station.id);
+        this.stations.update((list) => list.map((item) => (item.id === saved.id ? saved : item)));
+      },
+      error: (error: unknown) => {
+        this.pending.delete(station.id);
+        this.notifier.show(error);
+        if (isStale(error)) {
+          this.load();
+        }
+      },
+    });
   }
 
   protected submit(): void {
