@@ -281,9 +281,17 @@
         <source>Hay pedidos en el tablero asignados a esta estación. Espera a que se entreguen.</source>
       </segment>
     </unit>
-    <unit id="error.catalog.station-inactive">
+    <unit id="error.catalog.station-has-unsent-lines">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:35</note>
+      </notes>
+      <segment>
+        <source>Hay líneas sin enviar en cuentas abiertas asignadas a esta estación. Envíalas o quítalas primero.</source>
+      </segment>
+    </unit>
+    <unit id="error.catalog.station-inactive">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:36</note>
       </notes>
       <segment>
         <source>La estación está inactiva. Reactívala primero.</source>
@@ -291,7 +299,7 @@
     </unit>
     <unit id="error.catalog.station-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:36</note>
+        <note category="location">src/app/core/errors/error-messages.ts:37</note>
       </notes>
       <segment>
         <source>Ya existe una estación con ese nombre.</source>
@@ -299,7 +307,7 @@
     </unit>
     <unit id="error.catalog.station-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:37</note>
+        <note category="location">src/app/core/errors/error-messages.ts:38</note>
       </notes>
       <segment>
         <source>La estación no existe.</source>
@@ -307,7 +315,7 @@
     </unit>
     <unit id="error.catalog.unknown-category">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:38</note>
+        <note category="location">src/app/core/errors/error-messages.ts:39</note>
       </notes>
       <segment>
         <source>La categoría elegida no existe.</source>
@@ -315,7 +323,7 @@
     </unit>
     <unit id="error.catalog.unknown-modifier-group">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:39</note>
+        <note category="location">src/app/core/errors/error-messages.ts:40</note>
       </notes>
       <segment>
         <source>El grupo de modificadores elegido no existe.</source>
@@ -323,7 +331,7 @@
     </unit>
     <unit id="error.catalog.unknown-station">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:40</note>
+        <note category="location">src/app/core/errors/error-messages.ts:41</note>
       </notes>
       <segment>
         <source>La estación elegida no existe.</source>
@@ -331,7 +339,7 @@
     </unit>
     <unit id="error.common.concurrent-modification">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:41</note>
+        <note category="location">src/app/core/errors/error-messages.ts:42</note>
       </notes>
       <segment>
         <source>Otra persona modificó este dato al mismo tiempo. Recarga e inténtalo de nuevo.</source>
@@ -339,7 +347,7 @@
     </unit>
     <unit id="error.common.content-too-large">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:42</note>
+        <note category="location">src/app/core/errors/error-messages.ts:43</note>
       </notes>
       <segment>
         <source>El contenido enviado es demasiado grande.</source>
@@ -347,7 +355,7 @@
     </unit>
     <unit id="error.common.idempotency-in-progress">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:43</note>
+        <note category="location">src/app/core/errors/error-messages.ts:44</note>
       </notes>
       <segment>
         <source>Esta operación ya se está procesando. Espera un momento e inténtalo de nuevo.</source>
@@ -355,7 +363,7 @@
     </unit>
     <unit id="error.common.idempotency-key-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:44</note>
+        <note category="location">src/app/core/errors/error-messages.ts:45</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Recarga la página e inténtalo de nuevo.</source>
@@ -363,7 +371,7 @@
     </unit>
     <unit id="error.common.idempotency-key-reused">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:45</note>
+        <note category="location">src/app/core/errors/error-messages.ts:46</note>
       </notes>
       <segment>
         <source>Esta solicitud ya se envió con otros datos. Recarga la página e inténtalo de nuevo.</source>
@@ -371,7 +379,7 @@
     </unit>
     <unit id="error.common.internal-error">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:46</note>
+        <note category="location">src/app/core/errors/error-messages.ts:47</note>
       </notes>
       <segment>
         <source>Ocurrió un error inesperado. Inténtalo de nuevo.</source>
@@ -379,7 +387,7 @@
     </unit>
     <unit id="error.common.malformed-request">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:47</note>
+        <note category="location">src/app/core/errors/error-messages.ts:48</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -387,7 +395,7 @@
     </unit>
     <unit id="error.common.method-not-allowed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:48</note>
+        <note category="location">src/app/core/errors/error-messages.ts:49</note>
       </notes>
       <segment>
         <source>Esta operación no está permitida.</source>
@@ -395,7 +403,7 @@
     </unit>
     <unit id="error.common.not-acceptable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:49</note>
+        <note category="location">src/app/core/errors/error-messages.ts:50</note>
       </notes>
       <segment>
         <source>No pudimos entregar la respuesta en el formato pedido.</source>
@@ -403,7 +411,7 @@
     </unit>
     <unit id="error.common.not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:50</note>
+        <note category="location">src/app/core/errors/error-messages.ts:51</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -411,7 +419,7 @@
     </unit>
     <unit id="error.common.precondition-failed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:51</note>
+        <note category="location">src/app/core/errors/error-messages.ts:52</note>
       </notes>
       <segment>
         <source>Los datos cambiaron mientras los editabas. Recarga e inténtalo de nuevo.</source>
@@ -419,7 +427,7 @@
     </unit>
     <unit id="error.common.precondition-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:52</note>
+        <note category="location">src/app/core/errors/error-messages.ts:53</note>
       </notes>
       <segment>
         <source>Recarga la página e inténtalo de nuevo.</source>
@@ -427,7 +435,7 @@
     </unit>
     <unit id="error.common.service-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:53</note>
+        <note category="location">src/app/core/errors/error-messages.ts:54</note>
       </notes>
       <segment>
         <source>El servicio no está disponible por ahora. Inténtalo en unos minutos.</source>
@@ -435,7 +443,7 @@
     </unit>
     <unit id="error.common.unsupported-media-type">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:54</note>
+        <note category="location">src/app/core/errors/error-messages.ts:55</note>
       </notes>
       <segment>
         <source>El tipo de archivo no es compatible.</source>
@@ -443,18 +451,10 @@
     </unit>
     <unit id="error.common.validation-failed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:55</note>
-      </notes>
-      <segment>
-        <source>Revisa los campos marcados.</source>
-      </segment>
-    </unit>
-    <unit id="error.identity.staff-account-in-use">
-      <notes>
         <note category="location">src/app/core/errors/error-messages.ts:56</note>
       </notes>
       <segment>
-        <source>La cuenta ya inició sesión o creó su contraseña y no se puede eliminar. Desactívala en su lugar.</source>
+        <source>Revisa los campos marcados.</source>
       </segment>
     </unit>
     <unit id="error.identity.cannot-modify-own-account">
@@ -481,28 +481,28 @@
         <source>El rol elegido no es válido para el personal.</source>
       </segment>
     </unit>
-    <unit id="error.identity.username-already-taken">
-      <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:60</note>
-      </notes>
-      <segment>
-        <source>Ya hay una cuenta activa con ese nombre de usuario.</source>
-      </segment>
-    </unit>
     <unit id="error.identity.last-active-admin-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+        <note category="location">src/app/core/errors/error-messages.ts:60</note>
       </notes>
       <segment>
         <source>Debe quedar al menos un administrador activo.</source>
       </segment>
     </unit>
-    <unit id="error.instore.table-in-use">
+    <unit id="error.identity.staff-account-in-use">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:61</note>
+      </notes>
+      <segment>
+        <source>La cuenta ya inició sesión o creó su contraseña y no se puede eliminar. Desactívala en su lugar.</source>
+      </segment>
+    </unit>
+    <unit id="error.identity.username-already-taken">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:62</note>
       </notes>
       <segment>
-        <source>La mesa ya tuvo cuentas y no se puede eliminar. Desactívala en su lugar.</source>
+        <source>Ya hay una cuenta activa con ese nombre de usuario.</source>
       </segment>
     </unit>
     <unit id="error.instore.invalid-date-range">
@@ -561,9 +561,17 @@
         <source>La mesa tiene una cuenta abierta y no se puede desactivar.</source>
       </segment>
     </unit>
-    <unit id="error.instore.table-inactive">
+    <unit id="error.instore.table-in-use">
       <notes>
         <note category="location">src/app/core/errors/error-messages.ts:70</note>
+      </notes>
+      <segment>
+        <source>La mesa ya tuvo cuentas y no se puede eliminar. Desactívala en su lugar.</source>
+      </segment>
+    </unit>
+    <unit id="error.instore.table-inactive">
+      <notes>
+        <note category="location">src/app/core/errors/error-messages.ts:71</note>
       </notes>
       <segment>
         <source>La mesa está desactivada.</source>
@@ -571,7 +579,7 @@
     </unit>
     <unit id="error.instore.table-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:71</note>
+        <note category="location">src/app/core/errors/error-messages.ts:72</note>
       </notes>
       <segment>
         <source>Ya existe una mesa con ese nombre.</source>
@@ -579,7 +587,7 @@
     </unit>
     <unit id="error.instore.table-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:72</note>
+        <note category="location">src/app/core/errors/error-messages.ts:73</note>
       </notes>
       <segment>
         <source>La mesa no existe.</source>
@@ -587,7 +595,7 @@
     </unit>
     <unit id="error.instore.table-occupied">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:73</note>
+        <note category="location">src/app/core/errors/error-messages.ts:74</note>
       </notes>
       <segment>
         <source>La mesa ya tiene una cuenta abierta.</source>
@@ -595,7 +603,7 @@
     </unit>
     <unit id="error.instore.ticket-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:74</note>
+        <note category="location">src/app/core/errors/error-messages.ts:75</note>
       </notes>
       <segment>
         <source>La cuenta ya está cerrada.</source>
@@ -603,7 +611,7 @@
     </unit>
     <unit id="error.instore.ticket-has-no-table">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:75</note>
+        <note category="location">src/app/core/errors/error-messages.ts:76</note>
       </notes>
       <segment>
         <source>Solo se pueden mover las cuentas de una mesa.</source>
@@ -611,7 +619,7 @@
     </unit>
     <unit id="error.instore.ticket-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:76</note>
+        <note category="location">src/app/core/errors/error-messages.ts:77</note>
       </notes>
       <segment>
         <source>La cuenta no existe.</source>
@@ -619,7 +627,7 @@
     </unit>
     <unit id="error.instore.cash-movement-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:77</note>
+        <note category="location">src/app/core/errors/error-messages.ts:78</note>
       </notes>
       <segment>
         <source>El movimiento de caja no existe.</source>
@@ -627,7 +635,7 @@
     </unit>
     <unit id="error.instore.counted-cash-locked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:78</note>
+        <note category="location">src/app/core/errors/error-messages.ts:79</note>
       </notes>
       <segment>
         <source>El efectivo contado ya se mostró y no puede cambiar. Cierra el turno con el mismo monto.</source>
@@ -635,7 +643,7 @@
     </unit>
     <unit id="error.instore.difference-note-required">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:79</note>
+        <note category="location">src/app/core/errors/error-messages.ts:80</note>
       </notes>
       <segment>
         <source>La diferencia supera el umbral permitido. Cierra el turno de nuevo con una nota.</source>
@@ -643,7 +651,7 @@
     </unit>
     <unit id="error.instore.invalid-amount">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:80</note>
+        <note category="location">src/app/core/errors/error-messages.ts:81</note>
       </notes>
       <segment>
         <source>El monto no es válido.</source>
@@ -651,7 +659,7 @@
     </unit>
     <unit id="error.instore.invalid-cash-movement">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:81</note>
+        <note category="location">src/app/core/errors/error-messages.ts:82</note>
       </notes>
       <segment>
         <source>El movimiento de caja no es válido. La entrada lleva una nota y la salida un motivo.</source>
@@ -659,7 +667,7 @@
     </unit>
     <unit id="error.instore.invalid-payment">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:82</note>
+        <note category="location">src/app/core/errors/error-messages.ts:83</note>
       </notes>
       <segment>
         <source>El pago no es válido. Revisa el método, el monto y el efectivo recibido.</source>
@@ -667,7 +675,7 @@
     </unit>
     <unit id="error.instore.line-already-paid">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:83</note>
+        <note category="location">src/app/core/errors/error-messages.ts:84</note>
       </notes>
       <segment>
         <source>La línea ya está pagada.</source>
@@ -675,7 +683,7 @@
     </unit>
     <unit id="error.instore.line-covered-by-payment">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:84</note>
+        <note category="location">src/app/core/errors/error-messages.ts:85</note>
       </notes>
       <segment>
         <source>Un pago cubre esta línea. Anula primero el pago.</source>
@@ -683,7 +691,7 @@
     </unit>
     <unit id="error.instore.no-open-shift">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:85</note>
+        <note category="location">src/app/core/errors/error-messages.ts:86</note>
       </notes>
       <segment>
         <source>Necesitas un turno de caja abierto para hacer esto.</source>
@@ -691,7 +699,7 @@
     </unit>
     <unit id="error.instore.payment-exceeds-balance">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:86</note>
+        <note category="location">src/app/core/errors/error-messages.ts:87</note>
       </notes>
       <segment>
         <source>El pago es mayor que lo que falta por cobrar.</source>
@@ -699,7 +707,7 @@
     </unit>
     <unit id="error.instore.payment-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:87</note>
+        <note category="location">src/app/core/errors/error-messages.ts:88</note>
       </notes>
       <segment>
         <source>El pago no existe en esta cuenta.</source>
@@ -707,7 +715,7 @@
     </unit>
     <unit id="error.instore.sale-void-not-permitted">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:88</note>
+        <note category="location">src/app/core/errors/error-messages.ts:89</note>
       </notes>
       <segment>
         <source>Solo puedes anular lo cobrado en tu propio turno abierto.</source>
@@ -715,7 +723,7 @@
     </unit>
     <unit id="error.instore.shift-already-open">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:89</note>
+        <note category="location">src/app/core/errors/error-messages.ts:90</note>
       </notes>
       <segment>
         <source>Ya tienes un turno de caja abierto.</source>
@@ -723,7 +731,7 @@
     </unit>
     <unit id="error.instore.shift-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:90</note>
+        <note category="location">src/app/core/errors/error-messages.ts:91</note>
       </notes>
       <segment>
         <source>El turno de caja ya está cerrado.</source>
@@ -731,7 +739,7 @@
     </unit>
     <unit id="error.instore.shift-closing">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:91</note>
+        <note category="location">src/app/core/errors/error-messages.ts:92</note>
       </notes>
       <segment>
         <source>El turno se está cerrando y no admite más cambios.</source>
@@ -739,7 +747,7 @@
     </unit>
     <unit id="error.instore.shift-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:92</note>
+        <note category="location">src/app/core/errors/error-messages.ts:93</note>
       </notes>
       <segment>
         <source>El turno de caja no existe.</source>
@@ -747,7 +755,7 @@
     </unit>
     <unit id="error.instore.ticket-has-unsent-lines">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:93</note>
+        <note category="location">src/app/core/errors/error-messages.ts:94</note>
       </notes>
       <segment>
         <source>Envía o elimina las líneas pendientes antes de cobrar.</source>
@@ -755,7 +763,7 @@
     </unit>
     <unit id="error.instore.cash-out-exceeds-drawer">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:94</note>
+        <note category="location">src/app/core/errors/error-messages.ts:95</note>
       </notes>
       <segment>
         <source>La salida es mayor que el efectivo que debería haber en caja. Explica el motivo en la nota.</source>
@@ -763,7 +771,7 @@
     </unit>
     <unit id="error.instore.line-product-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:95</note>
+        <note category="location">src/app/core/errors/error-messages.ts:96</note>
       </notes>
       <segment>
         <source>Un producto de la cuenta ya no está disponible. Elimina esa línea antes de enviar.</source>
@@ -771,7 +779,7 @@
     </unit>
     <unit id="error.instore.product-not-quick-sale">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:96</note>
+        <note category="location">src/app/core/errors/error-messages.ts:97</note>
       </notes>
       <segment>
         <source>Este producto no está en los frecuentes de venta rápida. Agrégalo a una cuenta.</source>
@@ -779,7 +787,7 @@
     </unit>
     <unit id="error.instore.too-many-lines">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:97</note>
+        <note category="location">src/app/core/errors/error-messages.ts:98</note>
       </notes>
       <segment>
         <source>La cuenta alcanzó el máximo de 100 líneas. Cóbrala o divídela en otra cuenta.</source>
@@ -787,7 +795,7 @@
     </unit>
     <unit id="error.instore.line-voided">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:98</note>
+        <note category="location">src/app/core/errors/error-messages.ts:99</note>
       </notes>
       <segment>
         <source>La línea ya se anuló y no se puede dar de cortesía.</source>
@@ -795,7 +803,7 @@
     </unit>
     <unit id="error.instore.line-comped">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:99</note>
+        <note category="location">src/app/core/errors/error-messages.ts:100</note>
       </notes>
       <segment>
         <source>La línea ya se dio de cortesía y no se puede anular.</source>
@@ -803,7 +811,7 @@
     </unit>
     <unit id="error.instore.invalid-merge">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:100</note>
+        <note category="location">src/app/core/errors/error-messages.ts:101</note>
       </notes>
       <segment>
         <source>Una cuenta no se puede unir consigo misma.</source>
@@ -811,7 +819,7 @@
     </unit>
     <unit id="error.instore.ticket-has-payments">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:101</note>
+        <note category="location">src/app/core/errors/error-messages.ts:102</note>
       </notes>
       <segment>
         <source>La cuenta tiene pagos. Anúlalos antes de unirla a otra.</source>
@@ -819,7 +827,7 @@
     </unit>
     <unit id="error.instore.ticket-not-empty">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:102</note>
+        <note category="location">src/app/core/errors/error-messages.ts:103</note>
       </notes>
       <segment>
         <source>La cuenta tiene líneas cobradas o pagos. Anúlalos antes de cancelarla.</source>
@@ -827,7 +835,7 @@
     </unit>
     <unit id="error.instore.user-has-open-shift">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:103</note>
+        <note category="location">src/app/core/errors/error-messages.ts:104</note>
       </notes>
       <segment>
         <source>Esta persona tiene un turno de caja abierto. Ciérralo antes de desactivarla o cambiar su rol.</source>
@@ -835,7 +843,7 @@
     </unit>
     <unit id="error.instore.ticket-not-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:104</note>
+        <note category="location">src/app/core/errors/error-messages.ts:105</note>
       </notes>
       <segment>
         <source>La cuenta sigue abierta. Anula sus líneas o sus pagos.</source>
@@ -843,7 +851,7 @@
     </unit>
     <unit id="error.inventory.insufficient-stock">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:105</note>
+        <note category="location">src/app/core/errors/error-messages.ts:106</note>
       </notes>
       <segment>
         <source>No hay suficiente stock disponible.</source>
@@ -851,7 +859,7 @@
     </unit>
     <unit id="error.inventory.invalid-quantity">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:106</note>
+        <note category="location">src/app/core/errors/error-messages.ts:107</note>
       </notes>
       <segment>
         <source>La cantidad no es válida.</source>
@@ -859,7 +867,7 @@
     </unit>
     <unit id="error.inventory.invalid-reason">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:107</note>
+        <note category="location">src/app/core/errors/error-messages.ts:108</note>
       </notes>
       <segment>
         <source>El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.</source>
@@ -867,7 +875,7 @@
     </unit>
     <unit id="error.inventory.product-out-of-stock">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:108</note>
+        <note category="location">src/app/core/errors/error-messages.ts:109</note>
       </notes>
       <segment>
         <source>El producto no tiene stock. Registra una entrada antes de marcarlo disponible.</source>
@@ -875,7 +883,7 @@
     </unit>
     <unit id="error.inventory.product-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:109</note>
+        <note category="location">src/app/core/errors/error-messages.ts:110</note>
       </notes>
       <segment>
         <source>El producto no existe.</source>
@@ -883,7 +891,7 @@
     </unit>
     <unit id="error.inventory.product-not-tracked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:110</note>
+        <note category="location">src/app/core/errors/error-messages.ts:111</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -891,7 +899,7 @@
     </unit>
     <unit id="error.inventory.reservation-not-active">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:111</note>
+        <note category="location">src/app/core/errors/error-messages.ts:112</note>
       </notes>
       <segment>
         <source>La reserva de stock ya venció o fue liberada.</source>
@@ -899,7 +907,7 @@
     </unit>
     <unit id="error.inventory.stock-item-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:112</note>
+        <note category="location">src/app/core/errors/error-messages.ts:113</note>
       </notes>
       <segment>
         <source>El producto no tiene control de stock.</source>
@@ -907,7 +915,7 @@
     </unit>
     <unit id="error.inventory.stock-reserved">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:113</note>
+        <note category="location">src/app/core/errors/error-messages.ts:114</note>
       </notes>
       <segment>
         <source>Hay unidades reservadas por pedidos en curso. Espera a que se confirmen o venzan para quitar el control de stock.</source>
@@ -915,7 +923,7 @@
     </unit>
     <unit id="error.preparation.line-already-flagged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:114</note>
+        <note category="location">src/app/core/errors/error-messages.ts:115</note>
       </notes>
       <segment>
         <source>Esa línea ya está marcada como agotada.</source>
@@ -923,7 +931,7 @@
     </unit>
     <unit id="error.preparation.line-already-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:115</note>
+        <note category="location">src/app/core/errors/error-messages.ts:116</note>
       </notes>
       <segment>
         <source>La línea ya está lista. Pide a un cajero que la anule.</source>
@@ -931,7 +939,7 @@
     </unit>
     <unit id="error.preparation.line-comped">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:116</note>
+        <note category="location">src/app/core/errors/error-messages.ts:117</note>
       </notes>
       <segment>
         <source>La línea es una cortesía y no se puede marcar como agotada.</source>
@@ -939,7 +947,7 @@
     </unit>
     <unit id="error.preparation.line-flagged-unavailable">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:117</note>
+        <note category="location">src/app/core/errors/error-messages.ts:118</note>
       </notes>
       <segment>
         <source>Hay una línea agotada sin resolver. Anúlala o sustitúyela antes de continuar.</source>
@@ -947,7 +955,7 @@
     </unit>
     <unit id="error.preparation.line-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:118</note>
+        <note category="location">src/app/core/errors/error-messages.ts:119</note>
       </notes>
       <segment>
         <source>La línea no existe.</source>
@@ -955,7 +963,7 @@
     </unit>
     <unit id="error.preparation.line-not-pending">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:119</note>
+        <note category="location">src/app/core/errors/error-messages.ts:120</note>
       </notes>
       <segment>
         <source>La línea ya no está pendiente.</source>
@@ -963,7 +971,7 @@
     </unit>
     <unit id="error.preparation.lines-not-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:120</note>
+        <note category="location">src/app/core/errors/error-messages.ts:121</note>
       </notes>
       <segment>
         <source>Llegaron líneas nuevas que aún no confirmas. Confírmalas antes de marcar el pedido como listo.</source>
@@ -971,7 +979,7 @@
     </unit>
     <unit id="error.preparation.marker-already-acknowledged">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:121</note>
+        <note category="location">src/app/core/errors/error-messages.ts:122</note>
       </notes>
       <segment>
         <source>Otra persona ya confirmó este aviso.</source>
@@ -979,7 +987,7 @@
     </unit>
     <unit id="error.preparation.marker-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:122</note>
+        <note category="location">src/app/core/errors/error-messages.ts:123</note>
       </notes>
       <segment>
         <source>El aviso no existe.</source>
@@ -987,7 +995,7 @@
     </unit>
     <unit id="error.preparation.order-already-started">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:123</note>
+        <note category="location">src/app/core/errors/error-messages.ts:124</note>
       </notes>
       <segment>
         <source>La preparación del pedido ya comenzó.</source>
@@ -995,7 +1003,7 @@
     </unit>
     <unit id="error.preparation.order-cancelled">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:124</note>
+        <note category="location">src/app/core/errors/error-messages.ts:125</note>
       </notes>
       <segment>
         <source>El pedido fue cancelado.</source>
@@ -1003,7 +1011,7 @@
     </unit>
     <unit id="error.preparation.order-closed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:125</note>
+        <note category="location">src/app/core/errors/error-messages.ts:126</note>
       </notes>
       <segment>
         <source>El pedido ya fue entregado y no admite cambios.</source>
@@ -1011,7 +1019,7 @@
     </unit>
     <unit id="error.preparation.order-not-completed">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:126</note>
+        <note category="location">src/app/core/errors/error-messages.ts:127</note>
       </notes>
       <segment>
         <source>El pedido aún no está terminado.</source>
@@ -1019,7 +1027,7 @@
     </unit>
     <unit id="error.preparation.order-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:127</note>
+        <note category="location">src/app/core/errors/error-messages.ts:128</note>
       </notes>
       <segment>
         <source>El pedido no existe en el tablero.</source>
@@ -1027,7 +1035,7 @@
     </unit>
     <unit id="error.preparation.order-not-preparing">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:128</note>
+        <note category="location">src/app/core/errors/error-messages.ts:129</note>
       </notes>
       <segment>
         <source>El pedido no está en preparación.</source>
@@ -1035,7 +1043,7 @@
     </unit>
     <unit id="error.preparation.order-not-ready">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:129</note>
+        <note category="location">src/app/core/errors/error-messages.ts:130</note>
       </notes>
       <segment>
         <source>El pedido no está listo para entregar.</source>
@@ -1043,7 +1051,7 @@
     </unit>
     <unit id="error.preparation.recall-window-expired">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:130</note>
+        <note category="location">src/app/core/errors/error-messages.ts:131</note>
       </notes>
       <segment>
         <source>Pasó demasiado tiempo para reabrir este pedido.</source>
@@ -1051,7 +1059,7 @@
     </unit>
     <unit id="error.store.delivery-zone-currency-mismatch">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:131</note>
+        <note category="location">src/app/core/errors/error-messages.ts:132</note>
       </notes>
       <segment>
         <source>La moneda de la zona de reparto no coincide con la de la tienda.</source>
@@ -1059,7 +1067,7 @@
     </unit>
     <unit id="error.store.delivery-zone-in-use">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:132</note>
+        <note category="location">src/app/core/errors/error-messages.ts:133</note>
       </notes>
       <segment>
         <source>La zona de reparto ya tiene pedidos y no se puede eliminar. Desactívala en su lugar.</source>
@@ -1067,7 +1075,7 @@
     </unit>
     <unit id="error.store.delivery-zone-name-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:133</note>
+        <note category="location">src/app/core/errors/error-messages.ts:134</note>
       </notes>
       <segment>
         <source>Ya existe una zona de reparto con ese nombre.</source>
@@ -1075,7 +1083,7 @@
     </unit>
     <unit id="error.store.delivery-zone-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:134</note>
+        <note category="location">src/app/core/errors/error-messages.ts:135</note>
       </notes>
       <segment>
         <source>La zona de reparto no existe.</source>
@@ -1083,7 +1091,7 @@
     </unit>
     <unit id="error.store.invalid-board-thresholds">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:135</note>
+        <note category="location">src/app/core/errors/error-messages.ts:136</note>
       </notes>
       <segment>
         <source>Los tiempos del tablero no son válidos.</source>
@@ -1091,7 +1099,7 @@
     </unit>
     <unit id="error.store.invalid-delivery-zone">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:136</note>
+        <note category="location">src/app/core/errors/error-messages.ts:137</note>
       </notes>
       <segment>
         <source>Los datos de la zona de reparto no son válidos.</source>
@@ -1099,7 +1107,7 @@
     </unit>
     <unit id="error.store.invalid-opening-hours">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:137</note>
+        <note category="location">src/app/core/errors/error-messages.ts:138</note>
       </notes>
       <segment>
         <source>El horario de atención no es válido.</source>
@@ -1107,7 +1115,7 @@
     </unit>
     <unit id="error.store.currency-locked">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:138</note>
+        <note category="location">src/app/core/errors/error-messages.ts:139</note>
       </notes>
       <segment>
         <source>La moneda no se puede cambiar mientras haya un turno de caja o una cuenta abiertos.</source>
@@ -1115,7 +1123,7 @@
     </unit>
     <unit id="error.store.invalid-settings-value">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:139</note>
+        <note category="location">src/app/core/errors/error-messages.ts:140</note>
       </notes>
       <segment>
         <source>Uno de los valores de la configuración no es válido.</source>
@@ -1123,7 +1131,7 @@
     </unit>
     <unit id="error.store.reason-code-already-used">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:140</note>
+        <note category="location">src/app/core/errors/error-messages.ts:141</note>
       </notes>
       <segment>
         <source>Ya existe un motivo con ese código.</source>
@@ -1131,7 +1139,7 @@
     </unit>
     <unit id="error.store.reason-not-found">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:141</note>
+        <note category="location">src/app/core/errors/error-messages.ts:142</note>
       </notes>
       <segment>
         <source>El motivo no existe.</source>
@@ -1139,7 +1147,7 @@
     </unit>
     <unit id="error.generic">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:144</note>
+        <note category="location">src/app/core/errors/error-messages.ts:145</note>
       </notes>
       <segment>
         <source>No pudimos completar la operación. Inténtalo de nuevo.</source>
@@ -1147,7 +1155,7 @@
     </unit>
     <unit id="error.status.0">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:147</note>
+        <note category="location">src/app/core/errors/error-messages.ts:148</note>
       </notes>
       <segment>
         <source>No pudimos conectar con el servidor. Revisa tu conexión a internet.</source>
@@ -1155,7 +1163,7 @@
     </unit>
     <unit id="error.status.400">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:148</note>
+        <note category="location">src/app/core/errors/error-messages.ts:149</note>
       </notes>
       <segment>
         <source>No pudimos procesar la solicitud. Revisa los datos e inténtalo de nuevo.</source>
@@ -1163,7 +1171,7 @@
     </unit>
     <unit id="error.status.401">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:149</note>
+        <note category="location">src/app/core/errors/error-messages.ts:150</note>
       </notes>
       <segment>
         <source>Tu sesión expiró. Inicia sesión de nuevo.</source>
@@ -1171,7 +1179,7 @@
     </unit>
     <unit id="error.status.403">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:150</note>
+        <note category="location">src/app/core/errors/error-messages.ts:151</note>
       </notes>
       <segment>
         <source>No tienes permiso para realizar esta acción.</source>
@@ -1179,7 +1187,7 @@
     </unit>
     <unit id="error.status.404">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:151</note>
+        <note category="location">src/app/core/errors/error-messages.ts:152</note>
       </notes>
       <segment>
         <source>No encontramos lo que buscas.</source>
@@ -1187,7 +1195,7 @@
     </unit>
     <unit id="error.status.409">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:152</note>
+        <note category="location">src/app/core/errors/error-messages.ts:153</note>
       </notes>
       <segment>
         <source>La operación no se puede completar en el estado actual. Recarga e inténtalo de nuevo.</source>
@@ -1195,7 +1203,7 @@
     </unit>
     <unit id="error.status.422">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:153</note>
+        <note category="location">src/app/core/errors/error-messages.ts:154</note>
       </notes>
       <segment>
         <source>Los datos no cumplen las reglas de la operación.</source>
@@ -1203,7 +1211,7 @@
     </unit>
     <unit id="error.status.429">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:154</note>
+        <note category="location">src/app/core/errors/error-messages.ts:155</note>
       </notes>
       <segment>
         <source>Hay demasiadas solicitudes. Espera un momento e inténtalo de nuevo.</source>
@@ -1211,7 +1219,7 @@
     </unit>
     <unit id="error.status.500">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:155</note>
+        <note category="location">src/app/core/errors/error-messages.ts:156</note>
       </notes>
       <segment>
         <source>Ocurrió un error en el servidor. Inténtalo de nuevo en unos minutos.</source>
@@ -1219,7 +1227,7 @@
     </unit>
     <unit id="error.supportCode">
       <notes>
-        <note category="location">src/app/core/errors/error-messages.ts:175</note>
+        <note category="location">src/app/core/errors/error-messages.ts:176</note>
       </notes>
       <segment>
         <source>Código de soporte: <ph id="0" equiv="correlationId" disp="correlationId"/></source>
@@ -1449,9 +1457,57 @@
         <source>Después</source>
       </segment>
     </unit>
+    <unit id="admin.audit.entity.cashMovement">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:86</note>
+      </notes>
+      <segment>
+        <source>Movimiento de caja</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.payment">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:88</note>
+      </notes>
+      <segment>
+        <source>Pago</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.shift">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:90</note>
+      </notes>
+      <segment>
+        <source>Turno de caja</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.stockItem">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:92</note>
+      </notes>
+      <segment>
+        <source>Stock</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.ticket">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:94</note>
+      </notes>
+      <segment>
+        <source>Ticket</source>
+      </segment>
+    </unit>
+    <unit id="admin.audit.entity.ticketLine">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:96</note>
+      </notes>
+      <segment>
+        <source>Línea de ticket</source>
+      </segment>
+    </unit>
     <unit id="admin.audit.entity.category">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:54</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:98</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -1459,7 +1515,7 @@
     </unit>
     <unit id="admin.audit.entity.deliveryZone">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:56</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:100</note>
       </notes>
       <segment>
         <source>Zona de reparto</source>
@@ -1467,7 +1523,7 @@
     </unit>
     <unit id="admin.audit.entity.modifierGroup">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:58</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:102</note>
       </notes>
       <segment>
         <source>Grupo de modificadores</source>
@@ -1475,7 +1531,7 @@
     </unit>
     <unit id="admin.audit.entity.modifierOption">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:60</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:104</note>
       </notes>
       <segment>
         <source>Opción de modificador</source>
@@ -1483,7 +1539,7 @@
     </unit>
     <unit id="admin.audit.entity.openingHours">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:62</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:106</note>
       </notes>
       <segment>
         <source>Horario de atención</source>
@@ -1491,7 +1547,7 @@
     </unit>
     <unit id="admin.audit.entity.product">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:64</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:108</note>
       </notes>
       <segment>
         <source>Producto</source>
@@ -1499,7 +1555,7 @@
     </unit>
     <unit id="admin.audit.entity.reason">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:66</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:110</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -1507,7 +1563,7 @@
     </unit>
     <unit id="admin.audit.entity.station">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:68</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:112</note>
       </notes>
       <segment>
         <source>Estación</source>
@@ -1515,7 +1571,7 @@
     </unit>
     <unit id="admin.audit.entity.storeSettings">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:70</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:114</note>
       </notes>
       <segment>
         <source>Configuración de la tienda</source>
@@ -1523,7 +1579,7 @@
     </unit>
     <unit id="admin.audit.entity.table">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:72</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:116</note>
       </notes>
       <segment>
         <source>Mesa</source>
@@ -1531,7 +1587,7 @@
     </unit>
     <unit id="admin.audit.entity.user">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:74</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:118</note>
       </notes>
       <segment>
         <source>Personal</source>
@@ -1539,7 +1595,7 @@
     </unit>
     <unit id="admin.audit.role.system">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:89</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:133</note>
       </notes>
       <segment>
         <source>Sistema</source>
@@ -1547,7 +1603,7 @@
     </unit>
     <unit id="admin.audit.role.anonymous">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:91</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:135</note>
       </notes>
       <segment>
         <source>Anónimo</source>
@@ -1590,10 +1646,10 @@
         <note category="location">src/app/features/admin/audit/audit-log.ts:111</note>
         <note category="location">src/app/features/admin/audit/audit-log.ts:135</note>
         <note category="location">src/app/features/admin/audit/audit-log.ts:171</note>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:194</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:204</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:160</note>
         <note category="location">src/app/features/admin/catalog/product-form.ts:278</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:79</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:80</note>
         <note category="location">src/app/features/admin/settings/reason-list.ts:90</note>
         <note category="location">src/app/features/admin/settings/settings-form.ts:167</note>
         <note category="location">src/app/features/admin/stock/stock-adjustment-dialog.ts:161</note>
@@ -1896,7 +1952,7 @@
     </unit>
     <unit id="admin.audit.detail.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:475</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:484</note>
       </notes>
       <segment>
         <source>Detalle del cambio <ph id="0" equiv="action" disp="entry.action"/> del <ph id="1" equiv="when" disp="this.when(entry)"/></source>
@@ -2064,7 +2120,7 @@
     </unit>
     <unit id="admin.catalog.categories.title">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:46,49</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:55,58</note>
       </notes>
       <segment>
         <source>Categorías</source>
@@ -2072,7 +2128,7 @@
     </unit>
     <unit id="admin.catalog.categories.create.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:52,53</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:61,62</note>
       </notes>
       <segment>
         <source>Agregar una categoría nueva</source>
@@ -2080,7 +2136,7 @@
     </unit>
     <unit id="admin.catalog.categories.create">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:57,61</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:66,70</note>
       </notes>
       <segment>
         <source>Agregar categoría</source>
@@ -2088,7 +2144,7 @@
     </unit>
     <unit id="admin.catalog.categories.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:62,63</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:71,72</note>
       </notes>
       <segment>
         <source>Listado de categorías</source>
@@ -2096,7 +2152,7 @@
     </unit>
     <unit id="admin.catalog.categories.edit.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:86,87</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:95,96</note>
       </notes>
       <segment>
         <source>Editar los datos de esta categoría</source>
@@ -2104,9 +2160,9 @@
     </unit>
     <unit id="admin.catalog.edit">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:91,93</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:100,102</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:62,64</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:138,140</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:139,141</note>
       </notes>
       <segment>
         <source>Editar</source>
@@ -2114,9 +2170,9 @@
     </unit>
     <unit id="admin.catalog.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:107,108</note>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:306</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:155,156</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:116,117</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:314</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:156,157</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -2124,8 +2180,8 @@
     </unit>
     <unit id="admin.catalog.reactivate">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:110,112</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:158,160</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:119,121</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:159,161</note>
       </notes>
       <segment>
         <source>Reactivar</source>
@@ -2133,7 +2189,7 @@
     </unit>
     <unit id="admin.catalog.categories.delete.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:123,124</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:133,134</note>
       </notes>
       <segment>
         <source>Eliminar esta categoría, que no tiene productos</source>
@@ -2141,8 +2197,8 @@
     </unit>
     <unit id="admin.catalog.categories.delete">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:128,130</note>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:325</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:138,140</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:336</note>
       </notes>
       <segment>
         <source>Eliminar</source>
@@ -2150,7 +2206,7 @@
     </unit>
     <unit id="admin.catalog.categories.nameLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:145,146</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:155,156</note>
       </notes>
       <segment>
         <source>Nombre de la categoría</source>
@@ -2158,7 +2214,7 @@
     </unit>
     <unit id="admin.catalog.categories.orderLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:161,162</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:171,172</note>
       </notes>
       <segment>
         <source>Orden de aparición</source>
@@ -2166,8 +2222,8 @@
     </unit>
     <unit id="admin.catalog.categories.stationLabel">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:176,177</note>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:222</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:186,187</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:232</note>
       </notes>
       <segment>
         <source>Estación de preparación</source>
@@ -2175,7 +2231,7 @@
     </unit>
     <unit id="admin.catalog.categories.defaultStation">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:185,186</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:195,196</note>
       </notes>
       <segment>
         <source>Estación predeterminada</source>
@@ -2183,7 +2239,7 @@
     </unit>
     <unit id="admin.catalog.categories.deactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:212</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:222</note>
       </notes>
       <segment>
         <source>Ocultar esta categoría del menú</source>
@@ -2191,7 +2247,7 @@
     </unit>
     <unit id="admin.catalog.categories.reactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:213</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:223</note>
       </notes>
       <segment>
         <source>Volver a mostrar esta categoría en el menú</source>
@@ -2199,7 +2255,7 @@
     </unit>
     <unit id="admin.catalog.active">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:216</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:226</note>
       </notes>
       <segment>
         <source>Activa</source>
@@ -2207,7 +2263,7 @@
     </unit>
     <unit id="admin.catalog.inactive">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:217</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:227</note>
       </notes>
       <segment>
         <source>Inactiva</source>
@@ -2215,7 +2271,7 @@
     </unit>
     <unit id="admin.catalog.categories.createHeader">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:218</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:228</note>
       </notes>
       <segment>
         <source>Agregar categoría</source>
@@ -2223,7 +2279,7 @@
     </unit>
     <unit id="admin.catalog.categories.editHeader">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:219</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:229</note>
       </notes>
       <segment>
         <source>Editar categoría</source>
@@ -2231,7 +2287,7 @@
     </unit>
     <unit id="admin.catalog.categories.nameInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:220</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:230</note>
       </notes>
       <segment>
         <source>Escribe un nombre válido.</source>
@@ -2239,7 +2295,7 @@
     </unit>
     <unit id="admin.catalog.categories.orderInvalid">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:221</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:231</note>
       </notes>
       <segment>
         <source>Escribe un número entero.</source>
@@ -2247,7 +2303,7 @@
     </unit>
     <unit id="admin.catalog.categories.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:225</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:235</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -2255,7 +2311,7 @@
     </unit>
     <unit id="admin.catalog.categories.station">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:228</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:238</note>
       </notes>
       <segment>
         <source>Estación</source>
@@ -2263,7 +2319,7 @@
     </unit>
     <unit id="admin.catalog.categories.order">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:232</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:242</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -2271,7 +2327,7 @@
     </unit>
     <unit id="admin.catalog.categories.state">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:233</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:243</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -2279,9 +2335,9 @@
     </unit>
     <unit id="admin.catalog.actions">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:234</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:244</note>
         <note category="location">src/app/features/admin/catalog/modifier-group-list.ts:98</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:220</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:221</note>
         <note category="location">src/app/features/admin/catalog/station-list.ts:169</note>
       </notes>
       <segment>
@@ -2290,7 +2346,7 @@
     </unit>
     <unit id="admin.catalog.categories.deactivate.header">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:304</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:312</note>
       </notes>
       <segment>
         <source>Desactivar categoría</source>
@@ -2298,7 +2354,7 @@
     </unit>
     <unit id="admin.catalog.categories.deactivate.confirm">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:305</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:313</note>
       </notes>
       <segment>
         <source>La categoría &quot;<ph id="0" equiv="name" disp="category.name"/>&quot; y sus productos dejarán de mostrarse en el menú.</source>
@@ -2306,7 +2362,7 @@
     </unit>
     <unit id="admin.catalog.categories.delete.header">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:323</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:334</note>
       </notes>
       <segment>
         <source>Eliminar categoría</source>
@@ -2314,7 +2370,7 @@
     </unit>
     <unit id="admin.catalog.categories.delete.confirm">
       <notes>
-        <note category="location">src/app/features/admin/catalog/category-list.ts:324</note>
+        <note category="location">src/app/features/admin/catalog/category-list.ts:335</note>
       </notes>
       <segment>
         <source>Se eliminará la categoría &quot;<ph id="0" equiv="name" disp="category.name"/>&quot; de forma definitiva y no se puede deshacer.</source>
@@ -2975,7 +3031,7 @@
     </unit>
     <unit id="admin.catalog.products.title">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:48,51</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:49,52</note>
       </notes>
       <segment>
         <source>Productos</source>
@@ -2983,7 +3039,7 @@
     </unit>
     <unit id="admin.catalog.products.new.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:52,53</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:53,54</note>
       </notes>
       <segment>
         <source>Crear un producto nuevo</source>
@@ -2991,7 +3047,7 @@
     </unit>
     <unit id="admin.catalog.products.new">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:57,61</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:58,62</note>
       </notes>
       <segment>
         <source>Nuevo producto</source>
@@ -2999,8 +3055,8 @@
     </unit>
     <unit id="admin.catalog.products.filter">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:62,63</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:199</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:63,64</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:200</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -3008,7 +3064,7 @@
     </unit>
     <unit id="admin.catalog.products.allCategories">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:71</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:72</note>
       </notes>
       <segment>
         <source>Todas</source>
@@ -3016,7 +3072,7 @@
     </unit>
     <unit id="admin.catalog.products.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:87,88</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:88,89</note>
       </notes>
       <segment>
         <source>Listado de productos</source>
@@ -3024,7 +3080,7 @@
     </unit>
     <unit id="admin.catalog.products.empty">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:89,90</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:90,91</note>
       </notes>
       <segment>
         <source>Todavía no hay productos.</source>
@@ -3032,7 +3088,7 @@
     </unit>
     <unit id="admin.catalog.products.edit.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:133,134</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:134,135</note>
       </notes>
       <segment>
         <source>Editar los datos de este producto</source>
@@ -3040,7 +3096,7 @@
     </unit>
     <unit id="admin.catalog.products.delete.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:172,173</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:173,174</note>
       </notes>
       <segment>
         <source>Eliminar este producto, que nunca se usó en una cuenta</source>
@@ -3048,8 +3104,8 @@
     </unit>
     <unit id="admin.catalog.products.delete">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:177,179</note>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:286</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:178,180</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:288</note>
       </notes>
       <segment>
         <source>Eliminar</source>
@@ -3057,7 +3113,7 @@
     </unit>
     <unit id="admin.catalog.products.deactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:195</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:196</note>
       </notes>
       <segment>
         <source>Ocultar este producto del menú</source>
@@ -3065,7 +3121,7 @@
     </unit>
     <unit id="admin.catalog.products.reactivate.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:196</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:197</note>
       </notes>
       <segment>
         <source>Volver a mostrar este producto en el menú</source>
@@ -3073,7 +3129,7 @@
     </unit>
     <unit id="admin.catalog.products.active">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:200</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:201</note>
       </notes>
       <segment>
         <source>Activo</source>
@@ -3081,7 +3137,7 @@
     </unit>
     <unit id="admin.catalog.products.inactive">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:201</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:202</note>
       </notes>
       <segment>
         <source>Inactivo</source>
@@ -3089,7 +3145,7 @@
     </unit>
     <unit id="admin.catalog.products.image">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:204</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:205</note>
       </notes>
       <segment>
         <source>Imagen</source>
@@ -3097,7 +3153,7 @@
     </unit>
     <unit id="admin.catalog.products.name">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:205</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:206</note>
       </notes>
       <segment>
         <source>Nombre</source>
@@ -3105,7 +3161,7 @@
     </unit>
     <unit id="admin.catalog.products.category">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:208</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:209</note>
       </notes>
       <segment>
         <source>Categoría</source>
@@ -3113,7 +3169,7 @@
     </unit>
     <unit id="admin.catalog.products.price">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:214</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:215</note>
       </notes>
       <segment>
         <source>Precio</source>
@@ -3121,7 +3177,7 @@
     </unit>
     <unit id="admin.catalog.products.state">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:218</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:219</note>
       </notes>
       <segment>
         <source>Estado</source>
@@ -3129,7 +3185,7 @@
     </unit>
     <unit id="admin.catalog.products.available">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:219</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:220</note>
       </notes>
       <segment>
         <source>Disponible</source>
@@ -3137,7 +3193,7 @@
     </unit>
     <unit id="admin.catalog.products.delete.header">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:284</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:286</note>
       </notes>
       <segment>
         <source>Eliminar producto</source>
@@ -3145,7 +3201,7 @@
     </unit>
     <unit id="admin.catalog.products.delete.confirm">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:285</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:287</note>
       </notes>
       <segment>
         <source>Se eliminará el producto &quot;<ph id="0" equiv="name" disp="product.name"/>&quot; y su imagen de forma definitiva y no se puede deshacer.</source>
@@ -3153,7 +3209,7 @@
     </unit>
     <unit id="admin.catalog.products.deactivated">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-list.ts:308</note>
+        <note category="location">src/app/features/admin/catalog/product-list.ts:317</note>
       </notes>
       <segment>
         <source>Producto &quot;<ph id="0" equiv="name" disp="product.name"/>&quot; desactivado</source>
