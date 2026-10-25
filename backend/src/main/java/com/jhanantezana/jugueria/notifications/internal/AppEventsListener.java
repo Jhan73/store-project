@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Properties;
 
 import org.postgresql.PGConnection;
@@ -19,6 +20,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeTypeUtils;
 
+import com.jhanantezana.jugueria.notifications.RealtimeTopic;
 import com.jhanantezana.jugueria.shared.RealtimeSignalReceived;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -37,6 +39,9 @@ class AppEventsListener implements SmartLifecycle {
 	// not after this timeout, so a longer value only reduces idle wake-ups.
 	private static final int POLL_TIMEOUT_MILLIS = 30_000;
 
+	// Tells a client to re-read everything on its topic; sent by each task to its own subscribers after a reconnect.
+	static final String RESYNC_TYPE = "RESYNC";
+
 	private static final Duration INITIAL_BACKOFF = Duration.ofMillis(500);
 
 	private static final Duration MAX_BACKOFF = Duration.ofSeconds(30);
@@ -50,6 +55,8 @@ class AppEventsListener implements SmartLifecycle {
 	private final String applicationName;
 
 	private final ApplicationEventPublisher localEvents;
+
+	private Duration backoff = INITIAL_BACKOFF;
 
 	private volatile boolean running;
 
@@ -72,6 +79,12 @@ class AppEventsListener implements SmartLifecycle {
 		worker = Thread.ofVirtual().name("app-events-listener").start(this::run);
 	}
 
+	// Lets a test drive the loop without a thread.
+	void runOnCallingThread() {
+		running = true;
+		run();
+	}
+
 	@Override
 	public void stop() {
 		running = false;
@@ -92,24 +105,39 @@ class AppEventsListener implements SmartLifecycle {
 		return running;
 	}
 
-	private void run() {
-		var backoff = INITIAL_BACKOFF;
+	void run() {
+		var missedSignals = false;
 		while (running) {
 			try {
 				connect();
-				backoff = INITIAL_BACKOFF;
+				// PostgreSQL does not replay a NOTIFY to a connection that was not listening, so clients that stayed
+				// connected to this task must be told to re-read once LISTEN is active again.
+				if (missedSignals) {
+					resynchronize();
+					missedSignals = false;
+				}
 				poll();
 			}
-			catch (SQLException e) {
+			catch (SQLException | RuntimeException e) {
 				if (!running) {
 					break;
 				}
-				log.warn("app_events LISTEN connection lost, reconnecting in {}", backoff, e);
-				sleep(backoff);
+				missedSignals = true;
+				closeQuietly();
+				log.warn("app_events LISTEN loop failed, reconnecting in {}", backoff, e);
+				pause(backoff);
 				backoff = nextBackoff(backoff);
 			}
 		}
 		closeQuietly();
+	}
+
+	private void resynchronize() {
+		for (var topic : RealtimeTopic.values()) {
+			if (topic.subscribable()) {
+				forward(mapper.writeValueAsString(new RealtimeSignal(topic.channel(), RESYNC_TYPE, Map.of())));
+			}
+		}
 	}
 
 	private static Duration nextBackoff(Duration current) {
@@ -117,7 +145,7 @@ class AppEventsListener implements SmartLifecycle {
 		return doubled.compareTo(MAX_BACKOFF) > 0 ? MAX_BACKOFF : doubled;
 	}
 
-	private void connect() throws SQLException {
+	void connect() throws SQLException {
 		var props = new Properties();
 		props.setProperty("user", connectionDetails.getUsername());
 		props.setProperty("password", connectionDetails.getPassword());
@@ -127,13 +155,19 @@ class AppEventsListener implements SmartLifecycle {
 		try (var statement = conn.createStatement()) {
 			statement.execute("LISTEN " + CHANNEL);
 		}
+		catch (SQLException | RuntimeException e) {
+			conn.close();
+			throw e;
+		}
 		this.connection = conn;
 	}
 
-	private void poll() throws SQLException {
+	void poll() throws SQLException {
 		var pg = connection.unwrap(PGConnection.class);
 		while (running) {
 			var notifications = pg.getNotifications(POLL_TIMEOUT_MILLIS);
+			// A read that returned without error proves the connection works, so the next failure starts over.
+			backoff = INITIAL_BACKOFF;
 			if (notifications != null) {
 				for (var notification : notifications) {
 					forward(notification.getParameter());
@@ -183,7 +217,7 @@ class AppEventsListener implements SmartLifecycle {
 		}
 	}
 
-	private static void sleep(Duration duration) {
+	void pause(Duration duration) {
 		try {
 			Thread.sleep(duration);
 		}
