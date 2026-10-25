@@ -64,6 +64,14 @@ class BoardDisplayControllerIT {
 	}
 
 	@Test
+	void theKitchenMayNotReadTheDisplay() {
+		var result = mvc.get().uri(DISPLAY).with(AuthenticatedAs.user(UUID.randomUUID(), Role.KITCHEN)).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.forbidden");
+	}
+
+	@Test
 	void aCustomerMayNotReadTheDisplay() {
 		var result = mvc.get().uri(DISPLAY).with(AuthenticatedAs.user(UUID.randomUUID(), Role.CUSTOMER)).exchange();
 

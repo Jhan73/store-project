@@ -19,7 +19,7 @@ class BoardThresholdsController {
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
+	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN', 'KITCHEN')")
 	BoardThresholdsResponse get() {
 		return BoardThresholdsResponse.from(settingsService.get());
 	}

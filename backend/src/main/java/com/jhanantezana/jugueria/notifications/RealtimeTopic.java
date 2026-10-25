@@ -8,7 +8,7 @@ import com.jhanantezana.jugueria.shared.Role;
 public enum RealtimeTopic {
 
 	CATALOG("catalog", true), STORE_STATUS("store-status", true),
-	BOARD("board", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
+	BOARD("board", true, Role.SERVER, Role.CASHIER, Role.KITCHEN, Role.ADMIN),
 	TABLES("tables", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
 	DISPLAY("display", true, Role.SERVER, Role.CASHIER, Role.ADMIN),
 

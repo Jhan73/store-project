@@ -186,7 +186,17 @@ class StompAuthChannelInterceptorTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "ROLE_SERVER", "ROLE_CASHIER", "ROLE_ADMIN" })
+	@ValueSource(strings = { "/topic/display", "/topic/tables" })
+	void rejectsTheKitchenSubscribingToTheFloorTopics(String destination) {
+		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+		accessor.setDestination(destination);
+		accessor.setUser(new TestingAuthenticationToken("user", null, "ROLE_KITCHEN"));
+
+		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "ROLE_SERVER", "ROLE_CASHIER", "ROLE_ADMIN", "ROLE_KITCHEN" })
 	void allowsStaffToSubscribeToTheBoard(String role) {
 		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
 		accessor.setDestination("/topic/board");

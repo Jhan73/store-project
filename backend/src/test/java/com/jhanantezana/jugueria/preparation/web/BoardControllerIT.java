@@ -5,7 +5,9 @@ import static com.jhanantezana.testsupport.PreparationTables.aLineAt;
 import static com.jhanantezana.testsupport.PreparationTables.anOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -31,6 +33,9 @@ import com.jhanantezana.jugueria.preparation.internal.BoardCommands;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.PreparationTables;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest(properties = { "spring.flyway.user=migrator", "spring.flyway.password=migrator" })
 @AutoConfigureMockMvc
@@ -77,6 +82,21 @@ class BoardControllerIT {
 				Arguments.of(new Endpoint("ack marker", "POST", t -> BOARD + "/markers/" + t.marker() + "/ack")));
 	}
 
+	// The kitchen prepares and marks Ready; handing over and recalling stay with the floor.
+	static Stream<Arguments> kitchenCommandEndpoints() {
+		return commandEndpoints().filter(args -> {
+			var name = ((Endpoint) args.get()[0]).name();
+			return !name.equals("handover") && !name.equals("recall");
+		});
+	}
+
+	static Stream<Arguments> floorOnlyCommandEndpoints() {
+		return commandEndpoints().filter(args -> {
+			var name = ((Endpoint) args.get()[0]).name();
+			return name.equals("handover") || name.equals("recall");
+		});
+	}
+
 	static Stream<Arguments> readEndpoints() {
 		return Stream.of(Arguments.of(BOARD + "/tickets"), Arguments.of(BOARD + "/ready"),
 				Arguments.of(BOARD + "/all-day"));
@@ -91,6 +111,56 @@ class BoardControllerIT {
 			assertThat(result).as("%s as %s", endpoint, role).hasStatusOk();
 			PreparationTables.clean(jdbc);
 		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("kitchenCommandEndpoints")
+	void theKitchenMayPrepareAndMarkReady(Endpoint endpoint) {
+		var result = call(endpoint, AuthenticatedAs.user(UUID.randomUUID(), Role.KITCHEN));
+
+		assertThat(result).hasStatusOk();
+	}
+
+	@ParameterizedTest
+	@MethodSource("floorOnlyCommandEndpoints")
+	void theKitchenMayNotHandOverOrRecall(Endpoint endpoint) {
+		var result = call(endpoint, AuthenticatedAs.user(UUID.randomUUID(), Role.KITCHEN));
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("auth.forbidden");
+	}
+
+	@ParameterizedTest
+	@MethodSource("readEndpoints")
+	void theKitchenMayReadTheViews(String path) {
+		assertThat(mvc.get().uri(path).with(kitchen()).exchange()).hasStatusOk();
+	}
+
+	@Test
+	void theKitchenMayNotReadTheCustomerDisplay() {
+		var result = mvc.get().uri(BOARD + "/display").with(kitchen()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void aKitchenCardCarriesNoMoneyOrPersonalData() {
+		var order = preparation.accept(anOrder(PreparationTables.aLineWithNote("no ice")));
+		commands.start(order);
+
+		var tickets = mvc.get().uri(BOARD + "/tickets").with(kitchen()).exchange();
+		var ready = mvc.get().uri(BOARD + "/ready").with(kitchen()).exchange();
+		var allDay = mvc.get().uri(BOARD + "/all-day").with(kitchen()).exchange();
+		var started = post(BOARD + "/orders/" + order + "/ready", kitchen());
+
+		var forbidden = Set.of("price", "unitPrice", "total", "subtotal", "amount", "currency", "payment", "paid",
+				"email", "phone", "address", "customer", "customerId", "actorId", "userId", "acknowledgedBy");
+		for (var result : List.of(tickets, ready, allDay, started)) {
+			assertThat(result).hasStatusOk();
+			assertThat(keysOf(result)).doesNotContainAnyElementsOf(forbidden);
+		}
+		assertThat(keysOf(tickets)).contains("lines", "note", "modifiersText",
+				"allergy", "shortNumber");
 	}
 
 	@ParameterizedTest
@@ -288,11 +358,42 @@ class BoardControllerIT {
 	}
 
 	private MvcTestResult post(String path) {
-		return mvc.post().uri(path).with(server()).exchange();
+		return post(path, server());
+	}
+
+	private MvcTestResult post(String path, org.springframework.test.web.servlet.request.RequestPostProcessor user) {
+		return mvc.post().uri(path).with(user).exchange();
 	}
 
 	private static org.springframework.test.web.servlet.request.RequestPostProcessor server() {
 		return AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER);
+	}
+
+	private static org.springframework.test.web.servlet.request.RequestPostProcessor kitchen() {
+		return AuthenticatedAs.user(UUID.randomUUID(), Role.KITCHEN);
+	}
+
+	private static Set<String> keysOf(MvcTestResult result) {
+		var keys = new HashSet<String>();
+		try {
+			collectKeys(JsonMapper.builder().build().readTree(result.getResponse().getContentAsString()), keys);
+		}
+		catch (java.io.UnsupportedEncodingException e) {
+			throw new IllegalStateException(e);
+		}
+		return keys;
+	}
+
+	private static void collectKeys(JsonNode node, Set<String> keys) {
+		if (node.isObject()) {
+			node.properties().forEach(entry -> {
+				keys.add(entry.getKey());
+				collectKeys(entry.getValue(), keys);
+			});
+		}
+		else if (node.isArray()) {
+			node.forEach(child -> collectKeys(child, keys));
+		}
 	}
 
 	UUID waiting() {

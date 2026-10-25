@@ -14157,7 +14157,7 @@
         "properties" : {
           "role" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "ADMIN" ]
+            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "KITCHEN", "ADMIN" ]
           }
         },
         "required" : [ "role" ]
@@ -14313,7 +14313,7 @@
           },
           "role" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "ADMIN" ]
+            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "KITCHEN", "ADMIN" ]
           },
           "username" : {
             "type" : "string",
@@ -14490,7 +14490,7 @@
           },
           "role" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "ADMIN" ]
+            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "KITCHEN", "ADMIN" ]
           },
           "tokenType" : {
             "type" : "string"
@@ -15673,7 +15673,7 @@
           },
           "role" : {
             "type" : "string",
-            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "ADMIN" ]
+            "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "KITCHEN", "ADMIN" ]
           },
           "username" : {
             "type" : [ "string", "null" ]

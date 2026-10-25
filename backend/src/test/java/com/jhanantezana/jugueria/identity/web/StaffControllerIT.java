@@ -77,6 +77,25 @@ class StaffControllerIT {
 	}
 
 	@Test
+	void createsAKitchenAccountLikeAnyOtherStaffAccount() {
+		var result = create("Chef", "chef@jugueria.pe", Role.KITCHEN, admin());
+
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(result).bodyJson().extractingPath("$.role").isEqualTo("KITCHEN");
+		assertThat(result).bodyJson().extractingPath("$.username").isEqualTo("Chef");
+	}
+
+	@Test
+	void changesAStaffAccountToTheKitchenRole() {
+		var staff = accounts.save(new UserAccount("server@jugueria.pe", "hash", Role.SERVER, Instant.now()));
+
+		var result = changeRole(staff.getId(), Role.KITCHEN, admin());
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.role").isEqualTo("KITCHEN");
+	}
+
+	@Test
 	void rejectsCreateWithoutAUsername() {
 		var result = mvc.post()
 			.uri(STAFF)

@@ -40,7 +40,7 @@ class FloorStationControllerIT {
 	}
 
 	@ParameterizedTest
-	@EnumSource(value = Role.class, names = { "SERVER", "CASHIER", "ADMIN" })
+	@EnumSource(value = Role.class, names = { "SERVER", "CASHIER", "ADMIN", "KITCHEN" })
 	void listsTheStationsForEveryStaffRole(Role role) {
 		var result = mvc.get().uri(STATIONS).with(AuthenticatedAs.user(UUID.randomUUID(), role)).exchange();
 

@@ -31,7 +31,7 @@ class BoardThresholdsControllerIT {
 	MockMvcTester mvc;
 
 	@ParameterizedTest
-	@EnumSource(value = Role.class, names = { "SERVER", "CASHIER", "ADMIN" })
+	@EnumSource(value = Role.class, names = { "SERVER", "CASHIER", "ADMIN", "KITCHEN" })
 	void returnsTheStoredThresholdsForEveryStaffRole(Role role) {
 		var settings = mvc.get().uri(SETTINGS).with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN)).exchange();
 		var warning = assertThat(settings).bodyJson().extractingPath("$.boardWarningMinutes").actual();

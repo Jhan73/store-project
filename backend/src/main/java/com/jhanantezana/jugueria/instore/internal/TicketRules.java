@@ -25,6 +25,7 @@ final class TicketRules {
 			case SERVER -> VoidMode.PENDING_ONLY;
 			case CASHIER, ADMIN -> VoidMode.ALLOW_READY_AS_WASTE;
 			case CUSTOMER -> throw new IllegalArgumentException("A customer cannot void ticket lines");
+			case KITCHEN -> throw new IllegalArgumentException("The kitchen cannot void ticket lines");
 		};
 	}
 
