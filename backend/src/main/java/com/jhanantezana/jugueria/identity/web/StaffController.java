@@ -39,9 +39,9 @@ class StaffController {
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "identity.email-already-registered", "identity.invalid-staff-role" })
+	@ApiErrors({ "identity.email-already-registered", "identity.username-already-taken", "identity.invalid-staff-role" })
 	ResponseEntity<StaffResponse> create(@Valid @RequestBody CreateStaffRequest request) {
-		var provisioned = provisioning.createStaff(request.email(), request.role());
+		var provisioned = provisioning.createStaff(request.username(), request.email(), request.role());
 		var response = StaffResponse.from(provisioned.account());
 		return ResponseEntity.created(URI.create("/api/v1/staff/" + provisioned.account().getId())).body(response);
 	}
@@ -67,6 +67,13 @@ class StaffController {
 		return StaffResponse.from(staffAccounts.changeRole(id, request.role()));
 	}
 
+	@PatchMapping("/{id}/username")
+	@PreAuthorize("hasRole('ADMIN')")
+	@ApiErrors({ "common.not-found", "identity.username-already-taken" })
+	StaffResponse rename(@PathVariable UUID id, @Valid @RequestBody RenameStaffRequest request) {
+		return StaffResponse.from(staffAccounts.rename(id, request.username()));
+	}
+
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiErrors({ "common.not-found", "identity.cannot-modify-own-account", "identity.last-active-admin-required", "instore.user-has-open-shift" })
@@ -76,7 +83,7 @@ class StaffController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "common.not-found" })
+	@ApiErrors({ "common.not-found", "identity.username-already-taken" })
 	StaffResponse reactivate(@PathVariable UUID id) {
 		return StaffResponse.from(staffAccounts.reactivate(id));
 	}

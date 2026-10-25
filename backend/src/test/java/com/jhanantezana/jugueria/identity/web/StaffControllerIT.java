@@ -66,18 +66,124 @@ class StaffControllerIT {
 
 	@Test
 	void createsAStaffAccountAsAdmin() {
-		var result = create("New-Cashier@Jugueria.PE", Role.CASHIER, admin());
+		var result = create("Maria", "New-Cashier@Jugueria.PE", Role.CASHIER, admin());
 
 		assertThat(result).hasStatus(HttpStatus.CREATED);
 		assertThat(result).headers().hasHeaderSatisfying("Location", values -> assertThat(values).singleElement());
 		assertThat(result).bodyJson().extractingPath("$.email").isEqualTo("new-cashier@jugueria.pe");
 		assertThat(result).bodyJson().extractingPath("$.role").isEqualTo("CASHIER");
 		assertThat(result).bodyJson().extractingPath("$.active").isEqualTo(true);
+		assertThat(result).bodyJson().extractingPath("$.username").isEqualTo("Maria");
+	}
+
+	@Test
+	void rejectsCreateWithoutAUsername() {
+		var result = mvc.post()
+			.uri(STAFF)
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"email\":\"x@jugueria.pe\",\"role\":\"CASHIER\"}")
+			.exchange();
+
+		assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("common.validation-failed");
+	}
+
+	@Test
+	void rejectsCreateWithABlankOrTooLongUsername() {
+		assertThat(create("   ", "a@jugueria.pe", Role.CASHIER, admin())).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(create("x".repeat(61), "b@jugueria.pe", Role.CASHIER, admin())).hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	void rejectsAUsernameTakenByAnActiveAccountIgnoringCase() {
+		accounts.save(named("maria@jugueria.pe", "Maria", true));
+
+		var result = create("  mARIA ", "other@jugueria.pe", Role.CASHIER, admin());
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.username-already-taken");
+	}
+
+	@Test
+	void aDeactivatedAccountFreesItsUsername() {
+		accounts.save(named("maria@jugueria.pe", "Maria", false));
+
+		var result = create("Maria", "new-maria@jugueria.pe", Role.CASHIER, admin());
+
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+	}
+
+	@Test
+	void renamesAStaffAccount() {
+		var staff = accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		var result = rename(staff.getId(), "  Maria ", admin());
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.username").isEqualTo("Maria");
+		assertThat(accounts.findById(staff.getId()).orElseThrow().getUsername()).isEqualTo("Maria");
+	}
+
+	@Test
+	void anAdminCanRenameTheirOwnAccount() {
+		var self = accounts.save(new UserAccount("owner@jugueria.pe", "hash", Role.ADMIN, Instant.now()));
+
+		var result = rename(self.getId(), "Owner", AuthenticatedAs.user(self.getId(), Role.ADMIN));
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.username").isEqualTo("Owner");
+	}
+
+	@Test
+	void rejectsRenamingToABlankUsername() {
+		var staff = accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		assertThat(rename(staff.getId(), "   ", admin())).hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	void rejectsRenamingToAUsernameTaken() {
+		accounts.save(named("maria@jugueria.pe", "Maria", true));
+		var staff = accounts.save(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		var result = rename(staff.getId(), "maria", admin());
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.username-already-taken");
+	}
+
+	@Test
+	void rejectsRenamingACustomerAccount() {
+		var customer = accounts.save(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, Instant.now()));
+
+		assertThat(rename(customer.getId(), "Maria", admin())).hasStatus(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
+	void rejectsReactivatingIntoAUsernameTakenInTheMeantime() {
+		var former = accounts.save(named("maria@jugueria.pe", "Maria", false));
+		accounts.save(named("maria2@jugueria.pe", "Maria", true));
+
+		var result = mvc.post().uri(STAFF + "/" + former.getId() + "/reactivate").with(admin()).exchange();
+
+		assertThat(result).hasStatus(HttpStatus.CONFLICT);
+		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.username-already-taken");
+	}
+
+	@Test
+	void listsTheUsernameAsNullForAccountsWithoutOne() {
+		accounts.save(new UserAccount("legacy@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
+
+		var result = mvc.get().uri(STAFF).with(admin()).exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content[0].username").isNull();
 	}
 
 	@Test
 	void rejectsCreateForANonAdminRole() {
-		var result = create("cashier@jugueria.pe", Role.CASHIER, AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER));
+		var result = create("Maria", "cashier@jugueria.pe", Role.CASHIER, AuthenticatedAs.user(UUID.randomUUID(), Role.SERVER));
 
 		assertThat(result).hasStatus(HttpStatus.FORBIDDEN);
 	}
@@ -87,7 +193,7 @@ class StaffControllerIT {
 		var result = mvc.post()
 			.uri(STAFF)
 			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"x@jugueria.pe\",\"role\":\"CASHIER\"}")
+			.content("{\"username\":\"X\",\"email\":\"x@jugueria.pe\",\"role\":\"CASHIER\"}")
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.UNAUTHORIZED);
@@ -97,7 +203,7 @@ class StaffControllerIT {
 	void rejectsADuplicateEmail() {
 		accounts.save(new UserAccount("dup@jugueria.pe", "hash", Role.CASHIER, Instant.now()));
 
-		var result = create("dup@jugueria.pe", Role.CASHIER, admin());
+		var result = create("Maria", "dup@jugueria.pe", Role.CASHIER, admin());
 
 		assertThat(result).hasStatus(HttpStatus.CONFLICT);
 		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.email-already-registered");
@@ -105,7 +211,7 @@ class StaffControllerIT {
 
 	@Test
 	void rejectsCreatingACustomerAsStaff() {
-		var result = create("customer@jugueria.pe", Role.CUSTOMER, admin());
+		var result = create("Customer", "customer@jugueria.pe", Role.CUSTOMER, admin());
 
 		assertThat(result).hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
 		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("identity.invalid-staff-role");
@@ -315,10 +421,11 @@ class StaffControllerIT {
 
 	static Stream<RouteCase> staffRoutes() {
 		return Stream.of(
-				new RouteCase("create", HttpMethod.POST, STAFF, "{\"email\":\"route@jugueria.pe\",\"role\":\"CASHIER\"}"),
+				new RouteCase("create", HttpMethod.POST, STAFF, "{\"username\":\"Route\",\"email\":\"route@jugueria.pe\",\"role\":\"CASHIER\"}"),
 				new RouteCase("list", HttpMethod.GET, STAFF, null),
 				new RouteCase("get", HttpMethod.GET, STAFF + "/{id}", null),
 				new RouteCase("changeRole", HttpMethod.PATCH, STAFF + "/{id}/role", "{\"role\":\"SERVER\"}"),
+				new RouteCase("rename", HttpMethod.PATCH, STAFF + "/{id}/username", "{\"username\":\"Renamed\"}"),
 				new RouteCase("deactivate", HttpMethod.POST, STAFF + "/{id}/deactivate", null),
 				new RouteCase("reactivate", HttpMethod.POST, STAFF + "/{id}/reactivate", null),
 				new RouteCase("resendSetPasswordLink", HttpMethod.POST, STAFF + "/{id}/set-password-link", null));
@@ -336,13 +443,28 @@ class StaffControllerIT {
 		return builder.exchange();
 	}
 
-	private MvcTestResult create(String email, Role role, RequestPostProcessor auth) {
+	private MvcTestResult create(String username, String email, Role role, RequestPostProcessor auth) {
 		return mvc.post()
 			.uri(STAFF)
 			.with(auth)
 			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"role\":\"%s\"}".formatted(email, role))
+			.content("{\"username\":\"%s\",\"email\":\"%s\",\"role\":\"%s\"}".formatted(username, email, role))
 			.exchange();
+	}
+
+	private MvcTestResult rename(UUID id, String username, RequestPostProcessor auth) {
+		return mvc.patch()
+			.uri(STAFF + "/" + id + "/username")
+			.with(auth)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"username\":\"%s\"}".formatted(username))
+			.exchange();
+	}
+
+	private static UserAccount named(String email, String username, boolean active) {
+		var account = new UserAccount(email, "hash", Role.CASHIER, Instant.now(), active);
+		account.rename(username, Instant.now());
+		return account;
 	}
 
 	private MvcTestResult changeRole(UUID id, Role role, RequestPostProcessor auth) {

@@ -2,6 +2,8 @@ package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Instant;
 
+import org.jspecify.annotations.Nullable;
+
 import com.jhanantezana.jugueria.shared.BaseEntity;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -23,6 +25,9 @@ public class UserAccount extends BaseEntity {
 
 	@Column(nullable = false)
 	private String email;
+
+	@Column
+	private @Nullable String username;
 
 	@Column(name = "password_hash", nullable = false)
 	private String passwordHash;
@@ -74,6 +79,11 @@ public class UserAccount extends BaseEntity {
 
 	public boolean isLocked(Instant now) {
 		return lockedUntil != null && lockedUntil.isAfter(now);
+	}
+
+	public void rename(@Nullable String newUsername, Instant now) {
+		this.username = newUsername;
+		this.updatedAt = now;
 	}
 
 	public void changeRole(Role newRole, Instant now) {

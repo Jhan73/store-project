@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.audit.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,16 +92,17 @@ class AuditLogServiceTest {
 	}
 
 	@Test
-	void storesTheEntityLabelAndTheActorsEmailAsTheActorLabel() {
+	void storesTheEntityLabelAndTheActorsUsernameAsTheActorLabel() {
 		var actorId = UUID.randomUUID();
-		when(identity.emailOf(actorId)).thenReturn(Optional.of("admin@example.com"));
+		when(identity.usernameOf(actorId)).thenReturn(Optional.of("Maria"));
 		when(auditLogs.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		service.record(new AuditEntry(NOW, actorId, Role.ADMIN, "PRODUCT_UPDATED", "PRODUCT", UUID.randomUUID(), null,
 				null, null, "Mango juice"));
 
 		assertThat(saved().getEntityLabel()).isEqualTo("Mango juice");
-		assertThat(saved().getActorLabel()).isEqualTo("admin@example.com");
+		assertThat(saved().getActorLabel()).isEqualTo("Maria");
+		verify(identity, never()).emailOf(any());
 	}
 
 	@Test
@@ -115,9 +117,9 @@ class AuditLogServiceTest {
 	}
 
 	@Test
-	void leavesTheActorLabelEmptyWhenTheAccountIsUnknown() {
+	void leavesTheActorLabelEmptyWhenTheAccountHasNoUsername() {
 		var actorId = UUID.randomUUID();
-		when(identity.emailOf(actorId)).thenReturn(Optional.empty());
+		when(identity.usernameOf(actorId)).thenReturn(Optional.empty());
 		when(auditLogs.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		service.record(new AuditEntry(NOW, actorId, Role.ADMIN, "USER_CREATED", "USER", UUID.randomUUID(), null, null,

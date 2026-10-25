@@ -21,10 +21,10 @@ class RecordAuditOnUserDeactivated {
 
 	@EventListener
 	void on(UserDeactivated event) {
-		var email = labels.user(event.userId());
+		var username = labels.user(event.userId());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "USER_DEACTIVATED",
-				ENTITY_TYPE, event.userId(), AuditSnapshots.status("email", email, true),
-				AuditSnapshots.status("email", email, false), null, email));
+				ENTITY_TYPE, event.userId(), AuditSnapshots.status("username", username, true),
+				AuditSnapshots.status("username", username, false), null, username));
 	}
 
 }

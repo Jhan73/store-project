@@ -7,7 +7,9 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +22,7 @@ import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.identity.UserReactivated;
+import com.jhanantezana.jugueria.identity.UserRenamed;
 import com.jhanantezana.jugueria.identity.UserRoleChanged;
 import com.jhanantezana.jugueria.identity.internal.security.RefreshTokens;
 import com.jhanantezana.jugueria.shared.BusinessException;
@@ -30,6 +33,8 @@ import com.jhanantezana.jugueria.shared.StaffChangeGuard;
 
 @Service
 public class StaffAccountService {
+
+	private static final String USERNAME_INDEX = "user_account_username_active_key";
 
 	private final UserAccountRepository accounts;
 
@@ -66,11 +71,11 @@ public class StaffAccountService {
 
 	// The account starts with no usable password: this random hash is never given to anyone.
 	@Transactional
-	StaffProvisioned createAccountAndToken(String email, Role role) {
+	StaffProvisioned createAccountAndToken(String username, String email, Role role) {
 		if (role == Role.CUSTOMER) {
 			throw invalidStaffRole();
 		}
-		return createAccount(normalize(email), role, Instant.now(clock));
+		return createAccount(username.strip(), normalize(email), role, Instant.now(clock));
 	}
 
 	// Checking "no active admin yet" and creating one must be one atomic decision, or two concurrent runs both pass.
@@ -80,7 +85,7 @@ public class StaffAccountService {
 		if (accounts.countByRoleAndActiveTrue(Role.ADMIN) > 0) {
 			return Optional.empty();
 		}
-		return Optional.of(createAccount(normalize(email), Role.ADMIN, Instant.now(clock)));
+		return Optional.of(createAccount(null, normalize(email), Role.ADMIN, Instant.now(clock)));
 	}
 
 	// An admin resending a link for someone stuck without a working password (missed link, reactivated account).
@@ -94,18 +99,21 @@ public class StaffAccountService {
 		return new StaffProvisioned(account, issued.rawToken(), issued.expiresAt());
 	}
 
-	private StaffProvisioned createAccount(String normalizedEmail, Role role, Instant now) {
+	private StaffProvisioned createAccount(@Nullable String username, String normalizedEmail, Role role,
+			Instant now) {
+		var newAccount = new UserAccount(normalizedEmail, passwordEncoder.encode(RefreshTokens.newRawToken()), role,
+				now);
+		newAccount.rename(username, now);
 		UserAccount account;
 		try {
-			account = accounts.saveAndFlush(
-					new UserAccount(normalizedEmail, passwordEncoder.encode(RefreshTokens.newRawToken()), role, now));
+			account = accounts.saveAndFlush(newAccount);
 		}
 		catch (DataIntegrityViolationException e) {
-			throw emailAlreadyRegistered();
+			throw isUsernameViolation(e) ? usernameAlreadyTaken() : emailAlreadyRegistered();
 		}
 		var issued = setPasswordTokens.issue(account.getId());
 		events.publishEvent(
-				new UserCreated(account.getId(), normalizedEmail, role, currentActor.id(), currentActor.role(), now));
+				new UserCreated(account.getId(), normalizedEmail, username, role, currentActor.id(), currentActor.role(), now));
 		return new StaffProvisioned(account, issued.rawToken(), issued.expiresAt());
 	}
 
@@ -117,6 +125,22 @@ public class StaffAccountService {
 	@Transactional(readOnly = true)
 	public UserAccount get(UUID id) {
 		return findStaffOrThrow(id);
+	}
+
+	// Self-rename is allowed: the bootstrap admin has no username and names themselves from the staff list.
+	@Transactional
+	public UserAccount rename(UUID id, String username) {
+		var account = findStaffOrThrow(id);
+		var newUsername = username.strip();
+		var oldUsername = account.getUsername();
+		if (newUsername.equals(oldUsername)) {
+			return account;
+		}
+		var now = Instant.now(clock);
+		account.rename(newUsername, now);
+		flushUsernameChange(() -> accounts.saveAndFlush(account));
+		events.publishEvent(new UserRenamed(id, oldUsername, newUsername, currentActor.id(), currentActor.role(), now));
+		return account;
 	}
 
 	@Transactional
@@ -170,8 +194,23 @@ public class StaffAccountService {
 		}
 		var now = Instant.now(clock);
 		account.reactivate(now);
+		flushUsernameChange(accounts::flush);
 		events.publishEvent(new UserReactivated(id, currentActor.id(), currentActor.role(), now));
 		return account;
+	}
+
+	private static void flushUsernameChange(Runnable flush) {
+		try {
+			flush.run();
+		}
+		catch (DataIntegrityViolationException e) {
+			throw isUsernameViolation(e) ? usernameAlreadyTaken() : e;
+		}
+	}
+
+	private static boolean isUsernameViolation(DataIntegrityViolationException e) {
+		var message = NestedExceptionUtils.getMostSpecificCause(e).getMessage();
+		return message != null && message.contains(USERNAME_INDEX);
 	}
 
 	private UserAccount findStaffOrThrow(UUID id) {
@@ -203,6 +242,10 @@ public class StaffAccountService {
 
 	private static BusinessException emailAlreadyRegistered() {
 		return new BusinessException(IdentityError.EMAIL_ALREADY_REGISTERED, "Email is already registered");
+	}
+
+	private static BusinessException usernameAlreadyTaken() {
+		return new BusinessException(IdentityError.USERNAME_ALREADY_TAKEN, "Username is already taken");
 	}
 
 	private static BusinessException cannotModifyOwnAccount() {

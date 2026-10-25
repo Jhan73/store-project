@@ -9,7 +9,7 @@ import org.jspecify.annotations.Nullable;
 import com.jhanantezana.jugueria.shared.Role;
 
 // actorRole null means the change was system-initiated (no acting user), never an unauthenticated request.
-// entityLabel is what a person calls the entity (a name, an email, a ticket number), null when it has none.
+// entityLabel is what a person calls the entity (a name, a username, a ticket number), null when it has none.
 record AuditEntry(Instant occurredAt, @Nullable UUID actorId, @Nullable Role actorRole, String action,
 		String entityType, UUID entityId, @Nullable Map<String, Object> before, @Nullable Map<String, Object> after,
 		@Nullable String reason, @Nullable String entityLabel) {

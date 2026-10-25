@@ -11,7 +11,8 @@ import com.jhanantezana.jugueria.instore.InstoreApi;
 
 /**
  * What a person calls an audited entity, for events that carry only its id. Read in the publisher's own transaction,
- * so the entity is still there; a label is never a secret: a name, an email, a ticket number.
+ * so the entity is still there; a label is never a secret or personal contact data: a name, a ticket number. A
+ * person is labeled by username, never by email.
  */
 @Component
 class AuditLabels {
@@ -29,7 +30,7 @@ class AuditLabels {
 	}
 
 	@Nullable String user(UUID userId) {
-		return identity.emailOf(userId).orElse(null);
+		return identity.usernameOf(userId).orElse(null);
 	}
 
 	@Nullable String product(UUID productId) {

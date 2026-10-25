@@ -63,7 +63,7 @@ public class AuditLogService {
 
 	// Read while the account still exists: the same transaction as the change, so a later deletion cannot lose it.
 	private @Nullable String actorLabel(@Nullable UUID actorId) {
-		return actorId == null ? null : identity.emailOf(actorId).orElse(null);
+		return actorId == null ? null : identity.usernameOf(actorId).orElse(null);
 	}
 
 	private static @Nullable String clip(@Nullable String label) {
