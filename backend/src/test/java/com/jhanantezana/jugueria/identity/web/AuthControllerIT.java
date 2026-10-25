@@ -88,6 +88,7 @@ class AuthControllerIT {
 		assertThat(result).bodyJson().extractingPath("$.userId").isEqualTo(account.getId().toString());
 		assertThat(result).bodyJson().extractingPath("$.role").isEqualTo("CASHIER");
 		assertThat(result).bodyJson().extractingPath("$.tokenType").isEqualTo("Bearer");
+		assertThat(result).bodyJson().extractingPath("$.sessionExpiresAt").isNotNull();
 		assertRefreshCookieIssued(result);
 	}
 

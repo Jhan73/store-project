@@ -63,7 +63,7 @@ public class LoginService {
 		accounts.resetFailedAttempts(account.getId(), now);
 		var issued = refreshTokens.issueFamily(account.getId());
 		return new LoginResult(tokenIssuer.issue(account.getId(), account.getRole()), issued.rawToken(),
-				issued.expiresAt(), issued.maxAge(), account.getId(), account.getRole());
+				issued.expiresAt(), issued.maxAge(), issued.sessionExpiresAt(), account.getId(), account.getRole());
 	}
 
 	private static BusinessException invalidCredentials() {

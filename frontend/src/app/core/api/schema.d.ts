@@ -1761,6 +1761,8 @@ export interface components {
             accessToken: string;
             /** @enum {string} */
             role: "CUSTOMER" | "SERVER" | "CASHIER" | "KITCHEN" | "ADMIN";
+            /** Format: date-time */
+            sessionExpiresAt: string;
             tokenType: string;
             /** Format: uuid */
             userId: string;

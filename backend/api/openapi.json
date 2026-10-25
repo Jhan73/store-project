@@ -14492,6 +14492,10 @@
             "type" : "string",
             "enum" : [ "CUSTOMER", "SERVER", "CASHIER", "KITCHEN", "ADMIN" ]
           },
+          "sessionExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "tokenType" : {
             "type" : "string"
           },
@@ -14500,7 +14504,7 @@
             "format" : "uuid"
           }
         },
-        "required" : [ "accessToken", "role", "tokenType", "userId" ]
+        "required" : [ "accessToken", "role", "sessionExpiresAt", "tokenType", "userId" ]
       },
       "MarkerResponse" : {
         "type" : "object",
