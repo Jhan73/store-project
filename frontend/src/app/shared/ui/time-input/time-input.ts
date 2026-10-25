@@ -27,6 +27,7 @@ export function toTimeText(date: Date | null): string {
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => TimeInput), multi: true }],
   template: `
     <p-datepicker
+      [appendTo]="'body'"
       [inputId]="inputId()"
       [ariaLabel]="ariaLabel() ?? undefined"
       [timeOnly]="true"

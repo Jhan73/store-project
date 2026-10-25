@@ -84,6 +84,7 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         <td>{{ member.email }}</td>
         <td>
           <p-select
+            [appendTo]="'body'"
             optionLabel="label"
             optionValue="value"
             [inputId]="'role-' + member.id"
@@ -181,6 +182,7 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         </app-form-field>
         <app-form-field label="Rol" i18n-label="@@admin.users.roleLabel" controlId="staff-role">
           <p-select
+            [appendTo]="'body'"
             inputId="staff-role"
             [ariaLabel]="labels.role"
             optionLabel="label"

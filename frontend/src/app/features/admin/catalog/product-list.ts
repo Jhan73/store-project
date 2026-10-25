@@ -62,6 +62,7 @@ import { isStale } from '../admin-errors';
       controlId="product-category-filter"
     >
       <p-select
+        [appendTo]="'body'"
         inputId="product-category-filter"
         [ariaLabel]="labels.category"
         placeholder="Todas"

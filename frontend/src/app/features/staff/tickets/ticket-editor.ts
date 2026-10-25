@@ -410,7 +410,6 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
                   data-testid="ticket-note"
                   [formControl]="noteControl"
                   maxlength="140"
-                  rows="2"
                   fluid
                 ></textarea>
               </app-form-field>

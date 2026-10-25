@@ -77,7 +77,6 @@ const ENTRY_INTENT = 'entry';
             data-testid="entry-note"
             formControlName="note"
             maxlength="300"
-            rows="3"
             fluid
           ></textarea>
         </app-form-field>

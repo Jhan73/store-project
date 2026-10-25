@@ -49,7 +49,8 @@ a[pButton]:focus {
 // Touch targets: sizing only, the look stays with the PrimeNG preset.
 .p-button,
 .p-inputtext,
-.p-select {
+.p-select,
+.p-textarea {
   min-height: var(--touch-target);
 }
 
@@ -73,8 +74,19 @@ app-form-field :is(.p-inputtext, .p-select, .p-inputnumber, .p-password, .p-date
   width: 100%;
 }
 
+// A textarea starts as tall as the other controls (min-height above), grows with its content
+// and can be dragged taller; the fixed height is the fallback where field-sizing is missing.
 textarea {
   resize: vertical;
+  max-width: 100%;
+  max-height: 12rem;
+  field-sizing: content;
+}
+
+@supports not (field-sizing: content) {
+  textarea {
+    height: var(--touch-target);
+  }
 }
 
 app-table-scroll th,

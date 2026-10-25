@@ -118,7 +118,6 @@ import { ShiftResult } from './shift-result';
               data-testid="force-reason"
               [formControl]="reason"
               maxlength="280"
-              rows="3"
               fluid
             ></textarea>
           </app-form-field>

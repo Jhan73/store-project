@@ -77,6 +77,7 @@ const TYPES: readonly TypeOption[] = [
       controlId="reason-type"
     >
       <p-select
+        [appendTo]="'body'"
         inputId="reason-type"
         [ariaLabel]="labels.type"
         optionLabel="label"
