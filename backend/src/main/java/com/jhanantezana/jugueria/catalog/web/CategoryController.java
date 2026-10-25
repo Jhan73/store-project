@@ -44,7 +44,7 @@ class CategoryController {
 	@PostMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "catalog.unknown-station", "catalog.category-name-already-used" })
+	@ApiErrors({ "catalog.unknown-station", "catalog.station-inactive", "catalog.category-name-already-used" })
 	ResponseEntity<CategoryResponse> create(@Valid @RequestBody CreateCategoryRequest request) {
 		var category = categories.create(request.name(), request.stationId(), request.displayOrder());
 		return ResponseEntity.created(URI.create("/api/v1/admin/categories/" + category.getId()))
@@ -54,7 +54,8 @@ class CategoryController {
 
 	@PutMapping("/{id}")
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "catalog.category-not-found", "catalog.unknown-station", "catalog.category-name-already-used" })
+	@ApiErrors({ "catalog.category-not-found", "catalog.unknown-station", "catalog.station-inactive",
+			"catalog.category-name-already-used" })
 	ResponseEntity<CategoryResponse> change(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch,
 			@Valid @RequestBody UpdateCategoryRequest request) {
@@ -76,7 +77,7 @@ class CategoryController {
 
 	@PostMapping("/{id}/reactivate")
 	@PreAuthorize("hasRole('ADMIN')")
-	@ApiErrors({ "catalog.category-not-found" })
+	@ApiErrors({ "catalog.category-not-found", "catalog.station-inactive" })
 	ResponseEntity<CategoryResponse> reactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);

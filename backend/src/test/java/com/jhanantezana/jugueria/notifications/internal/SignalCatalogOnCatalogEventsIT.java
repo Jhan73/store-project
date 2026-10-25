@@ -58,7 +58,7 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var stationId = UUID.randomUUID();
 
-		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), null, null, NOW))
+		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar", true), null, null, NOW))
 			.andWaitForStateChange(() -> probe.countMatching(stationId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(stationId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
@@ -139,7 +139,7 @@ class SignalCatalogOnCatalogEventsIT {
 	void deliveringTheSameStationEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		var id = UUID.randomUUID();
 
-		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, new StationSnapshot("Bar"), null, null, NOW), id);
+		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, new StationSnapshot("Bar", true), null, null, NOW), id);
 	}
 
 	@Test

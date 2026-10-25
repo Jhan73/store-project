@@ -65,7 +65,8 @@ public class CategoryService {
 		EntityVersions.requireMatching(category.getVersion(), expectedVersion);
 		var now = Instant.now(clock);
 		var before = category.snapshot();
-		category.change(name.strip(), resolveStation(stationId), displayOrder, now);
+		category.change(name.strip(), stationId.equals(category.getStationId()) ? stationId : resolveStation(stationId),
+				displayOrder, now);
 		try {
 			categories.flush();
 		}
@@ -97,6 +98,7 @@ public class CategoryService {
 		if (category.isActive()) {
 			return category;
 		}
+		requireActiveStation(category.getStationId());
 		var now = Instant.now(clock);
 		var before = category.snapshot();
 		category.reactivate(now);
@@ -110,10 +112,23 @@ public class CategoryService {
 				.orElseThrow(() -> new IllegalStateException("Expected the seeded default station"))
 				.getId();
 		}
-		if (!stations.existsById(stationId)) {
-			throw new BusinessException(CatalogError.UNKNOWN_STATION, "Station " + stationId + " does not exist");
-		}
+		var station = stations.findForShareById(stationId)
+			.orElseThrow(() -> new BusinessException(CatalogError.UNKNOWN_STATION,
+					"Station " + stationId + " does not exist"));
+		requireActive(station);
 		return stationId;
+	}
+
+	// The share lock makes this check and the station's own deactivation a single ordered decision.
+	private void requireActiveStation(UUID stationId) {
+		stations.findForShareById(stationId).ifPresent(CategoryService::requireActive);
+	}
+
+	private static void requireActive(Station station) {
+		if (!station.isActive()) {
+			throw new BusinessException(CatalogError.STATION_INACTIVE,
+					"Station " + station.getId() + " is inactive; reactivate it first");
+		}
 	}
 
 	private void publish(Category category, CatalogChangeKind kind, @Nullable CategorySnapshot before, Instant now) {

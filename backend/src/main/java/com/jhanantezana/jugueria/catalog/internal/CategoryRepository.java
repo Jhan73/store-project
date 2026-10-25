@@ -9,4 +9,6 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
 	List<Category> findAllByOrderByDisplayOrderAscNameAsc();
 
+	boolean existsByStationIdAndActiveTrue(UUID stationId);
+
 }

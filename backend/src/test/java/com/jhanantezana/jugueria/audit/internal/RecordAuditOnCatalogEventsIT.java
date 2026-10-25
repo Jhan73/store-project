@@ -252,7 +252,7 @@ class RecordAuditOnCatalogEventsIT {
 		var stationId = UUID.randomUUID();
 		var actorId = UUID.randomUUID();
 
-		publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), actorId,
+		publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar", true), actorId,
 				Role.ADMIN, NOW));
 
 		var entry = findByEntityId(stationId);
@@ -267,14 +267,32 @@ class RecordAuditOnCatalogEventsIT {
 	void recordsAStationRenameWithBothNames() {
 		var stationId = UUID.randomUUID();
 
-		publish(new StationChanged(stationId, CatalogChangeKind.UPDATED, new StationSnapshot("Bar"),
-				new StationSnapshot("Juice bar"), null, null, NOW));
+		publish(new StationChanged(stationId, CatalogChangeKind.UPDATED, new StationSnapshot("Bar", true),
+				new StationSnapshot("Juice bar", true), null, null, NOW));
 
 		var entry = findByEntityId(stationId);
 		assertThat(entry.getAction()).isEqualTo("STATION_UPDATED");
 		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
 		assertThat(entry.getBefore()).containsEntry("name", "Bar");
 		assertThat(entry.getAfter()).containsEntry("name", "Juice bar");
+	}
+
+	@Test
+	void recordsAStationDeactivationAndReactivationLabelledByItsName() {
+		var stationId = UUID.randomUUID();
+
+		publish(new StationChanged(stationId, CatalogChangeKind.DEACTIVATED, new StationSnapshot("Bar", true),
+				new StationSnapshot("Bar", false), null, null, NOW));
+		publish(new StationChanged(stationId, CatalogChangeKind.ACTIVATED, new StationSnapshot("Bar", false),
+				new StationSnapshot("Bar", true), null, null, NOW.plusSeconds(1)));
+
+		var entries = auditLogs.findAll().stream().filter(entry -> stationId.equals(entry.getEntityId())).toList();
+		assertThat(entries).extracting(AuditLog::getAction)
+			.containsExactlyInAnyOrder("STATION_DEACTIVATED", "STATION_REACTIVATED");
+		assertThat(entries).extracting(AuditLog::getEntityLabel).containsOnly("Bar");
+		var deactivated = entries.stream().filter(e -> e.getAction().equals("STATION_DEACTIVATED")).findFirst().orElseThrow();
+		assertThat(deactivated.getBefore()).containsEntry("active", true);
+		assertThat(deactivated.getAfter()).containsEntry("active", false);
 	}
 
 	private static ProductSnapshot product(String name, String price, boolean active) {
