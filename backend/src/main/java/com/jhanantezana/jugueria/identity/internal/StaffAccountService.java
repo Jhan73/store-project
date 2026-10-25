@@ -2,10 +2,14 @@ package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
@@ -21,6 +25,7 @@ import com.jhanantezana.jugueria.identity.IdentityError;
 import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
+import com.jhanantezana.jugueria.identity.UserDeleted;
 import com.jhanantezana.jugueria.identity.UserReactivated;
 import com.jhanantezana.jugueria.identity.UserRenamed;
 import com.jhanantezana.jugueria.identity.UserRoleChanged;
@@ -40,6 +45,10 @@ public class StaffAccountService {
 
 	private final SetPasswordTokenService setPasswordTokens;
 
+	private final SetPasswordTokenRepository setPasswordTokenRows;
+
+	private final RefreshTokenRepository refreshTokenRows;
+
 	private final RefreshTokenService refreshTokens;
 
 	private final PasswordEncoder passwordEncoder;
@@ -55,11 +64,14 @@ public class StaffAccountService {
 	private final Clock clock;
 
 	StaffAccountService(UserAccountRepository accounts, SetPasswordTokenService setPasswordTokens,
+			SetPasswordTokenRepository setPasswordTokenRows, RefreshTokenRepository refreshTokenRows,
 			RefreshTokenService refreshTokens, PasswordEncoder passwordEncoder, ApplicationEventPublisher events,
 			CurrentActor currentActor, ActiveAdminLock activeAdminLock, List<StaffChangeGuard> changeGuards,
 			Clock clock) {
 		this.accounts = accounts;
 		this.setPasswordTokens = setPasswordTokens;
+		this.setPasswordTokenRows = setPasswordTokenRows;
+		this.refreshTokenRows = refreshTokenRows;
 		this.refreshTokens = refreshTokens;
 		this.passwordEncoder = passwordEncoder;
 		this.events = events;
@@ -184,6 +196,54 @@ public class StaffAccountService {
 		setPasswordTokens.revokeAllUnused(id);
 		events.publishEvent(new UserDeactivated(id, currentActor.id(), currentActor.role(), now));
 		return account;
+	}
+
+	/**
+	 * The given accounts an admin may delete: invitations nobody accepted (no consumed set-password link and no
+	 * session ever), that are not the actor's own and not the last active admin.
+	 */
+	@Transactional(readOnly = true)
+	public Set<UUID> deletable(Collection<UserAccount> candidates) {
+		if (candidates.isEmpty()) {
+			return Set.of();
+		}
+		var ids = candidates.stream().map(UserAccount::getId).toList();
+		var used = new HashSet<>(setPasswordTokenRows.userIdsWithUsedToken(ids));
+		used.addAll(refreshTokenRows.userIdsWithTokens(ids));
+		var lastAdmin = accounts.countByRoleAndActiveTrue(Role.ADMIN) <= 1;
+		var actorId = currentActor.id();
+		return candidates.stream()
+			.filter(account -> !used.contains(account.getId()))
+			.filter(account -> !account.getId().equals(actorId))
+			.filter(account -> !(lastAdmin && account.getRole() == Role.ADMIN && account.isActive()))
+			.map(UserAccount::getId)
+			.collect(Collectors.toSet());
+	}
+
+	// Holding the account row keeps a set-password link from being consumed between the check and the delete.
+	@Transactional
+	public void delete(UUID id) {
+		activeAdminLock.acquire();
+		rejectSelf(id);
+		var account = accounts.findForUpdateById(id).orElseThrow(StaffAccountService::notFound);
+		if (account.getRole() == Role.CUSTOMER) {
+			throw notFound();
+		}
+		var everActive = !setPasswordTokenRows.userIdsWithUsedToken(List.of(id)).isEmpty()
+				|| !refreshTokenRows.userIdsWithTokens(List.of(id)).isEmpty();
+		if (everActive) {
+			throw new BusinessException(IdentityError.STAFF_ACCOUNT_IN_USE,
+					"The account has signed in or set its password; deactivate it instead");
+		}
+		if (account.getRole() == Role.ADMIN && account.isActive() && isLastActiveAdmin()) {
+			throw lastActiveAdminRequired();
+		}
+		var now = Instant.now(clock);
+		setPasswordTokenRows.deleteAllForUser(id);
+		accounts.delete(account);
+		accounts.flush();
+		events.publishEvent(new UserDeleted(id, account.getUsername(), account.getRole(), account.isActive(),
+				currentActor.id(), currentActor.role(), now));
 	}
 
 	@Transactional

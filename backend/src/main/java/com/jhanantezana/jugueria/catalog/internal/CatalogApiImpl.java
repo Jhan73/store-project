@@ -110,9 +110,13 @@ class CatalogApiImpl implements CatalogApi {
 		availability.setProductAvailability(productId, available);
 	}
 
+	// Not read-only: the lock on the product is held until the caller's transaction ends, which keeps the product
+	// from being deleted between pricing a line and storing it.
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public PricedSelection priceSelection(UUID productId, List<UUID> optionIds) {
+		products.lockAgainstDeletion(productId)
+			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
 		var product = products.findById(productId)
 			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
 		var category = categories.findById(product.getCategoryId());

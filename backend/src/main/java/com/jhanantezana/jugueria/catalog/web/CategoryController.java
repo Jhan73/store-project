@@ -8,6 +8,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.catalog.internal.Category;
 import com.jhanantezana.jugueria.catalog.internal.CategoryService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
@@ -38,7 +40,23 @@ class CategoryController {
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	List<CategoryResponse> list() {
-		return categories.list().stream().map(CategoryResponse::from).toList();
+		var all = categories.list();
+		var deletable = categories.deletable(all.stream().map(Category::getId).toList());
+		return all.stream().map(category -> CategoryResponse.from(category, deletable.contains(category.getId()))).toList();
+	}
+
+	private CategoryResponse response(Category category) {
+		return CategoryResponse.from(category, !categories.deletable(List.of(category.getId())).isEmpty());
+	}
+
+	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "204", description = "No Content")
+	@ApiErrors({ "catalog.category-not-found", "catalog.category-in-use" })
+	ResponseEntity<Void> delete(@PathVariable UUID id,
+			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
+		categories.delete(id, IfMatchHeader.require(ifMatch));
+		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping
@@ -49,7 +67,7 @@ class CategoryController {
 		var category = categories.create(request.name(), request.stationId(), request.displayOrder());
 		return ResponseEntity.created(URI.create("/api/v1/admin/categories/" + category.getId()))
 			.eTag(ETags.format(category.getVersion()))
-			.body(CategoryResponse.from(category));
+			.body(response(category));
 	}
 
 	@PutMapping("/{id}")
@@ -62,7 +80,7 @@ class CategoryController {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
 		var category = categories.change(id, request.name(), request.stationId(), request.displayOrder(),
 				expectedVersion);
-		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(CategoryResponse.from(category));
+		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(response(category));
 	}
 
 	@PostMapping("/{id}/deactivate")
@@ -72,7 +90,7 @@ class CategoryController {
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
 		var category = categories.deactivate(id, expectedVersion);
-		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(CategoryResponse.from(category));
+		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(response(category));
 	}
 
 	@PostMapping("/{id}/reactivate")
@@ -82,7 +100,7 @@ class CategoryController {
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
 		var category = categories.reactivate(id, expectedVersion);
-		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(CategoryResponse.from(category));
+		return ResponseEntity.ok().eTag(ETags.format(category.getVersion())).body(response(category));
 	}
 
 }

@@ -1,6 +1,8 @@
 package com.jhanantezana.jugueria.catalog.internal.s3;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.delete;
+import static com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.put;
 import static com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor;
@@ -80,6 +82,27 @@ class S3ProductImageStorageTest {
 		// Over plain HTTP the SDK signs the payload in chunks, so the bytes arrive framed rather than bare.
 		var body = wireMock.getAllServeEvents().getFirst().getRequest().getBody();
 		assertThat(indexOf(body, IMAGE)).isGreaterThanOrEqualTo(0);
+	}
+
+	@Test
+	void deletesTheObjectByItsKey() {
+		wireMock.stubFor(delete(urlEqualTo("/" + BUCKET + "/products/abc.png")).willReturn(aResponse().withStatus(204)));
+
+		storage().delete("products/abc.png");
+
+		wireMock.verify(deleteRequestedFor(urlEqualTo("/" + BUCKET + "/products/abc.png")));
+	}
+
+	@Test
+	void reportsAFailedDeleteAsUnavailable() {
+		wireMock.stubFor(delete(urlEqualTo("/" + BUCKET + "/products/abc.png"))
+			.willReturn(aResponse().withStatus(500).withBody("<Error><Message>internal detail</Message></Error>")));
+
+		assertThatThrownBy(() -> storage().delete("products/abc.png")).isInstanceOfSatisfying(BusinessException.class,
+				e -> {
+					assertThat(e.errorCode()).isEqualTo(CatalogError.PROVIDER_UNAVAILABLE);
+					assertThat(e.getMessage()).doesNotContain("internal detail");
+				});
 	}
 
 	private static int indexOf(byte[] haystack, byte[] needle) {

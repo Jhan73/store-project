@@ -16,4 +16,9 @@ class UnavailableProductImageStorage implements ProductImageStorage {
 		throw new BusinessException(CatalogError.PROVIDER_UNAVAILABLE, "Image storage is not available");
 	}
 
+	@Override
+	public void delete(String key) {
+		throw new BusinessException(CatalogError.PROVIDER_UNAVAILABLE, "Image storage is not available");
+	}
+
 }

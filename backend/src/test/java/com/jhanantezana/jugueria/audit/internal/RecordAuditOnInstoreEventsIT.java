@@ -30,6 +30,7 @@ import com.jhanantezana.jugueria.instore.ShiftCountRevealed;
 import com.jhanantezana.jugueria.instore.ShiftOpened;
 import com.jhanantezana.jugueria.instore.ShiftTotals;
 import com.jhanantezana.jugueria.instore.TableCreated;
+import com.jhanantezana.jugueria.instore.TableDeleted;
 import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
@@ -98,6 +99,22 @@ class RecordAuditOnInstoreEventsIT {
 		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
 		assertThat(entry.getBefore()).containsEntry("name", "Mesa 1").containsEntry("area", "Terrace");
 		assertThat(entry.getAfter()).containsEntry("name", "Barra").containsEntry("area", null);
+	}
+
+	@Test
+	void recordsATableDeletionWithTheWholeSnapshotAndItsName() {
+		var tableId = UUID.randomUUID();
+
+		publish(new TableDeleted(tableId, new TableSnapshot("Mesa 1", "Terrace", 2), UUID.randomUUID(), Role.ADMIN, NOW));
+
+		var entry = findByEntityId(tableId);
+		assertThat(entry.getAction()).isEqualTo("TABLE_DELETED");
+		assertThat(entry.getEntityType()).isEqualTo("TABLE");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mesa 1");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Mesa 1")
+			.containsEntry("area", "Terrace")
+			.containsEntry("displayOrder", 2);
 	}
 
 	@Test

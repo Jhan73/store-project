@@ -57,6 +57,12 @@ class StaffAccountServiceTest {
 	RefreshTokenService refreshTokens;
 
 	@Mock
+	SetPasswordTokenRepository setPasswordTokenRows;
+
+	@Mock
+	RefreshTokenRepository refreshTokenRows;
+
+	@Mock
 	PasswordEncoder passwordEncoder;
 
 	@Mock
@@ -72,7 +78,8 @@ class StaffAccountServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new StaffAccountService(accounts, setPasswordTokens, refreshTokens, passwordEncoder, events,
+		service = new StaffAccountService(accounts, setPasswordTokens, setPasswordTokenRows, refreshTokenRows,
+				refreshTokens, passwordEncoder, events,
 				currentActor, activeAdminLock, List.of(), Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 

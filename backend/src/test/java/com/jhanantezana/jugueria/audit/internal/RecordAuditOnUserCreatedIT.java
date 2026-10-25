@@ -22,6 +22,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
+import com.jhanantezana.jugueria.identity.UserDeleted;
 import com.jhanantezana.jugueria.identity.UserRenamed;
 import com.jhanantezana.jugueria.shared.Role;
 
@@ -82,6 +83,24 @@ class RecordAuditOnUserCreatedIT {
 		assertThat(entry.getBefore()).containsEntry("active", true);
 		assertThat(entry.getAfter()).containsEntry("active", false).doesNotContainKey("email");
 		assertThat(entry.getEntityLabel()).isNull();
+	}
+
+	@Test
+	void recordsAnAccountDeletionWithItsOwnSnapshotBecauseTheAccountIsGone() {
+		var userId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		transactionTemplate.executeWithoutResult(status -> events
+			.publishEvent(new UserDeleted(userId, "Maria", Role.CASHIER, true, actorId, Role.ADMIN, NOW)));
+
+		var entry = findByEntityId(userId);
+		assertThat(entry.getAction()).isEqualTo("USER_DELETED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Maria");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("username", "Maria")
+			.containsEntry("role", "CASHIER")
+			.containsEntry("active", true)
+			.doesNotContainKey("email");
 	}
 
 	@Test

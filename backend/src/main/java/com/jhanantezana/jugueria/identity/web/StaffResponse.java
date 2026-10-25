@@ -9,11 +9,11 @@ import com.jhanantezana.jugueria.identity.internal.UserAccount;
 import com.jhanantezana.jugueria.shared.Role;
 
 record StaffResponse(UUID id, @Nullable String username, String email, Role role, boolean active,
-		Instant createdAt) {
+		boolean deletable, Instant createdAt) {
 
-	static StaffResponse from(UserAccount account) {
-		return new StaffResponse(account.getId(), account.getUsername(), account.getEmail(), account.getRole(), account.isActive(),
-				account.getCreatedAt());
+	static StaffResponse from(UserAccount account, boolean deletable) {
+		return new StaffResponse(account.getId(), account.getUsername(), account.getEmail(), account.getRole(),
+				account.isActive(), deletable, account.getCreatedAt());
 	}
 
 }

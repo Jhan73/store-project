@@ -9,6 +9,7 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jhanantezana.jugueria.catalog.internal.ProductDetails;
-import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
+import com.jhanantezana.jugueria.catalog.internal.ProductDeletionService;
 import com.jhanantezana.jugueria.catalog.internal.ProductService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
@@ -41,11 +42,14 @@ class ProductController {
 
 	private final ProductService products;
 
-	private final ProductImageUrls imageUrls;
+	private final ProductDeletionService deletion;
 
-	ProductController(ProductService products, ProductImageUrls imageUrls) {
+	private final ProductResponses responses;
+
+	ProductController(ProductService products, ProductDeletionService deletion, ProductResponses responses) {
 		this.products = products;
-		this.imageUrls = imageUrls;
+		this.deletion = deletion;
+		this.responses = responses;
 	}
 
 	@GetMapping
@@ -53,7 +57,9 @@ class ProductController {
 	PageResponse<ProductResponse> list(@RequestParam(required = false) @Nullable UUID categoryId,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 		var pageable = PageRequests.of(page, size, SORT);
-		return PageResponse.from(products.list(categoryId, pageable), product -> ProductResponse.from(product, imageUrls));
+		var found = products.list(categoryId, pageable);
+		return new PageResponse<>(responses.all(found.getContent()), found.getNumber(), found.getSize(),
+				found.getTotalElements(), found.getTotalPages());
 	}
 
 	@GetMapping("/{id}")
@@ -64,7 +70,7 @@ class ProductController {
 		// A bare body (not ResponseEntity) skips Spring's automatic 304, which would hide an availability change.
 		response.setHeader(HttpHeaders.ETAG, ETags.format(product.version()));
 		response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
-		return ProductResponse.from(product, imageUrls);
+		return responses.of(product);
 	}
 
 	@PostMapping
@@ -105,7 +111,17 @@ class ProductController {
 	}
 
 	private ResponseEntity<ProductResponse> respond(ResponseEntity.BodyBuilder builder, ProductDetails product) {
-		return builder.eTag(ETags.format(product.version())).body(ProductResponse.from(product, imageUrls));
+		return builder.eTag(ETags.format(product.version())).body(responses.of(product));
+	}
+
+	@DeleteMapping("/{id}")
+	@PreAuthorize("hasRole('ADMIN')")
+	@ApiResponse(responseCode = "204", description = "No Content")
+	@ApiErrors({ "catalog.product-not-found", "catalog.product-in-use" })
+	ResponseEntity<Void> delete(@PathVariable UUID id,
+			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
+		deletion.delete(id, IfMatchHeader.require(ifMatch));
+		return ResponseEntity.noContent().build();
 	}
 
 }

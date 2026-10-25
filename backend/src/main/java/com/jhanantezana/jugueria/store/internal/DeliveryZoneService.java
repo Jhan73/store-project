@@ -2,8 +2,11 @@ package com.jhanantezana.jugueria.store.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -19,6 +22,8 @@ import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Singletons;
 import com.jhanantezana.jugueria.store.DeliveryZoneCreated;
+import com.jhanantezana.jugueria.store.DeliveryZoneDeleted;
+import com.jhanantezana.jugueria.store.DeliveryZoneUsageGuard;
 import com.jhanantezana.jugueria.store.DeliveryZoneStatusChanged;
 import com.jhanantezana.jugueria.store.DeliveryZoneUpdated;
 import com.jhanantezana.jugueria.store.StoreError;
@@ -30,6 +35,8 @@ public class DeliveryZoneService {
 
 	private final StoreSettingsRepository settings;
 
+	private final List<DeliveryZoneUsageGuard> usageGuards;
+
 	private final ApplicationEventPublisher events;
 
 	private final CurrentActor currentActor;
@@ -37,9 +44,11 @@ public class DeliveryZoneService {
 	private final Clock clock;
 
 	DeliveryZoneService(DeliveryZoneRepository zones, StoreSettingsRepository settings,
-			ApplicationEventPublisher events, CurrentActor currentActor, Clock clock) {
+			List<DeliveryZoneUsageGuard> usageGuards, ApplicationEventPublisher events, CurrentActor currentActor,
+			Clock clock) {
 		this.zones = zones;
 		this.settings = settings;
+		this.usageGuards = usageGuards;
 		this.events = events;
 		this.currentActor = currentActor;
 		this.clock = clock;
@@ -86,6 +95,32 @@ public class DeliveryZoneService {
 		events.publishEvent(
 				new DeliveryZoneUpdated(zone.getId(), before, after, currentActor.id(), currentActor.role(), now));
 		return zone;
+	}
+
+	/** The given zones nothing refers to yet, which are the only ones that can be deleted. */
+	@Transactional(readOnly = true)
+	public Set<UUID> deletable(Collection<UUID> zoneIds) {
+		if (zoneIds.isEmpty()) {
+			return Set.of();
+		}
+		var deletable = new HashSet<>(zoneIds);
+		usageGuards.forEach(guard -> deletable.removeAll(guard.zonesInUse(zoneIds)));
+		return deletable;
+	}
+
+	@Transactional
+	public void delete(UUID id, long expectedVersion) {
+		var zone = findOrThrow(id);
+		requireMatchingVersion(zone, expectedVersion);
+		if (deletable(Set.of(id)).isEmpty()) {
+			throw new BusinessException(StoreError.DELIVERY_ZONE_IN_USE,
+					"Orders refer to the delivery zone; deactivate it instead");
+		}
+		var before = zone.snapshot();
+		var now = Instant.now(clock);
+		zones.delete(zone);
+		zones.flush();
+		events.publishEvent(new DeliveryZoneDeleted(id, before, currentActor.id(), currentActor.role(), now));
 	}
 
 	@Transactional

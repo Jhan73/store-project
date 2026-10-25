@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.jhanantezana.jugueria.catalog.internal.ProductDetails;
 import com.jhanantezana.jugueria.catalog.internal.ProductImageService;
-import com.jhanantezana.jugueria.catalog.internal.ProductImageUrls;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
 import com.jhanantezana.jugueria.shared.IfMatchHeader;
@@ -30,11 +29,11 @@ class ProductImageController {
 
 	private final ProductImageService images;
 
-	private final ProductImageUrls imageUrls;
+	private final ProductResponses responses;
 
-	ProductImageController(ProductImageService images, ProductImageUrls imageUrls) {
+	ProductImageController(ProductImageService images, ProductResponses responses) {
 		this.images = images;
-		this.imageUrls = imageUrls;
+		this.responses = responses;
 	}
 
 	@PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -57,7 +56,7 @@ class ProductImageController {
 	}
 
 	private ResponseEntity<ProductResponse> respond(ProductDetails product) {
-		return ResponseEntity.ok().eTag(ETags.format(product.version())).body(ProductResponse.from(product, imageUrls));
+		return ResponseEntity.ok().eTag(ETags.format(product.version())).body(responses.of(product));
 	}
 
 }

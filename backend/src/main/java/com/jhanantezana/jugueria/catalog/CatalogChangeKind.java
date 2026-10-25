@@ -2,6 +2,6 @@ package com.jhanantezana.jugueria.catalog;
 
 public enum CatalogChangeKind {
 
-	CREATED, UPDATED, ACTIVATED, DEACTIVATED
+	CREATED, UPDATED, ACTIVATED, DEACTIVATED, DELETED
 
 }

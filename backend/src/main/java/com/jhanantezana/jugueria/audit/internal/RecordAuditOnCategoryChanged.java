@@ -18,6 +18,11 @@ class RecordAuditOnCategoryChanged {
 
 	@EventListener
 	void on(CategoryChanged event) {
+		if (event.after() == null && event.before() != null) {
+			auditLog.record(AuditEntry.deletion(event.occurredAt(), event.actorId(), event.actorRole(), ENTITY_TYPE,
+					event.categoryId(), CatalogAuditMaps.toMap(event.before()), event.before().name(), null));
+			return;
+		}
 		var before = event.before() == null ? null : CatalogAuditMaps.toMap(event.before());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), action(event),
 				ENTITY_TYPE, event.categoryId(), before, CatalogAuditMaps.toMap(event.after()), null,
@@ -30,6 +35,7 @@ class RecordAuditOnCategoryChanged {
 			case UPDATED -> "CATEGORY_UPDATED";
 			case DEACTIVATED -> "CATEGORY_DEACTIVATED";
 			case ACTIVATED -> "CATEGORY_REACTIVATED";
+			case DELETED -> "CATEGORY_DELETED";
 		};
 	}
 

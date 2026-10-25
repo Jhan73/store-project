@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 import com.jhanantezana.jugueria.shared.Role;
 
-/** {@code before} is null when the category was created. */
+/** {@code before} is null when the category was created and {@code after} is null when it was deleted. */
 public record CategoryChanged(UUID categoryId, CatalogChangeKind kind, @Nullable CategorySnapshot before,
-		CategorySnapshot after, @Nullable UUID actorId, @Nullable Role actorRole, Instant occurredAt) {
+		@Nullable CategorySnapshot after, @Nullable UUID actorId, @Nullable Role actorRole, Instant occurredAt) {
 }

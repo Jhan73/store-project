@@ -278,6 +278,36 @@ class RecordAuditOnCatalogEventsIT {
 	}
 
 	@Test
+	void recordsAProductDeletionWithTheWholeSnapshotAndItsName() {
+		var productId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new ProductChanged(productId, product("Mango juice", "5.00", true), null, actorId, Role.ADMIN, NOW));
+
+		var entry = findByEntityId(productId);
+		assertThat(entry.getAction()).isEqualTo("PRODUCT_DELETED");
+		assertThat(entry.getEntityType()).isEqualTo("PRODUCT");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango juice");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Mango juice").containsEntry("price", "5.00");
+	}
+
+	@Test
+	void recordsACategoryDeletionWithTheWholeSnapshotAndItsName() {
+		var categoryId = UUID.randomUUID();
+		var stationId = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.DELETED, new CategorySnapshot("Juices", 2, stationId, true),
+				null, null, null, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_DELETED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Juices");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Juices").containsEntry("stationId", stationId.toString());
+	}
+
+	@Test
 	void recordsAStationDeactivationAndReactivationLabelledByItsName() {
 		var stationId = UUID.randomUUID();
 

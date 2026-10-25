@@ -13,6 +13,7 @@ import com.jhanantezana.jugueria.shared.BusinessException;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 @Component
@@ -46,6 +47,17 @@ class S3ProductImageStorage implements ProductImageStorage {
 		}
 		catch (SdkException e) {
 			log.error("Storing the object {} failed", key, e);
+			throw new BusinessException(CatalogError.PROVIDER_UNAVAILABLE, "Image storage is unavailable");
+		}
+	}
+
+	@Override
+	public void delete(String key) {
+		try {
+			client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+		}
+		catch (SdkException e) {
+			log.error("Deleting the object {} failed", key, e);
 			throw new BusinessException(CatalogError.PROVIDER_UNAVAILABLE, "Image storage is unavailable");
 		}
 	}

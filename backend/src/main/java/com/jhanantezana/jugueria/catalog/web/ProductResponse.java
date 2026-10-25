@@ -13,13 +13,13 @@ import com.jhanantezana.jugueria.shared.Money;
 
 record ProductResponse(UUID id, String name, @Nullable String description, UUID categoryId, Money price,
 		int displayOrder, boolean quickSalePinned, boolean active, boolean available, @Nullable String imageUrl,
-		List<Allergen> allergens, List<UUID> modifierGroupIds, String etag) {
+		List<Allergen> allergens, List<UUID> modifierGroupIds, boolean deletable, String etag) {
 
-	static ProductResponse from(ProductDetails product, ProductImageUrls imageUrls) {
+	static ProductResponse from(ProductDetails product, ProductImageUrls imageUrls, boolean deletable) {
 		return new ProductResponse(product.id(), product.name(), product.description(), product.categoryId(),
 				product.price(), product.displayOrder(), product.quickSalePinned(), product.active(),
 				product.available(), imageUrls.urlFor(product.imageKey()), product.allergens(),
-				product.modifierGroupIds(), ETags.format(product.version()));
+				product.modifierGroupIds(), deletable, ETags.format(product.version()));
 	}
 
 }

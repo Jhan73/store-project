@@ -2,8 +2,11 @@ package com.jhanantezana.jugueria.catalog.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -16,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.jhanantezana.jugueria.catalog.CatalogError;
 import com.jhanantezana.jugueria.catalog.ProductChanged;
 import com.jhanantezana.jugueria.catalog.ProductSnapshot;
+import com.jhanantezana.jugueria.catalog.ProductUsageGuard;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 import com.jhanantezana.jugueria.store.StoreApi;
@@ -31,6 +35,8 @@ public class ProductService {
 
 	private final StoreApi store;
 
+	private final List<ProductUsageGuard> usageGuards;
+
 	private final CatalogChanges changes;
 
 	private final CurrentActor currentActor;
@@ -38,14 +44,54 @@ public class ProductService {
 	private final Clock clock;
 
 	ProductService(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups,
-			StoreApi store, CatalogChanges changes, CurrentActor currentActor, Clock clock) {
+			StoreApi store, List<ProductUsageGuard> usageGuards, CatalogChanges changes, CurrentActor currentActor,
+			Clock clock) {
 		this.products = products;
 		this.categories = categories;
 		this.groups = groups;
 		this.store = store;
+		this.usageGuards = usageGuards;
 		this.changes = changes;
 		this.currentActor = currentActor;
 		this.clock = clock;
+	}
+
+	/** The given products nothing refers to yet, which are the only ones that can be deleted. */
+	@Transactional(readOnly = true)
+	public Set<UUID> deletable(Collection<UUID> productIds) {
+		if (productIds.isEmpty()) {
+			return Set.of();
+		}
+		var deletable = new HashSet<>(productIds);
+		usageGuards.forEach(guard -> deletable.removeAll(guard.productsInUse(productIds)));
+		return deletable;
+	}
+
+	// The write lock waits for any transaction that priced a line for this product and has not committed yet, and
+	// the usage check that follows sees the line that transaction stored. Pricing after this commit finds no product.
+	@Transactional
+	public @Nullable String delete(UUID id, long expectedVersion) {
+		products.lockForDeletion(id)
+			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
+		var product = findOrThrow(id);
+		EntityVersions.requireMatching(product.getVersion(), expectedVersion);
+		if (deletable(Set.of(id)).isEmpty()) {
+			throw new BusinessException(CatalogError.PRODUCT_IN_USE,
+					"The product appears in tickets, the board, reports or stock history; deactivate it instead");
+		}
+		var before = product.snapshot();
+		var imageKey = product.getImageKey();
+		var now = Instant.now(clock);
+		products.delete(product);
+		products.flush();
+		changes.publish(new ProductChanged(id, before, null, currentActor.id(), currentActor.role(), now));
+		return imageKey;
+	}
+
+	/** Whether another product still points at the object, so the storage must keep it. */
+	@Transactional(readOnly = true)
+	public boolean imageKeyInUse(String imageKey) {
+		return products.existsByImageKey(imageKey);
 	}
 
 	@Transactional(readOnly = true)

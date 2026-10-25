@@ -20,6 +20,7 @@ import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.jugueria.store.DeliveryZoneCreated;
+import com.jhanantezana.jugueria.store.DeliveryZoneDeleted;
 import com.jhanantezana.jugueria.store.DeliveryZoneSnapshot;
 import com.jhanantezana.jugueria.store.DeliveryZoneStatusChanged;
 import com.jhanantezana.jugueria.store.DeliveryZoneUpdated;
@@ -127,6 +128,24 @@ class RecordAuditOnStoreEventsIT {
 		assertThat(entry.getAction()).isEqualTo("DELIVERY_ZONE_UPDATED");
 		assertThat(entry.getBefore()).containsEntry("name", "Downtown");
 		assertThat(entry.getAfter()).containsEntry("name", "Uptown");
+	}
+
+	@Test
+	void recordsADeliveryZoneDeletionWithTheWholeSnapshotAndItsName() {
+		var zoneId = UUID.randomUUID();
+		var snapshot = new DeliveryZoneSnapshot("Downtown", Money.of("5.00", PEN), 20, Money.of("10.00", PEN), null);
+
+		transactionTemplate.executeWithoutResult(
+				status -> events.publishEvent(new DeliveryZoneDeleted(zoneId, snapshot, null, null, NOW)));
+
+		var entry = findByEntityId(zoneId);
+		assertThat(entry.getAction()).isEqualTo("DELIVERY_ZONE_DELETED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Downtown");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Downtown")
+			.containsEntry("fee", "5.00")
+			.containsEntry("deliveryMinutes", 20)
+			.containsEntry("minimumOrder", "10.00");
 	}
 
 	@Test

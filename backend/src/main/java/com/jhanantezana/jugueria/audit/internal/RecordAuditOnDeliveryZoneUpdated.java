@@ -28,7 +28,7 @@ class RecordAuditOnDeliveryZoneUpdated {
 				null, event.after().name()));
 	}
 
-	private static Map<String, Object> toMap(DeliveryZoneSnapshot snapshot) {
+	static Map<String, Object> toMap(DeliveryZoneSnapshot snapshot) {
 		var map = new java.util.LinkedHashMap<String, Object>();
 		map.put("name", snapshot.name());
 		map.put("fee", snapshot.fee().amount().toPlainString());
