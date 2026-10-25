@@ -14,6 +14,8 @@ const entry: AuditEntry = {
   after: { price: '12.00', note: '<script>alert(1)</script>' },
   reason: 'Ajuste de precio',
   correlationId: 'req-1',
+  entityLabel: null,
+  actorLabel: null,
 };
 
 function render(value: AuditEntry) {
@@ -35,6 +37,13 @@ describe('AuditDetail', () => {
     expect(text).toContain('0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c');
     expect(text).toContain('Ajuste de precio');
     expect(text).toContain('req-1');
+  });
+
+  it('names the entity by the label stored with the row and keeps the id beside it', () => {
+    const text = render({ ...entry, entityLabel: 'Jugo de mango' }).textContent ?? '';
+
+    expect(text).toContain('Jugo de mango');
+    expect(text).toContain('0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c');
   });
 
   it('shows the values before and after side by side, pretty printed', () => {

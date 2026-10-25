@@ -36,6 +36,11 @@ small.muted {
   display: block;
 }
 
+.label {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 code {
   overflow-wrap: anywhere;
 }

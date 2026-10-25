@@ -17,7 +17,11 @@ import type { AuditEntry } from '../../../core/api/api-types';
       </dd>
       <dt i18n="@@admin.audit.detail.entity">Entidad</dt>
       <dd>
-        {{ entry().entityType }} <code>{{ entry().entityId }}</code>
+        {{ entry().entityType }}
+        @if (entry().entityLabel) {
+          <strong>{{ entry().entityLabel }}</strong>
+        }
+        <code>{{ entry().entityId }}</code>
       </dd>
       <dt i18n="@@admin.audit.detail.reason">Motivo</dt>
       <dd>{{ entry().reason ?? '—' }}</dd>

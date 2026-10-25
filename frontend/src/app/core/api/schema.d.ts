@@ -1474,6 +1474,7 @@ export interface components {
             action: string;
             /** Format: uuid */
             actorId: string | null;
+            actorLabel: string | null;
             actorRole: string;
             after: {
                 [key: string]: unknown;
@@ -1484,6 +1485,7 @@ export interface components {
             correlationId: string | null;
             /** Format: uuid */
             entityId: string;
+            entityLabel: string | null;
             entityType: string;
             /** Format: uuid */
             id: string;

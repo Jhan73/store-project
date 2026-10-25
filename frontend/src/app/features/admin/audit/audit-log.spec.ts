@@ -41,6 +41,8 @@ const update: AuditEntry = {
   after: { price: '12.00' },
   reason: 'Ajuste de precio',
   correlationId: 'req-1',
+  entityLabel: null,
+  actorLabel: null,
 };
 const system: AuditEntry = {
   ...update,
@@ -173,6 +175,31 @@ describe('AuditLog', () => {
 
       const id = host.querySelector('tbody tr code.id');
       expect(id?.textContent).toBe('0199f3a2…');
+    });
+
+    it('shows the label stored with the row for an actor that no longer exists, never its raw id', async () => {
+      const deleted: AuditEntry = { ...stranger, actorLabel: 'luz@juguera.pe', entityLabel: 'Jugo de mango' };
+      const { host } = await rendered('/audit', page([deleted]));
+
+      const [row] = rows(host);
+      expect(row).toContain('luz@juguera.pe');
+      expect(row).not.toContain('0199f3a2…');
+      expect(row).toContain('Jugo de mango');
+    });
+
+    it('shows the live account only as a complement when the stored label differs', async () => {
+      const renamed: AuditEntry = { ...update, actorLabel: 'ana.old@juguera.pe' };
+      const { host } = await rendered('/audit', page([renamed]));
+
+      const [row] = rows(host);
+      expect(row).toContain('ana.old@juguera.pe');
+      expect(row).toContain('ana@juguera.pe');
+    });
+
+    it('says "or more" when the total reached the point where the API stops counting', async () => {
+      const { host } = await rendered('/audit', page([update], { totalElements: 10_000, totalPages: 500 }));
+
+      expect(host.querySelector('[aria-live="polite"]')?.textContent).toContain('10000 registros o más');
     });
 
     it('announces how many entries matched', async () => {

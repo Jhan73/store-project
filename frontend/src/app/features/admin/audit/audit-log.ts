@@ -205,9 +205,13 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
 
     <p class="count" role="status" [attr.aria-live]="'polite'">
       @if (status() === 'ready' && result(); as current) {
-        <span i18n="@@admin.audit.count">
-          {current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}
-        </span>
+        @if (current.totalElements >= totalCap) {
+          <span i18n="@@admin.audit.count.capped">{{ totalCap }} registros o más</span>
+        } @else {
+          <span i18n="@@admin.audit.count">
+            {current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}
+          </span>
+        }
       }
     </p>
 
@@ -253,14 +257,17 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
               <time [attr.datetime]="entry.occurredAt">{{ when(entry) }}</time>
             </td>
             <td>
-              @if (actorEmail(entry); as email) {
-                <span>{{ email }}</span>
+              @if (actorText(entry); as text) {
+                <span>{{ text }}</span>
               } @else if (entry.actorId) {
                 <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
                   short(entry.actorId)
                 }}</code>
               } @else {
                 <span>{{ roleName(entry) }}</span>
+              }
+              @if (liveAccount(entry); as live) {
+                <small class="muted">{{ live }}</small>
               }
               @if (entry.actorId) {
                 <small class="muted">{{ roleName(entry) }}</small>
@@ -271,9 +278,15 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
             </td>
             <td>
               <span>{{ typeName(entry) }}</span>
-              <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
-                short(entry.entityId)
-              }}</code>
+              @if (entry.entityLabel) {
+                <span class="label" [pTooltip]="entry.entityId" tooltipPosition="top">{{
+                  entry.entityLabel
+                }}</span>
+              } @else {
+                <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
+                  short(entry.entityId)
+                }}</code>
+              }
             </td>
             <td>{{ entry.reason ?? '—' }}</td>
             <td class="actions">
@@ -349,6 +362,8 @@ export class AuditLog {
     close: IconX,
   };
   protected readonly pageSizes = [...PAGE_SIZES];
+  // The API stops counting here, so a total at the cap means "at least".
+  protected readonly totalCap = 10_000;
   protected readonly labels = {
     rangeOrder: $localize`:@@admin.audit.range.order:La fecha inicial no puede ser posterior a la final.`,
     entityIdInvalid: $localize`:@@admin.audit.entityId.invalid:Escribe un id válido (formato UUID).`,
@@ -433,8 +448,18 @@ export class AuditLog {
     return (entry.actorId && this.staffById().get(entry.actorId)?.email) || null;
   }
 
+  // The label stored with the row wins: the live account may have been renamed or deleted since.
+  protected actorText(entry: AuditEntry): string | null {
+    return entry.actorLabel ?? this.actorEmail(entry);
+  }
+
+  protected liveAccount(entry: AuditEntry): string | null {
+    const live = this.actorEmail(entry);
+    return entry.actorLabel && live && live !== entry.actorLabel ? live : null;
+  }
+
   protected actorName(entry: AuditEntry): string {
-    return this.actorEmail(entry) ?? (entry.actorId ? shortId(entry.actorId) : this.roleName(entry));
+    return this.actorText(entry) ?? (entry.actorId ? shortId(entry.actorId) : this.roleName(entry));
   }
 
   protected roleName(entry: AuditEntry): string {

@@ -1331,7 +1331,7 @@
     </unit>
     <unit id="admin.audit.detail.reason">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:22,23</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:26,27</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -1339,7 +1339,7 @@
     </unit>
     <unit id="admin.audit.detail.correlation">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:24,26</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:28,30</note>
       </notes>
       <segment>
         <source>Id de la solicitud</source>
@@ -1347,7 +1347,7 @@
     </unit>
     <unit id="admin.audit.detail.none">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:46,48</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:50,53</note>
       </notes>
       <segment>
         <source>Sin valor registrado</source>
@@ -1355,7 +1355,7 @@
     </unit>
     <unit id="admin.audit.detail.before">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:61</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:65</note>
       </notes>
       <segment>
         <source>Antes</source>
@@ -1363,7 +1363,7 @@
     </unit>
     <unit id="admin.audit.detail.after">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-detail.ts:66</note>
+        <note category="location">src/app/features/admin/audit/audit-detail.ts:70</note>
       </notes>
       <segment>
         <source>Después</source>
@@ -1614,9 +1614,17 @@
         <source>Limpiar</source>
       </segment>
     </unit>
+    <unit id="admin.audit.count.capped">
+      <notes>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:209,210</note>
+      </notes>
+      <segment>
+        <source><ph id="0" equiv="INTERPOLATION" disp="{{ totalCap }}"/> registros o más</source>
+      </segment>
+    </unit>
     <unit id="admin.audit.count">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:209,212</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:212,215</note>
       </notes>
       <segment>
         <source> <ph id="0" equiv="ICU" disp="{current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}" subFlows="1260611991748454381"/> </source>
@@ -1624,7 +1632,7 @@
     </unit>
     <unit id="1813585563108443776">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:209</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:212</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =0 {Sin registros} =1 {1 registro} other {<ph id="0" equiv="INTERPOLATION"/> registros}}</source>
@@ -1632,7 +1640,7 @@
     </unit>
     <unit id="admin.audit.error">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:216,218</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:220,222</note>
       </notes>
       <segment>
         <source>No se pudo cargar el registro de auditoría.</source>
@@ -1640,7 +1648,7 @@
     </unit>
     <unit id="admin.audit.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:223,224</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:227,228</note>
       </notes>
       <segment>
         <source>Volver a intentar la búsqueda</source>
@@ -1648,7 +1656,7 @@
     </unit>
     <unit id="admin.audit.retry">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:228,230</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:232,234</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -1656,7 +1664,7 @@
     </unit>
     <unit id="admin.audit.loading">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:233,235</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:237,239</note>
       </notes>
       <segment>
         <source>Cargando…</source>
@@ -1664,7 +1672,7 @@
     </unit>
     <unit id="admin.audit.tableScroll">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:237,238</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:241,242</note>
       </notes>
       <segment>
         <source>Registro de auditoría</source>
@@ -1672,7 +1680,7 @@
     </unit>
     <unit id="admin.audit.detail.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:292,293</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:305,306</note>
       </notes>
       <segment>
         <source>Ver los valores antes y después del cambio</source>
@@ -1680,7 +1688,7 @@
     </unit>
     <unit id="admin.audit.detail">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:297,298</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:310,311</note>
       </notes>
       <segment>
         <source>Detalle</source>
@@ -1688,7 +1696,7 @@
     </unit>
     <unit id="admin.audit.detail.title">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:307,308</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:320,321</note>
       </notes>
       <segment>
         <source>Detalle del cambio</source>
@@ -1696,7 +1704,7 @@
     </unit>
     <unit id="admin.audit.detail.close.tooltip">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:326,327</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:339,340</note>
       </notes>
       <segment>
         <source>Cerrar el detalle</source>
@@ -1704,7 +1712,7 @@
     </unit>
     <unit id="admin.audit.detail.close">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:331,333</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:344,346</note>
       </notes>
       <segment>
         <source>Cerrar</source>
@@ -1712,7 +1720,7 @@
     </unit>
     <unit id="admin.audit.range.order">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:353</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:368</note>
       </notes>
       <segment>
         <source>La fecha inicial no puede ser posterior a la final.</source>
@@ -1720,7 +1728,7 @@
     </unit>
     <unit id="admin.audit.entityId.invalid">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:354</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:369</note>
       </notes>
       <segment>
         <source>Escribe un id válido (formato UUID).</source>
@@ -1728,7 +1736,7 @@
     </unit>
     <unit id="admin.audit.actor.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:355</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:370</note>
       </notes>
       <segment>
         <source>Persona</source>
@@ -1736,7 +1744,7 @@
     </unit>
     <unit id="admin.audit.entityType.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:356</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:371</note>
       </notes>
       <segment>
         <source>Tipo de entidad</source>
@@ -1744,7 +1752,7 @@
     </unit>
     <unit id="admin.audit.action.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:357</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:372</note>
       </notes>
       <segment>
         <source>Acción</source>
@@ -1752,7 +1760,7 @@
     </unit>
     <unit id="admin.audit.empty">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:359</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:374</note>
       </notes>
       <segment>
         <source>No hay registros con estos filtros.</source>
@@ -1760,7 +1768,7 @@
     </unit>
     <unit id="admin.audit.col.when">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:362</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:377</note>
       </notes>
       <segment>
         <source>Cuándo</source>
@@ -1768,7 +1776,7 @@
     </unit>
     <unit id="admin.audit.col.actor">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:363</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:378</note>
       </notes>
       <segment>
         <source>Quién</source>
@@ -1776,7 +1784,7 @@
     </unit>
     <unit id="admin.audit.col.action">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:364</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:379</note>
       </notes>
       <segment>
         <source>Acción</source>
@@ -1784,7 +1792,7 @@
     </unit>
     <unit id="admin.audit.col.entity">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:365</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:380</note>
       </notes>
       <segment>
         <source>Entidad</source>
@@ -1792,7 +1800,7 @@
     </unit>
     <unit id="admin.audit.col.reason">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:366</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:381</note>
       </notes>
       <segment>
         <source>Motivo</source>
@@ -1800,7 +1808,7 @@
     </unit>
     <unit id="admin.audit.col.detail">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:367</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:382</note>
       </notes>
       <segment>
         <source>Acciones</source>
@@ -1808,7 +1816,7 @@
     </unit>
     <unit id="admin.audit.detail.aria">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-log.ts:453</note>
+        <note category="location">src/app/features/admin/audit/audit-log.ts:478</note>
       </notes>
       <segment>
         <source>Detalle del cambio <ph id="0" equiv="action" disp="entry.action"/> del <ph id="1" equiv="when" disp="this.when(entry)"/></source>
@@ -2209,7 +2217,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.newTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:87,91</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:87,90</note>
       </notes>
       <segment>
         <source>Nuevo grupo de modificadores</source>
@@ -2225,8 +2233,8 @@
     </unit>
     <unit id="admin.catalog.back">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:99,103</note>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:100,104</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:99,102</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:100,103</note>
       </notes>
       <segment>
         <source>Volver a la lista</source>
@@ -2274,7 +2282,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.violation.maxTooLow">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:166,169</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:166,168</note>
       </notes>
       <segment>
         <source>El máximo debe ser al menos 1 y no menor que el mínimo.</source>
@@ -2378,7 +2386,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.addOption">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:279,282</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:279,281</note>
       </notes>
       <segment>
         <source>Agregar opción</source>
@@ -2394,7 +2402,7 @@
     </unit>
     <unit id="admin.catalog.groupForm.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:292,295</note>
+        <note category="location">src/app/features/admin/catalog/modifier-group-form.ts:292,294</note>
       </notes>
       <segment>
         <source>Guardar grupo</source>
@@ -2572,7 +2580,7 @@
     </unit>
     <unit id="admin.catalog.productForm.newTitle">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:88,92</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:88,91</note>
       </notes>
       <segment>
         <source>Nuevo producto</source>
@@ -2734,7 +2742,7 @@
     </unit>
     <unit id="admin.catalog.productForm.addGroup">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:291,294</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:291,293</note>
       </notes>
       <segment>
         <source>Agregar grupo</source>
@@ -2750,7 +2758,7 @@
     </unit>
     <unit id="admin.catalog.productForm.save">
       <notes>
-        <note category="location">src/app/features/admin/catalog/product-form.ts:308,311</note>
+        <note category="location">src/app/features/admin/catalog/product-form.ts:308,310</note>
       </notes>
       <segment>
         <source>Guardar producto</source>
@@ -3183,7 +3191,7 @@
     </unit>
     <unit id="admin.settings.hours.day">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:105</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:104,105</note>
       </notes>
       <segment>
         <source>Día</source>
@@ -3223,7 +3231,7 @@
     </unit>
     <unit id="admin.settings.hours.save">
       <notes>
-        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:169,172</note>
+        <note category="location">src/app/features/admin/settings/opening-hours-form.ts:169,171</note>
       </notes>
       <segment>
         <source>Guardar horario</source>
@@ -3360,8 +3368,8 @@
     </unit>
     <unit id="admin.settings.deactivate">
       <notes>
-        <note category="location">src/app/features/admin/settings/reason-list.ts:128,130</note>
-        <note category="location">src/app/features/admin/settings/zone-list.ts:116,118</note>
+        <note category="location">src/app/features/admin/settings/reason-list.ts:128,129</note>
+        <note category="location">src/app/features/admin/settings/zone-list.ts:116,117</note>
       </notes>
       <segment>
         <source>Desactivar</source>
@@ -5031,7 +5039,7 @@
     </unit>
     <unit id="admin.users.resend">
       <notes>
-        <note category="location">src/app/features/admin/users/staff-list.ts:147,149</note>
+        <note category="location">src/app/features/admin/users/staff-list.ts:147,148</note>
       </notes>
       <segment>
         <source>Reenviar enlace</source>
@@ -5888,7 +5896,7 @@
     </unit>
     <unit id="staff.quickSale.title">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:53,56</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:53,55</note>
       </notes>
       <segment>
         <source>Venta rápida</source>
@@ -5936,7 +5944,7 @@
     </unit>
     <unit id="staff.quickSale.openShift">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:86,90</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:86,89</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -5984,7 +5992,7 @@
     </unit>
     <unit id="staff.quickSale.ticket">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:118,121</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:118,120</note>
       </notes>
       <segment>
         <source>Ver la cuenta</source>
@@ -6032,7 +6040,7 @@
     </unit>
     <unit id="staff.quickSale.soldOut">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:163,165</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:163,164</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -6048,7 +6056,7 @@
     </unit>
     <unit id="staff.quickSale.cart">
       <notes>
-        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:175,177</note>
+        <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:175,176</note>
       </notes>
       <segment>
         <source>Venta</source>
@@ -6808,7 +6816,7 @@
     </unit>
     <unit id="staff.register.title">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:33,36</note>
+        <note category="location">src/app/features/staff/register/register.ts:33,35</note>
       </notes>
       <segment>
         <source>Caja</source>
@@ -6944,7 +6952,7 @@
     </unit>
     <unit id="staff.register.none.currencyFailed">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:123,126</note>
+        <note category="location">src/app/features/staff/register/register.ts:123,125</note>
       </notes>
       <segment>
         <source>No se pudo leer la moneda de la tienda, así que todavía no se puede abrir un turno.</source>
@@ -6960,7 +6968,7 @@
     </unit>
     <unit id="staff.register.none.currencyRetry">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:136,139</note>
+        <note category="location">src/app/features/staff/register/register.ts:136,138</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -6984,7 +6992,7 @@
     </unit>
     <unit id="staff.register.none.submit">
       <notes>
-        <note category="location">src/app/features/staff/register/register.ts:157,160</note>
+        <note category="location">src/app/features/staff/register/register.ts:157,159</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -7312,7 +7320,7 @@
     </unit>
     <unit id="staff.tables.counter.open">
       <notes>
-        <note category="location">src/app/features/staff/tables/table-grid.ts:149,152</note>
+        <note category="location">src/app/features/staff/tables/table-grid.ts:149,151</note>
       </notes>
       <segment>
         <source>Abrir cuenta</source>
@@ -7376,7 +7384,7 @@
     </unit>
     <unit id="staff.tickets.pay.openShift">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:76,80</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:76,79</note>
       </notes>
       <segment>
         <source>Abrir turno</source>
@@ -7432,7 +7440,7 @@
     </unit>
     <unit id="staff.tickets.pay.submit">
       <notes>
-        <note category="location">src/app/features/staff/tickets/payment-panel.ts:171,175</note>
+        <note category="location">src/app/features/staff/tickets/payment-panel.ts:171,174</note>
       </notes>
       <segment>
         <source>Registrar cobro</source>
@@ -7560,7 +7568,7 @@
     </unit>
     <unit id="staff.ticket.mergedInto">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:480</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:479</note>
       </notes>
       <segment>
         <source>La cuenta <ph id="0" equiv="number" disp="ticket.number"/> se unió a otra. Seguimos en la cuenta que quedó.</source>
@@ -7568,7 +7576,7 @@
     </unit>
     <unit id="staff.ticket.moneyRegistered">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:539</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor-store.ts:538</note>
       </notes>
       <segment>
         <source>El cambio del ticket <ph id="0" equiv="number" disp="ticket.number"/> quedó registrado.</source>
@@ -7672,7 +7680,7 @@
     </unit>
     <unit id="staff.tickets.closed">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:139,143</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:139,142</note>
       </notes>
       <segment>
         <source> La cuenta está cerrada y ya no se puede modificar. </source>
@@ -7728,7 +7736,7 @@
     </unit>
     <unit id="staff.tickets.state.unsent">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:214,216</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:214,215</note>
       </notes>
       <segment>
         <source>Sin enviar</source>
@@ -7744,7 +7752,7 @@
     </unit>
     <unit id="staff.tickets.state.ready">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:220,222</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:220,221</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -7968,7 +7976,7 @@
     </unit>
     <unit id="staff.tickets.send">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:446,448</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:446,447</note>
       </notes>
       <segment>
         <source>Enviar a cocina</source>
@@ -7992,7 +8000,7 @@
     </unit>
     <unit id="staff.tickets.billOff">
       <notes>
-        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:477,479</note>
+        <note category="location">src/app/features/staff/tickets/ticket-editor.ts:477,478</note>
       </notes>
       <segment>
         <source>Quitar el pedido de cuenta</source>
