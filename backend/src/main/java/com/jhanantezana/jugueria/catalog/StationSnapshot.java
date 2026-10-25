@@ -1,4 +1,4 @@
 package com.jhanantezana.jugueria.catalog;
 
-public record StationSnapshot(String name) {
+public record StationSnapshot(String name, boolean active) {
 }

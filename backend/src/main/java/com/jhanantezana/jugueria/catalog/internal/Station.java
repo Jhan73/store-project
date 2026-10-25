@@ -26,6 +26,9 @@ public class Station extends BaseEntity {
 	@Column(name = "default_station", nullable = false, updatable = false)
 	private boolean defaultStation;
 
+	@Column(nullable = false)
+	private boolean active;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -37,6 +40,7 @@ public class Station extends BaseEntity {
 
 	public Station(String name, Instant now) {
 		this.name = name;
+		this.active = true;
 		this.createdAt = now;
 		this.updatedAt = now;
 	}
@@ -46,8 +50,18 @@ public class Station extends BaseEntity {
 		this.updatedAt = now;
 	}
 
+	public void deactivate(Instant now) {
+		this.active = false;
+		this.updatedAt = now;
+	}
+
+	public void reactivate(Instant now) {
+		this.active = true;
+		this.updatedAt = now;
+	}
+
 	public StationSnapshot snapshot() {
-		return new StationSnapshot(name);
+		return new StationSnapshot(name, active);
 	}
 
 }

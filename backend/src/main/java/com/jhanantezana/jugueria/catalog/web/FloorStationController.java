@@ -23,7 +23,7 @@ class FloorStationController {
 	@GetMapping
 	@PreAuthorize("hasAnyRole('SERVER', 'CASHIER', 'ADMIN')")
 	List<StationOptionResponse> list() {
-		return stations.list().stream().map(StationOptionResponse::from).toList();
+		return stations.listActive().stream().map(StationOptionResponse::from).toList();
 	}
 
 }

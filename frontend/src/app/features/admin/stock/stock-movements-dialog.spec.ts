@@ -49,6 +49,7 @@ function page(content: StockMovement[], overrides: Partial<StockMovementPage> = 
 
 const ana = {
   id: ANA,
+  username: null,
   email: 'ana@juguera.pe',
   role: 'ADMIN',
   active: true,

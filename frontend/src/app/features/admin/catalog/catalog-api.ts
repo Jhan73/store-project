@@ -57,6 +57,14 @@ export class CatalogApi {
     return this.http.put<Station>(`${this.base}/admin/stations/${id}`, body, ifMatch(etag));
   }
 
+  deactivateStation(id: string, etag: string): Observable<Station> {
+    return this.http.post<Station>(`${this.base}/admin/stations/${id}/deactivate`, null, ifMatch(etag));
+  }
+
+  reactivateStation(id: string, etag: string): Observable<Station> {
+    return this.http.post<Station>(`${this.base}/admin/stations/${id}/reactivate`, null, ifMatch(etag));
+  }
+
   categories(): Observable<Category[]> {
     return this.http.get<Category[]>(`${this.base}/admin/categories`);
   }
@@ -83,6 +91,10 @@ export class CatalogApi {
       null,
       ifMatch(etag),
     );
+  }
+
+  deleteCategory(id: string, etag: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/categories/${id}`, ifMatch(etag));
   }
 
   modifierGroups(): Observable<ModifierGroup[]> {
@@ -160,6 +172,10 @@ export class CatalogApi {
       null,
       ifMatch(etag),
     );
+  }
+
+  deleteProduct(id: string, etag: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/products/${id}`, ifMatch(etag));
   }
 
   replaceProductImage(id: string, etag: string, file: File): Observable<Product> {

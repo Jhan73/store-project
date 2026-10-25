@@ -19,6 +19,7 @@ const size: ModifierGroup = {
   required: true,
   minChoices: 1,
   maxChoices: 1,
+  deletable: true,
   etag: '"7"',
   options: [
     {

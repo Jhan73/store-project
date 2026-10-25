@@ -6,4 +6,7 @@ public interface ProductImageStorage {
 	/** Stores the object under a content-addressed key; a repeated put of the same key and bytes is harmless. */
 	void put(String key, byte[] content, String contentType);
 
+	/** Removes the object; removing one that is already gone is harmless. */
+	void delete(String key);
+
 }

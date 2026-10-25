@@ -94,6 +94,8 @@ class StockChanges {
 	boolean apply(UUID productId, StockMovementType type, int onHandDelta, int reservedDelta,
 			@Nullable UUID referenceId, @Nullable String reasonCode, @Nullable String note, boolean allowShortfall) {
 		var now = Instant.now(clock);
+		// A product that is gone is tolerated (its units must still be released), but one being deleted is waited for.
+		catalog.lockProduct(productId);
 		// The ledger row goes first: its unique index is what makes a redelivered sale or return a no-op.
 		var recorded = jdbc.sql("""
 				INSERT INTO inventory.stock_movement (id, product_id, type, on_hand_delta, reserved_delta, reference_id,

@@ -1,16 +1,20 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import {
   IconMail,
+  IconPencil,
   IconPlayerPause,
   IconPlayerPlay,
   IconSend,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -35,6 +39,18 @@ import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { StaffApi } from './staff-api';
 
 const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
+const USERNAME_MAX = 60;
+
+function notBlank(control: AbstractControl<string>): ValidationErrors | null {
+  return control.value.trim() === '' ? { blank: true } : null;
+}
+
+function usernameControl(): FormControl<string> {
+  return new FormControl('', {
+    nonNullable: true,
+    validators: [notBlank, Validators.maxLength(USERNAME_MAX)],
+  });
+}
 
 @Component({
   selector: 'app-staff-list',
@@ -81,6 +97,13 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
       [columns]="columns"
     >
       <ng-template #row let-member>
+        <td>
+          @if (member.username) {
+            {{ member.username }}
+          } @else {
+            <app-status-tag [value]="labels.noUsername" severity="warn" />
+          }
+        </td>
         <td>{{ member.email }}</td>
         <td>
           <p-select
@@ -116,20 +139,56 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
               severity="secondary"
               [size]="'small'"
               [outlined]="true"
-              [disabled]="pending.has(member.id) || isOwn(member)"
-              [attr.data-testid]="'toggle-' + member.id"
-              (click)="toggle(member)"
-              [pTooltip]="member.active ? tips.deactivate : tips.reactivate"
+              [disabled]="pending.has(member.id)"
+              [attr.data-testid]="'rename-' + member.id"
+              (click)="startRename(member)"
+              pTooltip="Cambiar el nombre de usuario con el que se muestra a esta persona"
+              i18n-pTooltip="@@admin.users.rename.tooltip"
               tooltipPosition="top"
             >
-              @if (member.active) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.users.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.users.reactivate">Reactivar</ng-container>
-              }
+              <tabler-icon [icon]="icons.rename" aria-hidden="true" />
+              <span i18n="@@admin.users.rename">Nombre</span>
             </button>
+            @if (!member.deletable || !member.active) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(member.id) || isOwn(member)"
+                [attr.data-testid]="'toggle-' + member.id"
+                (click)="toggle(member)"
+                [pTooltip]="member.active ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (member.active) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.users.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.users.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (member.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(member.id) || isOwn(member)"
+                [attr.data-testid]="'delete-' + member.id"
+                (click)="remove(member)"
+                pTooltip="Eliminar esta invitación, que nadie aceptó"
+                i18n-pTooltip="@@admin.users.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.users.delete">Eliminar</span>
+              </button>
+            }
             @if (member.active) {
               <button
                 pButton
@@ -162,6 +221,23 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
       (dismissed)="close()"
     >
       <div [formGroup]="form" class="dialog-fields">
+        <app-form-field
+          label="Nombre de usuario"
+          i18n-label="@@admin.users.usernameLabel"
+          controlId="staff-username"
+          [error]="invalid('username') ? labels.usernameInvalid : null"
+          [hint]="labels.usernameHint"
+        >
+          <input
+            pInputText
+            id="staff-username"
+            formControlName="username"
+            autocomplete="off"
+            [attr.maxlength]="usernameMax"
+            [attr.aria-invalid]="invalid('username') ? 'true' : null"
+            fluid
+          />
+        </app-form-field>
         <app-form-field
           label="Correo de la nueva cuenta"
           i18n-label="@@admin.users.emailLabel"
@@ -199,6 +275,35 @@ const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
         </app-form-field>
       </div>
     </app-form-dialog>
+
+    <app-form-dialog
+      header="Nombre de usuario"
+      i18n-header="@@admin.users.renameHeader"
+      [visible]="renaming() !== null"
+      [busy]="saving()"
+      (saved)="submitRename()"
+      (dismissed)="closeRename()"
+    >
+      <div [formGroup]="renameForm" class="dialog-fields">
+        <app-form-field
+          label="Nombre de usuario"
+          i18n-label="@@admin.users.usernameLabel"
+          controlId="staff-rename"
+          [error]="renameInvalid() ? labels.usernameInvalid : null"
+          [hint]="labels.usernameHint"
+        >
+          <input
+            pInputText
+            id="staff-rename"
+            formControlName="username"
+            autocomplete="off"
+            [attr.maxlength]="usernameMax"
+            [attr.aria-invalid]="renameInvalid() ? 'true' : null"
+            fluid
+          />
+        </app-form-field>
+      </div>
+    </app-form-dialog>
   `,
 })
 export class StaffList {
@@ -212,7 +317,10 @@ export class StaffList {
     reactivate: IconPlayerPlay,
     resend: IconSend,
     invite: IconMail,
+    rename: IconPencil,
+    delete: IconTrash,
   };
+  protected readonly usernameMax = USERNAME_MAX;
   protected readonly tips = {
     deactivate: $localize`:@@admin.users.deactivate.tooltip:Impedir que la cuenta inicie sesión`,
     reactivate: $localize`:@@admin.users.reactivate.tooltip:Permitir que la cuenta vuelva a iniciar sesión`,
@@ -221,10 +329,19 @@ export class StaffList {
     active: $localize`:@@admin.users.active:Activa`,
     inactive: $localize`:@@admin.users.inactive:Inactiva`,
     role: $localize`:@@admin.users.roleLabel:Rol`,
+    noUsername: $localize`:@@admin.users.noUsername:Sin nombre`,
+    usernameInvalid: $localize`:@@admin.users.usernameInvalid:Escribe un nombre de usuario de hasta 60 caracteres.`,
+    usernameHint: $localize`:@@admin.users.usernameHint:El nombre con el que se muestra a esta persona. No sirve para iniciar sesión.`,
     emailInvalid: $localize`:@@admin.users.emailInvalid:Escribe un correo válido.`,
     inviteHint: $localize`:@@admin.users.inviteHint:La persona recibirá un enlace por correo para crear su propia contraseña.`,
   };
   protected readonly columns: readonly DataColumn[] = [
+    {
+      field: 'usernameText',
+      header: $localize`:@@admin.users.username:Nombre de usuario`,
+      sortable: true,
+      filter: true,
+    },
     { field: 'email', header: $localize`:@@admin.users.email:Correo`, sortable: true, filter: true },
     { field: 'roleText', header: $localize`:@@admin.users.role:Rol`, sortable: true },
     { field: 'stateLabel', header: $localize`:@@admin.users.state:Estado`, sortable: true },
@@ -241,6 +358,7 @@ export class StaffList {
   protected readonly timeZone = signal('');
   protected readonly notice = signal('');
   protected readonly open = signal(false);
+  protected readonly renaming = signal<StaffMember | null>(null);
   protected readonly saving = signal(false);
   protected readonly pending = new PendingIds();
   protected readonly rowsView = computed(() =>
@@ -249,6 +367,7 @@ export class StaffList {
       return {
         ...member,
         shownRole,
+        usernameText: member.username ?? '',
         roleText: roleLabel(shownRole),
         stateLabel: member.active ? this.labels.active : this.labels.inactive,
       };
@@ -256,7 +375,9 @@ export class StaffList {
   );
   private readonly ownId = computed(() => this.auth.session()?.userId ?? null);
   private lastRequest = 0;
+  protected readonly renameForm = new FormGroup({ username: usernameControl() });
   protected readonly form = new FormGroup({
+    username: usernameControl(),
     email: new FormControl('', {
       nonNullable: true,
       validators: [Validators.required, Validators.email],
@@ -290,14 +411,56 @@ export class StaffList {
     return !!control && control.invalid && control.touched;
   }
 
+  protected renameInvalid(): boolean {
+    const control = this.renameForm.controls.username;
+    return control.invalid && control.touched;
+  }
+
   protected add(): void {
-    this.form.reset({ email: '', role: 'SERVER' });
+    this.form.reset({ username: '', email: '', role: 'SERVER' });
     this.open.set(true);
   }
 
   protected close(): void {
     this.open.set(false);
-    this.form.reset({ email: '', role: 'SERVER' });
+    this.form.reset({ username: '', email: '', role: 'SERVER' });
+  }
+
+  protected startRename(member: StaffMember): void {
+    this.renameForm.reset({ username: member.username ?? '' });
+    this.renaming.set(member);
+  }
+
+  protected closeRename(): void {
+    this.renaming.set(null);
+    this.renameForm.reset({ username: '' });
+  }
+
+  protected submitRename(): void {
+    const member = this.renaming();
+    if (!member || this.saving()) {
+      return;
+    }
+    if (this.renameForm.invalid) {
+      this.renameForm.markAllAsTouched();
+      return;
+    }
+    this.saving.set(true);
+    this.api.rename(member.id, this.renameForm.getRawValue().username.trim()).subscribe({
+      next: (saved) => {
+        this.saving.set(false);
+        this.replace(saved);
+        this.closeRename();
+      },
+      error: (error: unknown) => {
+        this.saving.set(false);
+        reportFailure(this.notifier, error, this.renameForm);
+        if (isStale(error)) {
+          this.closeRename();
+          this.load();
+        }
+      },
+    });
   }
 
   protected changeRole(member: StaffMember, role: Role): void {
@@ -330,6 +493,21 @@ export class StaffList {
     this.run(member, request, (saved) => this.replace(saved));
   }
 
+  protected async remove(member: StaffMember): Promise<void> {
+    const name = member.username ?? member.email;
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.users.delete.header:Eliminar invitación`,
+      message: $localize`:@@admin.users.delete.confirm:Se eliminará la cuenta de "${name}:name:" y su enlace de invitación de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.users.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.run(member, this.api.delete(member.id), () =>
+      this.members.update((list) => list.filter((item) => item.id !== member.id)),
+    );
+  }
+
   protected resend(member: StaffMember): void {
     this.run(member, this.api.resendSetPasswordLink(member.id), () =>
       this.notice.set($localize`:@@admin.users.resent:Enlace reenviado a ${member.email}:email:.`),
@@ -344,10 +522,10 @@ export class StaffList {
       this.form.markAllAsTouched();
       return;
     }
-    const { email, role } = this.form.getRawValue();
+    const { username, email, role } = this.form.getRawValue();
     const address = email.trim();
     this.saving.set(true);
-    this.api.create({ email: address, role }).subscribe({
+    this.api.create({ username: username.trim(), email: address, role }).subscribe({
       next: () => {
         this.saving.set(false);
         this.notice.set($localize`:@@admin.users.invited:Invitación enviada a ${address}:email:.`);

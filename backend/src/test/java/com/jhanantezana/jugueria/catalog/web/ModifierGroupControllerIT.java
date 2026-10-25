@@ -365,6 +365,36 @@ class ModifierGroupControllerIT {
 	}
 
 	@Test
+	void theListSaysWhichGroupsCanBeDeleted() {
+		var free = create(sizeGroup("Free-" + UUID.randomUUID()));
+		var attached = create(sizeGroup("Attached-" + UUID.randomUUID()));
+		var category = mvc.post()
+			.uri("/api/v1/admin/categories")
+			.with(admin())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Cat-%s\",\"displayOrder\":0}".formatted(UUID.randomUUID()))
+			.exchange();
+		mvc.post().uri("/api/v1/admin/products").with(admin()).contentType(MediaType.APPLICATION_JSON).content("""
+				{ "name": "Mango-%s", "categoryId": "%s", "price": { "amount": "5.00", "currency": "PEN" },
+				  "displayOrder": 0, "quickSalePinned": false, "modifierGroupIds": ["%s"] }
+				""".formatted(UUID.randomUUID(), idOf(category), idOf(attached))).exchange();
+
+		var result = mvc.get().uri(GROUPS).with(admin()).exchange();
+
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='%s')].deletable".formatted(idOf(free)))
+			.asList()
+			.containsExactly(true);
+		assertThat(result).bodyJson()
+			.extractingPath("$[?(@.id=='%s')].deletable".formatted(idOf(attached)))
+			.asList()
+			.containsExactly(false);
+		assertThat(create(sizeGroup("Fresh-" + UUID.randomUUID()))).bodyJson()
+			.extractingPath("$.deletable")
+			.isEqualTo(true);
+	}
+
+	@Test
 	void rejectsADeleteWithoutIfMatch() {
 		var created = create(sizeGroup("Size-" + UUID.randomUUID()));
 

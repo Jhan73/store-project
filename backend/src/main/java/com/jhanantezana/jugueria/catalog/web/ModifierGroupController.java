@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jhanantezana.jugueria.catalog.internal.ModifierGroup;
 import com.jhanantezana.jugueria.catalog.internal.ModifierGroupService;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.ETags;
@@ -41,7 +42,13 @@ class ModifierGroupController {
 	@GetMapping
 	@PreAuthorize("hasRole('ADMIN')")
 	List<ModifierGroupResponse> list() {
-		return groups.list().stream().map(ModifierGroupResponse::from).toList();
+		var all = groups.list();
+		var deletable = groups.deletable(all.stream().map(ModifierGroup::getId).toList());
+		return all.stream().map(group -> ModifierGroupResponse.from(group, deletable.contains(group.getId()))).toList();
+	}
+
+	private ModifierGroupResponse response(ModifierGroup group) {
+		return ModifierGroupResponse.from(group, !groups.deletable(List.of(group.getId())).isEmpty());
 	}
 
 	@GetMapping("/{id}")
@@ -52,7 +59,7 @@ class ModifierGroupController {
 		// A bare body (not ResponseEntity) skips Spring's automatic 304, which would hide an availability change.
 		response.setHeader(HttpHeaders.ETAG, ETags.format(group.getVersion()));
 		response.setHeader(HttpHeaders.CACHE_CONTROL, CacheControl.noStore().getHeaderValue());
-		return ModifierGroupResponse.from(group);
+		return response(group);
 	}
 
 	@PostMapping
@@ -64,7 +71,7 @@ class ModifierGroupController {
 				request.optionDefinitions());
 		return ResponseEntity.created(URI.create("/api/v1/admin/modifier-groups/" + group.getId()))
 			.eTag(ETags.format(group.getVersion()))
-			.body(ModifierGroupResponse.from(group));
+			.body(response(group));
 	}
 
 	@PutMapping("/{id}")
@@ -76,7 +83,7 @@ class ModifierGroupController {
 		var expectedVersion = IfMatchHeader.require(ifMatch);
 		var group = groups.change(id, request.name(), request.required(), request.minChoices(), request.maxChoices(),
 				request.optionDefinitions(), expectedVersion);
-		return ResponseEntity.ok().eTag(ETags.format(group.getVersion())).body(ModifierGroupResponse.from(group));
+		return ResponseEntity.ok().eTag(ETags.format(group.getVersion())).body(response(group));
 	}
 
 	@DeleteMapping("/{id}")

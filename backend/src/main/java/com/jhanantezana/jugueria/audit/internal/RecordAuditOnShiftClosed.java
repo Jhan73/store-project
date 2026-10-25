@@ -13,8 +13,11 @@ class RecordAuditOnShiftClosed {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnShiftClosed(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnShiftClosed(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -28,7 +31,8 @@ class RecordAuditOnShiftClosed {
 		after.put("difference", event.difference() == null ? null : event.difference().amount().toPlainString());
 		var reason = event.forced() ? event.forceReason() : event.differenceNote();
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "SHIFT_CLOSED",
-				RecordAuditOnShiftOpened.ENTITY_TYPE, event.shiftId(), Map.of("status", "OPEN"), after, reason));
+				RecordAuditOnShiftOpened.ENTITY_TYPE, event.shiftId(), Map.of("status", "OPEN"), after, reason,
+				labels.user(event.cashierId())));
 	}
 
 }

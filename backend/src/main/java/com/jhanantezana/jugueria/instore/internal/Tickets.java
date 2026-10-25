@@ -5,9 +5,12 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.Currency;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -242,6 +245,14 @@ class Tickets {
 			.param("id", tableId)
 			.query(Boolean.class)
 			.single();
+	}
+
+	/** The given tables that have ever had a ticket, open or not. */
+	Set<UUID> tablesWithTickets(Collection<UUID> tableIds) {
+		return new HashSet<>(jdbc.sql("SELECT DISTINCT table_id FROM instore.ticket WHERE table_id IN (:ids)")
+			.param("ids", tableIds)
+			.query(UUID.class)
+			.list());
 	}
 
 	List<TicketSummary> open(int limit, long offset) {

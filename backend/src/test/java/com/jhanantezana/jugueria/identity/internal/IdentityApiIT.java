@@ -49,4 +49,16 @@ class IdentityApiIT {
 		assertThat(identity.emailOf(UUID.randomUUID())).isEmpty();
 	}
 
+	@Test
+	void findsTheUsernameOfAUserByIdAndNothingWhenThereIsNone() {
+		var named = new UserAccount("maria@jugueria.pe", "hash", Role.CASHIER, NOW);
+		named.rename("Maria", NOW);
+		named = accounts.save(named);
+		var legacy = accounts.save(new UserAccount("legacy@jugueria.pe", "hash", Role.CASHIER, NOW));
+
+		assertThat(identity.usernameOf(named.getId())).contains("Maria");
+		assertThat(identity.usernameOf(legacy.getId())).isEmpty();
+		assertThat(identity.usernameOf(UUID.randomUUID())).isEmpty();
+	}
+
 }

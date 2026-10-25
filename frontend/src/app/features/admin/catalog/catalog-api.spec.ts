@@ -61,6 +61,17 @@ describe('CatalogApi', () => {
     });
   });
 
+  it('deactivates, reactivates and deletes with the item version', () => {
+    api.deactivateStation('s1', ETAG).subscribe();
+    expect(expectRequest('POST', '/admin/stations/s1/deactivate').request.headers.get('If-Match')).toBe(ETAG);
+    api.reactivateStation('s1', ETAG).subscribe();
+    expect(expectRequest('POST', '/admin/stations/s1/reactivate').request.headers.get('If-Match')).toBe(ETAG);
+    api.deleteCategory('c1', ETAG).subscribe();
+    expect(expectRequest('DELETE', '/admin/categories/c1').request.headers.get('If-Match')).toBe(ETAG);
+    api.deleteProduct('p1', ETAG).subscribe();
+    expect(expectRequest('DELETE', '/admin/products/p1').request.headers.get('If-Match')).toBe(ETAG);
+  });
+
   describe('categories', () => {
     it('lists and creates', () => {
       api.categories().subscribe();

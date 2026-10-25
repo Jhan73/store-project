@@ -118,7 +118,8 @@ class OpenApiSpecIT {
 		var create = paths.path("/api/v1/admin/categories").path("post").path("responses");
 		assertThat(create.has("201")).isTrue();
 		assertThat(create.has("200")).isFalse();
-		assertThat(codes(create.path("409"))).containsExactly("catalog.category-name-already-used");
+		assertThat(codes(create.path("409"))).containsExactlyInAnyOrder("catalog.category-name-already-used",
+				"catalog.station-inactive");
 		assertThat(codes(create.path("422"))).containsExactly("catalog.unknown-station");
 		assertThat(codes(create.path("401"))).containsExactly("auth.unauthenticated");
 
@@ -212,7 +213,8 @@ class OpenApiSpecIT {
 		var product = schemas().path("ProductResponse");
 
 		assertThat(names(product.path("required"))).containsExactlyInAnyOrder("id", "name", "categoryId", "price",
-				"displayOrder", "quickSalePinned", "active", "available", "allergens", "modifierGroupIds", "etag", "description",
+				"displayOrder", "quickSalePinned", "active", "available", "allergens", "modifierGroupIds", "deletable", "etag",
+				"description",
 				"imageUrl");
 		assertThat(types(product.path("properties").path("description"))).containsExactlyInAnyOrder("string", "null");
 		assertThat(types(product.path("properties").path("imageUrl"))).containsExactlyInAnyOrder("string", "null");

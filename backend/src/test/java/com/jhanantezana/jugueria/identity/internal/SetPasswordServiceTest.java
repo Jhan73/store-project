@@ -76,7 +76,7 @@ class SetPasswordServiceTest {
 		var token = new SetPasswordToken(USER_ID, RefreshTokens.hash("raced"), NOW, NOW.plus(Duration.ofHours(48)));
 		var account = new UserAccount("raced@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
 		when(tokens.findByTokenHash(RefreshTokens.hash("raced"))).thenReturn(Optional.of(token));
-		when(accounts.findById(USER_ID)).thenReturn(Optional.of(account));
+		when(accounts.findForUpdateById(USER_ID)).thenReturn(Optional.of(account));
 		when(tokens.markUsed(token.getId(), NOW)).thenReturn(0);
 
 		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.setPassword("raced", "a-long-password"));
@@ -88,7 +88,7 @@ class SetPasswordServiceTest {
 		var token = new SetPasswordToken(USER_ID, RefreshTokens.hash(raw), NOW, NOW.plus(Duration.ofHours(48)));
 		var account = new UserAccount("inactive@jugueria.pe", "unusable-hash", Role.CASHIER, NOW, false);
 		when(tokens.findByTokenHash(RefreshTokens.hash(raw))).thenReturn(Optional.of(token));
-		when(accounts.findById(USER_ID)).thenReturn(Optional.of(account));
+		when(accounts.findForUpdateById(USER_ID)).thenReturn(Optional.of(account));
 
 		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.setPassword(raw, "a-long-password"));
 
@@ -103,6 +103,7 @@ class SetPasswordServiceTest {
 				NOW.plus(Duration.ofMinutes(15)));
 		when(tokens.findByTokenHash(RefreshTokens.hash(raw))).thenReturn(Optional.of(token));
 		when(tokens.markUsed(token.getId(), NOW)).thenReturn(1);
+		when(accounts.findForUpdateById(USER_ID)).thenReturn(Optional.of(account));
 		when(accounts.findById(USER_ID)).thenReturn(Optional.of(account));
 		when(passwordEncoder.encode("a-long-password")).thenReturn("encoded-hash");
 
@@ -122,7 +123,7 @@ class SetPasswordServiceTest {
 		var raw = "orphan-token";
 		var token = new SetPasswordToken(USER_ID, RefreshTokens.hash(raw), NOW, NOW.plus(Duration.ofHours(48)));
 		when(tokens.findByTokenHash(RefreshTokens.hash(raw))).thenReturn(Optional.of(token));
-		when(accounts.findById(USER_ID)).thenReturn(Optional.empty());
+		when(accounts.findForUpdateById(USER_ID)).thenReturn(Optional.empty());
 
 		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.setPassword(raw, "a-long-password"));
 

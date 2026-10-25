@@ -135,6 +135,59 @@ class AuditControllerIT {
 		assertThat(Set.copyOf(seenIds)).hasSize(3);
 	}
 
+	@Test
+	void exposesTheLabelsStoredWithARowWhoseEntityAndActorAreGone() {
+		var entityId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+		var snapshot = java.util.Map.<String, Object>of("name", "Mango juice", "price", "12.50");
+		auditLogs.save(new AuditLog(NOW, actorId, "ADMIN", "PRODUCT_DELETED", "PRODUCT", entityId, snapshot, null,
+				"Duplicate", null, null, null, "Mango juice", "admin@example.com"));
+
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?entityId=" + entityId)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content[0].entityLabel").isEqualTo("Mango juice");
+		assertThat(result).bodyJson().extractingPath("$.content[0].actorLabel").isEqualTo("admin@example.com");
+		assertThat(result).bodyJson().extractingPath("$.content[0].before.name").isEqualTo("Mango juice");
+		assertThat(result).bodyJson().extractingPath("$.content[0].after").isNull();
+	}
+
+	@Test
+	void returnsNullLabelsForARowWrittenBeforeLabelsExisted() {
+		var entityId = UUID.randomUUID();
+		auditLogs.save(new AuditLog(NOW, null, "SYSTEM", "USER_CREATED", "USER", entityId, null, null, null, null,
+				null, null));
+
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?entityId=" + entityId)
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content[0].entityLabel").isNull();
+		assertThat(result).bodyJson().extractingPath("$.content[0].actorLabel").isNull();
+	}
+
+	@Test
+	void reportsTheTotalOfAFilteredSearchAcrossFullPages() {
+		var actorId = UUID.randomUUID();
+		Stream.generate(() -> auditLogs.save(new AuditLog(NOW, actorId, "ADMIN", "USER_CREATED", "USER",
+				UUID.randomUUID(), null, null, null, null, null, null))).limit(3).toList();
+
+		var result = mvc.get()
+			.uri(AUDIT_ENTRIES + "?actorId=" + actorId + "&size=2&page=0")
+			.with(AuthenticatedAs.user(UUID.randomUUID(), Role.ADMIN))
+			.exchange();
+
+		assertThat(result).hasStatusOk();
+		assertThat(result).bodyJson().extractingPath("$.content.length()").isEqualTo(2);
+		assertThat(result).bodyJson().extractingPath("$.totalElements").isEqualTo(3);
+		assertThat(result).bodyJson().extractingPath("$.totalPages").isEqualTo(2);
+	}
+
 	private UUID firstEntryId(MvcTestResult result) {
 		try {
 			String json = result.getResponse().getContentAsString();

@@ -24,7 +24,7 @@ class RecordAuditOnStoreSettingsChanged {
 	void on(StoreSettingsChanged event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				"STORE_SETTINGS_CHANGED", ENTITY_TYPE, event.settingsId(), toMap(event.before()),
-				toMap(event.after()), null));
+				toMap(event.after()), null, null));
 	}
 
 	private static Map<String, Object> toMap(StoreSettingsSnapshot snapshot) {

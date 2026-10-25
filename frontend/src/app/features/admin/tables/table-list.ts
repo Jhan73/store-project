@@ -5,6 +5,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -17,6 +18,7 @@ import type { AdminTable } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { isStale, reportFailure } from '../admin-errors';
 import { wholeNumber } from '../admin-validators';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { PendingIds } from '../../../shared/state/pending-ids';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { UndoableChanges } from '../../../shared/state/undoable-changes';
@@ -101,26 +103,46 @@ function byDisplayOrder(a: AdminTable, b: AdminTable): number {
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.tables.edit">Editar</span>
             </button>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              [size]="'small'"
-              [outlined]="true"
-              [disabled]="pending.has(table.id) || changes.has(table.id)"
-              [attr.data-testid]="'toggle-' + table.id"
-              (click)="toggle(table)"
-              [pTooltip]="table.shownActive ? tips.deactivate : tips.reactivate"
-              tooltipPosition="top"
-            >
-              @if (table.shownActive) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.tables.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.tables.reactivate">Reactivar</ng-container>
-              }
-            </button>
+            @if (!table.deletable || !table.shownActive) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(table.id) || changes.has(table.id)"
+                [attr.data-testid]="'toggle-' + table.id"
+                (click)="toggle(table)"
+                [pTooltip]="table.shownActive ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (table.shownActive) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.tables.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.tables.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (table.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [size]="'small'"
+                [outlined]="true"
+                [disabled]="pending.has(table.id) || changes.has(table.id)"
+                [attr.data-testid]="'delete-' + table.id"
+                (click)="remove(table)"
+                pTooltip="Eliminar esta mesa, que nunca tuvo cuentas"
+                i18n-pTooltip="@@admin.tables.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.tables.delete">Eliminar</span>
+              </button>
+            }
           </div>
         </td>
       </ng-template>
@@ -189,6 +211,7 @@ export class TableList {
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
     create: IconPlus,
+    delete: IconTrash,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.tables.deactivate.tooltip:Ocultar esta mesa sin borrarla`,
@@ -212,6 +235,7 @@ export class TableList {
   ];
   private readonly api = inject(TablesApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
   protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
   protected readonly tables = signal<readonly AdminTable[]>([]);
@@ -289,6 +313,34 @@ export class TableList {
       next: (saved) => {
         this.pending.delete(table.id);
         this.replace(saved);
+      },
+      error: (error: unknown) => {
+        this.pending.delete(table.id);
+        this.fail(error, undefined, table.id);
+      },
+    });
+  }
+
+  protected async remove(table: AdminTable): Promise<void> {
+    if (this.pending.has(table.id) || this.changes.has(table.id)) {
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.tables.delete.header:Eliminar mesa`,
+      message: $localize`:@@admin.tables.delete.confirm:Se eliminará la mesa "${table.name}:name:" de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.tables.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.pending.add(table.id);
+    this.api.delete(table.id, table.etag).subscribe({
+      next: () => {
+        this.pending.delete(table.id);
+        this.tables.update((list) => list.filter((item) => item.id !== table.id));
+        if (this.editing()?.id === table.id) {
+          this.close();
+        }
       },
       error: (error: unknown) => {
         this.pending.delete(table.id);

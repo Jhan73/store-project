@@ -1,6 +1,6 @@
 package com.jhanantezana.jugueria.audit.internal;
 
-import java.util.Map;
+import java.util.LinkedHashMap;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -22,9 +22,13 @@ class RecordAuditOnUserCreated {
 
 	@EventListener
 	void on(UserCreated event) {
+		var after = new LinkedHashMap<String, Object>();
+		if (event.username() != null) {
+			after.put("username", event.username());
+		}
+		after.put("role", event.role().name());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "USER_CREATED",
-				ENTITY_TYPE, event.userId(), null, Map.of("email", event.email(), "role", event.role().name()),
-				null));
+				ENTITY_TYPE, event.userId(), null, after, null, event.username()));
 	}
 
 }

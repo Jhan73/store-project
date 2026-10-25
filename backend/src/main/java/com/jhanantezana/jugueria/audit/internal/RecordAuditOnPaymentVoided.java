@@ -14,8 +14,11 @@ class RecordAuditOnPaymentVoided {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnPaymentVoided(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnPaymentVoided(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -29,7 +32,8 @@ class RecordAuditOnPaymentVoided {
 		after.put("saleVoidId", event.saleVoidId() == null ? null : event.saleVoidId().toString());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "PAYMENT_VOIDED",
 				RecordAuditOnPaymentRecorded.ENTITY_TYPE, event.paymentId(), Map.of("state", "RECORDED"), after,
-				reason(event.reasonCode(), event.note())));
+				reason(event.reasonCode(), event.note()),
+				labels.ticket(event.ticketId())));
 	}
 
 	private static String reason(String code, @Nullable String note) {

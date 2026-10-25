@@ -17,15 +17,18 @@ class RecordAuditOnStockAdjusted {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnStockAdjusted(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnStockAdjusted(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
 	void on(StockAdjusted event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				"STOCK_" + event.kind().name(), ENTITY_TYPE, event.productId(), of(event.before()), of(event.after()),
-				reason(event.reasonCode(), event.note())));
+				reason(event.reasonCode(), event.note()), labels.product(event.productId())));
 	}
 
 	private static @Nullable String reason(@Nullable String code, @Nullable String note) {

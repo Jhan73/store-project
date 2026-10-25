@@ -13,7 +13,7 @@ import com.jhanantezana.jugueria.shared.Money;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 record ModifierGroupResponse(UUID id, String name, boolean required, int minChoices, int maxChoices,
-		List<Option> options, String etag) {
+		List<Option> options, boolean deletable, String etag) {
 
 	@Schema(name = "ModifierOptionResponse")
 	record Option(UUID id, String name, Money priceDelta, boolean available, List<Allergen> allergens) {
@@ -25,9 +25,9 @@ record ModifierGroupResponse(UUID id, String name, boolean required, int minChoi
 
 	}
 
-	static ModifierGroupResponse from(ModifierGroup group) {
+	static ModifierGroupResponse from(ModifierGroup group, boolean deletable) {
 		return new ModifierGroupResponse(group.getId(), group.getName(), group.isRequired(), group.getMinChoices(),
-				group.getMaxChoices(), group.getOptions().stream().map(Option::from).toList(),
+				group.getMaxChoices(), group.getOptions().stream().map(Option::from).toList(), deletable,
 				ETags.format(group.getVersion()));
 	}
 

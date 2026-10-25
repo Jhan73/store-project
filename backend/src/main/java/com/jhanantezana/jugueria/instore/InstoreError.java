@@ -11,6 +11,7 @@ public enum InstoreError implements ErrorCode {
 	TABLE_OCCUPIED("instore.table-occupied", HttpStatus.CONFLICT),
 	TABLE_INACTIVE("instore.table-inactive", HttpStatus.CONFLICT),
 	TABLE_HAS_OPEN_TICKET("instore.table-has-open-ticket", HttpStatus.CONFLICT),
+	TABLE_IN_USE("instore.table-in-use", HttpStatus.CONFLICT),
 	TICKET_NOT_FOUND("instore.ticket-not-found", HttpStatus.NOT_FOUND),
 	TICKET_CLOSED("instore.ticket-closed", HttpStatus.CONFLICT),
 	INVALID_TICKET("instore.invalid-ticket", HttpStatus.UNPROCESSABLE_CONTENT),

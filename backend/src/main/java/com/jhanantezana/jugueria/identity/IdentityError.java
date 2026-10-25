@@ -11,7 +11,11 @@ public enum IdentityError implements ErrorCode {
 	// The actor themselves, not a business rule about the target account.
 	CANNOT_MODIFY_OWN_ACCOUNT("identity.cannot-modify-own-account", HttpStatus.UNPROCESSABLE_CONTENT),
 	// The number of active ADMINs, which someone else promoting another admin can change.
-	LAST_ACTIVE_ADMIN_REQUIRED("identity.last-active-admin-required", HttpStatus.CONFLICT);
+	LAST_ACTIVE_ADMIN_REQUIRED("identity.last-active-admin-required", HttpStatus.CONFLICT),
+	// Another active account may take the name, or free it, between two attempts.
+	USERNAME_ALREADY_TAKEN("identity.username-already-taken", HttpStatus.CONFLICT),
+	// An account that ever signed in, or set its password, has a history and can only be deactivated.
+	STAFF_ACCOUNT_IN_USE("identity.staff-account-in-use", HttpStatus.CONFLICT);
 
 	private final String code;
 

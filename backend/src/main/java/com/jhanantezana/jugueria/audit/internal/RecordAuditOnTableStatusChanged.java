@@ -1,7 +1,5 @@
 package com.jhanantezana.jugueria.audit.internal;
 
-import java.util.Map;
-
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +17,9 @@ class RecordAuditOnTableStatusChanged {
 	@EventListener
 	void on(TableStatusChanged event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
-				"TABLE_STATUS_CHANGED", TableAuditMaps.ENTITY_TYPE, event.tableId(), null,
-				Map.of("active", event.active()), null));
+				"TABLE_STATUS_CHANGED", TableAuditMaps.ENTITY_TYPE, event.tableId(),
+				AuditSnapshots.status("name", event.name(), !event.active()),
+				AuditSnapshots.status("name", event.name(), event.active()), null, event.name()));
 	}
 
 }

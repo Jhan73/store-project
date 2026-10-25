@@ -2,7 +2,10 @@ package com.jhanantezana.jugueria.catalog.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.Hibernate;
@@ -24,6 +27,8 @@ public class ModifierGroupService {
 
 	private final ModifierGroupRepository groups;
 
+	private final ProductRepository products;
+
 	private final StoreApi store;
 
 	private final CatalogChanges changes;
@@ -34,9 +39,10 @@ public class ModifierGroupService {
 
 	private final EntityManager entityManager;
 
-	ModifierGroupService(ModifierGroupRepository groups, StoreApi store, CatalogChanges changes,
-			CurrentActor currentActor, Clock clock, EntityManager entityManager) {
+	ModifierGroupService(ModifierGroupRepository groups, ProductRepository products, StoreApi store,
+			CatalogChanges changes, CurrentActor currentActor, Clock clock, EntityManager entityManager) {
 		this.entityManager = entityManager;
+		this.products = products;
 		this.groups = groups;
 		this.store = store;
 		this.changes = changes;
@@ -56,6 +62,17 @@ public class ModifierGroupService {
 		var group = groups.findWithOptionsById(id).orElseThrow(ModifierGroupService::notFound);
 		initializeAllergens(group);
 		return group;
+	}
+
+	/** The given groups no product attaches, which are the only ones that can be deleted. */
+	@Transactional(readOnly = true)
+	public Set<UUID> deletable(Collection<UUID> groupIds) {
+		if (groupIds.isEmpty()) {
+			return Set.of();
+		}
+		var deletable = new HashSet<>(groupIds);
+		deletable.removeAll(products.attachedModifierGroupIds(groupIds));
+		return deletable;
 	}
 
 	// Fetching allergens in the same join as the options repeats every option once per allergen, so they load

@@ -2,8 +2,11 @@ package com.jhanantezana.jugueria.instore.internal;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jhanantezana.jugueria.instore.InstoreError;
 import com.jhanantezana.jugueria.instore.TableCreated;
+import com.jhanantezana.jugueria.instore.TableDeleted;
 import com.jhanantezana.jugueria.instore.TableSnapshot;
 import com.jhanantezana.jugueria.instore.TableStatusChanged;
 import com.jhanantezana.jugueria.instore.TableUpdated;
@@ -91,6 +95,43 @@ public class DiningTableService {
 		return table;
 	}
 
+	/** The given tables that never had a ticket, which are the only ones that can be deleted. */
+	@Transactional(readOnly = true)
+	public Set<UUID> deletable(Collection<UUID> tableIds) {
+		if (tableIds.isEmpty()) {
+			return Set.of();
+		}
+		var deletable = new HashSet<>(tableIds);
+		deletable.removeAll(tickets.tablesWithTickets(tableIds));
+		return deletable;
+	}
+
+	// The table row is locked first, as in a deactivation, and the foreign key from the tickets is the last guard.
+	@Transactional
+	public void delete(UUID id, long expectedVersion) {
+		var table = findOrThrow(id);
+		EntityVersions.requireMatching(table.getVersion(), expectedVersion);
+		tickets.lockTable(id);
+		if (deletable(Set.of(id)).isEmpty()) {
+			throw tableInUse();
+		}
+		var before = snapshot(table);
+		var now = Instant.now(clock);
+		tables.delete(table);
+		try {
+			tables.flush();
+		}
+		catch (DataIntegrityViolationException e) {
+			throw Constraints.violated(e, Constraints.TICKET_TABLE_FK) ? tableInUse() : e;
+		}
+		events.publishEvent(new TableDeleted(id, before, currentActor.id(), currentActor.role(), now));
+	}
+
+	private static BusinessException tableInUse() {
+		return new BusinessException(InstoreError.TABLE_IN_USE,
+				"The table has tickets in its history; deactivate it instead");
+	}
+
 	@Transactional
 	public DiningTable deactivate(UUID id, long expectedVersion) {
 		var table = findOrThrow(id);
@@ -121,8 +162,8 @@ public class DiningTableService {
 	}
 
 	private void publishStatus(DiningTable table, Instant now) {
-		events.publishEvent(
-				new TableStatusChanged(table.getId(), table.isActive(), currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new TableStatusChanged(table.getId(), table.isActive(), currentActor.id(),
+				currentActor.role(), now, table.getName()));
 	}
 
 	private static TableSnapshot snapshot(DiningTable table) {

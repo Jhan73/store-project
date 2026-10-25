@@ -12,15 +12,18 @@ class RecordAuditOnUserPasswordSet {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnUserPasswordSet(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnUserPasswordSet(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	// The set-password token is the actor's own proof of identity; never a request with a signed-in user.
 	@EventListener
 	void on(UserPasswordSet event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.userId(), event.role(), "USER_PASSWORD_SET",
-				ENTITY_TYPE, event.userId(), null, null, null));
+				ENTITY_TYPE, event.userId(), null, null, null, labels.user(event.userId())));
 	}
 
 }

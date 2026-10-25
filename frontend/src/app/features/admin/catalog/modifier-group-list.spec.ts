@@ -25,6 +25,7 @@ const size: ModifierGroup = {
   required: true,
   minChoices: 1,
   maxChoices: 1,
+  deletable: true,
   etag: '"7"',
   options: [option('o1'), option('o2')],
 };
@@ -34,6 +35,7 @@ const extras: ModifierGroup = {
   required: false,
   minChoices: 0,
   maxChoices: 3,
+  deletable: true,
   etag: '"2"',
   options: [option('o3')],
 };
@@ -89,6 +91,14 @@ describe('ModifierGroupList', () => {
     expect(host.querySelector('a[href="/admin/catalog/modifier-groups/g1"]')).not.toBeNull();
   });
 
+  it('offers no Delete for a group a product still attaches and says it is in use', async () => {
+    const { host } = await render([{ ...size, deletable: false }, extras]);
+
+    expect(host.querySelector('[data-testid="delete-g1"]')).toBeNull();
+    expect(host.querySelector('[data-testid="delete-g2"]')).toBeTruthy();
+    expect(rows(host)[0]).toContain('En uso');
+  });
+
   it('asks for confirmation before deleting, and deletes nothing when it is declined', async () => {
     ask.mockResolvedValue(false);
     const { fixture, host } = await render();
@@ -126,8 +136,11 @@ describe('ModifierGroupList', () => {
       { status: 409, statusText: 'Conflict' },
     );
     await fixture.whenStable();
+    http.expectOne(GROUPS).flush([{ ...size, deletable: false }, extras]);
+    await fixture.whenStable();
 
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
     expect(rows(host)).toHaveLength(2);
+    expect(host.querySelector('[data-testid="delete-g1"]')).toBeNull();
   });
 });

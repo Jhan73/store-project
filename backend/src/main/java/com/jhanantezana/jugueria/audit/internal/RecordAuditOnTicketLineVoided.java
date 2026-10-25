@@ -27,6 +27,9 @@ class RecordAuditOnTicketLineVoided {
 		after.put("waste", event.waste());
 		after.put("ticketId", event.ticketId().toString());
 		after.put("productId", event.productId().toString());
+		if (event.productName() != null) {
+			after.put("productName", event.productName());
+		}
 		after.put("quantity", event.quantity());
 		if (event.amount() != null) {
 			after.put("amount", event.amount().amount().toPlainString());
@@ -34,7 +37,7 @@ class RecordAuditOnTicketLineVoided {
 		}
 		after.put("ticketClosed", event.ticketClosed());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TICKET_LINE_VOIDED",
-				ENTITY_TYPE, event.lineId(), Map.of("state", "SENT"), after, reason(event.reasonCode(), event.note())));
+				ENTITY_TYPE, event.lineId(), Map.of("state", "SENT"), after, reason(event.reasonCode(), event.note()), event.productName()));
 	}
 
 	private static String reason(String code, @Nullable String note) {

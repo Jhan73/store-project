@@ -50,10 +50,10 @@ class StaffProvisioningServiceTest {
 	@Test
 	void buildsTheLinkAndSendsTheEmail() {
 		var account = new UserAccount("new-staff@jugueria.pe", "hash", Role.CASHIER, NOW);
-		when(staffAccounts.createAccountAndToken("new-staff@jugueria.pe", Role.CASHIER))
+		when(staffAccounts.createAccountAndToken("Maria", "new-staff@jugueria.pe", Role.CASHIER))
 			.thenReturn(new StaffProvisioned(account, "raw-token", NOW.plus(Duration.ofHours(48))));
 
-		var provisioned = service.createStaff("new-staff@jugueria.pe", Role.CASHIER);
+		var provisioned = service.createStaff("Maria", "new-staff@jugueria.pe", Role.CASHIER);
 
 		assertThat(provisioned.setPasswordLink().toString())
 			.startsWith("https://jugueria.jhanantezana.com/set-password?token=");
@@ -63,12 +63,12 @@ class StaffProvisioningServiceTest {
 	@Test
 	void toleratesTheEmailSenderFailingWithoutFailingTheCreation() {
 		var account = new UserAccount("new-staff@jugueria.pe", "hash", Role.CASHIER, NOW);
-		when(staffAccounts.createAccountAndToken(any(), any()))
+		when(staffAccounts.createAccountAndToken(any(), any(), any()))
 			.thenReturn(new StaffProvisioned(account, "raw-token", NOW.plus(Duration.ofHours(48))));
 		doThrow(new IllegalStateException("no transport")).when(notifications)
 			.sendStaffSetPasswordEmail(any(), any(), any());
 
-		assertThatCode(() -> service.createStaff("new-staff@jugueria.pe", Role.CASHIER)).doesNotThrowAnyException();
+		assertThatCode(() -> service.createStaff("Maria", "new-staff@jugueria.pe", Role.CASHIER)).doesNotThrowAnyException();
 	}
 
 	@Test

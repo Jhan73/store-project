@@ -56,6 +56,7 @@ const zone: DeliveryZone = {
   minimumOrder: null,
   freeDeliveryThreshold: null,
   active: true,
+  deletable: false,
   etag: '"2"',
 };
 const reason: Reason = { id: 'r1', type: 'VOID', code: 'Spilled', active: true, etag: '"1"' };
@@ -159,6 +160,14 @@ describe('SettingsApi', () => {
     const on = http.expectOne(`${ADMIN}/delivery-zones/z1/reactivate`);
     expect(on.request.headers.get('If-Match')).toBe('"3"');
     on.flush(zone);
+  });
+
+  it('deletes a delivery zone guarded by the version of the item', () => {
+    api.deleteZone('z1', '"2"').subscribe();
+    const remove = http.expectOne(`${ADMIN}/delivery-zones/z1`);
+    expect(remove.request.method).toBe('DELETE');
+    expect(remove.request.headers.get('If-Match')).toBe('"2"');
+    remove.flush(null);
   });
 
   it('lists reasons of one type, creates them and toggles them with the version of the item', () => {

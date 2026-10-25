@@ -18,7 +18,7 @@ class RecordAuditOnTableUpdated {
 	void on(TableUpdated event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TABLE_UPDATED",
 				TableAuditMaps.ENTITY_TYPE, event.tableId(), TableAuditMaps.of(event.before()),
-				TableAuditMaps.of(event.after()), null));
+				TableAuditMaps.of(event.after()), null, event.after().name()));
 	}
 
 }

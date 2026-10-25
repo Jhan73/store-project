@@ -30,8 +30,8 @@ public class StaffProvisioningService {
 		this.setPasswordProperties = identityProperties.setPassword();
 	}
 
-	public ProvisionedStaff createStaff(String email, Role role) {
-		return provisionAndNotify(staffAccounts.createAccountAndToken(email, role));
+	public ProvisionedStaff createStaff(String username, String email, Role role) {
+		return provisionAndNotify(staffAccounts.createAccountAndToken(username, email, role));
 	}
 
 	public Optional<ProvisionedStaff> createFirstAdmin(String email) {

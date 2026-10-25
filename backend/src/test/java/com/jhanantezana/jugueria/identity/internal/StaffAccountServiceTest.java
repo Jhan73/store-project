@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -11,11 +12,13 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +35,7 @@ import com.jhanantezana.jugueria.identity.SetPasswordLinkReissued;
 import com.jhanantezana.jugueria.identity.UserCreated;
 import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.identity.UserReactivated;
+import com.jhanantezana.jugueria.identity.UserRenamed;
 import com.jhanantezana.jugueria.identity.UserRoleChanged;
 import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.CommonError;
@@ -55,6 +59,12 @@ class StaffAccountServiceTest {
 	RefreshTokenService refreshTokens;
 
 	@Mock
+	SetPasswordTokenRepository setPasswordTokenRows;
+
+	@Mock
+	RefreshTokenRepository refreshTokenRows;
+
+	@Mock
 	PasswordEncoder passwordEncoder;
 
 	@Mock
@@ -70,14 +80,15 @@ class StaffAccountServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		service = new StaffAccountService(accounts, setPasswordTokens, refreshTokens, passwordEncoder, events,
+		service = new StaffAccountService(accounts, setPasswordTokens, setPasswordTokenRows, refreshTokenRows,
+				refreshTokens, passwordEncoder, events,
 				currentActor, activeAdminLock, List.of(), Clock.fixed(NOW, ZoneOffset.UTC));
 	}
 
 	@Test
 	void rejectsCreatingACustomerAsStaff() {
 		assertThatExceptionOfType(BusinessException.class)
-			.isThrownBy(() -> service.createAccountAndToken("customer@jugueria.pe", Role.CUSTOMER))
+			.isThrownBy(() -> service.createAccountAndToken("Customer", "customer@jugueria.pe", Role.CUSTOMER))
 			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.INVALID_STAFF_ROLE));
 
 		verify(accounts, never()).saveAndFlush(any());
@@ -91,13 +102,115 @@ class StaffAccountServiceTest {
 		when(currentActor.id()).thenReturn(ADMIN_ID);
 		when(currentActor.role()).thenReturn(Role.ADMIN);
 
-		var provisioned = service.createAccountAndToken("  Cashier@Jugueria.PE ", Role.CASHIER);
+		var provisioned = service.createAccountAndToken("  Maria ", "  Cashier@Jugueria.PE ", Role.CASHIER);
 
 		assertThat(provisioned.account().getEmail()).isEqualTo("cashier@jugueria.pe");
+		assertThat(provisioned.account().getUsername()).isEqualTo("Maria");
 		var captor = ArgumentCaptor.forClass(UserCreated.class);
 		verify(events).publishEvent(captor.capture());
 		assertThat(captor.getValue().email()).isEqualTo("cashier@jugueria.pe");
+		assertThat(captor.getValue().username()).isEqualTo("Maria");
 		assertThat(captor.getValue().actorId()).isEqualTo(ADMIN_ID);
+	}
+
+	@Test
+	void translatesADuplicateUsernameIntoABusinessException() {
+		when(passwordEncoder.encode(any())).thenReturn("unusable-hash");
+		when(accounts.saveAndFlush(any())).thenThrow(usernameViolation());
+
+		assertThatExceptionOfType(BusinessException.class)
+			.isThrownBy(() -> service.createAccountAndToken("Maria", "new@jugueria.pe", Role.CASHIER))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.USERNAME_ALREADY_TAKEN));
+	}
+
+	@Test
+	void renameSetsTheStrippedUsernameAndPublishesUserRenamed() {
+		var targetId = UUID.randomUUID();
+		when(currentActor.id()).thenReturn(ADMIN_ID);
+		when(currentActor.role()).thenReturn(Role.ADMIN);
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW);
+		account.rename("Mari", NOW);
+		when(accounts.findById(targetId)).thenReturn(Optional.of(account));
+
+		var updated = service.rename(targetId, "  Maria ");
+
+		assertThat(updated.getUsername()).isEqualTo("Maria");
+		verify(accounts).saveAndFlush(account);
+		var captor = ArgumentCaptor.forClass(UserRenamed.class);
+		verify(events).publishEvent(captor.capture());
+		assertThat(captor.getValue().userId()).isEqualTo(targetId);
+		assertThat(captor.getValue().oldUsername()).isEqualTo("Mari");
+		assertThat(captor.getValue().newUsername()).isEqualTo("Maria");
+		assertThat(captor.getValue().actorId()).isEqualTo(ADMIN_ID);
+		assertThat(captor.getValue().actorRole()).isEqualTo(Role.ADMIN);
+	}
+
+	@Test
+	void renameLetsAnAccountWithoutAUsernameGetItsFirstOne() {
+		var targetId = UUID.randomUUID();
+		when(currentActor.id()).thenReturn(targetId);
+		when(currentActor.role()).thenReturn(Role.ADMIN);
+		when(accounts.findById(targetId))
+			.thenReturn(Optional.of(new UserAccount("owner@jugueria.pe", "hash", Role.ADMIN, NOW)));
+
+		var updated = service.rename(targetId, "Owner");
+
+		assertThat(updated.getUsername()).isEqualTo("Owner");
+		var captor = ArgumentCaptor.forClass(UserRenamed.class);
+		verify(events).publishEvent(captor.capture());
+		assertThat(captor.getValue().oldUsername()).isNull();
+	}
+
+	@Test
+	void renameIsANoOpWhenTheUsernameIsUnchanged() {
+		var targetId = UUID.randomUUID();
+		var account = new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW);
+		account.rename("Maria", NOW);
+		when(accounts.findById(targetId)).thenReturn(Optional.of(account));
+
+		service.rename(targetId, "Maria");
+
+		verify(accounts, never()).saveAndFlush(any());
+		verify(events, never()).publishEvent(any());
+	}
+
+	@Test
+	void renameHidesACustomerAccountAsNotFound() {
+		var targetId = UUID.randomUUID();
+		when(accounts.findById(targetId))
+			.thenReturn(Optional.of(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, NOW)));
+
+		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.rename(targetId, "Maria"))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(CommonError.NOT_FOUND));
+	}
+
+	@Test
+	void renameTranslatesATakenUsernameIntoABusinessException() {
+		var targetId = UUID.randomUUID();
+		when(accounts.findById(targetId))
+			.thenReturn(Optional.of(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW)));
+		when(accounts.saveAndFlush(any())).thenThrow(usernameViolation());
+
+		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.rename(targetId, "Maria"))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.USERNAME_ALREADY_TAKEN));
+		verify(events, never()).publishEvent(any());
+	}
+
+	@Test
+	void reactivateTranslatesAUsernameTakenInTheMeantimeIntoABusinessException() {
+		var targetId = UUID.randomUUID();
+		when(accounts.findById(targetId))
+			.thenReturn(Optional.of(new UserAccount("cashier@jugueria.pe", "hash", Role.CASHIER, NOW, false)));
+		doThrow(usernameViolation()).when(accounts).flush();
+
+		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.reactivate(targetId))
+			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.USERNAME_ALREADY_TAKEN));
+		verify(events, never()).publishEvent(any());
+	}
+
+	private static DataIntegrityViolationException usernameViolation() {
+		return new DataIntegrityViolationException("could not execute statement",
+				new ConstraintViolationException("duplicate key", new SQLException(), "user_account_username_active_key"));
 	}
 
 	@Test
@@ -106,7 +219,7 @@ class StaffAccountServiceTest {
 		when(accounts.saveAndFlush(any())).thenThrow(mock(DataIntegrityViolationException.class));
 
 		assertThatExceptionOfType(BusinessException.class)
-			.isThrownBy(() -> service.createAccountAndToken("dup@jugueria.pe", Role.CASHIER))
+			.isThrownBy(() -> service.createAccountAndToken("Maria", "dup@jugueria.pe", Role.CASHIER))
 			.satisfies(ex -> assertThat(ex.errorCode()).isEqualTo(IdentityError.EMAIL_ALREADY_REGISTERED));
 	}
 
@@ -121,6 +234,7 @@ class StaffAccountServiceTest {
 
 		assertThat(provisioned).isPresent();
 		assertThat(provisioned.orElseThrow().account().getRole()).isEqualTo(Role.ADMIN);
+		assertThat(provisioned.orElseThrow().account().getUsername()).isNull();
 		verify(activeAdminLock).acquire();
 	}
 
@@ -148,7 +262,7 @@ class StaffAccountServiceTest {
 	@Test
 	void reissueSetPasswordTokenHidesACustomerAccountAsNotFound() {
 		var id = UUID.randomUUID();
-		when(accounts.findById(id))
+		when(accounts.findForUpdateById(id))
 			.thenReturn(Optional.of(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, NOW)));
 
 		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.reissueSetPasswordToken(id))
@@ -158,7 +272,7 @@ class StaffAccountServiceTest {
 	@Test
 	void reissueSetPasswordTokenIssuesANewTokenAndPublishesSetPasswordLinkReissued() {
 		var account = new UserAccount("cashier@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
-		when(accounts.findById(account.getId())).thenReturn(Optional.of(account));
+		when(accounts.findForUpdateById(account.getId())).thenReturn(Optional.of(account));
 		when(setPasswordTokens.issue(account.getId())).thenReturn(new IssuedSetPasswordToken("raw", NOW.plusSeconds(1)));
 		when(currentActor.id()).thenReturn(ADMIN_ID);
 		when(currentActor.role()).thenReturn(Role.ADMIN);

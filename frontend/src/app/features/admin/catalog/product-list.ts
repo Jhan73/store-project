@@ -7,6 +7,7 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconPlus,
+  IconTrash,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
@@ -16,12 +17,14 @@ import { Tooltip } from 'primeng/tooltip';
 import type { Category, Product } from '../../../core/api/api-types';
 import { ErrorNotifier } from '../../../core/errors/error-notifier';
 import { formatMoneyOrDash, safeMinorUnits } from '../../../core/money/money';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { UndoNotice } from '../../../shared/state/undo-notice';
 import { UndoableChanges } from '../../../shared/state/undoable-changes';
 import { DataColumn, DataTable } from '../../../shared/ui/data-table/data-table';
 import { FormField } from '../../../shared/ui/form-field/form-field';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { CatalogApi } from './catalog-api';
+import { PendingIds } from '../../../shared/state/pending-ids';
 import { isStale } from '../admin-errors';
 
 @Component({
@@ -135,26 +138,46 @@ import { isStale } from '../admin-errors';
               <tabler-icon [icon]="icons.edit" aria-hidden="true" />
               <span i18n="@@admin.catalog.edit">Editar</span>
             </a>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              [outlined]="true"
-              [size]="'small'"
-              [attr.data-testid]="'toggle-' + product.id"
-              [disabled]="changes.has(product.id)"
-              (click)="toggle(product)"
-              [pTooltip]="product.shownActive ? tips.deactivate : tips.reactivate"
-              tooltipPosition="top"
-            >
-              @if (product.shownActive) {
-                <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
-              } @else {
-                <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
-                <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
-              }
-            </button>
+            @if (!product.deletable || !product.shownActive) {
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                [outlined]="true"
+                [size]="'small'"
+                [attr.data-testid]="'toggle-' + product.id"
+                [disabled]="changes.has(product.id)"
+                (click)="toggle(product)"
+                [pTooltip]="product.shownActive ? tips.deactivate : tips.reactivate"
+                tooltipPosition="top"
+              >
+                @if (product.shownActive) {
+                  <tabler-icon [icon]="icons.deactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.deactivate">Desactivar</ng-container>
+                } @else {
+                  <tabler-icon [icon]="icons.reactivate" aria-hidden="true" />
+                  <ng-container i18n="@@admin.catalog.reactivate">Reactivar</ng-container>
+                }
+              </button>
+            }
+            @if (product.deletable) {
+              <button
+                pButton
+                type="button"
+                severity="danger"
+                [outlined]="true"
+                [size]="'small'"
+                [attr.data-testid]="'delete-' + product.id"
+                [disabled]="changes.has(product.id) || removing.has(product.id)"
+                (click)="remove(product)"
+                pTooltip="Eliminar este producto, que nunca se usó en una cuenta"
+                i18n-pTooltip="@@admin.catalog.products.delete.tooltip"
+                tooltipPosition="top"
+              >
+                <tabler-icon [icon]="icons.delete" aria-hidden="true" />
+                <span i18n="@@admin.catalog.products.delete">Eliminar</span>
+              </button>
+            }
           </div>
         </td>
       </ng-template>
@@ -167,6 +190,7 @@ export class ProductList {
     edit: IconPencil,
     deactivate: IconPlayerPause,
     reactivate: IconPlayerPlay,
+    delete: IconTrash,
   };
   protected readonly tips = {
     deactivate: $localize`:@@admin.catalog.products.deactivate.tooltip:Ocultar este producto del menú`,
@@ -198,8 +222,10 @@ export class ProductList {
   ];
   private readonly api = inject(CatalogApi);
   private readonly notifier = inject(ErrorNotifier);
+  private readonly confirm = inject(ConfirmAction);
 
   protected readonly changes = new UndoableChanges<boolean>(inject(UndoNotice));
+  protected readonly removing = new PendingIds();
   protected readonly categories = signal<readonly Category[]>([]);
   protected readonly categoryOptions = computed(() => [...this.categories()]);
   protected readonly categoryId = signal('');
@@ -248,6 +274,31 @@ export class ProductList {
         const held = this.products().find((item) => item.id === product.id);
         control.control.setValue(held?.available ?? product.available);
         this.notifier.show(error);
+      },
+    });
+  }
+
+  protected async remove(product: Product): Promise<void> {
+    if (this.changes.has(product.id) || this.removing.has(product.id)) {
+      return;
+    }
+    const confirmed = await this.confirm.ask({
+      header: $localize`:@@admin.catalog.products.delete.header:Eliminar producto`,
+      message: $localize`:@@admin.catalog.products.delete.confirm:Se eliminará el producto "${product.name}:name:" y su imagen de forma definitiva y no se puede deshacer.`,
+      acceptLabel: $localize`:@@admin.catalog.products.delete:Eliminar`,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.removing.add(product.id);
+    this.api.deleteProduct(product.id, product.etag).subscribe({
+      next: () => {
+        this.removing.delete(product.id);
+        this.products.update((list) => list.filter((item) => item.id !== product.id));
+      },
+      error: (error: unknown) => {
+        this.removing.delete(product.id);
+        this.fail(error);
       },
     });
   }

@@ -31,4 +31,10 @@ class IdentityService implements IdentityApi {
 		return accounts.findById(userId).map(UserAccount::getEmail);
 	}
 
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> usernameOf(UUID userId) {
+		return accounts.findById(userId).map(UserAccount::getUsername);
+	}
+
 }

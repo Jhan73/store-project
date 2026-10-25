@@ -5,13 +5,16 @@ import { MessageService } from 'primeng/api';
 import { API_ORIGIN } from '../../../core/api/api-config';
 import type { Station } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
+import { ConfirmAction } from '../../../shared/state/confirm-action';
 import { CatalogApi } from './catalog-api';
 import { StationList } from './station-list';
 
 const STATIONS = 'http://api.test/api/v1/admin/stations';
 
-const main: Station = { id: 's1', name: 'Main', defaultStation: true, etag: '"1"' };
-const bar: Station = { id: 's2', name: 'Bar', defaultStation: false, etag: '"4"' };
+const main: Station = { id: 's1', name: 'Main', defaultStation: true, active: true, etag: '"1"' };
+const bar: Station = { id: 's2', name: 'Bar', defaultStation: false, active: true, etag: '"4"' };
+
+const ask = vi.fn(() => Promise.resolve(true));
 
 async function render(stations: Station[] = [main, bar]) {
   TestBed.configureTestingModule({
@@ -20,6 +23,7 @@ async function render(stations: Station[] = [main, bar]) {
       provideHttpClientTesting(),
       MessageService,
       CatalogApi,
+      { provide: ConfirmAction, useValue: { ask } },
       { provide: API_ORIGIN, useValue: 'http://api.test' },
     ],
   });
@@ -55,7 +59,70 @@ function rows(host: HTMLElement) {
 }
 
 describe('StationList', () => {
+  beforeEach(() => ask.mockReset().mockResolvedValue(true));
   afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('shows the state of each station and keeps Deactivate away from the default one', async () => {
+    const { host } = await render([main, { ...bar, active: false }]);
+
+    const [first, second] = rows(host);
+    expect(first).toContain('Activa');
+    expect(second).toContain('Inactiva');
+    expect(host.querySelector('[data-testid="toggle-s1"]')).toBeNull();
+    expect(host.querySelector('[data-testid="toggle-s2"]')).toBeTruthy();
+  });
+
+  it('asks what happens to the kitchen, then deactivates with the version', async () => {
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-s2"]')!.click();
+    await fixture.whenStable();
+    expect(ask).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Bar') }));
+    const request = http.expectOne(`${STATIONS}/s2/deactivate`);
+    expect(request.request.headers.get('If-Match')).toBe('"4"');
+    request.flush({ ...bar, active: false, etag: '"5"' });
+    await fixture.whenStable();
+
+    expect(rows(host)[1]).toContain('Inactiva');
+  });
+
+  it('sends nothing when the deactivation is declined', async () => {
+    ask.mockResolvedValue(false);
+    const { fixture, host, http } = await render();
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-s2"]')!.click();
+    await fixture.whenStable();
+
+    http.expectNone(`${STATIONS}/s2/deactivate`);
+  });
+
+  it('reactivates straight away without asking', async () => {
+    const { fixture, host, http } = await render([main, { ...bar, active: false }]);
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-s2"]')!.click();
+    await fixture.whenStable();
+    expect(ask).not.toHaveBeenCalled();
+    http.expectOne(`${STATIONS}/s2/reactivate`).flush({ ...bar, active: true, etag: '"6"' });
+    await fixture.whenStable();
+
+    expect(rows(host)[1]).toContain('Activa');
+  });
+
+  it('keeps the station and tells the user when categories still use it', async () => {
+    const { fixture, host, http, messages } = await render();
+    const add = vi.spyOn(messages, 'add');
+
+    host.querySelector<HTMLButtonElement>('[data-testid="toggle-s2"]')!.click();
+    await fixture.whenStable();
+    http.expectOne(`${STATIONS}/s2/deactivate`).flush(
+      { type: 'about:blank', status: 409, code: 'catalog.station-has-active-categories', correlationId: 'c' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+
+    expect(add).toHaveBeenCalledWith(expect.objectContaining({ severity: 'error' }));
+    expect(rows(host)[1]).toContain('Activa');
+  });
 
   it('lists the stations and marks the default one', async () => {
     const { host } = await render();

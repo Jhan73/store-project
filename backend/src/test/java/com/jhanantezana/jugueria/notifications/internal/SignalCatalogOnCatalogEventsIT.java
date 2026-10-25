@@ -58,7 +58,7 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var stationId = UUID.randomUUID();
 
-		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), null, null, NOW))
+		scenario.publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar", true), null, null, NOW))
 			.andWaitForStateChange(() -> probe.countMatching(stationId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(stationId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
@@ -113,7 +113,7 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var productId = UUID.randomUUID();
 
-		scenario.publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, null, null, NOW))
+		scenario.publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, null, null, NOW, null))
 			.andWaitForStateChange(() -> probe.countMatching(productId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(productId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"topic\":\"catalog\"");
@@ -127,7 +127,7 @@ class SignalCatalogOnCatalogEventsIT {
 		probe = new AppEventsProbe(connectionDetails);
 		var optionId = UUID.randomUUID();
 
-		scenario.publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, false, null, null, NOW))
+		scenario.publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, false, null, null, NOW, null))
 			.andWaitForStateChange(() -> probe.countMatching(optionId.toString()), count -> count >= 1)
 			.andVerify(count -> assertThat(probe.matching(optionId.toString())).singleElement().satisfies(n -> {
 				assertThat(n).contains("\"type\":\"OPTION_AVAILABILITY_CHANGED\"");
@@ -139,7 +139,7 @@ class SignalCatalogOnCatalogEventsIT {
 	void deliveringTheSameStationEventTwiceSignalsBothTimesWithoutFailing(Scenario scenario) throws SQLException {
 		var id = UUID.randomUUID();
 
-		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, new StationSnapshot("Bar"), null, null, NOW), id);
+		assertSignalsTwice(scenario, new StationChanged(id, CatalogChangeKind.UPDATED, null, new StationSnapshot("Bar", true), null, null, NOW), id);
 	}
 
 	@Test
@@ -164,7 +164,7 @@ class SignalCatalogOnCatalogEventsIT {
 			throws SQLException {
 		var id = UUID.randomUUID();
 
-		assertSignalsTwice(scenario, new AvailabilityChanged(id, AvailabilityTarget.PRODUCT, false, null, null, NOW),
+		assertSignalsTwice(scenario, new AvailabilityChanged(id, AvailabilityTarget.PRODUCT, false, null, null, NOW, null),
 				id);
 	}
 

@@ -25,7 +25,7 @@ class RecordAuditOnOpeningHoursChanged {
 	void on(OpeningHoursChanged event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				"OPENING_HOURS_CHANGED", ENTITY_TYPE, event.settingsId(), toMap(event.before()), toMap(event.after()),
-				null));
+				null, null));
 	}
 
 	private static Map<String, Object> toMap(List<OpeningHourSnapshot> week) {

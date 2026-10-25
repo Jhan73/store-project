@@ -11,6 +11,8 @@ final class Constraints {
 
 	static final String MODIFIER_GROUP_NAME = "modifier_group_name_key";
 
+	static final String PRODUCT_CATEGORY_FK = "product_category_id_fkey";
+
 	private Constraints() {
 	}
 

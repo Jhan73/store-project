@@ -35,6 +35,10 @@ export class StaffApi {
     return this.http.post<StaffMember>(`${this.base}/staff`, body);
   }
 
+  rename(id: string, username: string): Observable<StaffMember> {
+    return this.http.patch<StaffMember>(`${this.base}/staff/${id}/username`, { username });
+  }
+
   changeRole(id: string, role: Role): Observable<StaffMember> {
     return this.http.patch<StaffMember>(`${this.base}/staff/${id}/role`, { role });
   }
@@ -45,6 +49,10 @@ export class StaffApi {
 
   reactivate(id: string): Observable<StaffMember> {
     return this.http.post<StaffMember>(`${this.base}/staff/${id}/reactivate`, null);
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/staff/${id}`);
   }
 
   resendSetPasswordLink(id: string): Observable<void> {

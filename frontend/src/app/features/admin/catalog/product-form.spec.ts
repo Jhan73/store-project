@@ -21,8 +21,8 @@ const API = 'http://api.test/api/v1';
 const ALLERGENS: Allergen[] = ['MILK', 'PEANUTS'];
 
 const categories: Category[] = [
-  { id: 'c1', name: 'Juices', displayOrder: 1, stationId: 's1', active: true, etag: '"1"' },
-  { id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's1', active: true, etag: '"1"' },
+  { id: 'c1', name: 'Juices', displayOrder: 1, stationId: 's1', active: true, deletable: false, etag: '"1"' },
+  { id: 'c2', name: 'Snacks', displayOrder: 2, stationId: 's1', active: true, deletable: false, etag: '"1"' },
 ];
 
 const group = (id: string, name: string): ModifierGroup => ({
@@ -31,6 +31,7 @@ const group = (id: string, name: string): ModifierGroup => ({
   required: false,
   minChoices: 0,
   maxChoices: 1,
+  deletable: false,
   etag: '"1"',
   options: [],
 });
@@ -49,6 +50,7 @@ const orange: Product = {
   imageUrl: null,
   active: true,
   available: true,
+  deletable: false,
   etag: '"4"',
 };
 

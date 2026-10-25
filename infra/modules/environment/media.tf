@@ -156,10 +156,10 @@ resource "aws_s3_bucket_policy" "media" {
   depends_on = [aws_s3_bucket_public_access_block.media]
 }
 
-# The adapter only writes objects; reads go through CloudFront and deletes never happen.
+# The adapter writes objects and removes the image of a deleted product; reads go through CloudFront.
 data "aws_iam_policy_document" "write_media" {
   statement {
-    actions   = ["s3:PutObject"]
+    actions   = ["s3:PutObject", "s3:DeleteObject"]
     resources = ["${aws_s3_bucket.media.arn}/products/*"]
   }
 }

@@ -67,6 +67,7 @@ final class CatalogAuditMaps {
 	static Map<String, Object> toMap(StationSnapshot snapshot) {
 		var map = new LinkedHashMap<String, Object>();
 		map.put("name", snapshot.name());
+		map.put("active", snapshot.active());
 		return map;
 	}
 

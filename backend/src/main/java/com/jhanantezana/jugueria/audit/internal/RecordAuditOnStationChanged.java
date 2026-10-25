@@ -20,8 +20,16 @@ class RecordAuditOnStationChanged {
 	void on(StationChanged event) {
 		var before = event.before() == null ? null : CatalogAuditMaps.toMap(event.before());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
-				event.before() == null ? "STATION_CREATED" : "STATION_UPDATED", ENTITY_TYPE, event.stationId(), before,
-				CatalogAuditMaps.toMap(event.after()), null));
+				action(event), ENTITY_TYPE, event.stationId(), before, CatalogAuditMaps.toMap(event.after()), null,
+				event.after().name()));
+	}
+
+	private static String action(StationChanged event) {
+		return switch (event.kind()) {
+			case DEACTIVATED -> "STATION_DEACTIVATED";
+			case ACTIVATED -> "STATION_REACTIVATED";
+			default -> event.before() == null ? "STATION_CREATED" : "STATION_UPDATED";
+		};
 	}
 
 }

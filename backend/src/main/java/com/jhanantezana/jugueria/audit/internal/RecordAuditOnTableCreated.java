@@ -17,7 +17,8 @@ class RecordAuditOnTableCreated {
 	@EventListener
 	void on(TableCreated event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TABLE_CREATED",
-				TableAuditMaps.ENTITY_TYPE, event.tableId(), null, TableAuditMaps.of(event.after()), null));
+				TableAuditMaps.ENTITY_TYPE, event.tableId(), null, TableAuditMaps.of(event.after()), null,
+				event.after().name()));
 	}
 
 }

@@ -24,6 +24,7 @@ import { formatInStoreZone } from '../../../core/time/store-time';
 import { datePickerAriaInvalid } from '../../../shared/forms/aria-invalid';
 import { DataColumn, DataTable, type DataTableLazyEvent } from '../../../shared/ui/data-table/data-table';
 import { FormField } from '../../../shared/ui/form-field/form-field';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { AuditApi } from './audit-api';
 import { AuditDetail } from './audit-detail';
 import {
@@ -67,6 +68,7 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
     FormField,
     Tooltip,
     AuditDetail,
+    StatusTag,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../admin-section.scss', './audit-log.scss'],
@@ -205,9 +207,13 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
 
     <p class="count" role="status" [attr.aria-live]="'polite'">
       @if (status() === 'ready' && result(); as current) {
-        <span i18n="@@admin.audit.count">
-          {current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}
-        </span>
+        @if (current.totalElements >= totalCap) {
+          <span i18n="@@admin.audit.count.capped">{{ totalCap }} registros o más</span>
+        } @else {
+          <span i18n="@@admin.audit.count">
+            {current.totalElements, plural, =0 {Sin registros} =1 {1 registro} other {{{ current.totalElements }} registros}}
+          </span>
+        }
       }
     </p>
 
@@ -253,27 +259,31 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
               <time [attr.datetime]="entry.occurredAt">{{ when(entry) }}</time>
             </td>
             <td>
-              @if (actorEmail(entry); as email) {
-                <span>{{ email }}</span>
-              } @else if (entry.actorId) {
-                <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
-                  short(entry.actorId)
-                }}</code>
-              } @else {
-                <span>{{ roleName(entry) }}</span>
-              }
-              @if (entry.actorId) {
-                <small class="muted">{{ roleName(entry) }}</small>
-              }
+              <div class="actor">
+                @if (actorText(entry); as text) {
+                  <span>{{ text }}</span>
+                } @else if (entry.actorId) {
+                  <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
+                    short(entry.actorId)
+                  }}</code>
+                }
+                <app-status-tag [value]="roleName(entry)" />
+              </div>
             </td>
             <td>
               <code>{{ entry.action }}</code>
             </td>
             <td>
               <span>{{ typeName(entry) }}</span>
-              <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
-                short(entry.entityId)
-              }}</code>
+              @if (entry.entityLabel) {
+                <span class="label" [pTooltip]="entry.entityId" tooltipPosition="top">{{
+                  entry.entityLabel
+                }}</span>
+              } @else {
+                <code class="id" [pTooltip]="entry.entityId" tooltipPosition="top">{{
+                  short(entry.entityId)
+                }}</code>
+              }
             </td>
             <td>{{ entry.reason ?? '—' }}</td>
             <td class="actions">
@@ -314,7 +324,12 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
       (visibleChange)="closeIfHidden($event)"
     >
       @if (selected(); as entry) {
-        <app-audit-detail [entry]="entry" [when]="when(entry)" [actor]="actorName(entry)" />
+        <app-audit-detail
+          [entry]="entry"
+          [when]="when(entry)"
+          [actor]="actorName(entry)"
+          [role]="roleName(entry)"
+        />
       }
       <ng-template #footer>
         <button
@@ -349,6 +364,8 @@ export class AuditLog {
     close: IconX,
   };
   protected readonly pageSizes = [...PAGE_SIZES];
+  // The API stops counting here, so a total at the cap means "at least".
+  protected readonly totalCap = 10_000;
   protected readonly labels = {
     rangeOrder: $localize`:@@admin.audit.range.order:La fecha inicial no puede ser posterior a la final.`,
     entityIdInvalid: $localize`:@@admin.audit.entityId.invalid:Escribe un id válido (formato UUID).`,
@@ -392,8 +409,17 @@ export class AuditLog {
   private actorsLoaded = false;
 
   protected readonly actorOptions = computed<Option[]>(() => {
-    const options = this.staff()
-      .map((member) => ({ value: member.id, label: member.email }))
+    const named = this.staff().map((member) => ({
+      value: member.id,
+      label: member.username ?? shortId(member.id),
+    }));
+    const taken = new Map<string, number>();
+    named.forEach(({ label }) => taken.set(label, (taken.get(label) ?? 0) + 1));
+    const options = named
+      .map(({ value, label }) => ({
+        value,
+        label: (taken.get(label) ?? 0) > 1 ? `${label} · ${value.slice(-4)}` : label,
+      }))
       .sort((a, b) => a.label.localeCompare(b.label));
     const chosen = this.applied().actorId;
     return chosen && !this.staffById().has(chosen)
@@ -429,12 +455,17 @@ export class AuditLog {
     return formatInStoreZone(entry.occurredAt, this.timeZone(), WHEN);
   }
 
-  protected actorEmail(entry: AuditEntry): string | null {
-    return (entry.actorId && this.staffById().get(entry.actorId)?.email) || null;
+  protected liveUsername(entry: AuditEntry): string | null {
+    return (entry.actorId && this.staffById().get(entry.actorId)?.username) || null;
+  }
+
+  // The label stored with the row wins: the live account may have been renamed or deleted since.
+  protected actorText(entry: AuditEntry): string | null {
+    return entry.actorLabel ?? this.liveUsername(entry);
   }
 
   protected actorName(entry: AuditEntry): string {
-    return this.actorEmail(entry) ?? (entry.actorId ? shortId(entry.actorId) : this.roleName(entry));
+    return this.actorText(entry) ?? (entry.actorId ? shortId(entry.actorId) : '');
   }
 
   protected roleName(entry: AuditEntry): string {

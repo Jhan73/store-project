@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,11 +31,14 @@ class CatalogApiImpl implements CatalogApi {
 
 	private final ModifierGroupRepository groups;
 
+	private final StationRepository stations;
+
 	private final AvailabilityService availability;
 
 	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups,
-			AvailabilityService availability) {
+			StationRepository stations, AvailabilityService availability) {
 		this.products = products;
+		this.stations = stations;
 		this.categories = categories;
 		this.groups = groups;
 		this.availability = availability;
@@ -44,6 +48,18 @@ class CatalogApiImpl implements CatalogApi {
 	@Transactional(readOnly = true)
 	public boolean productExists(UUID productId) {
 		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional
+	public boolean lockProduct(UUID productId) {
+		return products.lockAgainstDeletion(productId).isPresent();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> productName(UUID productId) {
+		return products.findById(productId).map(Product::getName);
 	}
 
 	@Override
@@ -103,13 +119,24 @@ class CatalogApiImpl implements CatalogApi {
 		availability.setProductAvailability(productId, available);
 	}
 
+	// Not read-only: the lock on the product is held until the caller's transaction ends, which keeps the product
+	// from being deleted between pricing a line and storing it.
 	@Override
-	@Transactional(readOnly = true)
+	@Transactional
 	public PricedSelection priceSelection(UUID productId, List<UUID> optionIds) {
+		products.lockAgainstDeletion(productId)
+			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
 		var product = products.findById(productId)
 			.orElseThrow(() -> new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found"));
 		var category = categories.findById(product.getCategoryId());
 		if (!product.isActive() || !product.isAvailable() || category.isEmpty() || !category.get().isActive()) {
+			throw new BusinessException(CatalogError.PRODUCT_UNAVAILABLE, "The product is not on sale right now");
+		}
+		// Shared lock on the station the line will be routed to: retiring it waits until the line is stored. The
+		// category was read before the lock was granted, so it is checked again with a fresh statement afterwards.
+		var stationId = category.get().getStationId();
+		stations.findForShareById(stationId);
+		if (!categories.existsByIdAndStationIdAndActiveTrue(category.get().getId(), stationId)) {
 			throw new BusinessException(CatalogError.PRODUCT_UNAVAILABLE, "The product is not on sale right now");
 		}
 		if (new HashSet<>(optionIds).size() != optionIds.size()) {

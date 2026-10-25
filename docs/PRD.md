@@ -103,7 +103,8 @@ Priority: **M** = Must (release blocker), **S** = Should (included if on schedul
 | FR-CAT-04 | Price changes follow BR-03 (existing orders and tickets keep their prices). | M |
 | FR-CAT-05 | ADMIN defines **modifier groups** (e.g., Size, Base, Fruits, Boosters, Sweetener) and attaches them to products. Each group is required or optional with a min/max number of choices; each option has a price delta (can be 0) and its own availability. The same modifiers apply to both channels. | M |
 | FR-CAT-06 | ADMIN tags products and modifier options with allergens from a fixed list; allergens are shown to customers before adding to cart. | M |
-| FR-CAT-07 | Each category belongs to a **preparation station** (default: a single station "Main"). | M |
+| FR-CAT-07 | Each category belongs to a **preparation station** (default: a single station "Main"). ADMIN can deactivate and reactivate a station (never the default one, and not while an active category or a live board card still uses it); stations are never deleted. | M |
+| FR-CAT-08 | A record is **deleted for real only when nothing relates to it** (a category without products, a product never sold or used, a modifier group no product attaches); otherwise ADMIN deactivates it and its history stays intact. The screens offer Delete only for such records, and ask before deleting. Every deletion is audited with the full record. | M |
 
 ### 5.2 Stock
 
@@ -171,7 +172,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | FR-INS-06 | In-store payments can only be recorded while the cashier has an **open register shift**. | M |
 | FR-INS-07 | A sent line is never edited in place. To change it, staff **voids** it (reason required) and adds a new line. Before the line is Ready: SERVER, CASHIER, or ADMIN can void it. After it is Ready: only CASHIER or ADMIN, and it counts as **waste** (BR-11). A line already covered by a recorded payment cannot be voided until that payment is voided (FR-INS-03). | M |
 | FR-INS-08 | CASHIER/ADMIN can **comp** a line (served free of charge) with a reason; it counts as waste. | S |
-| FR-INS-09 | ADMIN configures tables (name, area). Staff see a **table grid** with each table's status (free / occupied / waiting for payment) and time since the ticket was opened. | M |
+| FR-INS-09 | ADMIN configures tables (name, area); a table that never had a ticket can be deleted, any other is only deactivated. Staff see a **table grid** with each table's status (free / occupied / waiting for payment) and time since the ticket was opened. | M |
 | FR-INS-10 | Staff can **transfer** an open ticket to a free table; lines keep their state (unsent, sent, ready, voided). | M |
 | FR-INS-11 | Staff can **merge** two open tickets into one. | S |
 | FR-INS-12 | CASHIER can **split the bill** by items or evenly into several recorded payments. | S |
@@ -208,8 +209,8 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 
 | ID | Requirement | P |
 |----|-------------|---|
-| FR-ADM-01 | ADMIN creates, deactivates, and changes roles of staff accounts. Deactivation takes effect within 15 minutes, even for active sessions. | M |
-| FR-ADM-02 | ADMIN configures store settings: opening hours, delivery zones (fee, delivery time), base preparation time, extra minutes per order already in the queue, busy-mode minutes, board thresholds, register-difference threshold, exception threshold, online capacity limits. | M |
+| FR-ADM-01 | ADMIN invites staff accounts with a username, an email, and a role; deletes an invitation nobody accepted (an account that ever signed in is only deactivated); deactivates them, changes their roles, and renames them. The username is the name people see (for example "Maria"), never a credential: sign-in stays by email. It is unique among active accounts, ignoring case, and a deactivated account frees its name. Accounts created before usernames existed have none until an ADMIN names them. Deactivation takes effect within 15 minutes, even for active sessions. | M |
+| FR-ADM-02 | ADMIN configures store settings: opening hours, delivery zones (fee, delivery time; a zone no order refers to can be deleted, any other is only deactivated), base preparation time, extra minutes per order already in the queue, busy-mode minutes, board thresholds, register-difference threshold, exception threshold, online capacity limits. | M |
 | FR-RPT-01 | Sales report for a date range by channel, product, category, **modifier**, and payment method, including voids, comps, waste, and refunds. | M |
 | FR-RPT-02 | Register shift report: float, cash sales, cash in/out, expected vs counted, differences with notes, voids. | M |
 | FR-RPT-03 | Every report can be exported to CSV. | S |
@@ -217,7 +218,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | FR-RPT-05 | **Hourly heatmap**: sales by hour × weekday for a date range. | M |
 | FR-RPT-06 | **Exceptions by employee**: voids, comps, waste, refunds, cash out, and shift differences per employee and reason; employees above the configured threshold are flagged. | M |
 | FR-AUD-01 | Every change to prices, modifiers, availability, stock, orders, tickets, lines (void/comp/transfer/merge), payments, cash movements, shifts, refunds, settings, table configuration, users, and roles is recorded: actor, role, action, entity, before/after values, reason, timestamp, and request origin. | M |
-| FR-AUD-02 | The audit log is read-only for everyone, including ADMIN, and is searchable by date, actor, and entity. | M |
+| FR-AUD-02 | The audit log is read-only for everyone, including ADMIN, and is searchable by date, actor, and entity. It names people by username and shows the role they had at the time of the change; it never stores or shows an email address. | M |
 
 ## 6. Business rules (consolidated)
 

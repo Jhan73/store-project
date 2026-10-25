@@ -100,6 +100,8 @@ class RecordAuditOnCatalogEventsIT {
 		var entry = findByEntityId(groupId);
 		assertThat(entry.getAction()).isEqualTo("MODIFIER_GROUP_DELETED");
 		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Size").containsEntry("minChoices", 1);
+		assertThat(entry.getEntityLabel()).isEqualTo("Size");
 	}
 
 	@Test
@@ -111,6 +113,7 @@ class RecordAuditOnCatalogEventsIT {
 
 		var entry = findByEntityId(productId);
 		assertThat(entry.getAction()).isEqualTo("PRODUCT_CREATED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango");
 		assertThat(entry.getEntityType()).isEqualTo("PRODUCT");
 		assertThat(entry.getActorId()).isEqualTo(actorId);
 		assertThat(entry.getBefore()).isNull();
@@ -148,7 +151,7 @@ class RecordAuditOnCatalogEventsIT {
 		var productId = UUID.randomUUID();
 		var actorId = UUID.randomUUID();
 
-		publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, actorId, Role.SERVER, NOW));
+		publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, actorId, Role.SERVER, NOW, "Mango juice"));
 
 		var entry = findByEntityId(productId);
 		assertThat(entry.getAction()).isEqualTo("PRODUCT_AVAILABILITY_CHANGED");
@@ -157,13 +160,14 @@ class RecordAuditOnCatalogEventsIT {
 		assertThat(entry.getActorRole()).isEqualTo("SERVER");
 		assertThat(entry.getBefore()).containsEntry("available", true);
 		assertThat(entry.getAfter()).containsEntry("available", false);
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango juice");
 	}
 
 	@Test
 	void recordsAnOptionBeingMarkedAvailableAgain() {
 		var optionId = UUID.randomUUID();
 
-		publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, true, null, null, NOW));
+		publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, true, null, null, NOW, "Large"));
 
 		var entry = findByEntityId(optionId);
 		assertThat(entry.getAction()).isEqualTo("MODIFIER_OPTION_AVAILABILITY_CHANGED");
@@ -248,7 +252,7 @@ class RecordAuditOnCatalogEventsIT {
 		var stationId = UUID.randomUUID();
 		var actorId = UUID.randomUUID();
 
-		publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar"), actorId,
+		publish(new StationChanged(stationId, CatalogChangeKind.CREATED, null, new StationSnapshot("Bar", true), actorId,
 				Role.ADMIN, NOW));
 
 		var entry = findByEntityId(stationId);
@@ -263,14 +267,62 @@ class RecordAuditOnCatalogEventsIT {
 	void recordsAStationRenameWithBothNames() {
 		var stationId = UUID.randomUUID();
 
-		publish(new StationChanged(stationId, CatalogChangeKind.UPDATED, new StationSnapshot("Bar"),
-				new StationSnapshot("Juice bar"), null, null, NOW));
+		publish(new StationChanged(stationId, CatalogChangeKind.UPDATED, new StationSnapshot("Bar", true),
+				new StationSnapshot("Juice bar", true), null, null, NOW));
 
 		var entry = findByEntityId(stationId);
 		assertThat(entry.getAction()).isEqualTo("STATION_UPDATED");
 		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
 		assertThat(entry.getBefore()).containsEntry("name", "Bar");
 		assertThat(entry.getAfter()).containsEntry("name", "Juice bar");
+	}
+
+	@Test
+	void recordsAProductDeletionWithTheWholeSnapshotAndItsName() {
+		var productId = UUID.randomUUID();
+		var actorId = UUID.randomUUID();
+
+		publish(new ProductChanged(productId, product("Mango juice", "5.00", true), null, actorId, Role.ADMIN, NOW));
+
+		var entry = findByEntityId(productId);
+		assertThat(entry.getAction()).isEqualTo("PRODUCT_DELETED");
+		assertThat(entry.getEntityType()).isEqualTo("PRODUCT");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango juice");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Mango juice").containsEntry("price", "5.00");
+	}
+
+	@Test
+	void recordsACategoryDeletionWithTheWholeSnapshotAndItsName() {
+		var categoryId = UUID.randomUUID();
+		var stationId = UUID.randomUUID();
+
+		publish(new CategoryChanged(categoryId, CatalogChangeKind.DELETED, new CategorySnapshot("Juices", 2, stationId, true),
+				null, null, null, NOW));
+
+		var entry = findByEntityId(categoryId);
+		assertThat(entry.getAction()).isEqualTo("CATEGORY_DELETED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Juices");
+		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Juices").containsEntry("stationId", stationId.toString());
+	}
+
+	@Test
+	void recordsAStationDeactivationAndReactivationLabelledByItsName() {
+		var stationId = UUID.randomUUID();
+
+		publish(new StationChanged(stationId, CatalogChangeKind.DEACTIVATED, new StationSnapshot("Bar", true),
+				new StationSnapshot("Bar", false), null, null, NOW));
+		publish(new StationChanged(stationId, CatalogChangeKind.ACTIVATED, new StationSnapshot("Bar", false),
+				new StationSnapshot("Bar", true), null, null, NOW.plusSeconds(1)));
+
+		var entries = auditLogs.findAll().stream().filter(entry -> stationId.equals(entry.getEntityId())).toList();
+		assertThat(entries).extracting(AuditLog::getAction)
+			.containsExactlyInAnyOrder("STATION_DEACTIVATED", "STATION_REACTIVATED");
+		assertThat(entries).extracting(AuditLog::getEntityLabel).containsOnly("Bar");
+		var deactivated = entries.stream().filter(e -> e.getAction().equals("STATION_DEACTIVATED")).findFirst().orElseThrow();
+		assertThat(deactivated.getBefore()).containsEntry("active", true);
+		assertThat(deactivated.getAfter()).containsEntry("active", false);
 	}
 
 	private static ProductSnapshot product(String name, String price, boolean active) {

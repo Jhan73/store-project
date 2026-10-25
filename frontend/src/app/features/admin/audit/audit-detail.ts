@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { AuditEntry } from '../../../core/api/api-types';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 
 @Component({
   selector: 'app-audit-detail',
+  imports: [StatusTag],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './audit-detail.scss',
   template: `
@@ -10,14 +12,23 @@ import type { AuditEntry } from '../../../core/api/api-types';
       <dt i18n="@@admin.audit.detail.when">Cuándo</dt>
       <dd>{{ when() }}</dd>
       <dt i18n="@@admin.audit.detail.actor">Quién</dt>
-      <dd>{{ actor() }}</dd>
+      <dd class="actor">
+        @if (actor()) {
+          <span>{{ actor() }}</span>
+        }
+        <app-status-tag [value]="role()" />
+      </dd>
       <dt i18n="@@admin.audit.detail.action">Acción</dt>
       <dd>
         <code>{{ entry().action }}</code>
       </dd>
       <dt i18n="@@admin.audit.detail.entity">Entidad</dt>
       <dd>
-        {{ entry().entityType }} <code>{{ entry().entityId }}</code>
+        {{ entry().entityType }}
+        @if (entry().entityLabel) {
+          <strong>{{ entry().entityLabel }}</strong>
+        }
+        <code>{{ entry().entityId }}</code>
       </dd>
       <dt i18n="@@admin.audit.detail.reason">Motivo</dt>
       <dd>{{ entry().reason ?? '—' }}</dd>
@@ -54,6 +65,7 @@ export class AuditDetail {
   readonly entry = input.required<AuditEntry>();
   readonly when = input.required<string>();
   readonly actor = input.required<string>();
+  readonly role = input.required<string>();
 
   protected readonly sides = computed(() => [
     {

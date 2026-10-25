@@ -10,9 +10,11 @@ const BASE = 'http://api.test/api/v1';
 
 const member: StaffMember = {
   id: 'u1',
+  username: 'Ana',
   email: 'ana@juguera.pe',
   role: 'SERVER',
   active: true,
+  deletable: false,
   createdAt: '2026-01-01T03:30:00Z',
 };
 
@@ -57,13 +59,23 @@ describe('StaffApi', () => {
     expect((await all).map((item) => item.id)).toEqual(['u1', 'u2']);
   });
 
-  it('invites an account by email and role, without any password', () => {
-    api.create({ email: 'ana@juguera.pe', role: 'SERVER' }).subscribe();
+  it('invites an account by username, email and role, without any password', () => {
+    api.create({ username: 'Ana', email: 'ana@juguera.pe', role: 'SERVER' }).subscribe();
 
     const request = http.expectOne(`${BASE}/staff`);
     expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({ email: 'ana@juguera.pe', role: 'SERVER' });
+    expect(request.request.body).toEqual({ username: 'Ana', email: 'ana@juguera.pe', role: 'SERVER' });
     request.flush(member, { status: 201, statusText: 'Created' });
+  });
+
+  it('renames an account with no version header', () => {
+    api.rename('u1', 'Ana Maria').subscribe();
+
+    const request = http.expectOne(`${BASE}/staff/u1/username`);
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toEqual({ username: 'Ana Maria' });
+    expect(request.request.headers.has('If-Match')).toBe(false);
+    request.flush(member);
   });
 
   it('changes a role, toggles an account and resends the link with no version header', () => {
@@ -86,6 +98,14 @@ describe('StaffApi', () => {
     const link = http.expectOne(`${BASE}/staff/u1/set-password-link`);
     expect(link.request.method).toBe('POST');
     link.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  it('deletes an account with no version header', () => {
+    api.delete('u1').subscribe();
+    const remove = http.expectOne(`${BASE}/staff/u1`);
+    expect(remove.request.method).toBe('DELETE');
+    expect(remove.request.headers.has('If-Match')).toBe(false);
+    remove.flush(null);
   });
 
   it('reads the store time zone from the settings', async () => {

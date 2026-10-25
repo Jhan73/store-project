@@ -1,7 +1,9 @@
 package com.jhanantezana.jugueria.identity.internal;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +15,10 @@ import org.springframework.data.repository.query.Param;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
 
 	Optional<RefreshToken> findByTokenHash(String tokenHash);
+
+	// An account with any refresh token, expired or revoked, has signed in at some point.
+	@Query("select distinct t.userId from RefreshToken t where t.userId in :userIds")
+	Set<UUID> userIdsWithTokens(@Param("userIds") Collection<UUID> userIds);
 
 	// Atomic: the row count is the only safe way to detect a concurrent reuse of the same token.
 	// Rechecks the absolute lifetime so a lowered absolute-ttl also cuts existing families short.

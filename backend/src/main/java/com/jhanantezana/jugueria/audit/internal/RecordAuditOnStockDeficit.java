@@ -14,8 +14,11 @@ class RecordAuditOnStockDeficit {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnStockDeficit(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnStockDeficit(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -25,7 +28,8 @@ class RecordAuditOnStockDeficit {
 		after.put("shortBy", event.shortBy());
 		after.put("referenceId", event.referenceId().toString());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "STOCK_DEFICIT",
-				ENTITY_TYPE, event.productId(), null, after, null));
+				ENTITY_TYPE, event.productId(), null, after, null,
+				labels.product(event.productId())));
 	}
 
 }
