@@ -44,14 +44,22 @@ class StompSessionRecheck implements SchedulingConfigurer {
 
 	void run() {
 		var now = Instant.now(clock);
+		var failed = 0;
+		RuntimeException first = null;
 		for (var userId : sessions.usersDue(now)) {
 			try {
 				recheck(userId, now);
 			}
 			catch (RuntimeException e) {
 				// The session stays and the user is due again on the next run.
-				log.warn("Could not recheck an account with an open realtime session", e);
+				failed++;
+				if (first == null) {
+					first = e;
+				}
 			}
+		}
+		if (first != null) {
+			log.warn("Could not recheck {} accounts with an open realtime session: {}", failed, first.toString());
 		}
 	}
 

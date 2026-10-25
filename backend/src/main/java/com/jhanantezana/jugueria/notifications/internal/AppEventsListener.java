@@ -222,6 +222,8 @@ class AppEventsListener implements SmartLifecycle {
 			Thread.sleep(duration);
 		}
 		catch (InterruptedException e) {
+			// Re-set, or the next sleep would throw at once and the loop would spin without backoff.
+			running = false;
 			Thread.currentThread().interrupt();
 		}
 	}

@@ -46,6 +46,12 @@ public class TestcontainersConfiguration {
 		};
 	}
 
+	// Cached contexts share the container; a live recheck must never close another test's sessions.
+	@Bean
+	DynamicPropertyRegistrar inertSessionRecheck() {
+		return registry -> registry.add("jugueria.notifications.session-recheck.sweep-interval", () -> "365d");
+	}
+
 	@Bean
 	JdbcConnectionDetails jdbcConnectionDetails() {
 		return new JdbcConnectionDetails() {

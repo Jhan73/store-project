@@ -14,7 +14,13 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -85,6 +91,37 @@ class StompSessionRecheckTest {
 
 		verify(socket, never()).close(any(CloseStatus.class));
 		assertThat(registry.usersDue(NOW)).containsExactly(user.toString());
+	}
+
+	@Test
+	void logsOneWarningWithoutAStackTraceNoMatterHowManyLookupsFailInASweep() throws IOException {
+		var other = UUID.randomUUID();
+		open("s1", NOW.minusSeconds(1));
+		registry.opened(mockSocket("s2"));
+		registry.authenticated("s2", other.toString(), NOW.minusSeconds(1));
+		when(accounts.isActive(any())).thenThrow(new IllegalStateException("database down"));
+		var appender = new ListAppender<ILoggingEvent>();
+		appender.start();
+		var logger = (Logger) LoggerFactory.getLogger(StompSessionRecheck.class);
+		logger.addAppender(appender);
+		try {
+			recheck.run();
+		}
+		finally {
+			logger.detachAppender(appender);
+		}
+
+		assertThat(appender.list).singleElement().satisfies(event -> {
+			assertThat(event.getLevel()).isEqualTo(Level.WARN);
+			assertThat(event.getThrowableProxy()).isNull();
+		});
+		assertThat(registry.usersDue(NOW)).hasSize(2);
+	}
+
+	private static WebSocketSession mockSocket(String id) {
+		var socket = mock(WebSocketSession.class);
+		when(socket.getId()).thenReturn(id);
+		return socket;
 	}
 
 	@Test

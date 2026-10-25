@@ -82,6 +82,32 @@ class AppEventsListenerTest {
 	}
 
 	@Test
+	void anInterruptStopsTheLoopInsteadOfLettingItSpinWithoutBackoff() {
+		var failing = new AppEventsListener(connectionDetails, messagingTemplate, mapper, properties, localEvents) {
+			@Override
+			void connect() throws SQLException {
+				throw new SQLException("database not ready");
+			}
+		};
+		var loop = new Thread(() -> {
+			Thread.currentThread().interrupt();
+			failing.runOnCallingThread();
+		});
+		loop.start();
+		try {
+			loop.join(Duration.ofSeconds(5));
+			assertThat(loop.isAlive()).isFalse();
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+		finally {
+			failing.stop();
+			loop.interrupt();
+		}
+	}
+
+	@Test
 	void isNotRunningUntilStarted() {
 		assertThat(listener.isRunning()).isFalse();
 	}
