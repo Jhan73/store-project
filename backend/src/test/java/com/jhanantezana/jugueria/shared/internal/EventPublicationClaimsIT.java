@@ -43,6 +43,7 @@ class EventPublicationClaimsIT {
 	@AfterEach
 	void clean() {
 		jdbc.sql("delete from modulith.event_publication").update();
+		jdbc.sql("delete from modulith.event_publication_dead_letter").update();
 	}
 
 	private UUID insert(String status, int attempts, Duration age) {
@@ -87,9 +88,14 @@ class EventPublicationClaimsIT {
 
 		assertThat(claim.toResubmit()).isEmpty();
 		assertThat(ids(claim.deadLettered())).containsExactly(id);
-		assertThat(jdbc.sql("select count(*) from modulith.event_publication where dead_lettered_at is not null")
+		assertThat(jdbc.sql("select count(*) from modulith.event_publication where id = :id")
+			.param("id", id)
 			.query(Long.class)
-			.single()).isEqualTo(1);
+			.single()).isZero();
+		assertThat(jdbc.sql("select completion_attempts from modulith.event_publication_dead_letter where id = :id")
+			.param("id", id)
+			.query(Integer.class)
+			.single()).isEqualTo(3);
 		assertThat(claims.claimBatch().deadLettered()).isEmpty();
 	}
 

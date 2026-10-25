@@ -14,7 +14,13 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+
 import org.junit.jupiter.api.Test;
+import org.slf4j.LoggerFactory;
 import org.mockito.ArgumentCaptor;
 import org.springframework.modulith.events.EventPublication;
 import org.springframework.modulith.events.IncompleteEventPublications;
@@ -36,7 +42,39 @@ class IncompleteEventPublicationsJobTest {
 			clock);
 
 	private static EventPublicationClaims.Publication publication(UUID id) {
-		return new EventPublicationClaims.Publication(id, "Listener.on", Instant.parse("2026-10-25T09:50:00Z"), 1);
+		return new EventPublicationClaims.Publication(id, "Listener.on", Instant.parse("2026-10-25T09:50:00Z"), 1, null);
+	}
+
+	private static EventPublicationClaims.Publication publication(Instant published, Instant previousClaim) {
+		return new EventPublicationClaims.Publication(UUID.randomUUID(), "Listener.on", published, 1, previousClaim);
+	}
+
+	private List<ILoggingEvent> errorsOf(EventPublicationClaims.Publication... claimed) {
+		var appender = new ListAppender<ILoggingEvent>();
+		appender.start();
+		var logger = (Logger) LoggerFactory.getLogger(IncompleteEventPublicationsJob.class);
+		logger.addAppender(appender);
+		try {
+			when(claims.claimBatch()).thenReturn(new EventPublicationClaims.Claim(List.of(claimed), List.of()))
+				.thenReturn(new EventPublicationClaims.Claim(List.of(), List.of()));
+			job.run();
+		}
+		finally {
+			logger.detachAppender(appender);
+		}
+		return appender.list.stream().filter(event -> event.getLevel() == Level.ERROR).toList();
+	}
+
+	@Test
+	void reportsAnOverduePublicationOnlyWhenItsAgeCrossesAMultipleOfMaxAge() {
+		var now = Instant.parse("2026-10-25T10:00:00Z");
+		var crossedNow = publication(now.minus(Duration.ofMinutes(61)), now.minus(Duration.ofMinutes(3)));
+		var alreadyReported = publication(now.minus(Duration.ofMinutes(80)), now.minus(Duration.ofMinutes(3)));
+		var crossedAgain = publication(now.minus(Duration.ofMinutes(121)), now.minus(Duration.ofMinutes(3)));
+		var neverClaimedBefore = publication(now.minus(Duration.ofMinutes(90)), null);
+		var young = publication(now.minus(Duration.ofMinutes(10)), null);
+
+		assertThat(errorsOf(crossedNow, alreadyReported, crossedAgain, neverClaimedBefore, young)).hasSize(3);
 	}
 
 	private static EventPublication stored(UUID id) {

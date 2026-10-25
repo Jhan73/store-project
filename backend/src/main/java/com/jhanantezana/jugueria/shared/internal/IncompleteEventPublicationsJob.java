@@ -66,13 +66,18 @@ class IncompleteEventPublicationsJob implements SchedulingConfigurer {
 
 	private void reportParked(EventPublicationClaims.Publication publication) {
 		log.error("Event publication {} for listener {} failed {} resubmissions and was parked; "
-				+ "see modulith.event_publication where dead_lettered_at is not null", publication.id(),
+				+ "see modulith.event_publication_dead_letter", publication.id(),
 				publication.listenerId(), publication.attempts());
 	}
 
+	// One line each time a publication's age crosses a multiple of max-age between two claims, not one per claim.
 	private void reportIfOverdue(EventPublicationClaims.Publication publication) {
-		var age = Duration.between(publication.publishedAt(), Instant.now(clock));
-		if (age.compareTo(properties.maxAge()) > 0) {
+		var now = Instant.now(clock);
+		var age = Duration.between(publication.publishedAt(), now);
+		var previousAge = publication.previousClaim() == null ? Duration.ZERO
+				: Duration.between(publication.publishedAt(), publication.previousClaim());
+		var crossings = age.dividedBy(properties.maxAge());
+		if (crossings > 0 && crossings > previousAge.dividedBy(properties.maxAge())) {
 			log.error("Event publication {} for listener {} is still not delivered after {} and {} attempts",
 					publication.id(), publication.listenerId(), age, publication.attempts());
 		}

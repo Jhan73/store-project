@@ -127,7 +127,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - The board and display signals are not outbox listeners: `SignalBoardOnBoardChanged` and `SignalDisplayOnBoardChanged` are `@EventListener`s that go through `AfterCommitSignals` (NOTIFY right after commit, nothing on rollback, a failure only logged). Every other topic stays an `@ApplicationModuleListener`.
 - After every reconnection of the `LISTEN` connection `AppEventsListener` sends a `RESYNC` signal to its own subscribers of every subscribable topic; the loop catches `RuntimeException` too and never dies.
 - A STOMP session is authenticated once; `StompSessionRecheck` looks the account up (`shared.AccountActivity`) when its token expires and closes the sessions of an inactive one. A new listener or job that needs identity data across modules uses a port in `shared`, as `AccountActivity` does.
-- `IncompleteEventPublicationsJob` resubmits only what `EventPublicationClaims` claimed with `SKIP LOCKED`; a publication that failed `max-attempts` times is parked (`dead_lettered_at`), and the error log lines it writes are the signal (no alarm exists).
+- `IncompleteEventPublicationsJob` resubmits only what `EventPublicationClaims` claimed with `SKIP LOCKED`; a publication that failed `max-attempts` times is moved to `modulith.event_publication_dead_letter` (a parked row left in `event_publication` would starve the library's own selection of the oldest 100 `FAILED` rows), and the error log lines it writes are the signal (no alarm exists).
 
 **Logging**
 - Structured JSON with `correlation_id`; never log passwords, tokens, or full addresses.
