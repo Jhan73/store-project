@@ -2,9 +2,13 @@ package com.jhanantezana.jugueria.audit.internal;
 
 import java.util.UUID;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaExpression;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.query.QueryUtils;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +25,16 @@ class AuditSearch {
 
 	private final EntityManager entityManager;
 
+	private final int countCap;
+
+	@Autowired
 	AuditSearch(EntityManager entityManager) {
+		this(entityManager, COUNT_CAP);
+	}
+
+	AuditSearch(EntityManager entityManager, int countCap) {
 		this.entityManager = entityManager;
+		this.countCap = countCap;
 	}
 
 	Page<AuditLog> search(AuditSearchFilter filter, Pageable pageable) {
@@ -40,15 +52,25 @@ class AuditSearch {
 			.getResultList();
 
 		var shown = pageable.getOffset() + content.size();
-		if (content.size() < pageable.getPageSize()) {
+		var lastPage = content.size() < pageable.getPageSize();
+		if (lastPage && (!content.isEmpty() || pageable.getOffset() == 0)) {
 			return new PageImpl<>(content, pageable, shown);
 		}
+		var matching = boundedCount(specification);
+		return new PageImpl<>(content, pageable, content.isEmpty() ? matching : Math.max(matching, shown));
+	}
 
-		var countQuery = builder.createQuery(UUID.class);
-		var countRoot = countQuery.from(AuditLog.class);
-		countQuery.select(countRoot.get("id")).where(specification.toPredicate(countRoot, countQuery, builder));
-		var matching = entityManager.createQuery(countQuery).setMaxResults(COUNT_CAP + 1).getResultList().size();
-		return new PageImpl<>(content, pageable, Math.max(Math.min(matching, COUNT_CAP), shown));
+	// count(*) over a subquery that stops at the cap, so a huge log is never read whole.
+	private long boundedCount(Specification<AuditLog> specification) {
+		var builder = (HibernateCriteriaBuilder) entityManager.getCriteriaBuilder();
+		var countQuery = builder.createQuery(Long.class);
+		var limited = countQuery.subquery(UUID.class);
+		var root = limited.from(AuditLog.class);
+		var id = (JpaExpression<UUID>) root.<UUID>get("id").alias("id");
+		limited.select(id).where(specification.toPredicate(root, countQuery, builder)).fetch(countCap);
+		countQuery.from(limited);
+		countQuery.select(builder.count());
+		return entityManager.createQuery(countQuery).getSingleResult();
 	}
 
 }

@@ -139,6 +139,18 @@ class AuditLogServiceTest {
 		assertThat(saved().getEntityLabel()).hasSize(AuditLogService.LABEL_MAX_LENGTH);
 	}
 
+	@Test
+	void clipsALabelByCodePointsNeverSplittingASurrogatePair() {
+		when(currentActor.isSystem()).thenReturn(true);
+		when(auditLogs.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+		var label = "a" + "🍊".repeat(200);
+
+		service.record(new AuditEntry(NOW, null, null, "PRODUCT_CREATED", "PRODUCT", UUID.randomUUID(), null, null, null,
+				label));
+
+		assertThat(saved().getEntityLabel()).isEqualTo("a" + "🍊".repeat(AuditLogService.LABEL_MAX_LENGTH - 1));
+	}
+
 	private AuditLog saved() {
 		var captor = ArgumentCaptor.forClass(AuditLog.class);
 		verify(auditLogs).save(captor.capture());

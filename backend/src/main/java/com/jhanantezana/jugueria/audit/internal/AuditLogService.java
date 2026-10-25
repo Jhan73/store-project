@@ -70,7 +70,10 @@ public class AuditLogService {
 		if (label == null || label.isBlank()) {
 			return null;
 		}
-		return label.length() <= LABEL_MAX_LENGTH ? label : label.substring(0, LABEL_MAX_LENGTH);
+		if (label.codePointCount(0, label.length()) <= LABEL_MAX_LENGTH) {
+			return label;
+		}
+		return label.substring(0, label.offsetByCodePoints(0, LABEL_MAX_LENGTH));
 	}
 
 	// The event runs on the publisher's own thread, so CurrentActor still reflects that same call.
