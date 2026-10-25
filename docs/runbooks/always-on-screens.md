@@ -6,8 +6,8 @@ These two screens are signed in like any other staff device and are left on all 
 
 ## How the screens warn you
 
-- **From 3 days before the end**, both screens show a yellow line: "La sesión de esta pantalla vence en N días…" (and "menos de un día" on the last day). On the board it is at the top; on the display it is under the numbers. It disappears by itself as soon as someone signs in again.
-- The warning comes from the end date the server sends with every sign-in and renewal, so it is exact. A screen that was never renewed since this release shows none until its next renewal (within 15 minutes of being on).
+- **From 3 days before the end**, both screens show a yellow line: "La sesión de esta pantalla vence en N días…" (and "menos de un día" on the last day). On the board it is at the top; on the display it is a small line in the bottom corner, under the numbers. It disappears by itself as soon as someone signs in again.
+- The warning comes from the end date the server sends with every sign-in and renewal, so it is exact. The screen learns the date when it signs in or renews its token, which happens about every 15 minutes while it is on and active, so the warning appears at the screen's next renewal; a screen that was switched off for a week loses its session (7 days without renewing) before any warning can reach it.
 
 ## What each screen does when the session ends
 
@@ -24,7 +24,7 @@ Do it on a quiet moment, ideally when the warning first appears (3 days of margi
 2. Check that the yellow line is gone and the screen shows live data (no "Actualizando…" and, on the board, no red or yellow banner).
 3. Board only: tap **Activar sonido** again if the browser asks, and check the wake lock keeps the screen on.
 
-Each screen has its **own account**: a `KITCHEN` account for the board, a `SERVER`, `CASHIER` or `ADMIN` account reserved for the display (the display never accepts `KITCHEN`). Do not share one account between devices: the refresh cookie belongs to the browser, but two devices on one account make it harder to tell whose session is whose, and deactivating the account (for a lost device) would stop both.
+Each screen has its **own account**: a `KITCHEN` account for the board, a `SERVER`, `CASHIER` or `ADMIN` account reserved for the display (the display never accepts `KITCHEN`). One account per device, and one signed-in account per browser: the refresh cookie belongs to the browser, so signing another user in on a second tab of the same device ends the display's session (it keeps its last numbers and offers the sign-in). Do not share one account between devices: the refresh cookie belongs to the browser, but two devices on one account make it harder to tell whose session is whose, and deactivating the account (for a lost device) would stop both.
 
 ## It already ended (the screen is on the login page or says "La sesión terminó")
 

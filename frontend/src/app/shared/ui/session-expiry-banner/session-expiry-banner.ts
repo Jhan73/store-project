@@ -16,9 +16,16 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
       background: var(--warning);
       font-weight: 600;
     }
+
+    .banner.compact {
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
   `,
   template: `
-    <p class="banner" role="status" data-testid="session-expiry-banner">
+    <p class="banner" [class.compact]="compact()" role="status" data-testid="session-expiry-banner">
       @if (daysLeft() >= 1) {
         <ng-container i18n="@@shared.sessionExpiry.days"
           >La sesión de esta pantalla vence en {daysLeft(), plural, =1 {1 día} other {{{ daysLeft() }} días}}. Alguien del
@@ -36,4 +43,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 export class SessionExpiryBanner {
   // Whole days left; 0 means under a day.
   readonly daysLeft = input.required<number>();
+  // For a screen that people other than the team look at: the same words, smaller.
+  readonly compact = input(false);
 }

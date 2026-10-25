@@ -52,17 +52,21 @@ import { DisplayStore } from './display-store';
     @if (store.failed() || !store.connected()) {
       <p class="stale" role="status" data-testid="stale" i18n="@@display.stale">Actualizando…</p>
     }
-    @if (auth.sessionEnded()) {
-      <p class="ended" role="status" data-testid="session-ended">
-        <ng-container i18n="@@display.sessionEnded"
-          >La sesión terminó: los números dejarán de actualizarse hasta que alguien inicie sesión de nuevo.</ng-container
-        >
-        <a routerLink="/login" [queryParams]="{ returnUrl: '/display' }" i18n="@@display.signIn">Iniciar sesión</a>
-      </p>
-    }
     @let daysLeft = warning.daysLeft();
-    @if (daysLeft !== null) {
-      <app-session-expiry-banner [daysLeft]="daysLeft" />
+    @if (auth.sessionEnded() || daysLeft !== null) {
+      <footer class="notices" data-testid="display-notices">
+        @if (daysLeft !== null) {
+          <app-session-expiry-banner [daysLeft]="daysLeft" [compact]="true" />
+        }
+        @if (auth.sessionEnded()) {
+          <p class="ended" role="status" data-testid="session-ended">
+            <ng-container i18n="@@display.sessionEnded"
+              >La sesión terminó: los números dejarán de actualizarse hasta que alguien inicie sesión de nuevo.</ng-container
+            >
+            <a routerLink="/login" [queryParams]="{ returnUrl: '/display' }" i18n="@@display.signIn">Iniciar sesión</a>
+          </p>
+        }
+      </footer>
     }
   `,
 })

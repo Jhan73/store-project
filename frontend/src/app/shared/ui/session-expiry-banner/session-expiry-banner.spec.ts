@@ -4,16 +4,18 @@ import { SessionExpiryBanner } from './session-expiry-banner';
 
 @Component({
   imports: [SessionExpiryBanner],
-  template: '<app-session-expiry-banner [daysLeft]="days()" />',
+  template: '<app-session-expiry-banner [daysLeft]="days()" [compact]="compact()" />',
 })
 class Host {
   readonly days = signal(2);
+  readonly compact = signal(false);
 }
 
 describe('SessionExpiryBanner', () => {
-  async function render(days: number) {
+  async function render(days: number, compact = false) {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.days.set(days);
+    fixture.componentInstance.compact.set(compact);
     await fixture.whenStable();
     return (fixture.nativeElement as HTMLElement).querySelector('[data-testid="session-expiry-banner"]');
   }
@@ -38,5 +40,14 @@ describe('SessionExpiryBanner', () => {
 
     expect(banner?.getAttribute('role')).toBe('status');
     expect(banner?.textContent).toContain('iniciar sesión');
+  });
+
+  it('is full size unless asked to be compact, and compact keeps the same words', async () => {
+    expect((await render(2))?.classList).not.toContain('compact');
+
+    const compact = await render(2, true);
+
+    expect(compact?.classList).toContain('compact');
+    expect(compact?.textContent).toContain('2 días');
   });
 });

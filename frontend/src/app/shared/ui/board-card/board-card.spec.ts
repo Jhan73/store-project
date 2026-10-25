@@ -506,6 +506,57 @@ describe('BoardCard', () => {
       expect(undo.mock.calls.map(([id]) => id)).toEqual(['a', 'b', 'c']);
     });
 
+    describe('a line that joins while the others wait out the undo window', () => {
+      const four = () =>
+        order({
+          id: 'o1',
+          status: 'PREPARING',
+          lines: [
+            line({ id: 'a', displayName: 'Mango' }),
+            line({ id: 'b', displayName: 'Mango' }),
+            line({ id: 'c', displayName: 'Mango' }),
+            line({ id: 'd', displayName: 'Mango' }),
+          ],
+        });
+
+      it('keeps the queued lines apart, with their Undo, from the one that is not queued', () => {
+        render(four(), { queued: ['a', 'b', 'c'] });
+
+        expect(host().querySelector('[data-testid="line-a"]')?.textContent).toContain('3×');
+        expect(host().querySelector('[data-testid="line-d"]')?.textContent).toContain('1×');
+        expect(button('undo-line-a')).not.toBeNull();
+        expect(button('ready-line-a')).toBeNull();
+        expect(button('ready-line-d')).not.toBeNull();
+        expect(button('undo-line-d')).toBeNull();
+      });
+
+      it('marks only the line that is not queued ready', () => {
+        render(four(), { queued: ['a', 'b', 'c'] });
+        const readyLine = emitted('readyLine');
+
+        button('ready-line-d')!.click();
+
+        expect(readyLine.mock.calls.map(([id]) => id)).toEqual(['d']);
+      });
+
+      it('undoes only the lines that are queued', () => {
+        render(four(), { queued: ['a', 'b', 'c'] });
+        const undo = emitted('undo');
+
+        button('undo-line-a')!.click();
+
+        expect(undo.mock.calls.map(([id]) => id)).toEqual(['a', 'b', 'c']);
+      });
+
+      it('joins them again once every line of the group is queued', () => {
+        render(four(), { queued: ['a', 'b', 'c', 'd'] });
+
+        expect(host().querySelector('[data-testid="line-a"]')?.textContent).toContain('4×');
+        expect(button('undo-line-a')).not.toBeNull();
+        expect(button('ready-line-d')).toBeNull();
+      });
+    });
+
     it('disables the group while any of its lines has a request in flight', () => {
       render(three(), { pending: ['b'] });
 

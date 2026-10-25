@@ -185,5 +185,23 @@ describe('Display', () => {
       expect(link?.getAttribute('href')).toContain('/login');
       expect(link?.getAttribute('href')).toContain('returnUrl=%2Fdisplay');
     });
+
+    it('keeps the notices meant for the team in a small footer apart from the numbers', async () => {
+      auth.sessionExpiresAt.set(Date.now() + 2 * DAY + 60_000);
+      const fixture = await open({ preparing: [{ shortNumber: 'L-001', firstName: 'Ana' }], ready: [] });
+      auth.sessionEnded.set(true);
+      await fixture.whenStable();
+
+      const notices = host(fixture).querySelector('[data-testid="display-notices"]');
+      expect(notices?.querySelector('[data-testid="session-expiry-banner"]')?.classList).toContain('compact');
+      expect(notices?.querySelector('[data-testid="session-ended"]')).not.toBeNull();
+      expect(host(fixture).querySelector('.columns')?.contains(notices ?? null)).toBe(false);
+    });
+
+    it('renders no footer while there is nothing to tell the team', async () => {
+      const fixture = await open({ preparing: [], ready: [] });
+
+      expect(host(fixture).querySelector('[data-testid="display-notices"]')).toBeNull();
+    });
   });
 });

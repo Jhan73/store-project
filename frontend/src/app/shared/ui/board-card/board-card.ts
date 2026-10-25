@@ -450,9 +450,10 @@ export class BoardCard {
   protected readonly indicators = computed(() => indicatorsOf(this.order()));
   protected readonly groups = computed(() =>
     groupLines(this.order().lines, (member) =>
-      this.markersOf(member)
-        .map((tag) => tag.id)
-        .join(','),
+      [
+        this.queued().has(member.id),
+        ...this.markersOf(member).map((tag) => tag.id),
+      ].join(','),
     ),
   );
   protected readonly detailTitle = computed(() =>
@@ -479,7 +480,7 @@ export class BoardCard {
     return MARKER_LABELS[marker.kind];
   }
 
-  // A group is queued or pending as a whole: its lines are always sent together.
+  // Queued status is part of the group key, so a group is queued as a whole: a line that joins later stays apart.
   protected groupQueued(group: LineGroup): boolean {
     return group.lines.every((member) => this.queued().has(member.id));
   }

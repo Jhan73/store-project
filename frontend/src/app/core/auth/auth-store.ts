@@ -66,7 +66,7 @@ export class AuthStore {
   readonly refreshError = this.failure.asReadonly();
   // True when a refresh brought another user's session (the cookie is shared between tabs); until the next login.
   readonly identityChanged = this.identityShift.asReadonly();
-  // True once the server refused the session, until the next login.
+  // True once this tab's session is gone (refused, signed out or another identity), until the next login.
   readonly sessionEnded = this.endedState.asReadonly();
   // When the refresh token family ends; null when nobody is signed in or the server did not say.
   readonly sessionExpiresAt = computed(() => this.state()?.sessionExpiresAt ?? null);
@@ -75,7 +75,7 @@ export class AuthStore {
     return this.state()?.accessToken ?? null;
   }
 
-  // True once the server refused the session, until the next login.
+  // True once this tab's session is gone (refused, signed out or another identity), until the next login.
   hasEnded(): boolean {
     return this.endedState();
   }

@@ -5697,7 +5697,7 @@
     </unit>
     <unit id="display.sessionEnded">
       <notes>
-        <note category="location">src/app/features/display/display.ts:58,60</note>
+        <note category="location">src/app/features/display/display.ts:64,66</note>
       </notes>
       <segment>
         <source>La sesión terminó: los números dejarán de actualizarse hasta que alguien inicie sesión de nuevo.</source>
@@ -5705,7 +5705,7 @@
     </unit>
     <unit id="display.signIn">
       <notes>
-        <note category="location">src/app/features/display/display.ts:60,63</note>
+        <note category="location">src/app/features/display/display.ts:66,68</note>
       </notes>
       <segment>
         <source>Iniciar sesión</source>
@@ -9819,7 +9819,7 @@
     </unit>
     <unit id="shared.sessionExpiry.days">
       <notes>
-        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:24,26</note>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:31,33</note>
       </notes>
       <segment>
         <source>La sesión de esta pantalla vence en <ph id="0" equiv="ICU" disp="{daysLeft(), plural, =1 {1 día} other {{{ daysLeft() }} días}}" subFlows="3011404153726310493"/>. Alguien del equipo debe volver a iniciar sesión antes para que no se detenga.</source>
@@ -9827,7 +9827,7 @@
     </unit>
     <unit id="7043237877750874746">
       <notes>
-        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:24</note>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:31</note>
       </notes>
       <segment>
         <source>{VAR_PLURAL, plural, =1 {1 día} other {<ph id="0" equiv="INTERPOLATION"/> días}}</source>
@@ -9835,7 +9835,7 @@
     </unit>
     <unit id="shared.sessionExpiry.soon">
       <notes>
-        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:29,32</note>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:36,39</note>
       </notes>
       <segment>
         <source>La sesión de esta pantalla vence en menos de un día. Alguien del equipo debe volver a iniciar sesión ya para que no se detenga.</source>
