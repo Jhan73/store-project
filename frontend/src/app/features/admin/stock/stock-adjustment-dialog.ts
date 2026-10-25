@@ -180,7 +180,6 @@ function wholeNonZero(control: AbstractControl<number | null>): ValidationErrors
               data-testid="adjust-note"
               formControlName="note"
               maxlength="300"
-              rows="3"
               [attr.aria-invalid]="invalid('note') ? 'true' : null"
               fluid
             ></textarea>

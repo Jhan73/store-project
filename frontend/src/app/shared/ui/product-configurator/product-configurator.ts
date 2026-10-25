@@ -108,7 +108,6 @@ let nextId = 0;
           [id]="prefix + 'note'"
           [formControl]="note"
           maxlength="140"
-          rows="2"
           fluid
         ></textarea>
       </div>

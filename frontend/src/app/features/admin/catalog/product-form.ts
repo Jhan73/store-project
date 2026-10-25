@@ -131,7 +131,6 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
             pTextarea
             id="product-description"
             formControlName="description"
-            rows="2"
             maxlength="500"
             fluid
           ></textarea>
@@ -145,6 +144,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
           [error]="invalid(form.controls.categoryId) ? labels.categoryInvalid : null"
         >
           <p-select
+            [appendTo]="'body'"
             inputId="product-category"
             [ariaLabel]="labels.category"
             formControlName="categoryId"
@@ -263,6 +263,7 @@ function positiveAmount(control: AbstractControl): ValidationErrors | null {
               >Grupo a agregar</label
             >
             <p-select
+              [appendTo]="'body'"
               inputId="product-group-add"
               [ariaLabel]="labels.addGroup"
               placeholder="Elige un grupo"

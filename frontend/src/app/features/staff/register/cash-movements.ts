@@ -173,7 +173,6 @@ type MovementType = CashMovementRequest['type'];
             data-testid="mv-note"
             formControlName="note"
             maxlength="280"
-            rows="2"
             fluid
           ></textarea>
         </app-form-field>

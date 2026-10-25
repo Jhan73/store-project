@@ -78,7 +78,6 @@ import { ShiftStore } from './shift-store';
                   data-testid="close-note"
                   [formControl]="note"
                   maxlength="280"
-                  rows="3"
                   fluid
                 ></textarea>
               </app-form-field>

@@ -34,7 +34,16 @@ const found: SelectElement[] = sources(root).flatMap((path) => {
   }));
 });
 
-const label = ({ file, open }: SelectElement) =>
+// A panel left inside a dialog is clipped by the dialog's scrolling content.
+const overlayTag = /<p-(?:select|multiselect|datepicker|autocomplete)\b(?:"[^"]*"|'[^']*'|[^>"'])*>/g;
+
+const overlays: SelectElement[] = sources(root).flatMap((path) => {
+  const text = readFileSync(path, 'utf8').replace(/\r\n/g, '\n');
+  const file = path.slice(root.length + 1).replace(/\\/g, '/');
+  return [...text.matchAll(overlayTag)].map(([open]) => ({ file, open, inputId: undefined }));
+});
+
+const label =({ file, open }: SelectElement) =>
   `${file}: ${open.replace(/\s+/g, ' ').slice(0, 90)}`;
 const allowed = ({ inputId }: SelectElement) => inputId !== undefined && WITHOUT_FILTER.includes(inputId);
 
@@ -49,6 +58,13 @@ describe('select conventions', () => {
       expect(open).toMatch(/\s\[filter\]="true"/);
       expect(open).toMatch(/\s\[resetFilterOnHide\]="true"/);
       expect(open).toMatch(/\sfilterPlaceholder=/);
+    },
+  );
+
+  it.each(overlays.map((o) => [label(o), o] as const))(
+    'appends its panel to the body: %s',
+    (_name, { open }) => {
+      expect(open).toMatch(/\s(?:\[appendTo\]="'body'"|appendTo="body")/);
     },
   );
 

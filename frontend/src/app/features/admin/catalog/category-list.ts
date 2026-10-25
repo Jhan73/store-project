@@ -158,6 +158,7 @@ import { isStale, reportFailure } from '../admin-errors';
           controlId="category-station"
         >
           <p-select
+            [appendTo]="'body'"
             inputId="category-station"
             [ariaLabel]="labels.station"
             formControlName="stationId"

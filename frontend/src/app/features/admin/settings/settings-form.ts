@@ -156,6 +156,7 @@ function timeZoneOptions(current: string): string[] {
           controlId="settings-timeZone"
         >
           <p-select
+            [appendTo]="'body'"
             inputId="settings-timeZone"
             [ariaLabel]="labels.timeZone"
             formControlName="timeZone"

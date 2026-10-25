@@ -105,7 +105,6 @@ export interface VoidChoice {
               data-testid="vd-note"
               [formControl]="note"
               maxlength="280"
-              rows="3"
               fluid
             ></textarea>
           </app-form-field>
