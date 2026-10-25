@@ -97,8 +97,8 @@ public class DeliveryZoneService {
 		}
 		var now = Instant.now(clock);
 		zone.deactivate(now);
-		events.publishEvent(
-				new DeliveryZoneStatusChanged(zone.getId(), false, currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new DeliveryZoneStatusChanged(zone.getId(), false, currentActor.id(), currentActor.role(),
+				now, zone.getName()));
 		return zone;
 	}
 
@@ -111,8 +111,8 @@ public class DeliveryZoneService {
 		}
 		var now = Instant.now(clock);
 		zone.reactivate(now);
-		events.publishEvent(
-				new DeliveryZoneStatusChanged(zone.getId(), true, currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new DeliveryZoneStatusChanged(zone.getId(), true, currentActor.id(), currentActor.role(),
+				now, zone.getName()));
 		return zone;
 	}
 

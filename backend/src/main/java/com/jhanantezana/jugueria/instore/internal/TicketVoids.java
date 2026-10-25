@@ -95,7 +95,7 @@ public class TicketVoids {
 		}
 		var closed = settlement.isSettled(ticket);
 		events.publishEvent(new TicketLineVoided(ticketId, lineId, line.productId(), line.quantity(), waste, reason, text,
-				actor, role, now, line.lineTotal(), closed));
+				actor, role, now, line.lineTotal(), closed, line.productName()));
 		if (closed) {
 			settlement.close(ticket, now);
 		}

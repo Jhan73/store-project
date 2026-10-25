@@ -21,7 +21,7 @@ class RecordAuditOnProductChanged {
 		var before = event.before() == null ? null : CatalogAuditMaps.toMap(event.before());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				event.before() == null ? "PRODUCT_CREATED" : "PRODUCT_UPDATED", ENTITY_TYPE, event.productId(), before,
-				CatalogAuditMaps.toMap(event.after()), null));
+				CatalogAuditMaps.toMap(event.after()), null, event.after().name()));
 	}
 
 }

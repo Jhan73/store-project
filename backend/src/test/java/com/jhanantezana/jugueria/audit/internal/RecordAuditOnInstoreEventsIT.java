@@ -105,13 +105,15 @@ class RecordAuditOnInstoreEventsIT {
 		var tableId = UUID.randomUUID();
 		var actorId = UUID.randomUUID();
 
-		publish(new TableStatusChanged(tableId, false, actorId, Role.ADMIN, NOW));
+		publish(new TableStatusChanged(tableId, false, actorId, Role.ADMIN, NOW, "Mesa 1"));
 
 		var entry = findByEntityId(tableId);
 		assertThat(entry.getAction()).isEqualTo("TABLE_STATUS_CHANGED");
 		assertThat(entry.getEntityType()).isEqualTo("TABLE");
 		assertThat(entry.getActorId()).isEqualTo(actorId);
-		assertThat(entry.getAfter()).containsEntry("active", false);
+		assertThat(entry.getBefore()).containsEntry("active", true).containsEntry("name", "Mesa 1");
+		assertThat(entry.getAfter()).containsEntry("active", false).containsEntry("name", "Mesa 1");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mesa 1");
 	}
 
 	@Test
@@ -124,6 +126,7 @@ class RecordAuditOnInstoreEventsIT {
 
 		var entry = findByEntityId(ticketId);
 		assertThat(entry.getAction()).isEqualTo("TICKET_OPENED");
+		assertThat(entry.getEntityLabel()).isEqualTo("#12");
 		assertThat(entry.getEntityType()).isEqualTo("TICKET");
 		assertThat(entry.getActorId()).isEqualTo(actorId);
 		assertThat(entry.getActorRole()).isEqualTo("SERVER");
@@ -157,10 +160,11 @@ class RecordAuditOnInstoreEventsIT {
 		var product = UUID.randomUUID();
 
 		publish(new TicketLineVoided(ticketId, lineId, product, 2, true, "Changed mind", "Wanted strawberry",
-				UUID.randomUUID(), Role.CASHIER, NOW, new Money(new BigDecimal("16.00"), Currency.getInstance("PEN")), true));
+				UUID.randomUUID(), Role.CASHIER, NOW, new Money(new BigDecimal("16.00"), Currency.getInstance("PEN")), true, "Mango juice"));
 
 		var entry = findByEntityId(lineId);
 		assertThat(entry.getAction()).isEqualTo("TICKET_LINE_VOIDED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango juice");
 		assertThat(entry.getEntityType()).isEqualTo("TICKET_LINE");
 		assertThat(entry.getReason()).isEqualTo("Changed mind: Wanted strawberry");
 		assertThat(entry.getBefore()).containsEntry("state", "SENT");
@@ -168,6 +172,7 @@ class RecordAuditOnInstoreEventsIT {
 			.containsEntry("waste", true)
 			.containsEntry("ticketId", ticketId.toString())
 			.containsEntry("productId", product.toString())
+			.containsEntry("productName", "Mango juice")
 			.containsEntry("quantity", 2)
 			.containsEntry("amount", "16.00")
 			.containsEntry("currency", "PEN")
@@ -179,7 +184,7 @@ class RecordAuditOnInstoreEventsIT {
 		var lineId = UUID.randomUUID();
 
 		publish(new TicketLineVoided(UUID.randomUUID(), lineId, UUID.randomUUID(), 1, false, "Changed mind", null,
-				UUID.randomUUID(), Role.SERVER, NOW, null, false));
+				UUID.randomUUID(), Role.SERVER, NOW, null, false, null));
 
 		assertThat(findByEntityId(lineId).getReason()).isEqualTo("Changed mind");
 	}

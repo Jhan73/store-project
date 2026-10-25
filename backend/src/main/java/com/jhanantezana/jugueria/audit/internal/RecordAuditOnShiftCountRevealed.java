@@ -12,8 +12,11 @@ class RecordAuditOnShiftCountRevealed {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnShiftCountRevealed(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnShiftCountRevealed(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -22,7 +25,8 @@ class RecordAuditOnShiftCountRevealed {
 		after.put("countedCash", event.countedCash().amount().toPlainString());
 		after.put("difference", event.difference().amount().toPlainString());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "SHIFT_COUNT_REVEALED",
-				RecordAuditOnShiftOpened.ENTITY_TYPE, event.shiftId(), null, after, null));
+				RecordAuditOnShiftOpened.ENTITY_TYPE, event.shiftId(), null, after, null,
+				labels.user(event.cashierId())));
 	}
 
 }

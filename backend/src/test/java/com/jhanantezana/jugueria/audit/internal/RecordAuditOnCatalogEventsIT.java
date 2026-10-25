@@ -100,6 +100,8 @@ class RecordAuditOnCatalogEventsIT {
 		var entry = findByEntityId(groupId);
 		assertThat(entry.getAction()).isEqualTo("MODIFIER_GROUP_DELETED");
 		assertThat(entry.getAfter()).isNull();
+		assertThat(entry.getBefore()).containsEntry("name", "Size").containsEntry("minChoices", 1);
+		assertThat(entry.getEntityLabel()).isEqualTo("Size");
 	}
 
 	@Test
@@ -111,6 +113,7 @@ class RecordAuditOnCatalogEventsIT {
 
 		var entry = findByEntityId(productId);
 		assertThat(entry.getAction()).isEqualTo("PRODUCT_CREATED");
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango");
 		assertThat(entry.getEntityType()).isEqualTo("PRODUCT");
 		assertThat(entry.getActorId()).isEqualTo(actorId);
 		assertThat(entry.getBefore()).isNull();
@@ -148,7 +151,7 @@ class RecordAuditOnCatalogEventsIT {
 		var productId = UUID.randomUUID();
 		var actorId = UUID.randomUUID();
 
-		publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, actorId, Role.SERVER, NOW));
+		publish(new AvailabilityChanged(productId, AvailabilityTarget.PRODUCT, false, actorId, Role.SERVER, NOW, "Mango juice"));
 
 		var entry = findByEntityId(productId);
 		assertThat(entry.getAction()).isEqualTo("PRODUCT_AVAILABILITY_CHANGED");
@@ -157,13 +160,14 @@ class RecordAuditOnCatalogEventsIT {
 		assertThat(entry.getActorRole()).isEqualTo("SERVER");
 		assertThat(entry.getBefore()).containsEntry("available", true);
 		assertThat(entry.getAfter()).containsEntry("available", false);
+		assertThat(entry.getEntityLabel()).isEqualTo("Mango juice");
 	}
 
 	@Test
 	void recordsAnOptionBeingMarkedAvailableAgain() {
 		var optionId = UUID.randomUUID();
 
-		publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, true, null, null, NOW));
+		publish(new AvailabilityChanged(optionId, AvailabilityTarget.MODIFIER_OPTION, true, null, null, NOW, "Large"));
 
 		var entry = findByEntityId(optionId);
 		assertThat(entry.getAction()).isEqualTo("MODIFIER_OPTION_AVAILABILITY_CHANGED");

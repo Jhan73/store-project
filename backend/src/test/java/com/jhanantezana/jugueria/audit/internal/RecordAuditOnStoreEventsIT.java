@@ -134,11 +134,12 @@ class RecordAuditOnStoreEventsIT {
 		var zoneId = UUID.randomUUID();
 
 		transactionTemplate.executeWithoutResult(
-				status -> events.publishEvent(new DeliveryZoneStatusChanged(zoneId, false, null, null, NOW)));
+				status -> events.publishEvent(new DeliveryZoneStatusChanged(zoneId, false, null, null, NOW, "Downtown")));
 
 		var entry = findByEntityId(zoneId);
 		assertThat(entry.getAction()).isEqualTo("DELIVERY_ZONE_STATUS_CHANGED");
-		assertThat(entry.getAfter()).containsEntry("active", false);
+		assertThat(entry.getAfter()).containsEntry("active", false).containsEntry("name", "Downtown");
+		assertThat(entry.getEntityLabel()).isEqualTo("Downtown");
 	}
 
 	@Test
@@ -158,11 +159,12 @@ class RecordAuditOnStoreEventsIT {
 		var reasonId = UUID.randomUUID();
 
 		transactionTemplate.executeWithoutResult(
-				status -> events.publishEvent(new ReasonStatusChanged(reasonId, true, null, null, NOW)));
+				status -> events.publishEvent(new ReasonStatusChanged(reasonId, true, null, null, NOW, "Wrong order")));
 
 		var entry = findByEntityId(reasonId);
 		assertThat(entry.getAction()).isEqualTo("REASON_STATUS_CHANGED");
-		assertThat(entry.getAfter()).containsEntry("active", true);
+		assertThat(entry.getAfter()).containsEntry("active", true).containsEntry("code", "Wrong order");
+		assertThat(entry.getEntityLabel()).isEqualTo("Wrong order");
 	}
 
 	private AuditLog findByEntityId(UUID entityId) {

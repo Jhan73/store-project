@@ -21,7 +21,8 @@ class RecordAuditOnAvailabilityChanged {
 	void on(AvailabilityChanged event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				event.target().name() + "_AVAILABILITY_CHANGED", event.target().name(), event.targetId(),
-				Map.of("available", !event.available()), Map.of("available", event.available()), null));
+				Map.of("available", !event.available()), Map.of("available", event.available()), null,
+				event.name()));
 	}
 
 }

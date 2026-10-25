@@ -20,7 +20,8 @@ class RecordAuditOnCategoryChanged {
 	void on(CategoryChanged event) {
 		var before = event.before() == null ? null : CatalogAuditMaps.toMap(event.before());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), action(event),
-				ENTITY_TYPE, event.categoryId(), before, CatalogAuditMaps.toMap(event.after()), null));
+				ENTITY_TYPE, event.categoryId(), before, CatalogAuditMaps.toMap(event.after()), null,
+				event.after().name()));
 	}
 
 	private static String action(CategoryChanged event) {

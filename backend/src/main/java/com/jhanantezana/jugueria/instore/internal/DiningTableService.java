@@ -121,8 +121,8 @@ public class DiningTableService {
 	}
 
 	private void publishStatus(DiningTable table, Instant now) {
-		events.publishEvent(
-				new TableStatusChanged(table.getId(), table.isActive(), currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new TableStatusChanged(table.getId(), table.isActive(), currentActor.id(),
+				currentActor.role(), now, table.getName()));
 	}
 
 	private static TableSnapshot snapshot(DiningTable table) {

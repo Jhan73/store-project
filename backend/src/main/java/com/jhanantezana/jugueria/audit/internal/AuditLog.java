@@ -62,10 +62,28 @@ public class AuditLog extends BaseEntity {
 	@Column(name = "user_agent")
 	private @Nullable String userAgent;
 
+	// Captured when the event happened, so the row stays readable after the entity or the account is gone.
+	@Column(name = "entity_label")
+	private @Nullable String entityLabel;
+
+	@Column(name = "actor_label")
+	private @Nullable String actorLabel;
+
+	// A row written without labels, as every row was before they existed.
 	public AuditLog(Instant occurredAt, @Nullable UUID actorId, String actorRole, String action, String entityType,
 			UUID entityId, @Nullable Map<String, Object> before, @Nullable Map<String, Object> after,
 			@Nullable String reason, @Nullable String correlationId, @Nullable String clientIp,
 			@Nullable String userAgent) {
+		this(occurredAt, actorId, actorRole, action, entityType, entityId, before, after, reason, correlationId, clientIp,
+				userAgent, null, null);
+	}
+
+	public AuditLog(Instant occurredAt, @Nullable UUID actorId, String actorRole, String action, String entityType,
+			UUID entityId, @Nullable Map<String, Object> before, @Nullable Map<String, Object> after,
+			@Nullable String reason, @Nullable String correlationId, @Nullable String clientIp,
+			@Nullable String userAgent, @Nullable String entityLabel, @Nullable String actorLabel) {
+		this.entityLabel = entityLabel;
+		this.actorLabel = actorLabel;
 		this.occurredAt = occurredAt;
 		this.actorId = actorId;
 		this.actorRole = actorRole;

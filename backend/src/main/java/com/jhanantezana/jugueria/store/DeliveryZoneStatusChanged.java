@@ -8,5 +8,5 @@ import org.jspecify.annotations.Nullable;
 import com.jhanantezana.jugueria.shared.Role;
 
 public record DeliveryZoneStatusChanged(UUID zoneId, boolean active, @Nullable UUID actorId,
-		@Nullable Role actorRole, Instant occurredAt) {
+		@Nullable Role actorRole, Instant occurredAt, @Nullable String name) {
 }

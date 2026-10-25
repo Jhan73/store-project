@@ -27,7 +27,8 @@ class RecordAuditOnTicketCancelled {
 		before.put("discardedLines", Integer.toString(event.discardedLines()));
 		before.put("discardedProductIds", event.discardedProductIds().stream().map(UUID::toString).toList());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TICKET_CANCELLED",
-				RecordAuditOnTicketOpened.ENTITY_TYPE, event.ticketId(), before, Map.of("status", "CANCELLED"), null));
+				RecordAuditOnTicketOpened.ENTITY_TYPE, event.ticketId(), before, Map.of("status", "CANCELLED"), null,
+				AuditLabels.ticketNumber(event.number())));
 	}
 
 }

@@ -21,7 +21,7 @@ class RecordAuditOnStationChanged {
 		var before = event.before() == null ? null : CatalogAuditMaps.toMap(event.before());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				event.before() == null ? "STATION_CREATED" : "STATION_UPDATED", ENTITY_TYPE, event.stationId(), before,
-				CatalogAuditMaps.toMap(event.after()), null));
+				CatalogAuditMaps.toMap(event.after()), null, event.after().name()));
 	}
 
 }

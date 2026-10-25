@@ -13,8 +13,11 @@ class RecordAuditOnTicketsMerged {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnTicketsMerged(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnTicketsMerged(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -27,7 +30,8 @@ class RecordAuditOnTicketsMerged {
 		after.put("movedLineIds", event.movedLineIds().stream().map(UUID::toString).toList());
 		after.put("sourceStatus", "MERGED");
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TICKETS_MERGED",
-				RecordAuditOnTicketOpened.ENTITY_TYPE, event.targetTicketId(), before, after, null));
+				RecordAuditOnTicketOpened.ENTITY_TYPE, event.targetTicketId(), before, after, null,
+				labels.ticket(event.targetTicketId())));
 	}
 
 }

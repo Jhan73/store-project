@@ -13,8 +13,11 @@ class RecordAuditOnTicketLinesSent {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnTicketLinesSent(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnTicketLinesSent(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -23,7 +26,8 @@ class RecordAuditOnTicketLinesSent {
 		after.put("boardSourceId", event.boardSourceId().toString());
 		after.put("lineIds", event.lineIds().stream().map(UUID::toString).toList());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TICKET_LINES_SENT",
-				RecordAuditOnTicketOpened.ENTITY_TYPE, event.ticketId(), null, after, null));
+				RecordAuditOnTicketOpened.ENTITY_TYPE, event.ticketId(), null, after, null,
+				labels.ticket(event.ticketId())));
 	}
 
 }

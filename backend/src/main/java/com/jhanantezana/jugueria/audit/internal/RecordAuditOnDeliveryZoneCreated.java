@@ -24,7 +24,7 @@ class RecordAuditOnDeliveryZoneCreated {
 				"DELIVERY_ZONE_CREATED", ENTITY_TYPE, event.zoneId(), null,
 				Map.of("name", event.name(), "fee", event.fee().amount().toPlainString(), "deliveryMinutes",
 						event.deliveryMinutes()),
-				null));
+				null, event.name()));
 	}
 
 }

@@ -1,7 +1,5 @@
 package com.jhanantezana.jugueria.audit.internal;
 
-import java.util.Map;
-
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -14,14 +12,19 @@ class RecordAuditOnUserReactivated {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnUserReactivated(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnUserReactivated(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
 	void on(UserReactivated event) {
+		var email = labels.user(event.userId());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "USER_REACTIVATED",
-				ENTITY_TYPE, event.userId(), Map.of("active", false), Map.of("active", true), null));
+				ENTITY_TYPE, event.userId(), AuditSnapshots.status("email", email, false),
+				AuditSnapshots.status("email", email, true), null, email));
 	}
 
 }

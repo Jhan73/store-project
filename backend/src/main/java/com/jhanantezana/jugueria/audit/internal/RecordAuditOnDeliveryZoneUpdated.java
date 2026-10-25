@@ -25,7 +25,7 @@ class RecordAuditOnDeliveryZoneUpdated {
 	void on(DeliveryZoneUpdated event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(),
 				"DELIVERY_ZONE_UPDATED", ENTITY_TYPE, event.zoneId(), toMap(event.before()), toMap(event.after()),
-				null));
+				null, event.after().name()));
 	}
 
 	private static Map<String, Object> toMap(DeliveryZoneSnapshot snapshot) {

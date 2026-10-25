@@ -26,7 +26,8 @@ class RecordAuditOnTicketOpened {
 		after.put("tableId", event.tableId() == null ? null : event.tableId().toString());
 		after.put("counterName", event.counterName());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "TICKET_OPENED",
-				ENTITY_TYPE, event.ticketId(), null, after, null));
+				ENTITY_TYPE, event.ticketId(), null, after, null,
+				AuditLabels.ticketNumber(event.number())));
 	}
 
 }

@@ -8,5 +8,5 @@ import org.jspecify.annotations.Nullable;
 import com.jhanantezana.jugueria.shared.Role;
 
 public record ReasonStatusChanged(UUID reasonId, boolean active, @Nullable UUID actorId, @Nullable Role actorRole,
-		Instant occurredAt) {
+		Instant occurredAt, @Nullable String code) {
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -44,6 +45,12 @@ class CatalogApiImpl implements CatalogApi {
 	@Transactional(readOnly = true)
 	public boolean productExists(UUID productId) {
 		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<String> productName(UUID productId) {
+		return products.findById(productId).map(Product::getName);
 	}
 
 	@Override

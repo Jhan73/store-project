@@ -19,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.identity.UserCreated;
+import com.jhanantezana.jugueria.identity.UserDeactivated;
 import com.jhanantezana.jugueria.shared.Role;
 
 // Publishes the identity module's public event directly, so this test only ever depends on that
@@ -58,6 +59,22 @@ class RecordAuditOnUserCreatedIT {
 		assertThat(entry.getActorRole()).isEqualTo("SYSTEM");
 		assertThat(entry.getAction()).isEqualTo("USER_CREATED");
 		assertThat(entry.getAfter()).containsEntry("email", "system-created@jugueria.pe");
+		assertThat(entry.getEntityLabel()).isEqualTo("system-created@jugueria.pe");
+		assertThat(entry.getActorLabel()).isNull();
+	}
+
+	@Test
+	void recordsADeactivationOfAnAccountThatCannotBeNamedWithoutInventingALabel() {
+		var userId = UUID.randomUUID();
+
+		transactionTemplate.executeWithoutResult(status -> events
+			.publishEvent(new UserDeactivated(userId, UUID.randomUUID(), Role.ADMIN, NOW)));
+
+		var entry = findByEntityId(userId);
+		assertThat(entry.getAction()).isEqualTo("USER_DEACTIVATED");
+		assertThat(entry.getBefore()).containsEntry("active", true);
+		assertThat(entry.getAfter()).containsEntry("active", false).doesNotContainKey("email");
+		assertThat(entry.getEntityLabel()).isNull();
 	}
 
 	@Test

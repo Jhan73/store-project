@@ -72,7 +72,8 @@ public class ReasonService {
 		}
 		var now = Instant.now(clock);
 		reason.deactivate(now);
-		events.publishEvent(new ReasonStatusChanged(reason.getId(), false, currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new ReasonStatusChanged(reason.getId(), false, currentActor.id(), currentActor.role(), now,
+				reason.getCode()));
 		return reason;
 	}
 
@@ -85,7 +86,8 @@ public class ReasonService {
 		}
 		var now = Instant.now(clock);
 		reason.reactivate(now);
-		events.publishEvent(new ReasonStatusChanged(reason.getId(), true, currentActor.id(), currentActor.role(), now));
+		events.publishEvent(new ReasonStatusChanged(reason.getId(), true, currentActor.id(), currentActor.role(), now,
+				reason.getCode()));
 		return reason;
 	}
 

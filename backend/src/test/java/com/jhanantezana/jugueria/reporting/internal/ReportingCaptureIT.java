@@ -137,9 +137,9 @@ class ReportingCaptureIT {
 		var waste = UUID.randomUUID();
 
 		publish(new TicketLineVoided(UUID.randomUUID(), plain, UUID.randomUUID(), 1, false, "Changed mind", "oops",
-				cashier, Role.CASHIER, NOW, new Money(new BigDecimal("8.00"), Currency.getInstance("PEN")), false));
+				cashier, Role.CASHIER, NOW, new Money(new BigDecimal("8.00"), Currency.getInstance("PEN")), false, null));
 		publish(new TicketLineVoided(UUID.randomUUID(), waste, UUID.randomUUID(), 1, true, "Spilled", null, cashier,
-				Role.CASHIER, NOW, new Money(new BigDecimal("5.00"), Currency.getInstance("PEN")), false));
+				Role.CASHIER, NOW, new Money(new BigDecimal("5.00"), Currency.getInstance("PEN")), false, null));
 
 		await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
 			assertThat(exceptionTypes(plain)).containsExactly("LINE_VOID");

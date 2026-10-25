@@ -27,7 +27,8 @@ class RecordAuditOnCashMovementRecorded {
 		after.put("amount", event.amount().amount().toPlainString());
 		after.put("reference", event.reference());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "CASH_MOVEMENT_RECORDED",
-				ENTITY_TYPE, event.movementId(), null, after, reason(event.reasonCode(), event.note())));
+				ENTITY_TYPE, event.movementId(), null, after, reason(event.reasonCode(), event.note()),
+				event.type().name() + " " + event.amount().amount().toPlainString()));
 	}
 
 	private static @Nullable String reason(@Nullable String code, @Nullable String note) {

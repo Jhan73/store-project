@@ -14,8 +14,11 @@ class RecordAuditOnPaymentRecorded {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnPaymentRecorded(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnPaymentRecorded(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -30,7 +33,8 @@ class RecordAuditOnPaymentRecorded {
 		after.put("lineIds", event.lineIds().stream().map(Object::toString).toList());
 		after.put("ticketClosed", event.ticketClosed());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "PAYMENT_RECORDED",
-				ENTITY_TYPE, event.paymentId(), null, after, null));
+				ENTITY_TYPE, event.paymentId(), null, after, null,
+				labels.ticket(event.ticketId())));
 	}
 
 }

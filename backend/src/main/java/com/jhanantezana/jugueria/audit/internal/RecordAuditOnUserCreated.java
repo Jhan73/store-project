@@ -24,7 +24,7 @@ class RecordAuditOnUserCreated {
 	void on(UserCreated event) {
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "USER_CREATED",
 				ENTITY_TYPE, event.userId(), null, Map.of("email", event.email(), "role", event.role().name()),
-				null));
+				null, event.email()));
 	}
 
 }

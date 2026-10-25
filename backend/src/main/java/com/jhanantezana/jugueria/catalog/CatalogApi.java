@@ -19,6 +19,9 @@ public interface CatalogApi {
 
 	boolean productExists(UUID productId);
 
+	/** The product's current name, empty for an unknown product. */
+	java.util.Optional<String> productName(UUID productId);
+
 	/** The given products that cannot be sold right now: unknown, inactive, unavailable or in a hidden category. */
 	Set<UUID> notOnSale(Collection<UUID> productIds);
 

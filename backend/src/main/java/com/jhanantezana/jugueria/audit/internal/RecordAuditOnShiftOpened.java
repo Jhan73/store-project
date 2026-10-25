@@ -14,8 +14,11 @@ class RecordAuditOnShiftOpened {
 
 	private final AuditLogService auditLog;
 
-	RecordAuditOnShiftOpened(AuditLogService auditLog) {
+	private final AuditLabels labels;
+
+	RecordAuditOnShiftOpened(AuditLogService auditLog, AuditLabels labels) {
 		this.auditLog = auditLog;
+		this.labels = labels;
 	}
 
 	@EventListener
@@ -24,7 +27,8 @@ class RecordAuditOnShiftOpened {
 		after.put("cashierId", event.cashierId().toString());
 		after.put("openingFloat", event.openingFloat().amount().toPlainString());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "SHIFT_OPENED",
-				ENTITY_TYPE, event.shiftId(), null, after, null));
+				ENTITY_TYPE, event.shiftId(), null, after, null,
+				labels.user(event.cashierId())));
 	}
 
 }

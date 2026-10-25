@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +59,8 @@ public class AvailabilityService {
 			throw new BusinessException(CatalogError.PRODUCT_NOT_FOUND, "Product not found");
 		}
 		if (flipped) {
-			publish(productId, AvailabilityTarget.PRODUCT, available, now);
+			publish(productId, AvailabilityTarget.PRODUCT, available, now,
+					products.findById(productId).map(Product::getName).orElse(null));
 		}
 	}
 
@@ -70,13 +72,15 @@ public class AvailabilityService {
 			throw new BusinessException(CatalogError.MODIFIER_OPTION_NOT_FOUND, "Modifier option not found");
 		}
 		if (flipped) {
-			publish(optionId, AvailabilityTarget.MODIFIER_OPTION, available, now);
+			publish(optionId, AvailabilityTarget.MODIFIER_OPTION, available, now,
+					options.findById(optionId).map(ModifierOption::getName).orElse(null));
 		}
 	}
 
-	private void publish(UUID targetId, AvailabilityTarget target, boolean available, Instant now) {
+	private void publish(UUID targetId, AvailabilityTarget target, boolean available, Instant now,
+			@Nullable String name) {
 		changes.publish(new AvailabilityChanged(targetId, target, available, currentActor.id(), currentActor.role(),
-				now));
+				now, name));
 	}
 
 }
