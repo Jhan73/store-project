@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.catalog.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import java.time.Duration;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -28,6 +30,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.catalog.CatalogApi;
+import com.jhanantezana.jugueria.catalog.CatalogError;
+import com.jhanantezana.jugueria.catalog.StationDeactivationGuard;
+import com.jhanantezana.jugueria.shared.BusinessException;
 import com.jhanantezana.jugueria.shared.Role;
 import com.jhanantezana.testsupport.AuthenticatedAs;
 import com.jhanantezana.testsupport.InstoreTables;
@@ -51,6 +56,9 @@ class StationDeactivationRaceIT {
 
 	@Autowired
 	PlatformTransactionManager transactions;
+
+	@Autowired
+	List<StationDeactivationGuard> guards;
 
 	final ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -90,6 +98,50 @@ class StationDeactivationRaceIT {
 		var result = deactivating.get(10, TimeUnit.SECONDS);
 		assertThat(result).hasStatus(HttpStatus.CONFLICT);
 		assertThat(result).bodyJson().extractingPath("$.code").isEqualTo("catalog.station-has-unsent-lines");
+	}
+
+	// Send moves a line to SENT and inserts its card in one transaction: the board check can only be trusted when the
+	// unsent check already ran, so the unsent one has to come first and the order cannot be left to bean scanning.
+	@Test
+	void theUnsentLinesGuardRunsBeforeTheLiveCardsGuard() {
+		var order = guards.stream().map(guard -> guard.getClass().getSimpleName()).toList();
+
+		assertThat(order).containsSubsequence("UnsentStationLinesGuard", "LiveStationCardsGuard");
+		assertThat(AnnotationAwareOrderComparator.INSTANCE.compare(guard("UnsentStationLinesGuard"),
+				guard("LiveStationCardsGuard")))
+			.isNegative();
+	}
+
+	@Test
+	void pricingRefusesAProductWhoseCategoryAndStationWereRetiredWhileItWaitedForTheStationLock() throws Exception {
+		var station = aStation();
+		var product = InventoryTables.aProduct(jdbc);
+		moveCategoryOf(product, station);
+		var locked = new CountDownLatch(1);
+		var retire = new CountDownLatch(1);
+		var admin = executor.submit(() -> new TransactionTemplate(transactions).executeWithoutResult(status -> {
+			jdbc.sql("select id from catalog.station where id = :id for update").param("id", station).query(UUID.class).single();
+			locked.countDown();
+			waitFor(retire);
+			jdbc.sql("update catalog.category set active = false where id = (select category_id from catalog.product where id = :product)")
+				.param("product", product)
+				.update();
+			jdbc.sql("update catalog.station set active = false where id = :id").param("id", station).update();
+		}));
+		assertThat(locked.await(10, TimeUnit.SECONDS)).isTrue();
+
+		var pricing = executor.submit(() -> catalog.priceSelection(product, List.of()));
+		await().during(Duration.ofMillis(700)).atMost(Duration.ofSeconds(5)).until(() -> !pricing.isDone());
+		retire.countDown();
+
+		admin.get(10, TimeUnit.SECONDS);
+		assertThatThrownBy(() -> pricing.get(10, TimeUnit.SECONDS)).cause()
+			.isInstanceOfSatisfying(BusinessException.class,
+					ex -> assertThat(ex.errorCode()).isEqualTo(CatalogError.PRODUCT_UNAVAILABLE));
+	}
+
+	private Object guard(String simpleName) {
+		return guards.stream().filter(guard -> guard.getClass().getSimpleName().equals(simpleName)).findFirst().orElseThrow();
 	}
 
 	private UUID aStation() {

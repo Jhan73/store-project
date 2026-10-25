@@ -2,6 +2,7 @@ package com.jhanantezana.jugueria.preparation.internal;
 
 import java.util.UUID;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import com.jhanantezana.jugueria.shared.BusinessException;
 
 /** A station with cards still on the board cannot be retired: its kitchen would stop seeing them. */
 @Component
+@Order(2)
 class LiveStationCardsGuard implements StationDeactivationGuard {
 
 	private final JdbcClient jdbc;

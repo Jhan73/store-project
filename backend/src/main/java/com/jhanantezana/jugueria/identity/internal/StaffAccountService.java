@@ -101,7 +101,11 @@ public class StaffAccountService {
 	@Transactional
 	StaffProvisioned reissueSetPasswordToken(UUID id) {
 		rejectSelf(id);
-		var account = findStaffOrThrow(id);
+		// The token row references the account: lock it so a concurrent delete cannot commit between the two.
+		var account = accounts.findForUpdateById(id).orElseThrow(StaffAccountService::notFound);
+		if (account.getRole() == Role.CUSTOMER) {
+			throw notFound();
+		}
 		var issued = setPasswordTokens.issue(account.getId());
 		var now = Instant.now(clock);
 		events.publishEvent(new SetPasswordLinkReissued(account.getId(), currentActor.id(), currentActor.role(), now));

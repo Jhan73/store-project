@@ -262,7 +262,7 @@ class StaffAccountServiceTest {
 	@Test
 	void reissueSetPasswordTokenHidesACustomerAccountAsNotFound() {
 		var id = UUID.randomUUID();
-		when(accounts.findById(id))
+		when(accounts.findForUpdateById(id))
 			.thenReturn(Optional.of(new UserAccount("customer@jugueria.pe", "hash", Role.CUSTOMER, NOW)));
 
 		assertThatExceptionOfType(BusinessException.class).isThrownBy(() -> service.reissueSetPasswordToken(id))
@@ -272,7 +272,7 @@ class StaffAccountServiceTest {
 	@Test
 	void reissueSetPasswordTokenIssuesANewTokenAndPublishesSetPasswordLinkReissued() {
 		var account = new UserAccount("cashier@jugueria.pe", "unusable-hash", Role.CASHIER, NOW);
-		when(accounts.findById(account.getId())).thenReturn(Optional.of(account));
+		when(accounts.findForUpdateById(account.getId())).thenReturn(Optional.of(account));
 		when(setPasswordTokens.issue(account.getId())).thenReturn(new IssuedSetPasswordToken("raw", NOW.plusSeconds(1)));
 		when(currentActor.id()).thenReturn(ADMIN_ID);
 		when(currentActor.role()).thenReturn(Role.ADMIN);

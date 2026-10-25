@@ -132,8 +132,13 @@ class CatalogApiImpl implements CatalogApi {
 		if (!product.isActive() || !product.isAvailable() || category.isEmpty() || !category.get().isActive()) {
 			throw new BusinessException(CatalogError.PRODUCT_UNAVAILABLE, "The product is not on sale right now");
 		}
-		// Shared lock on the station the line will be routed to: retiring it waits until the line is stored.
-		stations.findForShareById(category.get().getStationId());
+		// Shared lock on the station the line will be routed to: retiring it waits until the line is stored. The
+		// category was read before the lock was granted, so it is checked again with a fresh statement afterwards.
+		var stationId = category.get().getStationId();
+		stations.findForShareById(stationId);
+		if (!categories.existsByIdAndStationIdAndActiveTrue(category.get().getId(), stationId)) {
+			throw new BusinessException(CatalogError.PRODUCT_UNAVAILABLE, "The product is not on sale right now");
+		}
 		if (new HashSet<>(optionIds).size() != optionIds.size()) {
 			throw invalidSelection("An option can be chosen only once");
 		}
