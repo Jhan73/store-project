@@ -29,6 +29,11 @@ class TicketRulesTest {
 	}
 
 	@Test
+	void theKitchenHasNoVoidMode() {
+		assertThatThrownBy(() -> TicketRules.voidModeFor(Role.KITCHEN)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
 	void theFirstRoundKeepsTheTicketNumberAndLaterRoundsAreNumbered() {
 		assertThat(TicketRules.boardNumber(12, 1, false)).isEqualTo("T12");
 		assertThat(TicketRules.boardNumber(12, 2, false)).isEqualTo("T12-2");

@@ -2,6 +2,6 @@ package com.jhanantezana.jugueria.shared;
 
 public enum Role {
 
-	CUSTOMER, SERVER, CASHIER, ADMIN
+	CUSTOMER, SERVER, CASHIER, KITCHEN, ADMIN
 
 }

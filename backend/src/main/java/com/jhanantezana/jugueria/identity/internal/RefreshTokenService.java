@@ -72,7 +72,7 @@ public class RefreshTokenService {
 		}
 		var issued = issue(token.getFamilyId(), account.getId(), token.getFamilyStartedAt(), now);
 		return new RefreshResult(accessTokens.issue(account.getId(), account.getRole()), issued.rawToken(),
-				issued.expiresAt(), issued.maxAge(), account.getId(), account.getRole());
+				issued.expiresAt(), issued.maxAge(), issued.sessionExpiresAt(), account.getId(), account.getRole());
 	}
 
 	@Transactional
@@ -95,7 +95,7 @@ public class RefreshTokenService {
 		var expiresAt = idleExpiry.isBefore(absoluteExpiry) ? idleExpiry : absoluteExpiry;
 		var raw = RefreshTokens.newRawToken();
 		tokens.save(new RefreshToken(familyId, userId, RefreshTokens.hash(raw), now, expiresAt, familyStartedAt));
-		return new IssuedRefreshToken(raw, expiresAt, Duration.between(now, expiresAt));
+		return new IssuedRefreshToken(raw, expiresAt, Duration.between(now, expiresAt), absoluteExpiry);
 	}
 
 	private static BusinessException invalidRefreshToken() {

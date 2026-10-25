@@ -10,7 +10,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import java.sql.SQLException;
 import java.time.Duration;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -78,8 +82,154 @@ class AppEventsListenerTest {
 	}
 
 	@Test
+	void anInterruptStopsTheLoopInsteadOfLettingItSpinWithoutBackoff() {
+		var failing = new AppEventsListener(connectionDetails, messagingTemplate, mapper, properties, localEvents) {
+			@Override
+			void connect() throws SQLException {
+				throw new SQLException("database not ready");
+			}
+		};
+		var loop = new Thread(() -> {
+			Thread.currentThread().interrupt();
+			failing.runOnCallingThread();
+		});
+		loop.start();
+		try {
+			loop.join(Duration.ofSeconds(5));
+			assertThat(loop.isAlive()).isFalse();
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+		finally {
+			failing.stop();
+			loop.interrupt();
+		}
+	}
+
+	@Test
 	void isNotRunningUntilStarted() {
 		assertThat(listener.isRunning()).isFalse();
+	}
+
+	// Drives the loop without a database: each poll() call does the next scripted action, connect() always succeeds.
+	private class ScriptedListener extends AppEventsListener {
+
+		final List<Duration> pauses = new ArrayList<>();
+
+		final List<Integer> connectsBeforePoll = new ArrayList<>();
+
+		private final Deque<PollAction> script;
+
+		private int connects;
+
+		private int failingConnects;
+
+		ScriptedListener(PollAction... actions) {
+			super(connectionDetails, messagingTemplate, mapper, properties, localEvents);
+			this.script = new ArrayDeque<>(List.of(actions));
+		}
+
+		ScriptedListener failingFirstConnects(int count) {
+			this.failingConnects = count;
+			return this;
+		}
+
+		@Override
+		void connect() throws SQLException {
+			if (failingConnects > 0) {
+				failingConnects--;
+				throw new SQLException("database not ready");
+			}
+			connects++;
+		}
+
+		@Override
+		void poll() throws SQLException {
+			connectsBeforePoll.add(connects);
+			script.removeFirst().run(this);
+		}
+
+		@Override
+		void pause(Duration duration) {
+			pauses.add(duration);
+		}
+
+	}
+
+	@FunctionalInterface
+	private interface PollAction {
+
+		void run(AppEventsListener listener) throws SQLException;
+
+	}
+
+	private static final PollAction DROP = listener -> {
+		throw new SQLException("connection lost");
+	};
+
+	private static final PollAction CRASH = listener -> {
+		throw new IllegalStateException("unexpected");
+	};
+
+	private static final PollAction STOP = AppEventsListener::stop;
+
+	private void run(ScriptedListener scripted) {
+		// stop() is what ends the scripted run.
+		scripted.runOnCallingThread();
+	}
+
+	private void verifyResyncSignalSentToEveryClientTopic(int times) {
+		for (var topic : List.of("catalog", "store-status", "board", "tables", "display")) {
+			verify(messagingTemplate, org.mockito.Mockito.times(times)).convertAndSend(eq("/topic/" + topic),
+					eq("{\"type\":\"RESYNC\",\"ids\":{}}"), anyMap());
+		}
+	}
+
+	@Test
+	void tellsEveryClientTopicToResynchronizeAfterAReconnect() {
+		var scripted = new ScriptedListener(DROP, STOP);
+
+		run(scripted);
+
+		verifyResyncSignalSentToEveryClientTopic(1);
+		verify(localEvents).publishEvent(new RealtimeSignalReceived("board", "RESYNC", Map.of()));
+		verify(localEvents).publishEvent(new RealtimeSignalReceived("catalog", "RESYNC", Map.of()));
+	}
+
+	@Test
+	void doesNotResynchronizeOnTheFirstConnection() {
+		var scripted = new ScriptedListener(STOP);
+
+		run(scripted);
+
+		verifyNoInteractions(messagingTemplate);
+	}
+
+	@Test
+	void resynchronizesAfterTheListenerCameUpFollowingAFailedFirstConnection() {
+		run(new ScriptedListener(STOP).failingFirstConnects(1));
+
+		verifyResyncSignalSentToEveryClientTopic(1);
+	}
+
+	@Test
+	void aRuntimeExceptionInTheLoopIsLoggedAndTheListenerReconnectsInsteadOfDying() {
+		var scripted = new ScriptedListener(CRASH, STOP);
+
+		run(scripted);
+
+		assertThat(scripted.connectsBeforePoll).containsExactly(1, 2);
+		verifyResyncSignalSentToEveryClientTopic(1);
+	}
+
+	@Test
+	void waitsLongerBetweenConsecutiveFailures() {
+		var scripted = new ScriptedListener(DROP, CRASH, DROP, STOP);
+
+		run(scripted);
+
+		assertThat(scripted.pauses).containsExactly(Duration.ofMillis(500), Duration.ofSeconds(1), Duration.ofSeconds(2));
 	}
 
 }

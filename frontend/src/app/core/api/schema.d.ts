@@ -1649,7 +1649,7 @@ export interface components {
         };
         ChangeStaffRoleRequest: {
             /** @enum {string} */
-            role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
+            role: "CUSTOMER" | "SERVER" | "CASHIER" | "KITCHEN" | "ADMIN";
         };
         CloseShiftRequest: {
             countedCash: components["schemas"]["Money"];
@@ -1702,7 +1702,7 @@ export interface components {
             /** Format: email */
             email: string;
             /** @enum {string} */
-            role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
+            role: "CUSTOMER" | "SERVER" | "CASHIER" | "KITCHEN" | "ADMIN";
             username: string;
         };
         CreateTableRequest: {
@@ -1760,7 +1760,9 @@ export interface components {
         LoginResponse: {
             accessToken: string;
             /** @enum {string} */
-            role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
+            role: "CUSTOMER" | "SERVER" | "CASHIER" | "KITCHEN" | "ADMIN";
+            /** Format: date-time */
+            sessionExpiresAt: string;
             tokenType: string;
             /** Format: uuid */
             userId: string;
@@ -2172,7 +2174,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            role: "CUSTOMER" | "SERVER" | "CASHIER" | "ADMIN";
+            role: "CUSTOMER" | "SERVER" | "CASHIER" | "KITCHEN" | "ADMIN";
             username: string | null;
         };
         StationOptionResponse: {

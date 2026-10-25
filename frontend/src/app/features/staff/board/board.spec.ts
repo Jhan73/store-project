@@ -5,7 +5,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MessageService } from 'primeng/api';
 import { Observable, Subject } from 'rxjs';
 import { API_ORIGIN } from '../../../core/api/api-config';
-import type { BoardAllDay, BoardOrder, StationOption } from '../../../core/api/api-types';
+import { AuthStore } from '../../../core/auth/auth-store';
+import type { BoardAllDay, BoardOrder, Role, StationOption } from '../../../core/api/api-types';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
@@ -145,7 +146,7 @@ describe('Board', () => {
   });
 
   describe('station filter', () => {
-    const selector = (fixture: ComponentFixture<Board>) => host(fixture).querySelector('p-select');
+    const selector = (fixture: ComponentFixture<Board>) => host(fixture).querySelector('.station p-select');
 
     async function choose(fixture: ComponentFixture<Board>, name: string) {
       selector(fixture)!.querySelector<HTMLElement>('[role="combobox"]')!.click();
@@ -249,6 +250,131 @@ describe('Board', () => {
     query(fixture, 'view-ready')!.click();
     await fixture.whenStable();
     expect(numbers(fixture)).toEqual(['W-009']);
+  });
+
+  describe('order and attention controls', () => {
+    const orderSelect = (fixture: ComponentFixture<Board>) => host(fixture).querySelector('.order p-select');
+    const attention = (fixture: ComponentFixture<Board>) =>
+      host(fixture).querySelector<HTMLInputElement>('p-toggleswitch[data-testid="attention-only"] input')!;
+
+    async function choose(fixture: ComponentFixture<Board>, name: string) {
+      orderSelect(fixture)!.querySelector<HTMLElement>('[role="combobox"]')!.click();
+      await fixture.whenStable();
+      await vi.waitFor(() => expect(document.body.querySelector('li[role="option"]')).not.toBeNull());
+      const option = Array.from(document.body.querySelectorAll<HTMLElement>('li[role="option"]')).find((node) =>
+        node.textContent?.includes(name),
+      )!;
+      option.click();
+      await fixture.whenStable();
+    }
+
+    const cards = () => [
+      order({ id: 'a', shortNumber: 'L-001', sentAt: minutesAgo(9) }),
+      order({ id: 'b', shortNumber: 'L-002', sentAt: minutesAgo(2), lines: [line({ id: 'b1', note: 'Sin hielo' })] }),
+      order({ id: 'c', shortNumber: 'L-003', sentAt: minutesAgo(5), lines: [line({ id: 'c1', allergy: true })] }),
+    ];
+
+    it('offers the three orders, labelled, with the longest elapsed selected', async () => {
+      const fixture = await live(cards());
+
+      expect(host(fixture).querySelector('label[for="board-order"]')?.textContent).toContain('Orden');
+      expect(orderSelect(fixture)!.textContent).toContain('Más tiempo transcurrido');
+      expect(numbers(fixture)).toEqual(['L-001', 'L-003', 'L-002']);
+    });
+
+    it('orders by arrival, newest first, from the selector', async () => {
+      const fixture = await live(cards());
+
+      await choose(fixture, 'Llegada: más recientes primero');
+
+      expect(numbers(fixture)).toEqual(['L-002', 'L-003', 'L-001']);
+    });
+
+    it('keeps only the orders with a note or an allergy while the switch is on', async () => {
+      const fixture = await live(cards());
+
+      attention(fixture).click();
+      await fixture.whenStable();
+
+      expect(numbers(fixture)).toEqual(['L-003', 'L-002']);
+      expect(host(fixture).querySelector('label[for="board-attention"]')?.textContent).toContain(
+        'Solo con notas o alergias',
+      );
+      expect(query(fixture, 'view-tickets')!.textContent).toContain('3');
+    });
+
+    it('says why the board looks empty while the filter hides every order', async () => {
+      const fixture = await live([order({ id: 'a' })]);
+
+      attention(fixture).click();
+      await fixture.whenStable();
+
+      expect(host(fixture).textContent).toContain('Ningún pedido tiene notas ni alergias');
+    });
+  });
+
+  describe('session expiry', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+
+    async function signInEndingIn(ms: number) {
+      const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
+      http.expectOne(`${BASE}/auth/login`).flush({
+        accessToken: 'jwt',
+        tokenType: 'Bearer',
+        userId: 'u',
+        role: 'KITCHEN',
+        sessionExpiresAt: new Date(Date.now() + ms).toISOString(),
+      });
+      await login;
+    }
+
+    it('warns a few days before the sign-in ends', async () => {
+      await signInEndingIn(2 * DAY + 60_000);
+      const fixture = await live([order({ id: 'a' })]);
+
+      expect(query(fixture, 'session-expiry-banner')?.textContent).toContain('2 días');
+    });
+
+    it('stays quiet while the sign-in has weeks left', async () => {
+      await signInEndingIn(20 * DAY);
+      const fixture = await live([order({ id: 'a' })]);
+
+      expect(query(fixture, 'session-expiry-banner')).toBeNull();
+    });
+  });
+
+  describe('kitchen device', () => {
+    async function signInAs(role: Role) {
+      const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
+      http.expectOne(`${BASE}/auth/login`).flush({ accessToken: 'jwt', tokenType: 'Bearer', userId: 'u', role });
+      await login;
+    }
+
+    const readyOrder = () => order({ id: 'r', status: 'READY', readyAt: minutesAgo(1), lines: [line({ id: 'r1', state: 'READY' })] });
+
+    it('can prepare but never hand over or recall', async () => {
+      await signInAs('KITCHEN');
+      const fixture = await live([order({ id: 'p', status: 'PREPARING' })], [readyOrder()]);
+
+      expect(query(fixture, 'ready-order')).not.toBeNull();
+      query(fixture, 'view-ready')!.click();
+      await fixture.whenStable();
+
+      expect(numbers(fixture)).toHaveLength(1);
+      expect(query(fixture, 'handover')).toBeNull();
+      expect(query(fixture, 'recall')).toBeNull();
+    });
+
+    it('lets the floor hand over and recall', async () => {
+      await signInAs('SERVER');
+      const fixture = await live([], [readyOrder()]);
+
+      query(fixture, 'view-ready')!.click();
+      await fixture.whenStable();
+
+      expect(query(fixture, 'handover')).not.toBeNull();
+      expect(query(fixture, 'recall')).not.toBeNull();
+    });
   });
 
   it('counts the cards on the tabs', async () => {

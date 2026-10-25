@@ -1,8 +1,10 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -10,10 +12,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.autoconfigure.JdbcConnectionDetails;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 import org.springframework.modulith.test.ApplicationModuleTest;
 import org.springframework.modulith.test.Scenario;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.jhanantezana.jugueria.TestcontainersConfiguration;
 import com.jhanantezana.jugueria.preparation.BoardChanged;
@@ -28,6 +32,12 @@ class SignalBoardOnBoardChangedIT {
 
 	@Autowired
 	JdbcConnectionDetails connectionDetails;
+
+	@Autowired
+	ApplicationEventPublisher events;
+
+	@Autowired
+	TransactionTemplate transactions;
 
 	AppEventsProbe probe;
 
@@ -52,6 +62,23 @@ class SignalBoardOnBoardChangedIT {
 				assertThat(n).contains("\"orderId\":\"" + order + "\"");
 				assertThat(n).contains("\"lineId\":\"" + line + "\"");
 			}));
+	}
+
+	@Test
+	void aRolledBackChangeSignalsNothingWhileACommittedOneStillDoes() throws SQLException {
+		probe = new AppEventsProbe(connectionDetails);
+		var rolledBack = UUID.randomUUID();
+		var committed = UUID.randomUUID();
+
+		transactions.executeWithoutResult(status -> {
+			events.publishEvent(new BoardChanged("ORDER_READY", rolledBack, null, NOW));
+			status.setRollbackOnly();
+		});
+		transactions.executeWithoutResult(
+				status -> events.publishEvent(new BoardChanged("ORDER_READY", committed, null, NOW)));
+
+		await().atMost(Duration.ofSeconds(10)).until(() -> probe.countMatching(committed.toString()) >= 1);
+		assertThat(probe.matching(rolledBack.toString())).isEmpty();
 	}
 
 	@Test

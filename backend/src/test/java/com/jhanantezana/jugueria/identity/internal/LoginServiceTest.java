@@ -57,7 +57,8 @@ class LoginServiceTest {
 				Duration.ofHours(48));
 		var properties = new IdentityProperties(jwt, lockout, refreshToken, setPassword);
 		lenient().when(refreshTokens.issueFamily(any())).thenReturn(
-				new IssuedRefreshToken("raw-refresh-token", NOW.plus(Duration.ofDays(7)), Duration.ofDays(7)));
+				new IssuedRefreshToken("raw-refresh-token", NOW.plus(Duration.ofDays(7)), Duration.ofDays(7),
+						NOW.plus(Duration.ofDays(30))));
 		service = new LoginService(accounts, passwordEncoder, tokenIssuer, refreshTokens, properties,
 				Clock.fixed(NOW, ZoneOffset.UTC));
 	}

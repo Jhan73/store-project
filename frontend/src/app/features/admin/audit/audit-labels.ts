@@ -126,6 +126,7 @@ export function actorRoleLabel(role: string): string {
   switch (role) {
     case 'SERVER':
     case 'CASHIER':
+    case 'KITCHEN':
     case 'ADMIN':
     case 'CUSTOMER':
       return roleLabel(role as Role);

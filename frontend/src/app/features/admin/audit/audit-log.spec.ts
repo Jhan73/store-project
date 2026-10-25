@@ -199,6 +199,13 @@ describe('AuditLog', () => {
       expect(rows(host)[0]).toContain('Ana');
     });
 
+    it('names the kitchen role in its tag', async () => {
+      const cook: AuditEntry = { ...update, actorLabel: 'Luis', actorRole: 'KITCHEN' };
+      const { host } = await rendered('/audit', page([cook]));
+
+      expect(host.querySelector('tbody tr td app-status-tag')?.textContent).toContain('Cocina');
+    });
+
     it('prefers the stored label to the live username, which may have changed since', async () => {
       const renamed: AuditEntry = { ...update, actorLabel: 'Ana vieja' };
       const { host } = await rendered('/audit', page([renamed]));

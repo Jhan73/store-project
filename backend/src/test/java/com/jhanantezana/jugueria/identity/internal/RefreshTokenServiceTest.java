@@ -195,6 +195,7 @@ class RefreshTokenServiceTest {
 		assertThat(result.refreshToken()).isNotBlank();
 		assertThat(result.refreshTokenExpiresAt()).isEqualTo(NOW.plus(IDLE_TTL));
 		assertThat(result.refreshTokenMaxAge()).isEqualTo(IDLE_TTL);
+		assertThat(result.sessionExpiresAt()).isEqualTo(NOW.plus(ABSOLUTE_TTL));
 		assertThat(result.userId()).isEqualTo(account.getId());
 		assertThat(result.role()).isEqualTo(Role.CASHIER);
 		verify(tokens).save(any(RefreshToken.class));
@@ -218,6 +219,7 @@ class RefreshTokenServiceTest {
 		var absoluteDeadline = familyStartedAt.plus(ABSOLUTE_TTL);
 		assertThat(result.refreshTokenExpiresAt()).isEqualTo(absoluteDeadline);
 		assertThat(result.refreshTokenMaxAge()).isEqualTo(Duration.between(NOW, absoluteDeadline));
+		assertThat(result.sessionExpiresAt()).isEqualTo(absoluteDeadline);
 	}
 
 	@Test

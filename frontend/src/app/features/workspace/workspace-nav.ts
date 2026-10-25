@@ -40,7 +40,7 @@ const NAV_ITEMS: readonly RoleNavItem[] = [
     path: '/staff/board',
     label: $localize`:@@workspace.nav.board:Tablero`,
     icon: IconToolsKitchen2,
-    roles: ['SERVER', 'CASHIER', 'ADMIN'],
+    roles: ['SERVER', 'CASHIER', 'KITCHEN', 'ADMIN'],
   },
   {
     path: '/staff/register',

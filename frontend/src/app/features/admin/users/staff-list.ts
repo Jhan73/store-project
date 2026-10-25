@@ -38,7 +38,7 @@ import { FormField } from '../../../shared/ui/form-field/form-field';
 import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { StaffApi } from './staff-api';
 
-const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'ADMIN'];
+const STAFF_ROLES: readonly Role[] = ['SERVER', 'CASHIER', 'KITCHEN', 'ADMIN'];
 const USERNAME_MAX = 60;
 
 function notBlank(control: AbstractControl<string>): ValidationErrors | null {

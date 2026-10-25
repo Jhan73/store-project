@@ -62,30 +62,35 @@ The project has a second, explicit purpose: to be the real-world vehicle for app
 | `CUSTOMER` | Public buyer with an account | Browse menu, place and pay online orders, track status, view order history |
 | `SERVER` | Floor staff | Manage tables and tickets, send items to the board, void lines not yet prepared, prepare and hand over orders |
 | `CASHIER` | Register staff | Everything a SERVER does, plus: register shifts, payments, quick sales, comps, cash movements, busy mode, run-out line removals |
+| `KITCHEN` | Cook, on the kitchen screen | Only the preparation board: see the orders, start them, mark lines or whole orders Ready, flag a run-out line, acknowledge labels. Never hands over, never sees money or customers |
 | `ADMIN` | Owner / manager | Everything, plus: catalog, prices, stock, tables, zones, settings, staff accounts, reports, audit log, refunds |
 
 Permission matrix (✅ allowed, — not allowed):
 
-| Capability | CUSTOMER | SERVER | CASHIER | ADMIN |
-|------------|:-------:|:------:|:-------:|:-----:|
-| Browse catalog | ✅ | ✅ | ✅ | ✅ |
-| Place online order; cancel own order before preparation (FR-ONL-15) | ✅ | — | — | — |
-| Create / edit / send in-store ticket; transfer, merge, repeat lines | — | ✅ | ✅ | ✅ |
-| Void a sent line **before** it is Ready (FR-INS-07) | — | ✅ | ✅ | ✅ |
-| Void a line **after** it is Ready (waste) / comp a line | — | — | ✅ | ✅ |
-| View and operate the preparation board (start, bump, recall, 86) | — | ✅ | ✅ | ✅ |
-| Flag a run-out line / substitute with same-price item (BR-08) | — | ✅ | ✅ | ✅ |
-| Confirm removal of a run-out online line (system refunds that line) | — | — | ✅ | ✅ |
-| Advance delivery status, verify pickup | — | ✅ | ✅ | ✅ |
-| Open / close register shift, record cash in / cash out | — | — | ✅ | ✅ |
-| Record in-store payment / quick sale; split payments; void a payment on an open ticket | — | — | ✅ | ✅ |
-| Void a recorded sale (with reason) | — | — | ✅ (own open shift) | ✅ |
-| Busy mode / pause online ordering | — | — | ✅ | ✅ |
-| Toggle item availability | — | ✅ | ✅ | ✅ |
-| Manage catalog, modifiers, prices, stock, tables, zones, reason lists, settings | — | — | — | ✅ |
-| Cancel / refund paid online order (any amount) | — | — | — | ✅ |
-| Manage staff accounts and roles | — | — | — | ✅ |
-| View dashboard, reports, and audit log | — | — | — | ✅ |
+| Capability | CUSTOMER | SERVER | CASHIER | KITCHEN | ADMIN |
+|------|:-------:|:-------:|:-------:|:-------:|:-------:|
+| Browse catalog | ✅ | ✅ | ✅ | — | ✅ |
+| Place online order; cancel own order before preparation (FR-ONL-15) | ✅ | — | — | — | — |
+| Create / edit / send in-store ticket; transfer, merge, repeat lines | — | ✅ | ✅ | — | ✅ |
+| Void a sent line **before** it is Ready (FR-INS-07) | — | ✅ | ✅ | — | ✅ |
+| Void a line **after** it is Ready (waste) / comp a line | — | — | ✅ | — | ✅ |
+| View the preparation board and prepare: start, mark a line or the order Ready (with undo), acknowledge NEW / MODIFIED / VOID labels | — | ✅ | ✅ | ✅ | ✅ |
+| Hand over or recall an order on the board | — | ✅ | ✅ | — | ✅ |
+| Use the customer-facing screen (FR-PRP-09) | — | ✅ | ✅ | — | ✅ |
+| Flag a run-out line (BR-08) / substitute with same-price item | — | ✅ | ✅ | ✅ (flag only) | ✅ |
+| Confirm removal of a run-out online line (system refunds that line) | — | — | ✅ | — | ✅ |
+| Advance delivery status, verify pickup | — | ✅ | ✅ | — | ✅ |
+| Open / close register shift, record cash in / cash out | — | — | ✅ | — | ✅ |
+| Record in-store payment / quick sale; split payments; void a payment on an open ticket | — | — | ✅ | — | ✅ |
+| Void a recorded sale (with reason) | — | — | ✅ (own open shift) | — | ✅ |
+| Busy mode / pause online ordering | — | — | ✅ | — | ✅ |
+| Toggle item availability | — | ✅ | ✅ | — | ✅ |
+| Manage catalog, modifiers, prices, stock, tables, zones, reason lists, settings | — | — | — | — | ✅ |
+| Cancel / refund paid online order (any amount) | — | — | — | — | ✅ |
+| Manage staff accounts and roles | — | — | — | — | ✅ |
+| View dashboard, reports, and audit log | — | — | — | — | ✅ |
+
+The `KITCHEN` role is a staff account like the others (username required at invitation, role tag in the audit log) and sees only the board: its home screen is the board, its menu has no other entry, and the backend answers `403` on every endpoint outside the board (the views, the start / Ready / flag / acknowledge commands, the station list and the board's age thresholds). The kitchen sees the comanda: lines, quantities, modifiers, notes and allergies. It never receives a price, total, payment or customer contact, and the customer-facing screen is not for it (a cook has no reason to read it, and it carries customer first names).
 
 A staff member has exactly one role. `ADMIN` accounts can only be created by another `ADMIN` (the first one is provisioned at installation).
 
@@ -204,6 +209,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | FR-PRP-08 | The board can be filtered by station (FR-CAT-07); an order is Ready only when all its lines are Ready. | S |
 | FR-PRP-09 | A **customer-facing screen** shows short numbers and first names in two columns: Preparing and Ready. No amounts or other personal data. | S |
 | FR-PRP-10 | The system records when each order and line is sent, started, Ready, and handed over, to enable preparation-time analytics later. | M |
+| FR-PRP-11 | Each card flags its order-level alerts in words as well as color: an **allergy** in red ("Alergia") and any free **note** in amber ("Nota"); the chosen modifiers are shown without alert styling. The screen can show only the orders with notes or allergies, orders them by elapsed time, by arrival oldest first or by arrival newest first, and opens a read-only detail of the comanda (lines, modifiers, notes, allergies) from the card. Identical lines on one card (same product, modifiers, note, allergy and state) are shown once with their total (`3× Mango`); a line with a different note, allergy or state is never merged. | S |
 
 ### 5.7 Administration, dashboard, reports, and audit
 

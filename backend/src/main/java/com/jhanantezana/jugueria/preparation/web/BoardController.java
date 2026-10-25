@@ -17,12 +17,17 @@ import com.jhanantezana.jugueria.preparation.internal.BoardQueries;
 import com.jhanantezana.jugueria.shared.ApiErrors;
 import com.jhanantezana.jugueria.shared.CurrentActor;
 
-/** The preparation board for the floor: SERVER, CASHIER and ADMIN all see it and operate it. */
+/**
+ * The preparation board. The floor (SERVER, CASHIER, ADMIN) sees and operates all of it; the KITCHEN reads the views
+ * and prepares (start, ready, run-out flag, acknowledge) but never hands over, recalls or reads the customer screen.
+ */
 @RestController
 @RequestMapping("/api/v1/board")
 class BoardController {
 
-	private static final String STAFF = "hasAnyRole('SERVER', 'CASHIER', 'ADMIN')";
+	private static final String FLOOR = "hasAnyRole('SERVER', 'CASHIER', 'ADMIN')";
+
+	private static final String PREPARES = "hasAnyRole('SERVER', 'CASHIER', 'ADMIN', 'KITCHEN')";
 
 	private final BoardQueries queries;
 
@@ -37,38 +42,38 @@ class BoardController {
 	}
 
 	@GetMapping("/tickets")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	List<BoardOrderResponse> tickets(@RequestParam(required = false) @Nullable UUID station) {
 		return queries.tickets(station).stream().map(BoardOrderResponse::from).toList();
 	}
 
 	@GetMapping("/ready")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	List<BoardOrderResponse> ready(@RequestParam(required = false) @Nullable UUID station) {
 		return queries.ready(station).stream().map(BoardOrderResponse::from).toList();
 	}
 
 	@GetMapping("/all-day")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	AllDayResponse allDay(@RequestParam(required = false) @Nullable UUID station) {
 		return AllDayResponse.from(queries.allDay(station));
 	}
 
 	@GetMapping("/display")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(FLOOR)
 	DisplayResponse display() {
 		return DisplayResponse.from(queries.display());
 	}
 
 	@PostMapping("/orders/{id}/start")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-already-started" })
 	BoardOrderResponse start(@PathVariable UUID id) {
 		return BoardOrderResponse.from(commands.start(id));
 	}
 
 	@PostMapping("/orders/{id}/ready")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-not-preparing",
 			"preparation.lines-not-acknowledged", "preparation.line-flagged-unavailable" })
 	BoardOrderResponse readyOrder(@PathVariable UUID id) {
@@ -76,14 +81,14 @@ class BoardController {
 	}
 
 	@PostMapping("/orders/{id}/handover")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(FLOOR)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-not-ready" })
 	BoardOrderResponse handover(@PathVariable UUID id) {
 		return BoardOrderResponse.from(commands.handover(id));
 	}
 
 	@PostMapping("/orders/{id}/recall")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(FLOOR)
 	@ApiErrors({ "preparation.order-not-found", "preparation.order-cancelled", "preparation.order-not-completed",
 			"preparation.recall-window-expired" })
 	BoardOrderResponse recall(@PathVariable UUID id) {
@@ -91,7 +96,7 @@ class BoardController {
 	}
 
 	@PostMapping("/lines/{id}/ready")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	@ApiErrors({ "preparation.line-not-found", "preparation.order-cancelled", "preparation.order-not-preparing",
 			"preparation.line-not-pending", "preparation.line-flagged-unavailable", "preparation.lines-not-acknowledged" })
 	BoardOrderResponse readyLine(@PathVariable UUID id) {
@@ -99,7 +104,7 @@ class BoardController {
 	}
 
 	@PostMapping("/lines/{id}/flag")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	@ApiErrors({ "preparation.line-not-found", "preparation.order-cancelled", "preparation.line-not-pending",
 			"preparation.line-already-flagged", "preparation.line-comped" })
 	BoardOrderResponse flagLine(@PathVariable UUID id) {
@@ -107,7 +112,7 @@ class BoardController {
 	}
 
 	@PostMapping("/markers/{id}/ack")
-	@PreAuthorize(STAFF)
+	@PreAuthorize(PREPARES)
 	@ApiErrors({ "preparation.marker-not-found", "preparation.marker-already-acknowledged" })
 	MarkerResponse acknowledge(@PathVariable UUID id) {
 		return MarkerResponse.from(commands.acknowledge(id, requireActor()));

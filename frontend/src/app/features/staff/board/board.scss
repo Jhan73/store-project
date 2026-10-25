@@ -64,7 +64,9 @@ h1 {
   }
 }
 
-.station {
+.station,
+.order,
+.attention {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -75,6 +77,13 @@ h1 {
   p-select {
     min-width: min(18rem, 100%);
   }
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
 }
 
 .cards {

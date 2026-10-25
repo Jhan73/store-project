@@ -27,12 +27,14 @@ export const routes: Routes = [
   },
   {
     path: 'staff',
-    canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
+    canMatch: [roleGuard('SERVER', 'CASHIER', 'KITCHEN', 'ADMIN')],
     loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES),
   },
   {
     path: 'display',
     title: $localize`:@@display.pageTitle:Pedidos`,
+    // The screen keeps its numbers when the session ends and offers the sign-in itself.
+    data: { keepOnSessionEnd: true },
     canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
     providers: [DisplayApi],
     loadComponent: () => import('./features/display/display').then((m) => m.Display),

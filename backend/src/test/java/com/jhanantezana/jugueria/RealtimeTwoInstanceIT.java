@@ -324,7 +324,8 @@ class RealtimeTwoInstanceIT {
 		var session = connection.session().get(5, TimeUnit.SECONDS);
 		try {
 			var received = new CompletableFuture<String>();
-			session.subscribe("/topic/store-status", stringHandler(received));
+			// The reconnect also sends a RESYNC to every topic, which may land right after this subscription.
+			session.subscribe("/topic/store-status", stringHandler(received, "STORE_SETTINGS_CHANGED"));
 
 			updateStoreSettingsOnA();
 

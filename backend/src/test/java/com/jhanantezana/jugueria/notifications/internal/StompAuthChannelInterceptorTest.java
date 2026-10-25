@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 
 class StompAuthChannelInterceptorTest {
+
+	private static final Instant EXPIRY = Instant.parse("2026-10-25T10:15:00Z");
 
 	private final JwtDecoder jwtDecoder = mock(JwtDecoder.class);
 
@@ -60,6 +63,7 @@ class StompAuthChannelInterceptorTest {
 	@Test
 	void tellsTheRegistryWhichUserASessionBelongsToSoItCanBeClosedLater() {
 		var jwt = mock(Jwt.class);
+		when(jwt.getExpiresAt()).thenReturn(EXPIRY);
 		var authentication = new TestingAuthenticationToken("user-1", null, List.of());
 		when(jwtDecoder.decode("good-token")).thenReturn(jwt);
 		when(jwtAuthenticationConverter.convert(jwt)).thenReturn(authentication);
@@ -69,7 +73,7 @@ class StompAuthChannelInterceptorTest {
 
 		interceptor.preSend(message(accessor), null);
 
-		verify(sessions).authenticated("session-1", "user-1");
+		verify(sessions).authenticated("session-1", "user-1", EXPIRY);
 	}
 
 	@Test
@@ -79,7 +83,7 @@ class StompAuthChannelInterceptorTest {
 
 		interceptor.preSend(message(accessor), null);
 
-		verify(sessions, never()).authenticated(any(), any());
+		verify(sessions, never()).authenticated(any(), any(), any());
 	}
 
 	// StompSubProtocolHandler reads the user back from the accessor it built the message with, to authenticate the
@@ -186,7 +190,17 @@ class StompAuthChannelInterceptorTest {
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "ROLE_SERVER", "ROLE_CASHIER", "ROLE_ADMIN" })
+	@ValueSource(strings = { "/topic/display", "/topic/tables" })
+	void rejectsTheKitchenSubscribingToTheFloorTopics(String destination) {
+		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
+		accessor.setDestination(destination);
+		accessor.setUser(new TestingAuthenticationToken("user", null, "ROLE_KITCHEN"));
+
+		assertThatThrownBy(() -> interceptor.preSend(message(accessor), null)).isInstanceOf(MessagingException.class);
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = { "ROLE_SERVER", "ROLE_CASHIER", "ROLE_ADMIN", "ROLE_KITCHEN" })
 	void allowsStaffToSubscribeToTheBoard(String role) {
 		var accessor = StompHeaderAccessor.create(StompCommand.SUBSCRIBE);
 		accessor.setDestination("/topic/board");

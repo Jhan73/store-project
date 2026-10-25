@@ -7,5 +7,5 @@ import java.util.UUID;
 import com.jhanantezana.jugueria.shared.Role;
 
 public record LoginResult(String accessToken, String refreshToken, Instant refreshTokenExpiresAt,
-		Duration refreshTokenMaxAge, UUID userId, Role role) {
+		Duration refreshTokenMaxAge, Instant sessionExpiresAt, UUID userId, Role role) {
 }

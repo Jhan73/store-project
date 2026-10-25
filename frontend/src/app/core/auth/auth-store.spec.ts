@@ -67,6 +67,46 @@ describe('AuthStore', () => {
     expect(sessionStorage.length).toBe(0);
   });
 
+  describe('session expiry', () => {
+    const endsAt = '2026-11-24T10:00:00Z';
+
+    it('knows when the session ends from the login answer and renews it with each refresh', async () => {
+      const done = store.login(credentials);
+      http.expectOne(LOGIN).flush({ ...session('jwt-1'), sessionExpiresAt: endsAt });
+      await done;
+      expect(store.sessionExpiresAt()).toBe(Date.parse(endsAt));
+
+      const refreshed = store.refresh();
+      http.expectOne(REFRESH).flush({ ...session('jwt-2'), sessionExpiresAt: '2026-11-25T10:00:00Z' });
+      await refreshed;
+
+      expect(store.sessionExpiresAt()).toBe(Date.parse('2026-11-25T10:00:00Z'));
+    });
+
+    it('does not know it when there is no session or the answer carries no valid date', async () => {
+      expect(store.sessionExpiresAt()).toBeNull();
+
+      const done = store.login(credentials);
+      http.expectOne(LOGIN).flush({ ...session('jwt-1'), sessionExpiresAt: 'not a date' });
+      await done;
+
+      expect(store.sessionExpiresAt()).toBeNull();
+    });
+
+    it('says the session ended once the server refused it, until the next login', async () => {
+      await signIn();
+      expect(store.sessionEnded()).toBe(false);
+
+      const refreshed = store.refresh();
+      http.expectOne(REFRESH).flush(null, UNAUTHORIZED);
+      await refreshed;
+      expect(store.sessionEnded()).toBe(true);
+
+      await signIn('jwt-2');
+      expect(store.sessionEnded()).toBe(false);
+    });
+  });
+
   it('leaves the store anonymous when login is rejected', async () => {
     const done = store.login(credentials);
     http.expectOne(LOGIN).flush({ code: 'auth.invalid-credentials' }, UNAUTHORIZED);
