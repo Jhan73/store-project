@@ -19,6 +19,13 @@ public interface CatalogApi {
 
 	boolean productExists(UUID productId);
 
+	/**
+	 * Whether the product exists, keeping it from being deleted until the caller's transaction ends (the lock
+	 * {@link #priceSelection} takes). A writer that stores the product's ID calls it before the write, in the same
+	 * transaction.
+	 */
+	boolean lockProduct(UUID productId);
+
 	/** The product's current name, empty for an unknown product. */
 	java.util.Optional<String> productName(UUID productId);
 

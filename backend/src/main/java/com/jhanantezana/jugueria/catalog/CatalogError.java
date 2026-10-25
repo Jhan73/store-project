@@ -13,6 +13,7 @@ public enum CatalogError implements ErrorCode {
 	DEFAULT_STATION_REQUIRED("catalog.default-station-required", HttpStatus.UNPROCESSABLE_CONTENT),
 	STATION_HAS_ACTIVE_CATEGORIES("catalog.station-has-active-categories", HttpStatus.CONFLICT),
 	STATION_HAS_LIVE_ORDERS("catalog.station-has-live-orders", HttpStatus.CONFLICT),
+	STATION_HAS_UNSENT_LINES("catalog.station-has-unsent-lines", HttpStatus.CONFLICT),
 	CATEGORY_IN_USE("catalog.category-in-use", HttpStatus.CONFLICT),
 	PRODUCT_IN_USE("catalog.product-in-use", HttpStatus.CONFLICT),
 	CATEGORY_NOT_FOUND("catalog.category-not-found", HttpStatus.NOT_FOUND),

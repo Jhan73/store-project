@@ -31,11 +31,14 @@ class CatalogApiImpl implements CatalogApi {
 
 	private final ModifierGroupRepository groups;
 
+	private final StationRepository stations;
+
 	private final AvailabilityService availability;
 
 	CatalogApiImpl(ProductRepository products, CategoryRepository categories, ModifierGroupRepository groups,
-			AvailabilityService availability) {
+			StationRepository stations, AvailabilityService availability) {
 		this.products = products;
+		this.stations = stations;
 		this.categories = categories;
 		this.groups = groups;
 		this.availability = availability;
@@ -45,6 +48,12 @@ class CatalogApiImpl implements CatalogApi {
 	@Transactional(readOnly = true)
 	public boolean productExists(UUID productId) {
 		return products.existsById(productId);
+	}
+
+	@Override
+	@Transactional
+	public boolean lockProduct(UUID productId) {
+		return products.lockAgainstDeletion(productId).isPresent();
 	}
 
 	@Override
@@ -123,6 +132,8 @@ class CatalogApiImpl implements CatalogApi {
 		if (!product.isActive() || !product.isAvailable() || category.isEmpty() || !category.get().isActive()) {
 			throw new BusinessException(CatalogError.PRODUCT_UNAVAILABLE, "The product is not on sale right now");
 		}
+		// Shared lock on the station the line will be routed to: retiring it waits until the line is stored.
+		stations.findForShareById(category.get().getStationId());
 		if (new HashSet<>(optionIds).size() != optionIds.size()) {
 			throw invalidSelection("An option can be chosen only once");
 		}

@@ -66,7 +66,8 @@ class StationController {
 	@PostMapping("/{id}/deactivate")
 	@PreAuthorize("hasRole('ADMIN')")
 	@ApiErrors({ "catalog.station-not-found", "catalog.default-station-required",
-			"catalog.station-has-active-categories", "catalog.station-has-live-orders" })
+			"catalog.station-has-active-categories", "catalog.station-has-live-orders",
+			"catalog.station-has-unsent-lines" })
 	ResponseEntity<StationResponse> deactivate(@PathVariable UUID id,
 			@RequestHeader(value = HttpHeaders.IF_MATCH, required = false) @Nullable String ifMatch) {
 		var station = stations.deactivate(id, IfMatchHeader.require(ifMatch));

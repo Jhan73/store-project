@@ -64,7 +64,7 @@ public class StockService {
 	/** Turns stock tracking on or off for a product and sets its low-stock threshold. */
 	@Transactional
 	public StockItemView track(UUID productId, boolean tracked, int lowStockThreshold) {
-		if (!catalog.productExists(productId)) {
+		if (!catalog.lockProduct(productId)) {
 			throw new BusinessException(InventoryError.PRODUCT_NOT_FOUND, "Product not found");
 		}
 		var now = Instant.now(clock);
@@ -197,7 +197,11 @@ public class StockService {
 		return reason.code();
 	}
 
+	// The product first, then its stock row: the order a product delete follows, so a write waits for the delete.
 	private StockSnapshot lockTracked(UUID productId) {
+		if (!catalog.lockProduct(productId)) {
+			throw notFound();
+		}
 		var item = lock(productId).orElseThrow(StockService::notFound);
 		if (!item.tracked()) {
 			throw new BusinessException(InventoryError.PRODUCT_NOT_TRACKED, "The product is not stock-tracked");
