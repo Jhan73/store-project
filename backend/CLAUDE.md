@@ -96,7 +96,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 
 **Consistency and concurrency**
 - Stock, board state, and slot capacity change through **conditional atomic updates** (`UPDATE … WHERE <precondition>`; 0 rows ⇒ business rejection). No read-check-write in Java.
-- Lock multiple products in ascending `product_id` order to avoid deadlocks.
+- Lock multiple products in ascending `product_id` order to avoid deadlocks. A writer that stores a product id in its own schema (stock entries, adjustments, tracking, movements) first calls `CatalogApi.lockProduct`, the key-share lock a product delete waits for, then locks its own rows: product first, then the module's row, always.
 - `preparation.board_order.status` arbitrates races between staff and customer commands.
 - Mutable aggregates use `@Version` optimistic locking.
 - Scheduled jobs run on every task and claim work with `SELECT … FOR UPDATE SKIP LOCKED LIMIT 100`. No scheduler lock library. Use `shared`'s `Jobs.drain(batch)` (capped at 10 batches per run) with one `@Transactional` batch method per bean, or a non-transactional batch method that hands each unit to a separate `@Transactional` bean for per-unit isolation (never call it inside an outer transaction); `@Scheduled`/`SchedulingConfigurer` tasks run on the `job-*` scheduler, never on the STOMP heartbeat one (give any new scheduler bean a `@Qualifier` at its injection points); when the batch deletes, claim in a `WITH … AS MATERIALIZED` CTE (see `IdempotencyCleanup`).

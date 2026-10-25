@@ -170,9 +170,10 @@ export class AdminApi {
     }
   }
 
-  // Removes everything this suite created, whichever run left it behind. Products and categories can only be
-  // deactivated; modifier groups are deleted after being detached from the products that used them. Items are
-  // processed independently and failures are reported together at the end.
+  // Removes everything this suite created, whichever run left it behind. Products and categories are only
+  // deactivated here (the API also deletes unused ones; the sweep leaves that alone); modifier groups are deleted
+  // after being detached from the products that used them. Items are processed independently and failures are
+  // reported together at the end.
   async cleanUp(): Promise<void> {
     const errors: string[] = [];
     const attempt: Attempt = async (what, action) => {
