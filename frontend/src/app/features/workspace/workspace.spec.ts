@@ -47,7 +47,7 @@ describe('staff and admin area', () => {
     http.verify();
   });
 
-  async function signInAs(role: 'SERVER' | 'CASHIER' | 'ADMIN') {
+  async function signInAs(role: 'SERVER' | 'CASHIER' | 'KITCHEN' | 'ADMIN') {
     const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
     http.expectOne(LOGIN).flush({ accessToken: 'jwt', tokenType: 'Bearer', userId: 'u', role });
     await login;
@@ -260,6 +260,47 @@ describe('staff and admin area', () => {
     expect(url()).toBe('/staff/register/shifts');
     expect(page().body.textContent).toContain('No hay turnos abiertos');
     expect(active).toEqual(['/staff/register/shifts']);
+  });
+
+  it('shows the kitchen only the board in the menu', async () => {
+    await signInAs('KITCHEN');
+
+    await harness.navigateByUrl('/staff/board');
+    http.expectOne('http://api.test/api/v1/store/board-thresholds').flush({
+      boardWarningMinutes: 5,
+      boardLateMinutes: 10,
+      timeZone: 'America/Lima',
+    });
+    http.expectOne('http://api.test/api/v1/stations').flush([]);
+    http.expectOne('http://api.test/api/v1/board/tickets').flush([]);
+    http.expectOne('http://api.test/api/v1/board/ready').flush([]);
+    http.expectOne('http://api.test/api/v1/board/all-day').flush({ groups: [], individual: [] });
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/staff/board');
+    expect(navLinks()).toEqual(['/staff/board']);
+    expect(page().body.textContent).toContain('Cocina');
+  });
+
+  it.each(['/staff/tables', '/staff/tickets/k1', '/staff/availability', '/staff/register', '/staff/quick-sale'])(
+    'keeps the kitchen out of %s',
+    async (path) => {
+      await signInAs('KITCHEN');
+
+      await harness.navigateByUrl(path);
+
+      expect(url()).toBe('/forbidden');
+    },
+  );
+
+  it('keeps the kitchen out of the customer screen and the admin area', async () => {
+    await signInAs('KITCHEN');
+
+    await harness.navigateByUrl('/display');
+    expect(url()).toBe('/forbidden');
+
+    await harness.navigateByUrl('/admin');
+    expect(url()).toBe('/forbidden');
   });
 
   it('keeps a server out of the register', async () => {

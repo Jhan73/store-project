@@ -5,6 +5,7 @@ describe('homeRouteFor', () => {
     ['ADMIN', '/admin'],
     ['CASHIER', '/staff'],
     ['SERVER', '/staff'],
+    ['KITCHEN', '/staff/board'],
     ['CUSTOMER', '/'],
   ] as const)('sends %s to %s', (role, route) => {
     expect(homeRouteFor(role)).toBe(route);

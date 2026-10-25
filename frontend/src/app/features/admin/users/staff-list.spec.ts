@@ -229,6 +229,7 @@ describe('StaffList', () => {
     expect(await optionLabels(fixture, body(), 'staff-role')).toEqual([
       'Mozo',
       'Cajero',
+      'Cocina',
       'Administrador',
     ]);
   });

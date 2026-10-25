@@ -54,7 +54,8 @@ test('table service with a change: sent, voided, prepared on the board and paid 
   await test.step('the order reaches the board labelled as new', async () => {
     await expect(card).toBeVisible(SYNC);
     await expect(card).toContainText('NUEVO');
-    await expect(boardLine(card, mangoName)).toHaveCount(2);
+    await expect(boardLine(card, mangoName)).toHaveCount(1);
+    await expect(boardLine(card, mangoName)).toContainText('2×');
   });
 
   await test.step('the customer switches one mango to strawberry', async () => {

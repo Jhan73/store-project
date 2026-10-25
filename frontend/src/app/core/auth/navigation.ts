@@ -7,6 +7,8 @@ export function homeRouteFor(role: Role): string {
     case 'SERVER':
     case 'CASHIER':
       return '/staff';
+    case 'KITCHEN':
+      return '/staff/board';
     case 'CUSTOMER':
       return '/';
   }

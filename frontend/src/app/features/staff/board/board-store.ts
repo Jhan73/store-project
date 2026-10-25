@@ -10,6 +10,7 @@ import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { clockOffsetMs, elapsedMinutes } from '../../../core/time/store-time';
 import { AgeLevel, ageLevel, ageStartOf, AgeThresholds, DEFAULT_AGE_THRESHOLDS, thresholdsOf } from './board-age';
 import { PendingIds } from '../../../shared/state/pending-ids';
+import { indicatorsOf } from '../../../shared/ui/board-card/board-lines';
 import { UNDO_WINDOW_MS, UndoQueue } from '../../../shared/state/undo-queue';
 import { BoardApi } from './board-api';
 import { newMarkerKinds, unacknowledgedMarkerIds } from './board-markers';
@@ -22,6 +23,20 @@ export interface BoardCard {
   readonly minutes: number;
   readonly level: AgeLevel;
 }
+
+// Elapsed counts from the fire time of a scheduled card; arrival always counts from when it was sent.
+export type BoardSort = 'elapsed' | 'arrivalAsc' | 'arrivalDesc';
+
+interface Aged {
+  readonly order: BoardOrder;
+  readonly start: string;
+}
+
+const SORTS: Record<BoardSort, (a: Aged, b: Aged) => number> = {
+  elapsed: (a, b) => Date.parse(a.start) - Date.parse(b.start),
+  arrivalAsc: (a, b) => Date.parse(a.order.sentAt) - Date.parse(b.order.sentAt),
+  arrivalDesc: (a, b) => Date.parse(b.order.sentAt) - Date.parse(a.order.sentAt),
+};
 
 const STATION_KEY = 'board.station';
 const CLOCK_TICK_MS = 30_000;
@@ -65,6 +80,8 @@ export class BoardStore {
   private readonly readyOrders = signal<readonly BoardOrder[]>([]);
   private readonly currentAllDay = signal<BoardAllDay>({ groups: [], individual: [] });
   private readonly currentView = signal<BoardView>('tickets');
+  private readonly currentSort = signal<BoardSort>('elapsed');
+  private readonly currentAttention = signal(false);
   private readonly loadFailed = signal(false);
   private readonly now = signal(Date.now());
   private readonly offset = signal(0);
@@ -93,21 +110,29 @@ export class BoardStore {
   // Ids of the orders and lines whose Ready is still inside the undo window.
   readonly queuedIds = this.queue.keys;
   readonly loaded = signal(false);
+  // Tab counts stay those of the whole board, so a filter never looks like an empty kitchen.
+  readonly ticketCount = computed(() => this.tickets().length);
+  readonly readyCount = computed(() => this.readyOrders().length);
+  readonly sortOrder = this.currentSort.asReadonly();
+  readonly attentionOnly = this.currentAttention.asReadonly();
   readonly cards = computed<BoardCard[]>(() =>
     this.tickets()
+      .filter((order) => this.passesFilter(order))
       .map((order) => ({ order, start: ageStartOf(order) }))
-      .sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
+      .sort(SORTS[this.currentSort()])
       .map(({ order, start }) => {
         const minutes = elapsedMinutes(start, this.now(), this.offset());
         return { order, minutes, level: ageLevel(minutes, this.ageThresholds()) };
       }),
   );
   readonly readyCards = computed<BoardCard[]>(() =>
-    this.readyOrders().map((order) => ({
-      order,
-      minutes: elapsedMinutes(order.readyAt ?? order.sentAt, this.now(), this.offset()),
-      level: 'normal',
-    })),
+    this.readyOrders()
+      .filter((order) => this.passesFilter(order))
+      .map((order) => ({
+        order,
+        minutes: elapsedMinutes(order.readyAt ?? order.sentAt, this.now(), this.offset()),
+        level: 'normal',
+      })),
   );
 
   constructor() {
@@ -203,6 +228,14 @@ export class BoardStore {
     this.currentView.set(view);
   }
 
+  setSortOrder(sort: BoardSort): void {
+    this.currentSort.set(sort);
+  }
+
+  setAttentionOnly(only: boolean): void {
+    this.currentAttention.set(only);
+  }
+
   setStation(station: string | null, remember = true): void {
     this.chosenStation.set(station);
     if (remember) {
@@ -243,6 +276,14 @@ export class BoardStore {
           }
         },
       });
+  }
+
+  private passesFilter(order: BoardOrder): boolean {
+    if (!this.currentAttention()) {
+      return true;
+    }
+    const { allergy, note } = indicatorsOf(order);
+    return allergy || note;
   }
 
   // A remembered station may no longer exist; an unknown id would show an empty board, so it means all stations.

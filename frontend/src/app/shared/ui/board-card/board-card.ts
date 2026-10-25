@@ -8,6 +8,7 @@ import {
   inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import {
   IconAlertTriangle,
@@ -15,15 +16,19 @@ import {
   IconBan,
   IconCheck,
   IconChecks,
+  IconListDetails,
+  IconNote,
   IconPackageExport,
   IconPlayerPlay,
   IconRotate2,
   TablerIconComponent,
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
 import { Tooltip } from 'primeng/tooltip';
 import type { BoardLine, BoardMarker, BoardOrder } from '../../../core/api/api-types';
 import { formatInStoreZone } from '../../../core/time/store-time';
+import { groupLines, indicatorsOf, LineGroup } from './board-lines';
 
 export type BoardCardLevel = 'normal' | 'warning' | 'late';
 
@@ -42,7 +47,7 @@ const MARKER_LABELS = {
 
 @Component({
   selector: 'app-board-card',
-  imports: [ButtonDirective, NgTemplateOutlet, TablerIconComponent, Tooltip],
+  imports: [ButtonDirective, Dialog, NgTemplateOutlet, TablerIconComponent, Tooltip],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './board-card.scss',
   template: `
@@ -67,7 +72,40 @@ const MARKER_LABELS = {
             >Programado {{ time }}</span
           >
         }
+        <button
+          pButton
+          type="button"
+          severity="secondary"
+          class="detail"
+          data-testid="detail"
+          [attr.aria-haspopup]="'dialog'"
+          [attr.aria-expanded]="detailOpen()"
+          pTooltip="Ver el detalle completo de la comanda"
+          i18n-pTooltip="@@board.card.detail.tooltip"
+          tooltipPosition="top"
+          (click)="detailOpen.set(true)"
+        >
+          <tabler-icon [icon]="icons.detail" aria-hidden="true" />
+          <span i18n="@@board.card.detail">Detalle</span>
+        </button>
       </header>
+
+      @if (indicators().allergy || indicators().note) {
+        <div class="indicators">
+          @if (indicators().allergy) {
+            <span class="indicator alert-allergy" data-testid="indicator-allergy">
+              <tabler-icon [icon]="icons.allergy" aria-hidden="true" />
+              <span i18n="@@board.card.indicator.allergy">Alergia</span>
+            </span>
+          }
+          @if (indicators().note) {
+            <span class="indicator alert-note" data-testid="indicator-note">
+              <tabler-icon [icon]="icons.note" aria-hidden="true" />
+              <span i18n="@@board.card.indicator.note">Nota</span>
+            </span>
+          }
+        </div>
+      }
 
       @for (item of headerMarkers(); track item.id) {
         <div class="marker" [class]="item.kind.toLowerCase()" [attr.data-testid]="'marker-' + item.id">
@@ -77,15 +115,16 @@ const MARKER_LABELS = {
       }
 
       <ul class="lines">
-        @for (item of order().lines; track item.id) {
+        @for (group of groups(); track group.id) {
+          @let item = group.lines[0];
           <li
             class="line"
             [class.allergy]="item.allergy"
             [class.voided]="item.state === 'VOIDED'"
-            [attr.data-testid]="'line-' + item.id"
+            [attr.data-testid]="'line-' + group.id"
           >
             <div class="what">
-              <span class="quantity">{{ item.quantity }}×</span>
+              <span class="quantity">{{ group.quantity }}×</span>
               <span class="name">{{ item.displayName }}</span>
               @if (item.allergy) {
                 <span class="badge allergy-badge" data-testid="allergy">
@@ -101,8 +140,8 @@ const MARKER_LABELS = {
               <div class="note">{{ item.note }}</div>
             }
             <div class="line-state">
-              @if (stateOf(item); as state) {
-                <span class="state" [class]="state" [attr.data-testid]="'line-state-' + item.id">
+              @if (stateOf(group); as state) {
+                <span class="state" [class]="state" [attr.data-testid]="'line-state-' + group.id">
                   @switch (state) {
                     @case ('ready') {
                       <tabler-icon [icon]="icons.ready" aria-hidden="true" />
@@ -120,7 +159,7 @@ const MARKER_LABELS = {
                 </span>
               }
               @if (item.comped) {
-                <span class="state comped" [attr.data-testid]="'comp-' + item.id" i18n="@@board.card.line.comped">Cortesía</span>
+                <span class="state comped" [attr.data-testid]="'comp-' + group.id" i18n="@@board.card.line.comped">Cortesía</span>
               }
               @for (tag of markersOf(item); track tag.id) {
                 <span class="marker inline" [class]="tag.kind.toLowerCase()" [attr.data-testid]="'marker-' + tag.id">
@@ -128,48 +167,48 @@ const MARKER_LABELS = {
                   <ng-container [ngTemplateOutlet]="ack" [ngTemplateOutletContext]="{ marker: tag }" />
                 </span>
               }
-              @if (queued().has(item.id)) {
+              @if (groupQueued(group)) {
                 <button
                   pButton
                   type="button"
                   severity="secondary"
-                  [attr.data-testid]="'undo-line-' + item.id"
-                  [attr.data-action]="'undo-line-' + item.id"
+                  [attr.data-testid]="'undo-line-' + group.id"
+                  [attr.data-action]="'undo-line-' + group.id"
                   pTooltip="Cancelar el aviso de línea lista antes de que se envíe"
                   i18n-pTooltip="@@board.card.line.undo.tooltip"
                   tooltipPosition="top"
-                  (click)="undoReady(item.id, 'ready-line-' + item.id)"
+                  (click)="undoGroup(group)"
                 >
                   <tabler-icon [icon]="icons.undo" aria-hidden="true" />
                   <span i18n="@@board.card.line.undo">Deshacer</span>
                 </button>
-              } @else if (mayReadyLine(item)) {
+              } @else if (mayReadyLine(group)) {
                 <button
                   pButton
                   type="button"
-                  [attr.data-testid]="'ready-line-' + item.id"
-                  [attr.data-action]="'ready-line-' + item.id"
-                  [disabled]="!enabled() || pending().has(item.id)"
+                  [attr.data-testid]="'ready-line-' + group.id"
+                  [attr.data-action]="'ready-line-' + group.id"
+                  [disabled]="!enabled() || groupPending(group)"
                   pTooltip="Marcar esta línea como lista"
                   i18n-pTooltip="@@board.card.line.ready.tooltip"
                   tooltipPosition="top"
-                  (click)="markReady(readyLine, item.id, 'undo-line-' + item.id)"
+                  (click)="readyGroup(group)"
                 >
                   <tabler-icon [icon]="icons.ready" aria-hidden="true" />
                   <span i18n="@@board.card.line.readyAction">Lista</span>
                 </button>
               }
-              @if (mayFlag(item)) {
+              @if (mayFlag(group)) {
                 <button
                   pButton
                   type="button"
                   severity="secondary"
-                  [attr.data-testid]="'flag-' + item.id"
-                  [disabled]="!enabled() || pending().has(item.id)"
+                  [attr.data-testid]="'flag-' + group.id"
+                  [disabled]="!enabled() || groupPending(group)"
                   pTooltip="Avisar que este producto se agotó"
                   i18n-pTooltip="@@board.card.line.flag.tooltip"
                   tooltipPosition="top"
-                  (click)="flag.emit(item.id)"
+                  (click)="flagGroup(group)"
                 >
                   <tabler-icon [icon]="icons.flag" aria-hidden="true" />
                   <span i18n="@@board.card.line.flag">Agotado</span>
@@ -231,37 +270,81 @@ const MARKER_LABELS = {
             }
           }
           @case ('READY') {
-            <button
-              pButton
-              type="button"
-              data-testid="handover"
-              [disabled]="!enabled() || pending().has(order().id)"
-              pTooltip="Entregar el pedido al cliente"
-              i18n-pTooltip="@@board.card.handover.tooltip"
-              tooltipPosition="top"
-              (click)="handover.emit(order().id)"
-            >
-              <tabler-icon [icon]="icons.handover" aria-hidden="true" />
-              <span i18n="@@board.card.handover">Entregar</span>
-            </button>
-            <button
-              pButton
-              type="button"
-              severity="secondary"
-              data-testid="recall"
-              [disabled]="!enabled() || pending().has(order().id)"
-              pTooltip="Volver a preparación un pedido terminado hace poco"
-              i18n-pTooltip="@@board.card.recall.tooltip"
-              tooltipPosition="top"
-              (click)="recall.emit(order().id)"
-            >
-              <tabler-icon [icon]="icons.recall" aria-hidden="true" />
-              <span i18n="@@board.card.recall">Reabrir</span>
-            </button>
+            @if (mayHandOver()) {
+              <button
+                pButton
+                type="button"
+                data-testid="handover"
+                [disabled]="!enabled() || pending().has(order().id)"
+                pTooltip="Entregar el pedido al cliente"
+                i18n-pTooltip="@@board.card.handover.tooltip"
+                tooltipPosition="top"
+                (click)="handover.emit(order().id)"
+              >
+                <tabler-icon [icon]="icons.handover" aria-hidden="true" />
+                <span i18n="@@board.card.handover">Entregar</span>
+              </button>
+              <button
+                pButton
+                type="button"
+                severity="secondary"
+                data-testid="recall"
+                [disabled]="!enabled() || pending().has(order().id)"
+                pTooltip="Volver a preparación un pedido terminado hace poco"
+                i18n-pTooltip="@@board.card.recall.tooltip"
+                tooltipPosition="top"
+                (click)="recall.emit(order().id)"
+              >
+                <tabler-icon [icon]="icons.recall" aria-hidden="true" />
+                <span i18n="@@board.card.recall">Reabrir</span>
+              </button>
+            }
           }
         }
       </footer>
     </article>
+
+    @if (detailOpen()) {
+      <p-dialog
+        [header]="detailTitle()"
+        [modal]="true"
+        [draggable]="false"
+        [closeOnEscape]="false"
+        [dismissableMask]="true"
+        [style]="{ width: 'min(40rem, calc(100vw - 1rem))' }"
+        [visible]="true"
+        (visibleChange)="closeDetail($event)"
+        (keydown.escape)="closeDetail(false)"
+      >
+        <div class="detail-body" data-testid="detail-dialog">
+          <ul class="detail-lines">
+            @for (group of groups(); track group.id) {
+              @let item = group.lines[0];
+              <li [class.voided]="item.state === 'VOIDED'">
+                <div class="detail-what">
+                  <span class="quantity">{{ group.quantity }}×</span>
+                  <span>{{ item.displayName }}</span>
+                  @if (item.allergy) {
+                    <span class="badge allergy-badge">
+                      <tabler-icon [icon]="icons.allergy" aria-hidden="true" />
+                      <span i18n="@@board.card.detail.allergy">Alergia</span>
+                    </span>
+                  }
+                </div>
+                @if (item.modifiersText) {
+                  <div class="modifiers">{{ item.modifiersText }}</div>
+                }
+                @if (item.note) {
+                  <div class="note">
+                    <span class="note-label" i18n="@@board.card.detail.note">Nota:</span> {{ item.note }}
+                  </div>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      </p-dialog>
+    }
 
     <ng-template #ack let-marker="marker">
       <button
@@ -290,6 +373,8 @@ export class BoardCard {
   readonly pending = input.required<ReadonlySet<string>>();
   readonly queued = input.required<ReadonlySet<string>>();
   readonly timeZone = input.required<string>();
+  // Handing over and recalling belong to the floor; a kitchen device only prepares.
+  readonly mayHandOver = input(true);
 
   readonly start = output<string>();
   readonly readyOrder = output<string>();
@@ -303,6 +388,8 @@ export class BoardCard {
   protected readonly icons = {
     allergy: IconAlertTriangle,
     ack: IconChecks,
+    detail: IconListDetails,
+    note: IconNote,
     flag: IconBan,
     handover: IconPackageExport,
     ready: IconCheck,
@@ -327,6 +414,8 @@ export class BoardCard {
     });
   }
 
+  protected readonly detailOpen = signal(false);
+
   protected markReady(emitter: { emit(id: string): void }, id: string, next: string): void {
     this.focusAfterSwap = next;
     emitter.emit(id);
@@ -337,6 +426,38 @@ export class BoardCard {
     this.undo.emit(id);
   }
 
+  protected readyGroup(group: LineGroup): void {
+    this.focusAfterSwap = 'undo-line-' + group.id;
+    group.lines.forEach((member) => this.readyLine.emit(member.id));
+  }
+
+  protected undoGroup(group: LineGroup): void {
+    this.focusAfterSwap = 'ready-line-' + group.id;
+    group.lines.forEach((member) => this.undo.emit(member.id));
+  }
+
+  protected flagGroup(group: LineGroup): void {
+    group.lines.forEach((member) => this.flag.emit(member.id));
+  }
+
+  protected closeDetail(visible: boolean): void {
+    if (!visible && this.detailOpen()) {
+      this.detailOpen.set(false);
+      this.host.nativeElement.querySelector<HTMLElement>('[data-testid="detail"]')?.focus();
+    }
+  }
+
+  protected readonly indicators = computed(() => indicatorsOf(this.order()));
+  protected readonly groups = computed(() =>
+    groupLines(this.order().lines, (member) =>
+      this.markersOf(member)
+        .map((tag) => tag.id)
+        .join(','),
+    ),
+  );
+  protected readonly detailTitle = computed(() =>
+    this.order().label ? `${this.order().shortNumber} · ${this.order().label}` : this.order().shortNumber,
+  );
   protected readonly channel = computed(() => CHANNELS[this.order().channel]);
   protected readonly scheduledTime = computed(() => {
     const fireAt = this.order().fireAt;
@@ -358,7 +479,17 @@ export class BoardCard {
     return MARKER_LABELS[marker.kind];
   }
 
-  protected stateOf(line: BoardLine): 'ready' | 'flagged' | 'voided' | null {
+  // A group is queued or pending as a whole: its lines are always sent together.
+  protected groupQueued(group: LineGroup): boolean {
+    return group.lines.every((member) => this.queued().has(member.id));
+  }
+
+  protected groupPending(group: LineGroup): boolean {
+    return group.lines.some((member) => this.pending().has(member.id));
+  }
+
+  protected stateOf(group: LineGroup): 'ready' | 'flagged' | 'voided' | null {
+    const line = group.lines[0];
     switch (line.state) {
       case 'VOIDED':
         return 'voided';
@@ -369,11 +500,12 @@ export class BoardCard {
           return 'flagged';
         }
         // A line already counts as ready while its Ready, or the whole order's, waits out the undo window.
-        return this.queued().has(line.id) || this.queued().has(this.order().id) ? 'ready' : null;
+        return this.groupQueued(group) || this.queued().has(this.order().id) ? 'ready' : null;
     }
   }
 
-  protected mayReadyLine(line: BoardLine): boolean {
+  protected mayReadyLine(group: LineGroup): boolean {
+    const line = group.lines[0];
     return (
       this.order().status === 'PREPARING' &&
       line.state === 'PENDING' &&
@@ -382,9 +514,10 @@ export class BoardCard {
     );
   }
 
-  protected mayFlag(line: BoardLine): boolean {
+  protected mayFlag(group: LineGroup): boolean {
+    const line = group.lines[0];
     const open = this.order().status === 'WAITING' || this.order().status === 'PREPARING';
-    const queued = this.queued().has(line.id) || this.queued().has(this.order().id);
+    const queued = this.groupQueued(group) || this.queued().has(this.order().id);
     return open && line.state === 'PENDING' && !line.flaggedUnavailable && !queued;
   }
 }

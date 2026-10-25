@@ -27,7 +27,7 @@ export const routes: Routes = [
   },
   {
     path: 'staff',
-    canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
+    canMatch: [roleGuard('SERVER', 'CASHIER', 'KITCHEN', 'ADMIN')],
     loadChildren: () => import('./features/staff/staff.routes').then((m) => m.STAFF_ROUTES),
   },
   {

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   IconBellCheck,
   IconLayoutKanban,
@@ -12,16 +12,28 @@ import {
 } from '@tabler/icons-angular';
 import { ButtonDirective } from 'primeng/button';
 import { Select } from 'primeng/select';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
+import { AuthStore } from '../../../core/auth/auth-store';
 import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
 import { BoardAllDayView } from '../../../shared/ui/board-all-day/board-all-day';
 import { BoardCard } from '../../../shared/ui/board-card/board-card';
 import { BoardSound } from './board-sound';
-import { BoardStore } from './board-store';
+import { BoardSort, BoardStore } from './board-store';
 
 @Component({
   selector: 'app-board',
-  imports: [BoardAllDayView, BoardCard, ButtonDirective, ReactiveFormsModule, Select, TablerIconComponent, Tooltip],
+  imports: [
+    BoardAllDayView,
+    BoardCard,
+    ButtonDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    Select,
+    TablerIconComponent,
+    ToggleSwitch,
+    Tooltip,
+  ],
   providers: [BoardStore, BoardSound, ScreenWakeLock],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './board.scss',
@@ -108,7 +120,7 @@ import { BoardStore } from './board-store';
         (click)="store.setView('tickets')"
       >
         <tabler-icon [icon]="icons.tickets" aria-hidden="true" />
-        <span i18n="@@staff.board.view.tickets">Pedidos ({{ store.cards().length }})</span>
+        <span i18n="@@staff.board.view.tickets">Pedidos ({{ store.ticketCount() }})</span>
       </button>
       <button
         pButton
@@ -136,7 +148,7 @@ import { BoardStore } from './board-store';
         (click)="store.setView('ready')"
       >
         <tabler-icon [icon]="icons.ready" aria-hidden="true" />
-        <span i18n="@@staff.board.view.ready">Listos ({{ store.readyCards().length }})</span>
+        <span i18n="@@staff.board.view.ready">Listos ({{ store.readyCount() }})</span>
       </button>
     </div>
 
@@ -160,6 +172,39 @@ import { BoardStore } from './board-store';
       </div>
     }
 
+    @if (store.view() !== 'allDay') {
+      <div class="controls">
+        @if (store.view() === 'tickets') {
+          <div class="order">
+            <label for="board-order" id="board-order-label" i18n="@@staff.board.order">Orden</label>
+            <p-select
+              inputId="board-order"
+              [ariaLabelledBy]="'board-order-label'"
+              [formControl]="order"
+              optionLabel="label"
+              optionValue="value"
+              [options]="orderOptions"
+              [filter]="true"
+              filterBy="label"
+              [resetFilterOnHide]="true"
+              filterPlaceholder="Buscar"
+              i18n-filterPlaceholder="@@shared.select.filterPlaceholder"
+              [appendTo]="'body'"
+            />
+          </div>
+        }
+        <div class="attention">
+          <p-toggleswitch
+            inputId="board-attention"
+            data-testid="attention-only"
+            [ngModel]="store.attentionOnly()"
+            (onChange)="store.setAttentionOnly($event.checked)"
+          />
+          <label for="board-attention" i18n="@@staff.board.attention">Solo con notas o alergias</label>
+        </div>
+      </div>
+    }
+
     @if (store.view() === 'allDay') {
       <app-board-all-day [allDay]="store.allDay()" />
     } @else {
@@ -174,6 +219,7 @@ import { BoardStore } from './board-store';
               [pending]="store.pending.values()"
               [queued]="store.queuedIds()"
               [timeZone]="store.timeZone()"
+              [mayHandOver]="mayHandOver()"
               (start)="store.start($event)"
               (readyOrder)="store.readyOrder($event)"
               (readyLine)="store.readyLine($event)"
@@ -187,7 +233,9 @@ import { BoardStore } from './board-store';
         }
       </ul>
       @if (shown().length === 0 && store.loaded()) {
-        @if (store.view() === 'ready') {
+        @if (store.attentionOnly() && (store.view() === 'ready' ? store.readyCount() : store.ticketCount()) > 0) {
+          <p class="empty" i18n="@@staff.board.empty.attention">Ningún pedido tiene notas ni alergias.</p>
+        } @else if (store.view() === 'ready') {
           <p class="empty" i18n="@@staff.board.empty.ready">No hay pedidos listos para entregar.</p>
         } @else {
           <p class="empty" i18n="@@staff.board.empty.tickets">No hay pedidos por preparar.</p>
@@ -198,6 +246,7 @@ import { BoardStore } from './board-store';
 })
 export class Board {
   protected readonly store = inject(BoardStore);
+  private readonly auth = inject(AuthStore);
   protected readonly sound = inject(BoardSound);
   protected readonly icons = {
     retry: IconRefresh,
@@ -215,8 +264,18 @@ export class Board {
     ...this.store.stations(),
   ]);
 
+  protected readonly orderOptions: { value: BoardSort; label: string }[] = [
+    { value: 'elapsed', label: $localize`:@@staff.board.order.elapsed:Más tiempo transcurrido` },
+    { value: 'arrivalAsc', label: $localize`:@@staff.board.order.arrivalAsc:Llegada: más antiguos primero` },
+    { value: 'arrivalDesc', label: $localize`:@@staff.board.order.arrivalDesc:Llegada: más recientes primero` },
+  ];
+  protected readonly order = new FormControl<BoardSort>('elapsed', { nonNullable: true });
+  // Handing over and recalling are floor commands: the kitchen only prepares.
+  protected readonly mayHandOver = computed(() => this.auth.role() !== 'KITCHEN');
+
   constructor() {
     inject(ScreenWakeLock).start();
+    this.order.valueChanges.pipe(takeUntilDestroyed()).subscribe((sort) => this.store.setSortOrder(sort));
     this.station.valueChanges.pipe(takeUntilDestroyed()).subscribe((id) => this.store.setStation(id || null));
     effect(() => this.station.setValue(this.store.station() ?? '', { emitEvent: false }));
   }

@@ -10,7 +10,7 @@ import { AuthStore } from '../../../core/auth/auth-store';
 import { errorInterceptor } from '../../../core/errors/error-interceptor';
 import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
-import { emptyAllDay, marker, minutesAgo, order } from '../../../testing/board-fixtures';
+import { emptyAllDay, line, marker, minutesAgo, order } from '../../../testing/board-fixtures';
 import { BoardSound } from './board-sound';
 import { BoardStore } from './board-store';
 
@@ -133,6 +133,96 @@ describe('BoardStore', () => {
 
     expect(store.cards().map((card) => card.order.id)).toEqual(['older', 'scheduled', 'newer']);
     expect(store.cards().map((card) => card.minutes)).toEqual([20, 8, 3]);
+  });
+
+  describe('order control', () => {
+    const tickets = () => [
+      order({ id: 'newer', sentAt: minutesAgo(3) }),
+      order({ id: 'scheduled', sentAt: minutesAgo(90), fireAt: minutesAgo(8) }),
+      order({ id: 'older', sentAt: minutesAgo(20) }),
+    ];
+    const ids = () => store.cards().map((card) => card.order.id);
+
+    it('defaults to the longest elapsed first', () => {
+      create();
+      answer(tickets());
+
+      expect(store.sortOrder()).toBe('elapsed');
+      expect(ids()).toEqual(['older', 'scheduled', 'newer']);
+    });
+
+    it('orders by arrival, oldest first, regardless of the fire time', () => {
+      create();
+      answer(tickets());
+
+      store.setSortOrder('arrivalAsc');
+
+      expect(ids()).toEqual(['scheduled', 'older', 'newer']);
+    });
+
+    it('orders by arrival, newest first', () => {
+      create();
+      answer(tickets());
+
+      store.setSortOrder('arrivalDesc');
+
+      expect(ids()).toEqual(['newer', 'older', 'scheduled']);
+    });
+
+    it('keeps the ready cards in the order the API sent them', () => {
+      create();
+      answer([], [
+        order({ id: 'first', status: 'READY', readyAt: minutesAgo(9) }),
+        order({ id: 'second', status: 'READY', readyAt: minutesAgo(2) }),
+      ]);
+
+      store.setSortOrder('arrivalDesc');
+
+      expect(store.readyCards().map((card) => card.order.id)).toEqual(['first', 'second']);
+    });
+  });
+
+  describe('attention filter', () => {
+    const withNote = order({ id: 'note', lines: [line({ id: 'n1', note: 'Sin hielo' })] });
+    const withAllergy = order({ id: 'allergy', lines: [line({ id: 'a1', allergy: true })] });
+    const plain = order({ id: 'plain' });
+
+    it('shows every card by default', () => {
+      create();
+      answer([withNote, withAllergy, plain]);
+
+      expect(store.attentionOnly()).toBe(false);
+      expect(store.cards()).toHaveLength(3);
+    });
+
+    it('keeps only the cards with a note or an allergy, in tickets and in ready', () => {
+      create();
+      answer([withNote, withAllergy, plain], [{ ...withNote, id: 'r1', status: 'READY' }, { ...plain, id: 'r2', status: 'READY' }]);
+
+      store.setAttentionOnly(true);
+
+      expect(store.cards().map((card) => card.order.id)).toEqual(['note', 'allergy']);
+      expect(store.readyCards().map((card) => card.order.id)).toEqual(['r1']);
+    });
+
+    it('keeps the tab counts of the whole board while the filter is on', () => {
+      create();
+      answer([withNote, plain], [{ ...plain, id: 'r2', status: 'READY' }]);
+
+      store.setAttentionOnly(true);
+
+      expect(store.ticketCount()).toBe(2);
+      expect(store.readyCount()).toBe(1);
+    });
+
+    it('ignores the note or allergy of a voided line', () => {
+      create();
+      answer([order({ id: 'v', lines: [line({ id: 'v1', note: 'x', state: 'VOIDED' })] })]);
+
+      store.setAttentionOnly(true);
+
+      expect(store.cards()).toEqual([]);
+    });
   });
 
   it('gives each card the level of its elapsed minutes', () => {

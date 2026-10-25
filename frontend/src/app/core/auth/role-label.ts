@@ -6,6 +6,8 @@ export function roleLabel(role: Role | null): string {
       return $localize`:@@role.server:Mozo`;
     case 'CASHIER':
       return $localize`:@@role.cashier:Cajero`;
+    case 'KITCHEN':
+      return $localize`:@@role.kitchen:Cocina`;
     case 'ADMIN':
       return $localize`:@@role.admin:Administrador`;
     case 'CUSTOMER':

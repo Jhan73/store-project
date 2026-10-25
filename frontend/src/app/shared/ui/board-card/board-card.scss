@@ -71,6 +71,76 @@ header {
   font-weight: 600;
 }
 
+.detail {
+  min-height: 3rem;
+  font-size: 1.125rem;
+}
+
+// Order-level alerts: the word always comes with the color.
+.indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+}
+
+.indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: 1.375rem;
+  font-weight: 800;
+  text-transform: uppercase;
+
+  &.alert-allergy {
+    color: var(--destructive-foreground);
+    background: var(--destructive);
+  }
+
+  &.alert-note {
+    color: var(--warning-foreground);
+    background: var(--warning);
+  }
+}
+
+.detail-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .voided {
+    text-decoration: line-through;
+    color: var(--muted-foreground);
+  }
+}
+
+.detail-what {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.note-label {
+  font-weight: 700;
+  font-style: normal;
+}
+
 .lines {
   display: flex;
   flex-direction: column;

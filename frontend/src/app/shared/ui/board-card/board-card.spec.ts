@@ -15,6 +15,7 @@ describe('BoardCard', () => {
       pending?: string[];
       queued?: string[];
       timeZone?: string;
+      mayHandOver?: boolean;
     } = {},
   ) {
     fixture = TestBed.createComponent(BoardCard);
@@ -25,6 +26,7 @@ describe('BoardCard', () => {
     fixture.componentRef.setInput('pending', new Set(options.pending ?? []));
     fixture.componentRef.setInput('queued', new Set(options.queued ?? []));
     fixture.componentRef.setInput('timeZone', options.timeZone ?? 'America/Lima');
+    fixture.componentRef.setInput('mayHandOver', options.mayHandOver ?? true);
     fixture.detectChanges();
   }
 
@@ -342,7 +344,7 @@ describe('BoardCard', () => {
     });
 
     it('disables the actions of an order and of a line while their request is in flight', () => {
-      render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' }), line({ id: 'l2' })] }), {
+      render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' }), line({ id: 'l2', productId: 'p2' })] }), {
         pending: ['l1'],
       });
 
@@ -399,6 +401,201 @@ describe('BoardCard', () => {
       render(order({ id: 'o1', markers: [marker({ id: 'm1', boardOrderId: 'o1' })] }), { enabled: false });
 
       expect(button('ack-m1')!.disabled).toBe(true);
+    });
+  });
+
+  describe('order indicators', () => {
+    const indicator = (name: 'allergy' | 'note') => host().querySelector(`[data-testid="indicator-${name}"]`);
+
+    it('flags an allergy in red with the word, apart from the line badge', () => {
+      render(order({ id: 'o1', lines: [line({ id: 'l1', allergy: true })] }));
+
+      expect(indicator('allergy')?.textContent).toContain('Alergia');
+      expect(indicator('allergy')?.classList.contains('alert-allergy')).toBe(true);
+      expect(indicator('note')).toBeNull();
+    });
+
+    it('flags a free note in amber with the word Nota', () => {
+      render(order({ id: 'o1', lines: [line({ id: 'l1', note: 'Sin hielo' })] }));
+
+      expect(indicator('note')?.textContent).toContain('Nota');
+      expect(indicator('note')?.classList.contains('alert-note')).toBe(true);
+      expect(indicator('allergy')).toBeNull();
+    });
+
+    it('shows both when the order has both', () => {
+      render(
+        order({ id: 'o1', lines: [line({ id: 'l1', allergy: true }), line({ id: 'l2', productId: 'p2', note: 'x' })] }),
+      );
+
+      expect(indicator('allergy')).not.toBeNull();
+      expect(indicator('note')).not.toBeNull();
+    });
+
+    it('shows the chosen modifiers without any alert', () => {
+      render(order({ id: 'o1', lines: [line({ id: 'l1', modifiersText: 'Sin azúcar' })] }));
+
+      expect(text()).toContain('Sin azúcar');
+      expect(indicator('allergy')).toBeNull();
+      expect(indicator('note')).toBeNull();
+    });
+  });
+
+  describe('repeated lines', () => {
+    const three = () =>
+      order({
+        id: 'o1',
+        status: 'PREPARING',
+        lines: [
+          line({ id: 'a', displayName: 'Mango' }),
+          line({ id: 'b', displayName: 'Mango' }),
+          line({ id: 'c', displayName: 'Mango' }),
+        ],
+      });
+
+    it('shows identical lines once with the total quantity', () => {
+      render(three());
+
+      expect(host().querySelectorAll('[data-testid^="line-"]:not([data-testid^="line-state-"])')).toHaveLength(1);
+      expect(host().querySelector('[data-testid="line-a"]')?.textContent).toContain('3×');
+    });
+
+    it('keeps lines with different notes or allergies separate', () => {
+      render(
+        order({
+          id: 'o1',
+          status: 'PREPARING',
+          lines: [
+            line({ id: 'a', displayName: 'Mango' }),
+            line({ id: 'b', displayName: 'Mango', note: 'Sin hielo' }),
+            line({ id: 'c', displayName: 'Mango', allergy: true }),
+          ],
+        }),
+      );
+
+      expect(host().querySelector('[data-testid="line-a"]')?.textContent).not.toContain('3×');
+      expect(host().querySelector('[data-testid="line-b"]')?.textContent).toContain('Sin hielo');
+      expect(host().querySelector('[data-testid="line-c"] [data-testid="allergy"]')).not.toBeNull();
+    });
+
+    it('marks every line of the group ready with one tap', () => {
+      render(three());
+      const readyLine = emitted('readyLine');
+
+      button('ready-line-a')!.click();
+
+      expect(readyLine.mock.calls.map(([id]) => id)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('flags every line of the group as sold out', () => {
+      render(three());
+      const flag = emitted('flag');
+
+      button('flag-a')!.click();
+
+      expect(flag.mock.calls.map(([id]) => id)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('offers Undo for the group once all its lines wait out the window', () => {
+      render(three(), { queued: ['a', 'b', 'c'] });
+      const undo = emitted('undo');
+
+      expect(button('ready-line-a')).toBeNull();
+      button('undo-line-a')!.click();
+
+      expect(undo.mock.calls.map(([id]) => id)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('disables the group while any of its lines has a request in flight', () => {
+      render(three(), { pending: ['b'] });
+
+      expect(button('ready-line-a')!.disabled).toBe(true);
+    });
+  });
+
+  describe('detail', () => {
+    const detail = () => document.body.querySelector<HTMLElement>('[data-testid="detail-dialog"]');
+    const withNotes = () =>
+      order({
+        id: 'o1',
+        shortNumber: 'L-021',
+        lines: [
+          line({ id: 'a', displayName: 'Mango', quantity: 2, modifiersText: '500 ml, sin azúcar', note: 'Sin hielo' }),
+          line({ id: 'b', displayName: 'Fresa', allergy: true }),
+        ],
+      });
+
+    async function open() {
+      render(withNotes());
+      button('detail')!.click();
+      await fixture.whenStable();
+    }
+
+    it('opens from the card with the lines, modifiers, notes and allergies', async () => {
+      await open();
+
+      expect(detail()).not.toBeNull();
+      const content = document.body.querySelector('[role="dialog"]')!.textContent!;
+      for (const expected of ['L-021', 'Mango', '500 ml, sin azúcar', 'Sin hielo', 'Fresa', 'Alergia']) {
+        expect(content).toContain(expected);
+      }
+      expect(button('detail')!.getAttribute('aria-haspopup')).toBe('dialog');
+    });
+
+    it('is closed until it is opened', () => {
+      render(withNotes());
+
+      expect(detail()).toBeNull();
+    });
+
+    it('closes on Escape and gives the focus back to its button', async () => {
+      await open();
+
+      detail()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await fixture.whenStable();
+
+      expect(detail()).toBeNull();
+      expect(document.activeElement).toBe(button('detail'));
+    });
+
+    it('closes from its close control', async () => {
+      await open();
+
+      document.body.querySelector<HTMLElement>('.p-dialog-close-button')!.click();
+      await fixture.whenStable();
+
+      expect(detail()).toBeNull();
+    });
+
+    it('carries no price or payment text', async () => {
+      await open();
+
+      expect(detail()!.textContent).not.toMatch(/S\/|PEN|total|precio|pago/i);
+    });
+  });
+
+  describe('floor actions', () => {
+    it('offers hand over and recall by default', () => {
+      render(order({ id: 'o1', status: 'READY', lines: [line({ id: 'l1', state: 'READY' })] }));
+
+      expect(button('handover')).not.toBeNull();
+      expect(button('recall')).not.toBeNull();
+    });
+
+    it('hides hand over and recall where the device may not hand over', () => {
+      render(order({ id: 'o1', status: 'READY', lines: [line({ id: 'l1', state: 'READY' })] }), {
+        mayHandOver: false,
+      });
+
+      expect(button('handover')).toBeNull();
+      expect(button('recall')).toBeNull();
+    });
+
+    it('still lets that device prepare', () => {
+      render(order({ id: 'o1', status: 'PREPARING', lines: [line({ id: 'l1' })] }), { mayHandOver: false });
+
+      expect(button('ready-order')).not.toBeNull();
+      expect(button('ready-line-l1')).not.toBeNull();
     });
   });
 });

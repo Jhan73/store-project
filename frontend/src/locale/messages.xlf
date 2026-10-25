@@ -33,9 +33,17 @@
         <source>Cajero</source>
       </segment>
     </unit>
-    <unit id="role.admin">
+    <unit id="role.kitchen">
       <notes>
         <note category="location">src/app/core/auth/role-label.ts:10</note>
+      </notes>
+      <segment>
+        <source>Cocina</source>
+      </segment>
+    </unit>
+    <unit id="role.admin">
+      <notes>
+        <note category="location">src/app/core/auth/role-label.ts:12</note>
       </notes>
       <segment>
         <source>Administrador</source>
@@ -43,7 +51,7 @@
     </unit>
     <unit id="role.customer">
       <notes>
-        <note category="location">src/app/core/auth/role-label.ts:12</note>
+        <note category="location">src/app/core/auth/role-label.ts:14</note>
       </notes>
       <segment>
         <source>Cliente</source>
@@ -1595,7 +1603,7 @@
     </unit>
     <unit id="admin.audit.role.system">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:133</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:134</note>
       </notes>
       <segment>
         <source>Sistema</source>
@@ -1603,7 +1611,7 @@
     </unit>
     <unit id="admin.audit.role.anonymous">
       <notes>
-        <note category="location">src/app/features/admin/audit/audit-labels.ts:135</note>
+        <note category="location">src/app/features/admin/audit/audit-labels.ts:136</note>
       </notes>
       <segment>
         <source>Anónimo</source>
@@ -1656,7 +1664,8 @@
         <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:156</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:120</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:272</note>
-        <note category="location">src/app/features/staff/board/board.ts:157</note>
+        <note category="location">src/app/features/staff/board/board.ts:169</note>
+        <note category="location">src/app/features/staff/board/board.ts:191</note>
         <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:275</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:105</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:130</note>
@@ -6151,7 +6160,7 @@
     </unit>
     <unit id="staff.board.failed">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:32,34</note>
+        <note category="location">src/app/features/staff/board/board.ts:44,46</note>
       </notes>
       <segment>
         <source>No se pudo actualizar el tablero. Las acciones están deshabilitadas.</source>
@@ -6159,7 +6168,7 @@
     </unit>
     <unit id="staff.board.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:40,41</note>
+        <note category="location">src/app/features/staff/board/board.ts:52,53</note>
       </notes>
       <segment>
         <source>Volver a cargar el tablero</source>
@@ -6167,7 +6176,7 @@
     </unit>
     <unit id="staff.board.retry">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:45,47</note>
+        <note category="location">src/app/features/staff/board/board.ts:57,59</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -6175,7 +6184,7 @@
     </unit>
     <unit id="staff.board.offline">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:51,53</note>
+        <note category="location">src/app/features/staff/board/board.ts:63,65</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
@@ -6183,7 +6192,7 @@
     </unit>
     <unit id="staff.board.updating">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:57,59</note>
+        <note category="location">src/app/features/staff/board/board.ts:69,71</note>
       </notes>
       <segment>
         <source>Actualizando el tablero. Las acciones se habilitan en unos segundos.</source>
@@ -6191,7 +6200,7 @@
     </unit>
     <unit id="staff.board.sound.unsupported">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:66,69</note>
+        <note category="location">src/app/features/staff/board/board.ts:78,81</note>
       </notes>
       <segment>
         <source>Este navegador no permite sonido. Mira el tablero para ver los avisos nuevos.</source>
@@ -6199,7 +6208,7 @@
     </unit>
     <unit id="staff.board.sound.off">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:73,75</note>
+        <note category="location">src/app/features/staff/board/board.ts:85,87</note>
       </notes>
       <segment>
         <source>Sonido desactivado: no sonarán los avisos de pedidos nuevos, modificados o anulados.</source>
@@ -6207,7 +6216,7 @@
     </unit>
     <unit id="staff.board.sound.enable.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:80,81</note>
+        <note category="location">src/app/features/staff/board/board.ts:92,93</note>
       </notes>
       <segment>
         <source>Activar los sonidos de aviso del tablero</source>
@@ -6215,7 +6224,7 @@
     </unit>
     <unit id="staff.board.sound.enable">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:85,87</note>
+        <note category="location">src/app/features/staff/board/board.ts:97,99</note>
       </notes>
       <segment>
         <source>Activar sonido</source>
@@ -6223,7 +6232,7 @@
     </unit>
     <unit id="staff.board.title">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:90,91</note>
+        <note category="location">src/app/features/staff/board/board.ts:102,103</note>
       </notes>
       <segment>
         <source>Tablero</source>
@@ -6231,7 +6240,7 @@
     </unit>
     <unit id="staff.board.sound.on">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:94,98</note>
+        <note category="location">src/app/features/staff/board/board.ts:106,110</note>
       </notes>
       <segment>
         <source>Sonido activado</source>
@@ -6239,7 +6248,7 @@
     </unit>
     <unit id="staff.board.views">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:98</note>
+        <note category="location">src/app/features/staff/board/board.ts:110</note>
       </notes>
       <segment>
         <source>Vistas del tablero</source>
@@ -6247,7 +6256,7 @@
     </unit>
     <unit id="staff.board.view.tickets.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:105,106</note>
+        <note category="location">src/app/features/staff/board/board.ts:117,118</note>
       </notes>
       <segment>
         <source>Ver los pedidos por preparar</source>
@@ -6255,15 +6264,15 @@
     </unit>
     <unit id="staff.board.view.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:111,112</note>
+        <note category="location">src/app/features/staff/board/board.ts:123,124</note>
       </notes>
       <segment>
-        <source>Pedidos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.cards().length }}"/>)</source>
+        <source>Pedidos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.ticketCount() }}"/>)</source>
       </segment>
     </unit>
     <unit id="staff.board.view.allDay.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:119,120</note>
+        <note category="location">src/app/features/staff/board/board.ts:131,132</note>
       </notes>
       <segment>
         <source>Ver el total de cada producto pendiente</source>
@@ -6271,7 +6280,7 @@
     </unit>
     <unit id="staff.board.view.allDay">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:125,127</note>
+        <note category="location">src/app/features/staff/board/board.ts:137,139</note>
       </notes>
       <segment>
         <source>Todo el día</source>
@@ -6279,7 +6288,7 @@
     </unit>
     <unit id="staff.board.view.ready.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:133,134</note>
+        <note category="location">src/app/features/staff/board/board.ts:145,146</note>
       </notes>
       <segment>
         <source>Ver los pedidos listos para entregar</source>
@@ -6287,23 +6296,47 @@
     </unit>
     <unit id="staff.board.view.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:139,140</note>
+        <note category="location">src/app/features/staff/board/board.ts:151,152</note>
       </notes>
       <segment>
-        <source>Listos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.readyCards().length }}"/>)</source>
+        <source>Listos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.readyCount() }}"/>)</source>
       </segment>
     </unit>
     <unit id="staff.board.station">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:145,147</note>
+        <note category="location">src/app/features/staff/board/board.ts:157,159</note>
       </notes>
       <segment>
         <source>Estación</source>
       </segment>
     </unit>
+    <unit id="staff.board.order">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:179,180</note>
+      </notes>
+      <segment>
+        <source>Orden</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.attention">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:203,205</note>
+      </notes>
+      <segment>
+        <source>Solo con notas o alergias</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.empty.attention">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:237,238</note>
+      </notes>
+      <segment>
+        <source>Ningún pedido tiene notas ni alergias.</source>
+      </segment>
+    </unit>
     <unit id="staff.board.empty.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:191,193</note>
+        <note category="location">src/app/features/staff/board/board.ts:239,241</note>
       </notes>
       <segment>
         <source>No hay pedidos listos para entregar.</source>
@@ -6311,7 +6344,7 @@
     </unit>
     <unit id="staff.board.empty.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:193,198</note>
+        <note category="location">src/app/features/staff/board/board.ts:241,246</note>
       </notes>
       <segment>
         <source>No hay pedidos por preparar.</source>
@@ -6319,10 +6352,34 @@
     </unit>
     <unit id="staff.board.station.all">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:214</note>
+        <note category="location">src/app/features/staff/board/board.ts:263</note>
       </notes>
       <segment>
         <source>Todas las estaciones</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.order.elapsed">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:268</note>
+      </notes>
+      <segment>
+        <source>Más tiempo transcurrido</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.order.arrivalAsc">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:269</note>
+      </notes>
+      <segment>
+        <source>Llegada: más antiguos primero</source>
+      </segment>
+    </unit>
+    <unit id="staff.board.order.arrivalDesc">
+      <notes>
+        <note category="location">src/app/features/staff/board/board.ts:270</note>
+      </notes>
+      <segment>
+        <source>Llegada: más recientes primero</source>
       </segment>
     </unit>
     <unit id="staff.quickSale.removed">
@@ -9218,7 +9275,7 @@
     </unit>
     <unit id="board.card.channel.table">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:31</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:36</note>
       </notes>
       <segment>
         <source>Mesa</source>
@@ -9226,7 +9283,7 @@
     </unit>
     <unit id="board.card.channel.counter">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:32</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:37</note>
       </notes>
       <segment>
         <source>Mostrador</source>
@@ -9234,7 +9291,7 @@
     </unit>
     <unit id="board.card.channel.pickup">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:33</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:38</note>
       </notes>
       <segment>
         <source>Recojo</source>
@@ -9242,7 +9299,7 @@
     </unit>
     <unit id="board.card.channel.delivery">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:34</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:39</note>
       </notes>
       <segment>
         <source>Delivery</source>
@@ -9250,7 +9307,7 @@
     </unit>
     <unit id="board.card.marker.new">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:38</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:43</note>
       </notes>
       <segment>
         <source>NUEVO</source>
@@ -9258,7 +9315,7 @@
     </unit>
     <unit id="board.card.marker.modified">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:39</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:44</note>
       </notes>
       <segment>
         <source>MODIFICADO</source>
@@ -9266,7 +9323,7 @@
     </unit>
     <unit id="board.card.marker.void">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:40</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:45</note>
       </notes>
       <segment>
         <source>ANULADO</source>
@@ -9274,7 +9331,7 @@
     </unit>
     <unit id="board.card.elapsed">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:58,59</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:63,64</note>
       </notes>
       <segment>
         <source><ph id="0" equiv="INTERPOLATION" disp="{{ minutes() }}"/> min</source>
@@ -9282,7 +9339,7 @@
     </unit>
     <unit id="board.card.level.late">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:60,61</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:65,66</note>
       </notes>
       <segment>
         <source>Atrasado</source>
@@ -9290,7 +9347,7 @@
     </unit>
     <unit id="board.card.level.warning">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:62,65</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:67,70</note>
       </notes>
       <segment>
         <source>Atención</source>
@@ -9298,15 +9355,47 @@
     </unit>
     <unit id="board.card.scheduled">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:67,68</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:72,73</note>
       </notes>
       <segment>
         <source>Programado <ph id="0" equiv="INTERPOLATION" disp="{{ time }}"/></source>
       </segment>
     </unit>
+    <unit id="board.card.detail.tooltip">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:83,84</note>
+      </notes>
+      <segment>
+        <source>Ver el detalle completo de la comanda</source>
+      </segment>
+    </unit>
+    <unit id="board.card.detail">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:89,91</note>
+      </notes>
+      <segment>
+        <source>Detalle</source>
+      </segment>
+    </unit>
+    <unit id="board.card.indicator.allergy">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:98,101</note>
+      </notes>
+      <segment>
+        <source>Alergia</source>
+      </segment>
+    </unit>
+    <unit id="board.card.indicator.note">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:104,106</note>
+      </notes>
+      <segment>
+        <source>Nota</source>
+      </segment>
+    </unit>
     <unit id="board.card.allergy">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:93,94</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:132,133</note>
       </notes>
       <segment>
         <source>Alergia</source>
@@ -9314,7 +9403,7 @@
     </unit>
     <unit id="board.card.line.ready">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:109,111</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:148,150</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -9322,7 +9411,7 @@
     </unit>
     <unit id="board.card.line.flagged">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:113,115</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:152,154</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -9330,7 +9419,7 @@
     </unit>
     <unit id="board.card.line.voided">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:117,119</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:156,158</note>
       </notes>
       <segment>
         <source>Anulada</source>
@@ -9338,7 +9427,7 @@
     </unit>
     <unit id="board.card.line.comped">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:123,125</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:162,164</note>
       </notes>
       <segment>
         <source>Cortesía</source>
@@ -9346,7 +9435,7 @@
     </unit>
     <unit id="board.card.line.undo.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:138,139</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:177,178</note>
       </notes>
       <segment>
         <source>Cancelar el aviso de línea lista antes de que se envíe</source>
@@ -9354,7 +9443,7 @@
     </unit>
     <unit id="board.card.line.undo">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:144,145</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:183,184</note>
       </notes>
       <segment>
         <source>Deshacer</source>
@@ -9362,7 +9451,7 @@
     </unit>
     <unit id="board.card.line.ready.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:153,154</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:192,193</note>
       </notes>
       <segment>
         <source>Marcar esta línea como lista</source>
@@ -9370,7 +9459,7 @@
     </unit>
     <unit id="board.card.line.readyAction">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:159,161</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:198,200</note>
       </notes>
       <segment>
         <source>Lista</source>
@@ -9378,7 +9467,7 @@
     </unit>
     <unit id="board.card.line.flag.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:169,170</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:208,209</note>
       </notes>
       <segment>
         <source>Avisar que este producto se agotó</source>
@@ -9386,7 +9475,7 @@
     </unit>
     <unit id="board.card.line.flag">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:175,176</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:214,215</note>
       </notes>
       <segment>
         <source>Agotado</source>
@@ -9394,7 +9483,7 @@
     </unit>
     <unit id="board.card.start.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:191,192</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:230,231</note>
       </notes>
       <segment>
         <source>Empezar a preparar este pedido</source>
@@ -9402,7 +9491,7 @@
     </unit>
     <unit id="board.card.start">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:197,198</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:236,237</note>
       </notes>
       <segment>
         <source>Iniciar</source>
@@ -9410,7 +9499,7 @@
     </unit>
     <unit id="board.card.undo.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:208,209</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:247,248</note>
       </notes>
       <segment>
         <source>Cancelar el aviso de pedido listo antes de que se envíe</source>
@@ -9418,7 +9507,7 @@
     </unit>
     <unit id="board.card.undo">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:214,215</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:253,254</note>
       </notes>
       <segment>
         <source>Deshacer</source>
@@ -9426,7 +9515,7 @@
     </unit>
     <unit id="board.card.ready.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:223,224</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:262,263</note>
       </notes>
       <segment>
         <source>Marcar todo el pedido como listo</source>
@@ -9434,7 +9523,7 @@
     </unit>
     <unit id="board.card.ready">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:229,230</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:268,269</note>
       </notes>
       <segment>
         <source>Todo listo</source>
@@ -9442,7 +9531,7 @@
     </unit>
     <unit id="board.card.handover.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:239,240</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:279,280</note>
       </notes>
       <segment>
         <source>Entregar el pedido al cliente</source>
@@ -9450,7 +9539,7 @@
     </unit>
     <unit id="board.card.handover">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:245,247</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:285,287</note>
       </notes>
       <segment>
         <source>Entregar</source>
@@ -9458,7 +9547,7 @@
     </unit>
     <unit id="board.card.recall.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:253,254</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:293,294</note>
       </notes>
       <segment>
         <source>Volver a preparación un pedido terminado hace poco</source>
@@ -9466,15 +9555,31 @@
     </unit>
     <unit id="board.card.recall">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:259,261</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:299,300</note>
       </notes>
       <segment>
         <source>Reabrir</source>
       </segment>
     </unit>
+    <unit id="board.card.detail.allergy">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:330,332</note>
+      </notes>
+      <segment>
+        <source>Alergia</source>
+      </segment>
+    </unit>
+    <unit id="board.card.detail.note">
+      <notes>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:339,340</note>
+      </notes>
+      <segment>
+        <source>Nota:</source>
+      </segment>
+    </unit>
     <unit id="board.card.marker.ack.tooltip">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:273,274</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:356,357</note>
       </notes>
       <segment>
         <source>Confirmar que viste este aviso</source>
@@ -9482,7 +9587,7 @@
     </unit>
     <unit id="board.card.marker.ack">
       <notes>
-        <note category="location">src/app/shared/ui/board-card/board-card.ts:279,281</note>
+        <note category="location">src/app/shared/ui/board-card/board-card.ts:362,364</note>
       </notes>
       <segment>
         <source>Confirmar</source>

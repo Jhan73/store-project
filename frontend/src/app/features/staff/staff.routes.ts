@@ -5,6 +5,9 @@ import { BoardApi } from './board/board-api';
 import { RegisterApi } from './register/register-api';
 import { TicketsApi } from './tickets/tickets-api';
 
+// The kitchen role reaches only the board: every other screen of the area is for the floor.
+const floorOnly = roleGuard('SERVER', 'CASHIER', 'ADMIN');
+
 export const STAFF_ROUTES: Routes = [
   {
     path: '',
@@ -32,10 +35,12 @@ export const STAFF_ROUTES: Routes = [
           },
           {
             path: 'tables',
+            canMatch: [floorOnly],
             loadComponent: () => import('./tables/table-grid').then((m) => m.TableGrid),
           },
           {
             path: 'tickets/:id',
+            canMatch: [floorOnly],
             loadComponent: () => import('./tickets/ticket-editor').then((m) => m.TicketEditor),
           },
         ],
@@ -47,6 +52,7 @@ export const STAFF_ROUTES: Routes = [
       },
       {
         path: 'availability',
+        canMatch: [floorOnly],
         providers: [AvailabilityApi],
         loadComponent: () => import('./availability/availability').then((m) => m.Availability),
       },
