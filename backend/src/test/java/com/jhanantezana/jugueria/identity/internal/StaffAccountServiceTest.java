@@ -12,11 +12,13 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -207,8 +209,8 @@ class StaffAccountServiceTest {
 	}
 
 	private static DataIntegrityViolationException usernameViolation() {
-		return new DataIntegrityViolationException("could not execute statement", new RuntimeException(
-				"ERROR: duplicate key value violates unique constraint \"user_account_username_active_key\""));
+		return new DataIntegrityViolationException("could not execute statement",
+				new ConstraintViolationException("duplicate key", new SQLException(), "user_account_username_active_key"));
 	}
 
 	@Test
