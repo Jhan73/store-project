@@ -118,10 +118,10 @@ The access token lasts 15 minutes; sign in again on a `401 auth.unauthenticated`
 
 ```powershell
 Invoke-RestMethod -Method Post "$Api/staff" -ContentType "application/json" -Headers $Auth `
-  -Body (@{ email = "<staff email>"; role = "CASHIER" } | ConvertTo-Json)
+  -Body (@{ username = "<name shown to people>"; email = "<staff email>"; role = "CASHIER" } | ConvertTo-Json)
 ```
 
-Staff roles: `ADMIN`, `CASHIER`, `SERVER` (`CUSTOMER` is rejected). The new member receives their own set-password link and repeats step 1. If a link expires, reissue it with `POST $Api/staff/<id>/set-password-link` (not for your own account).
+The username is a name of use, not a credential (sign-in stays by email), and must be unique among active accounts. The first admin is created without one: name it from `/admin/users` after signing in. Staff roles: `ADMIN`, `CASHIER`, `SERVER` (`CUSTOMER` is rejected). The new member receives their own set-password link and repeats step 1. If a link expires, reissue it with `POST $Api/staff/<id>/set-password-link` (not for your own account).
 
 In `test`, the address must be in `NOTIFICATIONS_RECIPIENT_ALLOWLIST` (then redeploy, see `ses-setup.md`), and while SES is in the sandbox it must also be a verified identity.
 

@@ -208,7 +208,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 
 | ID | Requirement | P |
 |----|-------------|---|
-| FR-ADM-01 | ADMIN creates, deactivates, and changes roles of staff accounts. Deactivation takes effect within 15 minutes, even for active sessions. | M |
+| FR-ADM-01 | ADMIN invites staff accounts with a username, an email, and a role; deactivates them, changes their roles, and renames them. The username is the name people see (for example "Maria"), never a credential: sign-in stays by email. It is unique among active accounts, ignoring case, and a deactivated account frees its name. Accounts created before usernames existed have none until an ADMIN names them. Deactivation takes effect within 15 minutes, even for active sessions. | M |
 | FR-ADM-02 | ADMIN configures store settings: opening hours, delivery zones (fee, delivery time), base preparation time, extra minutes per order already in the queue, busy-mode minutes, board thresholds, register-difference threshold, exception threshold, online capacity limits. | M |
 | FR-RPT-01 | Sales report for a date range by channel, product, category, **modifier**, and payment method, including voids, comps, waste, and refunds. | M |
 | FR-RPT-02 | Register shift report: float, cash sales, cash in/out, expected vs counted, differences with notes, voids. | M |
@@ -217,7 +217,7 @@ Expired ──► Paid (payment approved late and items could be reserved again 
 | FR-RPT-05 | **Hourly heatmap**: sales by hour × weekday for a date range. | M |
 | FR-RPT-06 | **Exceptions by employee**: voids, comps, waste, refunds, cash out, and shift differences per employee and reason; employees above the configured threshold are flagged. | M |
 | FR-AUD-01 | Every change to prices, modifiers, availability, stock, orders, tickets, lines (void/comp/transfer/merge), payments, cash movements, shifts, refunds, settings, table configuration, users, and roles is recorded: actor, role, action, entity, before/after values, reason, timestamp, and request origin. | M |
-| FR-AUD-02 | The audit log is read-only for everyone, including ADMIN, and is searchable by date, actor, and entity. | M |
+| FR-AUD-02 | The audit log is read-only for everyone, including ADMIN, and is searchable by date, actor, and entity. It names people by username and shows the role they had at the time of the change; it never stores or shows an email address. | M |
 
 ## 6. Business rules (consolidated)
 
