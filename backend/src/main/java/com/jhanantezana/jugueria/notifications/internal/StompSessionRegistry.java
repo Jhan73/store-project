@@ -1,6 +1,8 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,19 +27,43 @@ class StompSessionRegistry {
 
 	private final Map<String, String> userBySession = new ConcurrentHashMap<>();
 
+	// When the account behind each authenticated session is next due for a lookup.
+	private final Map<String, Instant> recheckAtBySession = new ConcurrentHashMap<>();
+
 	void opened(WebSocketSession session) {
 		sockets.put(session.getId(), session);
 	}
 
-	void authenticated(String sessionId, String userId) {
+	void authenticated(String sessionId, String userId, Instant recheckAt) {
 		if (sockets.containsKey(sessionId)) {
 			userBySession.put(sessionId, userId);
+			recheckAtBySession.put(sessionId, recheckAt);
 		}
 	}
 
 	void closed(String sessionId) {
 		sockets.remove(sessionId);
 		userBySession.remove(sessionId);
+		recheckAtBySession.remove(sessionId);
+	}
+
+	/** The users with at least one session whose account lookup is due; each is listed once. */
+	List<String> usersDue(Instant now) {
+		return recheckAtBySession.entrySet()
+			.stream()
+			.filter(entry -> !entry.getValue().isAfter(now))
+			.map(entry -> userBySession.get(entry.getKey()))
+			.filter(userId -> userId != null)
+			.distinct()
+			.toList();
+	}
+
+	void rechecked(String userId, Instant nextRecheckAt) {
+		for (var entry : userBySession.entrySet()) {
+			if (entry.getValue().equals(userId)) {
+				recheckAtBySession.put(entry.getKey(), nextRecheckAt);
+			}
+		}
 	}
 
 	void closeSessionsOf(String userId) {

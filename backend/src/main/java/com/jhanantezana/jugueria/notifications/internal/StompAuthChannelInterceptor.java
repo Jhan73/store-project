@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.notifications.internal;
 
 import java.security.Principal;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
@@ -86,7 +87,10 @@ class StompAuthChannelInterceptor implements ChannelInterceptor {
 			var authentication = jwtAuthenticationConverter.convert(jwt);
 			accessor.setUser(authentication);
 			if (authentication != null && accessor.getSessionId() != null) {
-				sessions.authenticated(accessor.getSessionId(), authentication.getName());
+				// The account is looked up again when this token expires (see StompSessionRecheck).
+				var expiresAt = jwt.getExpiresAt();
+				sessions.authenticated(accessor.getSessionId(), authentication.getName(),
+						expiresAt != null ? expiresAt : Instant.EPOCH);
 			}
 		}
 		catch (JwtException e) {

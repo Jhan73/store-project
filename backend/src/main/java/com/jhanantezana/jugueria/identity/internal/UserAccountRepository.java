@@ -32,6 +32,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
 
 	long countByRoleAndActiveTrue(Role role);
 
+	boolean existsByIdAndActiveTrue(UUID id);
+
 	List<UserAccount> findByRoleAndActiveTrueOrderByEmail(Role role);
 
 	// Atomic so concurrent failures all count; an expired lock restarts the count instead of relocking.
