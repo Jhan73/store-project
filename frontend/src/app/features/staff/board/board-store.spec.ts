@@ -12,7 +12,7 @@ import { RealtimeClient } from '../../../core/realtime/realtime-client';
 import { BoardApi } from './board-api';
 import { emptyAllDay, line, marker, minutesAgo, order } from '../../../testing/board-fixtures';
 import { BoardSound } from './board-sound';
-import { BoardStore } from './board-store';
+import { BACKGROUND_FAILURES_BEFORE_FAILED, BoardStore } from './board-store';
 
 const BASE = 'http://api.test/api/v1';
 const TICKETS = `${BASE}/board/tickets`;
@@ -441,6 +441,66 @@ describe('BoardStore', () => {
     vi.advanceTimersByTime(60_000);
     answer([order({ id: 'fresh' })]);
     expect(store.cards().map((card) => card.order.id)).toEqual(['fresh']);
+  });
+
+  function failBackgroundRead() {
+    vi.advanceTimersByTime(60_000);
+    http.expectOne(TICKETS).flush(serverError, failure);
+    http.match(READY);
+    http.match(ALL_DAY);
+  }
+
+  it('marks the board as failed after several background re-reads in a row fail, keeping the cards', () => {
+    vi.useFakeTimers();
+    create();
+    answer();
+    connect([order({ id: 'kept' })]);
+
+    for (let failed = 1; failed < BACKGROUND_FAILURES_BEFORE_FAILED; failed++) {
+      failBackgroundRead();
+      expect(store.failed()).toBe(false);
+    }
+    failBackgroundRead();
+
+    expect(store.failed()).toBe(true);
+    expect(store.enabled()).toBe(false);
+    expect(store.cards().map((card) => card.order.id)).toEqual(['kept']);
+  });
+
+  it('clears the failure when the next background re-read succeeds', () => {
+    vi.useFakeTimers();
+    create();
+    answer();
+    connect();
+    for (let failed = 0; failed < BACKGROUND_FAILURES_BEFORE_FAILED; failed++) {
+      failBackgroundRead();
+    }
+    expect(store.failed()).toBe(true);
+
+    vi.advanceTimersByTime(60_000);
+    answer([order({ id: 'back' })]);
+
+    expect(store.failed()).toBe(false);
+    expect(store.enabled()).toBe(true);
+    expect(store.cards().map((card) => card.order.id)).toEqual(['back']);
+  });
+
+  it('counts only consecutive background failures: a success in between starts over', () => {
+    vi.useFakeTimers();
+    create();
+    answer();
+    connect();
+
+    for (let failed = 1; failed < BACKGROUND_FAILURES_BEFORE_FAILED; failed++) {
+      failBackgroundRead();
+    }
+    vi.advanceTimersByTime(60_000);
+    answer();
+    for (let failed = 1; failed < BACKGROUND_FAILURES_BEFORE_FAILED; failed++) {
+      failBackgroundRead();
+    }
+
+    expect(store.failed()).toBe(false);
   });
 
   it('does not poll while disconnected', () => {

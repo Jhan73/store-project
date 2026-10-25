@@ -280,9 +280,73 @@ describe('RealtimeClient', () => {
       vi.advanceTimersByTime(1_000);
       last().open();
       last().connected();
-      expect(refetches).toBe(2);
-      vi.advanceTimersByTime(10_000);
       expect(refetches).toBe(3);
+    });
+
+    it('re-fetches at once on the first reconnection, however short the outage was', () => {
+      setup();
+      let refetches = 0;
+      subscriptions.push(client.refetch('/topic/board').subscribe(() => refetches++));
+      last().open();
+      last().connected();
+      vi.advanceTimersByTime(30_000);
+      expect(refetches).toBe(1);
+
+      last().close();
+      vi.advanceTimersByTime(1_000);
+      last().open();
+      last().connected();
+
+      expect(refetches).toBe(2);
+    });
+
+    it('waits for the connection to stay up when it reconnects a second time in a row', () => {
+      setup();
+      let refetches = 0;
+      subscriptions.push(client.refetch('/topic/board').subscribe(() => refetches++));
+      last().open();
+      last().connected();
+      vi.advanceTimersByTime(30_000);
+      last().close();
+      vi.advanceTimersByTime(1_000);
+      last().open();
+      last().connected();
+      expect(refetches).toBe(2);
+
+      last().close();
+      vi.advanceTimersByTime(2_000);
+      last().open();
+      last().connected();
+      expect(refetches).toBe(2);
+      vi.advanceTimersByTime(9_999);
+      expect(refetches).toBe(2);
+      vi.advanceTimersByTime(1);
+      expect(refetches).toBe(3);
+    });
+
+    it('goes back to re-fetching at once after a connection stayed healthy', () => {
+      setup();
+      let refetches = 0;
+      subscriptions.push(client.refetch('/topic/board').subscribe(() => refetches++));
+      last().open();
+      last().connected();
+      last().close();
+      vi.advanceTimersByTime(1_000);
+      last().open();
+      last().connected();
+      last().close();
+      vi.advanceTimersByTime(2_000);
+      last().open();
+      last().connected();
+      vi.advanceTimersByTime(10_000);
+      const settled = refetches;
+
+      last().close();
+      vi.advanceTimersByTime(1_000);
+      last().open();
+      last().connected();
+
+      expect(refetches).toBe(settled + 1);
     });
 
     it('keeps growing the delay when the broker rejects a subscription after CONNECTED', () => {
@@ -337,7 +401,76 @@ describe('RealtimeClient', () => {
         vi.advanceTimersByTime(5_000);
       }
 
-      expect(refetches).toBe(1);
+      // Only the first reconnection re-fetches; the others wait for a connection that stays up.
+      expect(refetches).toBe(2);
+    });
+
+    describe('when the browser comes back online', () => {
+      const comeBackOnline = () => window.dispatchEvent(new Event('online'));
+
+      it('reconnects at once instead of waiting out the delay', () => {
+        setup();
+        watch('/topic/board');
+        last().open();
+        last().connected();
+        last().close();
+        expect(FakeSocket.instances).toHaveLength(1);
+
+        comeBackOnline();
+
+        expect(FakeSocket.instances).toHaveLength(2);
+        vi.advanceTimersByTime(60_000);
+        expect(FakeSocket.instances).toHaveLength(2);
+      });
+
+      it('starts the delay over, so the next failure waits the shortest time', () => {
+        setup();
+        watch('/topic/board');
+        for (let attempt = 0; attempt < 4; attempt++) {
+          last().close();
+          vi.advanceTimersByTime(30_000);
+        }
+        last().close();
+        const before = FakeSocket.instances.length;
+
+        comeBackOnline();
+        last().close();
+        vi.advanceTimersByTime(999);
+        expect(FakeSocket.instances).toHaveLength(before + 1);
+        vi.advanceTimersByTime(1);
+        expect(FakeSocket.instances).toHaveLength(before + 2);
+      });
+
+      it('replaces a connection attempt that never finished', () => {
+        setup();
+        watch('/topic/board');
+        const stuck = last();
+
+        comeBackOnline();
+
+        expect(stuck.closed).toBe(true);
+        expect(FakeSocket.instances).toHaveLength(2);
+      });
+
+      it('leaves a live connection alone', () => {
+        setup();
+        watch('/topic/board');
+        last().open();
+        last().connected();
+
+        comeBackOnline();
+
+        expect(FakeSocket.instances).toHaveLength(1);
+        expect(last().closed).toBe(false);
+      });
+
+      it('does nothing when nobody is listening', () => {
+        setup();
+
+        comeBackOnline();
+
+        expect(FakeSocket.instances).toHaveLength(0);
+      });
     });
   });
 

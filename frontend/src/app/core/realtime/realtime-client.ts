@@ -1,6 +1,7 @@
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import {
   computed,
+  DestroyRef,
   effect,
   inject,
   Injectable,
@@ -35,6 +36,8 @@ const MAX_DELAY_MS = 30_000;
 // A connection counts as healthy only after surviving this long; a broker that accepts CONNECT and then
 // rejects a SUBSCRIBE would otherwise reset the backoff on every cycle.
 const STABLE_AFTER_MS = 10_000;
+// Connections since the last stable one that re-fetch as soon as they are up: the first and the first reconnection.
+const IMMEDIATE_CONNECTIONS = 2;
 
 interface Topic {
   readonly subject: Subject<RealtimeMessage>;
@@ -72,6 +75,7 @@ export class RealtimeClient {
   private identity: string | null = null;
   private usedToken = false;
   private attempts = 0;
+  private unstableConnections = 0;
   private nextTopicId = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | undefined;
   private pingTimer: ReturnType<typeof setInterval> | undefined;
@@ -84,6 +88,12 @@ export class RealtimeClient {
   readonly isConnected = computed(() => this.status() === 'connected');
 
   constructor() {
+    const page = inject(DOCUMENT).defaultView;
+    if (this.isBrowser && page) {
+      const online = () => this.cameBackOnline();
+      page.addEventListener('online', online);
+      inject(DestroyRef).onDestroy(() => page.removeEventListener('online', online));
+    }
     // The broker validates the token only at CONNECT, so a different user needs a new connection.
     effect(() => {
       const userId = this.auth.session()?.userId ?? null;
@@ -196,14 +206,18 @@ export class RealtimeClient {
     for (const [destination, topic] of this.topics) {
       this.sendSubscribe(destination, topic);
     }
-    // After a recent failure, wait for the connection to prove itself so a flapping one does not hammer REST.
-    if (this.attempts === 0) {
+    // The first connection and the first reconnection re-fetch at once, so a short blip costs nothing. From the second
+    // one in a row the connection must prove itself first, so a flapping one does not hammer REST.
+    this.unstableConnections++;
+    if (this.unstableConnections <= IMMEDIATE_CONNECTIONS) {
       this.connected.next();
     } else {
       this.resyncPending = true;
     }
     this.stableTimer = setTimeout(() => {
       this.attempts = 0;
+      // The connection that proved itself is the one a later reconnection follows.
+      this.unstableConnections = 1;
       if (this.resyncPending) {
         this.resyncPending = false;
         this.connected.next();
@@ -266,8 +280,19 @@ export class RealtimeClient {
     this.socket = null;
     this.stopHeartBeats();
     previous?.close();
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
     this.attempts = 0;
+    this.unstableConnections = 0;
     this.open();
+  }
+
+  // The wait for the next attempt was sized for an outage that just ended, and an attempt made while offline may
+  // never answer: start over at once. A live connection is left alone; the heart-beat watchdog covers a dead one.
+  private cameBackOnline(): void {
+    if (this.topics.size > 0 && this.status() !== 'connected') {
+      this.restart();
+    }
   }
 
   private shutDown(): void {
@@ -277,6 +302,7 @@ export class RealtimeClient {
     const socket = this.socket;
     this.socket = null;
     this.attempts = 0;
+    this.unstableConnections = 0;
     this.status.set('idle');
     socket?.close();
   }

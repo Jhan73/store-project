@@ -42,6 +42,8 @@ const STATION_KEY = 'board.station';
 const CLOCK_TICK_MS = 30_000;
 // A scheduled card is hidden by the API until it fires and nothing signals that moment, so the board asks again.
 const REFRESH_MS = 60_000;
+// Background reads that fail in a row before the board admits its data may be stale (about this many minutes).
+export const BACKGROUND_FAILURES_BEFORE_FAILED = 3;
 // A Ready can be flushed as the page closes, when no refresh can finish: the token must outlive the undo window.
 const TOKEN_MARGIN_MS = 30_000;
 
@@ -96,6 +98,7 @@ export class BoardStore {
   // Markers nobody has acknowledged as of the previous read; null until the first read has been applied.
   private knownMarkers: ReadonlySet<string> | null = null;
   private lastRequest = 0;
+  private backgroundFailures = 0;
 
   readonly view = this.currentView.asReadonly();
   readonly allDay = this.currentAllDay.asReadonly();
@@ -246,7 +249,8 @@ export class BoardStore {
     this.load();
   }
 
-  // A background read that fails keeps the last good data and tries again on the next tick.
+  // A background read that fails keeps the last good data and tries again on the next tick; only after several in a
+  // row does the board admit it may be stale.
   load(background = false): void {
     const request = ++this.lastRequest;
     const read = this.sync.begin();
@@ -265,14 +269,22 @@ export class BoardStore {
           this.offset.set(clockOffsetMs(tickets.serverDate, Date.now()));
           this.now.set(Date.now());
           this.loadFailed.set(false);
+          this.backgroundFailures = 0;
           this.loaded.set(true);
           this.sync.applied(read);
         },
         error: (error: unknown) => {
-          if (request === this.lastRequest && !background) {
+          if (request !== this.lastRequest) {
+            return;
+          }
+          if (!background) {
             this.loadFailed.set(true);
             this.sync.failed();
             this.notifier.show(error);
+          } else if (++this.backgroundFailures >= BACKGROUND_FAILURES_BEFORE_FAILED) {
+            // No toast: the banner is on screen and the next read tries again by itself.
+            this.loadFailed.set(true);
+            this.sync.failed();
           }
         },
       });
