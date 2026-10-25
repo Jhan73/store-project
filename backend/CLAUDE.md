@@ -92,6 +92,7 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 - Exception: commands needing an atomic decision across two modules (voiding a line, cancelling an order vs board state, sending a ticket, moving it to another table) call the other module's API synchronously in the same transaction. Keep this list short and documented in the module's API.
 - Every command that changes an audited entity (PRD FR-AUD-01) publishes a domain event, even with no other consumer. The event carries the before/after snapshot the audit row needs (products, categories, stations, and modifier groups do).
 - No cyclic dependencies between modules.
+- **Delete only what nothing refers to.** A record other modules or tables point at by ID is deleted only when unused, through a usage guard SPI owned by the entity's module and implemented by each module that stores its id (`catalog.ProductUsageGuard`, `store.DeliveryZoneUsageGuard`, like `ProductAvailabilityGuard`); a module that starts storing such an id adds its guard in the same change. List responses expose `deletable`, the `DELETE` re-checks inside its transaction and answers `409 <entity>.in-use`, and the deletion publishes its full snapshot for the audit trail (tech-spec §4.7).
 
 **Consistency and concurrency**
 - Stock, board state, and slot capacity change through **conditional atomic updates** (`UPDATE … WHERE <precondition>`; 0 rows ⇒ business rejection). No read-check-write in Java.
