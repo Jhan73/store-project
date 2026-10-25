@@ -124,6 +124,10 @@ Likely candidates: `ordering`, `instore`. Expected to stay layered: `catalog`, `
 **Real-time**
 - STOMP over `/ws` with the in-memory broker. Cross-instance fan-out: publish `NOTIFY app_events` after commit; each task's `LISTEN` connection forwards to local subscribers.
 - Payloads carry only type + IDs; clients re-fetch via REST.
+- The board and display signals are not outbox listeners: `SignalBoardOnBoardChanged` and `SignalDisplayOnBoardChanged` are `@EventListener`s that go through `AfterCommitSignals` (NOTIFY right after commit, nothing on rollback, a failure only logged). Every other topic stays an `@ApplicationModuleListener`.
+- After every reconnection of the `LISTEN` connection `AppEventsListener` sends a `RESYNC` signal to its own subscribers of every subscribable topic; the loop catches `RuntimeException` too and never dies.
+- A STOMP session is authenticated once; `StompSessionRecheck` looks the account up (`shared.AccountActivity`) when its token expires and closes the sessions of an inactive one. A new listener or job that needs identity data across modules uses a port in `shared`, as `AccountActivity` does.
+- `IncompleteEventPublicationsJob` resubmits only what `EventPublicationClaims` claimed with `SKIP LOCKED`; a publication that failed `max-attempts` times is parked (`dead_lettered_at`), and the error log lines it writes are the signal (no alarm exists).
 
 **Logging**
 - Structured JSON with `correlation_id`; never log passwords, tokens, or full addresses.

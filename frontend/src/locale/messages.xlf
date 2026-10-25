@@ -1664,8 +1664,8 @@
         <note category="location">src/app/features/admin/stock/stock-track-dialog.ts:156</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:120</note>
         <note category="location">src/app/features/admin/users/staff-list.ts:272</note>
-        <note category="location">src/app/features/staff/board/board.ts:169</note>
-        <note category="location">src/app/features/staff/board/board.ts:191</note>
+        <note category="location">src/app/features/staff/board/board.ts:177</note>
+        <note category="location">src/app/features/staff/board/board.ts:199</note>
         <note category="location">src/app/features/staff/quick-sale/quick-sale.ts:275</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:105</note>
         <note category="location">src/app/features/staff/register/cash-movements.ts:130</note>
@@ -5664,7 +5664,7 @@
     </unit>
     <unit id="display.preparing">
       <notes>
-        <note category="location">src/app/features/display/display.ts:15,17</note>
+        <note category="location">src/app/features/display/display.ts:20,22</note>
       </notes>
       <segment>
         <source>Preparando</source>
@@ -5672,8 +5672,8 @@
     </unit>
     <unit id="display.empty">
       <notes>
-        <note category="location">src/app/features/display/display.ts:27,29</note>
-        <note category="location">src/app/features/display/display.ts:43,45</note>
+        <note category="location">src/app/features/display/display.ts:32,34</note>
+        <note category="location">src/app/features/display/display.ts:48,50</note>
       </notes>
       <segment>
         <source>Sin pedidos</source>
@@ -5681,7 +5681,7 @@
     </unit>
     <unit id="display.ready">
       <notes>
-        <note category="location">src/app/features/display/display.ts:31,33</note>
+        <note category="location">src/app/features/display/display.ts:36,38</note>
       </notes>
       <segment>
         <source>Listos para recoger</source>
@@ -5689,10 +5689,26 @@
     </unit>
     <unit id="display.stale">
       <notes>
-        <note category="location">src/app/features/display/display.ts:48,52</note>
+        <note category="location">src/app/features/display/display.ts:53,55</note>
       </notes>
       <segment>
         <source>Actualizando…</source>
+      </segment>
+    </unit>
+    <unit id="display.sessionEnded">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:58,60</note>
+      </notes>
+      <segment>
+        <source>La sesión terminó: los números dejarán de actualizarse hasta que alguien inicie sesión de nuevo.</source>
+      </segment>
+    </unit>
+    <unit id="display.signIn">
+      <notes>
+        <note category="location">src/app/features/display/display.ts:60,63</note>
+      </notes>
+      <segment>
+        <source>Iniciar sesión</source>
       </segment>
     </unit>
     <unit id="forbidden.title">
@@ -6160,7 +6176,7 @@
     </unit>
     <unit id="staff.board.failed">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:44,46</note>
+        <note category="location">src/app/features/staff/board/board.ts:47,49</note>
       </notes>
       <segment>
         <source>No se pudo actualizar el tablero. Las acciones están deshabilitadas.</source>
@@ -6168,7 +6184,7 @@
     </unit>
     <unit id="staff.board.retry.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:52,53</note>
+        <note category="location">src/app/features/staff/board/board.ts:55,56</note>
       </notes>
       <segment>
         <source>Volver a cargar el tablero</source>
@@ -6176,7 +6192,7 @@
     </unit>
     <unit id="staff.board.retry">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:57,59</note>
+        <note category="location">src/app/features/staff/board/board.ts:60,62</note>
       </notes>
       <segment>
         <source>Reintentar</source>
@@ -6184,7 +6200,7 @@
     </unit>
     <unit id="staff.board.offline">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:63,65</note>
+        <note category="location">src/app/features/staff/board/board.ts:66,68</note>
       </notes>
       <segment>
         <source>Sin conexión en tiempo real. Las acciones se habilitan al reconectar.</source>
@@ -6192,7 +6208,7 @@
     </unit>
     <unit id="staff.board.updating">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:69,71</note>
+        <note category="location">src/app/features/staff/board/board.ts:72,74</note>
       </notes>
       <segment>
         <source>Actualizando el tablero. Las acciones se habilitan en unos segundos.</source>
@@ -6200,7 +6216,7 @@
     </unit>
     <unit id="staff.board.sound.unsupported">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:78,81</note>
+        <note category="location">src/app/features/staff/board/board.ts:86,89</note>
       </notes>
       <segment>
         <source>Este navegador no permite sonido. Mira el tablero para ver los avisos nuevos.</source>
@@ -6208,7 +6224,7 @@
     </unit>
     <unit id="staff.board.sound.off">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:85,87</note>
+        <note category="location">src/app/features/staff/board/board.ts:93,95</note>
       </notes>
       <segment>
         <source>Sonido desactivado: no sonarán los avisos de pedidos nuevos, modificados o anulados.</source>
@@ -6216,7 +6232,7 @@
     </unit>
     <unit id="staff.board.sound.enable.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:92,93</note>
+        <note category="location">src/app/features/staff/board/board.ts:100,101</note>
       </notes>
       <segment>
         <source>Activar los sonidos de aviso del tablero</source>
@@ -6224,7 +6240,7 @@
     </unit>
     <unit id="staff.board.sound.enable">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:97,99</note>
+        <note category="location">src/app/features/staff/board/board.ts:105,108</note>
       </notes>
       <segment>
         <source>Activar sonido</source>
@@ -6232,7 +6248,7 @@
     </unit>
     <unit id="staff.board.title">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:102,103</note>
+        <note category="location">src/app/features/staff/board/board.ts:110,111</note>
       </notes>
       <segment>
         <source>Tablero</source>
@@ -6240,7 +6256,7 @@
     </unit>
     <unit id="staff.board.sound.on">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:106,110</note>
+        <note category="location">src/app/features/staff/board/board.ts:114,118</note>
       </notes>
       <segment>
         <source>Sonido activado</source>
@@ -6248,7 +6264,7 @@
     </unit>
     <unit id="staff.board.views">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:110</note>
+        <note category="location">src/app/features/staff/board/board.ts:118</note>
       </notes>
       <segment>
         <source>Vistas del tablero</source>
@@ -6256,7 +6272,7 @@
     </unit>
     <unit id="staff.board.view.tickets.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:117,118</note>
+        <note category="location">src/app/features/staff/board/board.ts:125,126</note>
       </notes>
       <segment>
         <source>Ver los pedidos por preparar</source>
@@ -6264,7 +6280,7 @@
     </unit>
     <unit id="staff.board.view.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:123,124</note>
+        <note category="location">src/app/features/staff/board/board.ts:131,132</note>
       </notes>
       <segment>
         <source>Pedidos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.ticketCount() }}"/>)</source>
@@ -6272,7 +6288,7 @@
     </unit>
     <unit id="staff.board.view.allDay.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:131,132</note>
+        <note category="location">src/app/features/staff/board/board.ts:139,140</note>
       </notes>
       <segment>
         <source>Ver el total de cada producto pendiente</source>
@@ -6280,7 +6296,7 @@
     </unit>
     <unit id="staff.board.view.allDay">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:137,139</note>
+        <note category="location">src/app/features/staff/board/board.ts:145,148</note>
       </notes>
       <segment>
         <source>Todo el día</source>
@@ -6288,7 +6304,7 @@
     </unit>
     <unit id="staff.board.view.ready.tooltip">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:145,146</note>
+        <note category="location">src/app/features/staff/board/board.ts:153,154</note>
       </notes>
       <segment>
         <source>Ver los pedidos listos para entregar</source>
@@ -6296,7 +6312,7 @@
     </unit>
     <unit id="staff.board.view.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:151,152</note>
+        <note category="location">src/app/features/staff/board/board.ts:159,160</note>
       </notes>
       <segment>
         <source>Listos (<ph id="0" equiv="INTERPOLATION" disp="{{ store.readyCount() }}"/>)</source>
@@ -6304,7 +6320,7 @@
     </unit>
     <unit id="staff.board.station">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:157,159</note>
+        <note category="location">src/app/features/staff/board/board.ts:165,167</note>
       </notes>
       <segment>
         <source>Estación</source>
@@ -6312,7 +6328,7 @@
     </unit>
     <unit id="staff.board.order">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:179,180</note>
+        <note category="location">src/app/features/staff/board/board.ts:187,189</note>
       </notes>
       <segment>
         <source>Orden</source>
@@ -6320,7 +6336,7 @@
     </unit>
     <unit id="staff.board.attention">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:203,205</note>
+        <note category="location">src/app/features/staff/board/board.ts:211,213</note>
       </notes>
       <segment>
         <source>Solo con notas o alergias</source>
@@ -6328,7 +6344,7 @@
     </unit>
     <unit id="staff.board.empty.attention">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:237,238</note>
+        <note category="location">src/app/features/staff/board/board.ts:245,246</note>
       </notes>
       <segment>
         <source>Ningún pedido tiene notas ni alergias.</source>
@@ -6336,7 +6352,7 @@
     </unit>
     <unit id="staff.board.empty.ready">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:239,241</note>
+        <note category="location">src/app/features/staff/board/board.ts:247,249</note>
       </notes>
       <segment>
         <source>No hay pedidos listos para entregar.</source>
@@ -6344,7 +6360,7 @@
     </unit>
     <unit id="staff.board.empty.tickets">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:241,246</note>
+        <note category="location">src/app/features/staff/board/board.ts:249,255</note>
       </notes>
       <segment>
         <source>No hay pedidos por preparar.</source>
@@ -6352,7 +6368,7 @@
     </unit>
     <unit id="staff.board.station.all">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:263</note>
+        <note category="location">src/app/features/staff/board/board.ts:272</note>
       </notes>
       <segment>
         <source>Todas las estaciones</source>
@@ -6360,7 +6376,7 @@
     </unit>
     <unit id="staff.board.order.elapsed">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:268</note>
+        <note category="location">src/app/features/staff/board/board.ts:277</note>
       </notes>
       <segment>
         <source>Más tiempo transcurrido</source>
@@ -6368,7 +6384,7 @@
     </unit>
     <unit id="staff.board.order.arrivalAsc">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:269</note>
+        <note category="location">src/app/features/staff/board/board.ts:278</note>
       </notes>
       <segment>
         <source>Llegada: más antiguos primero</source>
@@ -6376,7 +6392,7 @@
     </unit>
     <unit id="staff.board.order.arrivalDesc">
       <notes>
-        <note category="location">src/app/features/staff/board/board.ts:270</note>
+        <note category="location">src/app/features/staff/board/board.ts:279</note>
       </notes>
       <segment>
         <source>Llegada: más recientes primero</source>
@@ -9799,6 +9815,30 @@
       </notes>
       <segment>
         <source>Elige entre <ph id="0" equiv="min" disp="min"/> y <ph id="1" equiv="max" disp="max"/> opciones</source>
+      </segment>
+    </unit>
+    <unit id="shared.sessionExpiry.days">
+      <notes>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:24,26</note>
+      </notes>
+      <segment>
+        <source>La sesión de esta pantalla vence en <ph id="0" equiv="ICU" disp="{daysLeft(), plural, =1 {1 día} other {{{ daysLeft() }} días}}" subFlows="3011404153726310493"/>. Alguien del equipo debe volver a iniciar sesión antes para que no se detenga.</source>
+      </segment>
+    </unit>
+    <unit id="7043237877750874746">
+      <notes>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:24</note>
+      </notes>
+      <segment>
+        <source>{VAR_PLURAL, plural, =1 {1 día} other {<ph id="0" equiv="INTERPOLATION"/> días}}</source>
+      </segment>
+    </unit>
+    <unit id="shared.sessionExpiry.soon">
+      <notes>
+        <note category="location">src/app/shared/ui/session-expiry-banner/session-expiry-banner.ts:29,32</note>
+      </notes>
+      <segment>
+        <source>La sesión de esta pantalla vence en menos de un día. Alguien del equipo debe volver a iniciar sesión ya para que no se detenga.</source>
       </segment>
     </unit>
     <unit id="shared.undo.tooltip">
