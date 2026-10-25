@@ -1,8 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
+import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
+import { AuthStore } from '../../core/auth/auth-store';
 import { API_ORIGIN } from '../../core/api/api-config';
 import type { CustomerDisplay } from '../../core/api/api-types';
 import { RealtimeClient } from '../../core/realtime/realtime-client';
@@ -27,9 +29,11 @@ describe('Display', () => {
   let realtime: FakeRealtime;
   let wakeLock: { start: ReturnType<typeof vi.fn> };
   let http: HttpTestingController;
+  let auth: { sessionExpiresAt: WritableSignal<number | null>; sessionEnded: WritableSignal<boolean> };
 
   beforeEach(() => {
     realtime = new FakeRealtime();
+    auth = { sessionExpiresAt: signal<number | null>(null), sessionEnded: signal(false) };
     wakeLock = { start: vi.fn() };
     TestBed.overrideComponent(Display, {
       set: { providers: [DisplayStore, { provide: ScreenWakeLock, useValue: wakeLock }] },
@@ -38,7 +42,9 @@ describe('Display', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideRouter([]),
         DisplayApi,
+        { provide: AuthStore, useValue: auth },
         { provide: RealtimeClient, useValue: realtime },
         { provide: API_ORIGIN, useValue: 'http://api.test' },
       ],
@@ -142,5 +148,42 @@ describe('Display', () => {
     const fixture = await open('failure');
 
     expect(host(fixture).querySelector('[data-testid="stale"]')).not.toBeNull();
+  });
+
+  describe('session', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+
+    it('warns a few days before the sign-in ends, without removing anything', async () => {
+      auth.sessionExpiresAt.set(Date.now() + 2 * DAY + 60_000);
+      const fixture = await open({ preparing: [{ shortNumber: 'L-001', firstName: 'Ana' }], ready: [] });
+
+      expect(host(fixture).querySelector('[data-testid="session-expiry-banner"]')?.textContent).toContain('2 días');
+      expect(entries(fixture, 'preparing')).toEqual([['L-001', 'Ana']]);
+    });
+
+    it('shows no warning while the end of the session is far or unknown', async () => {
+      auth.sessionExpiresAt.set(Date.now() + 20 * DAY);
+      const fixture = await open({ preparing: [], ready: [] });
+
+      expect(host(fixture).querySelector('[data-testid="session-expiry-banner"]')).toBeNull();
+    });
+
+    it('keeps the last numbers and offers the sign-in once the session has ended', async () => {
+      const fixture = await open({
+        preparing: [{ shortNumber: 'L-001', firstName: 'Ana' }],
+        ready: [{ shortNumber: 'L-002', firstName: null }],
+      });
+
+      auth.sessionEnded.set(true);
+      await fixture.whenStable();
+
+      expect(entries(fixture, 'preparing')).toEqual([['L-001', 'Ana']]);
+      expect(entries(fixture, 'ready')).toEqual([['L-002']]);
+      const notice = host(fixture).querySelector('[data-testid="session-ended"]');
+      expect(notice?.textContent).toContain('La sesión terminó');
+      const link = notice?.querySelector('a');
+      expect(link?.getAttribute('href')).toContain('/login');
+      expect(link?.getAttribute('href')).toContain('returnUrl=%2Fdisplay');
+    });
   });
 });

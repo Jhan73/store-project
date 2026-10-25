@@ -33,6 +33,8 @@ export const routes: Routes = [
   {
     path: 'display',
     title: $localize`:@@display.pageTitle:Pedidos`,
+    // The screen keeps its numbers when the session ends and offers the sign-in itself.
+    data: { keepOnSessionEnd: true },
     canMatch: [roleGuard('SERVER', 'CASHIER', 'ADMIN')],
     providers: [DisplayApi],
     loadComponent: () => import('./features/display/display').then((m) => m.Display),

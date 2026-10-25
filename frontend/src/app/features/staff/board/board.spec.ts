@@ -313,6 +313,36 @@ describe('Board', () => {
     });
   });
 
+  describe('session expiry', () => {
+    const DAY = 24 * 60 * 60 * 1000;
+
+    async function signInEndingIn(ms: number) {
+      const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });
+      http.expectOne(`${BASE}/auth/login`).flush({
+        accessToken: 'jwt',
+        tokenType: 'Bearer',
+        userId: 'u',
+        role: 'KITCHEN',
+        sessionExpiresAt: new Date(Date.now() + ms).toISOString(),
+      });
+      await login;
+    }
+
+    it('warns a few days before the sign-in ends', async () => {
+      await signInEndingIn(2 * DAY + 60_000);
+      const fixture = await live([order({ id: 'a' })]);
+
+      expect(query(fixture, 'session-expiry-banner')?.textContent).toContain('2 días');
+    });
+
+    it('stays quiet while the sign-in has weeks left', async () => {
+      await signInEndingIn(20 * DAY);
+      const fixture = await live([order({ id: 'a' })]);
+
+      expect(query(fixture, 'session-expiry-banner')).toBeNull();
+    });
+  });
+
   describe('kitchen device', () => {
     async function signInAs(role: Role) {
       const login = TestBed.inject(AuthStore).login({ email: 'a@b.pe', password: 'x' });

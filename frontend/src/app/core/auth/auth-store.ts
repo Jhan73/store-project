@@ -6,6 +6,8 @@ import { AuthApi } from './auth-api';
 import { runExclusive } from './refresh-lock';
 
 export interface Session {
+  // When the refresh token family ends and the sign-in must be repeated; null when the server did not say.
+  readonly sessionExpiresAt: number | null;
   readonly accessToken: string;
   readonly userId: string;
   readonly role: Role;
@@ -30,8 +32,13 @@ function expiryOf(token: string): number | null {
   }
 }
 
-function toSession({ accessToken, userId, role }: LoginResponse): Session {
-  return { accessToken, userId, role };
+function instantOf(value: string | undefined): number | null {
+  const instant = value === undefined ? Number.NaN : Date.parse(value);
+  return Number.isNaN(instant) ? null : instant;
+}
+
+function toSession({ accessToken, userId, role, sessionExpiresAt }: LoginResponse): Session {
+  return { accessToken, userId, role, sessionExpiresAt: instantOf(sessionExpiresAt) };
 }
 
 function isRejection(error: unknown): boolean {
@@ -49,7 +56,7 @@ export class AuthStore {
   private inFlight: Promise<RefreshOutcome> | null = null;
   // Bumped by login and logout so a refresh that started before them cannot change the session afterwards.
   private generation = 0;
-  private ended = false;
+  private readonly endedState = signal(false);
   private readonly signOutHooks = new Set<() => Promise<void> | void>();
 
   readonly session = this.state.asReadonly();
@@ -59,6 +66,10 @@ export class AuthStore {
   readonly refreshError = this.failure.asReadonly();
   // True when a refresh brought another user's session (the cookie is shared between tabs); until the next login.
   readonly identityChanged = this.identityShift.asReadonly();
+  // True once the server refused the session, until the next login.
+  readonly sessionEnded = this.endedState.asReadonly();
+  // When the refresh token family ends; null when nobody is signed in or the server did not say.
+  readonly sessionExpiresAt = computed(() => this.state()?.sessionExpiresAt ?? null);
 
   accessToken(): string | null {
     return this.state()?.accessToken ?? null;
@@ -66,13 +77,13 @@ export class AuthStore {
 
   // True once the server refused the session, until the next login.
   hasEnded(): boolean {
-    return this.ended;
+    return this.endedState();
   }
 
   async login(credentials: LoginRequest): Promise<void> {
     const response = await firstValueFrom(this.api.login(credentials));
     this.generation++;
-    this.ended = false;
+    this.endedState.set(false);
     this.identityShift.set(false);
     this.failure.set(null);
     this.state.set(toSession(response));
@@ -131,7 +142,7 @@ export class AuthStore {
       }
     }
     this.generation++;
-    this.ended = true;
+    this.endedState.set(true);
     this.restoration = Promise.resolve();
     this.state.set(null);
     return true;
@@ -156,13 +167,13 @@ export class AuthStore {
       if (previous !== null && previous.userId !== response.userId) {
         // Not a logout: the cookie now belongs to the other user, and revoking it would sign them out.
         this.state.set(null);
-        this.ended = true;
+        this.endedState.set(true);
         this.identityShift.set(true);
         this.failure.set(null);
         return 'rejected';
       }
       this.state.set(toSession(response));
-      this.ended = false;
+      this.endedState.set(false);
       this.failure.set(null);
       return 'refreshed';
     } catch (error) {
@@ -171,7 +182,7 @@ export class AuthStore {
       }
       if (isRejection(error)) {
         this.state.set(null);
-        this.ended = true;
+        this.endedState.set(true);
         this.failure.set(null);
         return 'rejected';
       }

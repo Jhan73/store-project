@@ -15,9 +15,11 @@ import { Select } from 'primeng/select';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { Tooltip } from 'primeng/tooltip';
 import { AuthStore } from '../../../core/auth/auth-store';
+import { SessionExpiryWarning } from '../../../core/auth/session-expiry-warning';
 import { ScreenWakeLock } from '../../../core/screen/screen-wake-lock';
 import { BoardAllDayView } from '../../../shared/ui/board-all-day/board-all-day';
 import { BoardCard } from '../../../shared/ui/board-card/board-card';
+import { SessionExpiryBanner } from '../../../shared/ui/session-expiry-banner/session-expiry-banner';
 import { BoardSound } from './board-sound';
 import { BoardSort, BoardStore } from './board-store';
 
@@ -26,6 +28,7 @@ import { BoardSort, BoardStore } from './board-store';
   imports: [
     BoardAllDayView,
     BoardCard,
+    SessionExpiryBanner,
     ButtonDirective,
     FormsModule,
     ReactiveFormsModule,
@@ -69,6 +72,11 @@ import { BoardSort, BoardStore } from './board-store';
           >Actualizando el tablero. Las acciones se habilitan en unos segundos.</ng-container
         >
       </div>
+    }
+
+    @let daysLeft = expiry.daysLeft();
+    @if (daysLeft !== null) {
+      <app-session-expiry-banner [daysLeft]="daysLeft" />
     }
 
     @if (sound.unsupported()) {
@@ -247,6 +255,7 @@ import { BoardSort, BoardStore } from './board-store';
 export class Board {
   protected readonly store = inject(BoardStore);
   private readonly auth = inject(AuthStore);
+  protected readonly expiry = inject(SessionExpiryWarning);
   protected readonly sound = inject(BoardSound);
   protected readonly icons = {
     retry: IconRefresh,

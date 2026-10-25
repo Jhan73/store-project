@@ -86,3 +86,16 @@ li {
   font-size: clamp(1rem, 1.5vw, 1.5rem);
   text-align: center;
 }
+
+.ended {
+  margin: var(--space-3) 0 0;
+  color: var(--foreground);
+  font-size: clamp(1rem, 1.5vw, 1.5rem);
+  font-weight: 600;
+  text-align: center;
+
+  a {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+}

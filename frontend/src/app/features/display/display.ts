@@ -1,11 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AuthStore } from '../../core/auth/auth-store';
+import { SessionExpiryWarning } from '../../core/auth/session-expiry-warning';
 import { ScreenWakeLock } from '../../core/screen/screen-wake-lock';
+import { SessionExpiryBanner } from '../../shared/ui/session-expiry-banner/session-expiry-banner';
 import { densityOf } from './display-density';
 import { DisplayStore } from './display-store';
 
 // A screen for customers: numbers and first names, nothing to click, nothing else of the order.
 @Component({
   selector: 'app-display',
+  imports: [RouterLink, SessionExpiryBanner],
   providers: [DisplayStore, ScreenWakeLock],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './display.scss',
@@ -47,10 +52,24 @@ import { DisplayStore } from './display-store';
     @if (store.failed() || !store.connected()) {
       <p class="stale" role="status" data-testid="stale" i18n="@@display.stale">Actualizando…</p>
     }
+    @if (auth.sessionEnded()) {
+      <p class="ended" role="status" data-testid="session-ended">
+        <ng-container i18n="@@display.sessionEnded"
+          >La sesión terminó: los números dejarán de actualizarse hasta que alguien inicie sesión de nuevo.</ng-container
+        >
+        <a routerLink="/login" [queryParams]="{ returnUrl: '/display' }" i18n="@@display.signIn">Iniciar sesión</a>
+      </p>
+    }
+    @let daysLeft = warning.daysLeft();
+    @if (daysLeft !== null) {
+      <app-session-expiry-banner [daysLeft]="daysLeft" />
+    }
   `,
 })
 export class Display {
   protected readonly store = inject(DisplayStore);
+  protected readonly auth = inject(AuthStore);
+  protected readonly warning = inject(SessionExpiryWarning);
   protected readonly density = computed(() =>
     densityOf(Math.max(this.store.preparing().length, this.store.ready().length)),
   );
