@@ -22,11 +22,11 @@ const ANA = '0199f3a2-0000-7000-8000-00000000000a';
 const BETO = '0199f3a2-0000-7000-8000-00000000000b';
 const ENTITY = '0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c';
 
-function staff(id: string, email: string): StaffMember {
-  return { id, email, role: 'ADMIN', active: true, createdAt: '2026-01-01T00:00:00Z' };
+function staff(id: string, email: string, username: string | null = null): StaffMember {
+  return { id, username, email, role: 'ADMIN', active: true, createdAt: '2026-01-01T00:00:00Z' };
 }
 
-const ana = staff(ANA, 'ana@juguera.pe');
+const ana = staff(ANA, 'ana@juguera.pe', 'Ana');
 const beto = staff(BETO, 'beto@juguera.pe');
 
 const update: AuditEntry = {
@@ -53,7 +53,7 @@ const system: AuditEntry = {
   action: 'USER_CREATED',
   entityType: 'USER',
   before: null,
-  after: { email: 'x@y.pe' },
+  after: { username: 'Ana' },
   reason: null,
 };
 const stranger: AuditEntry = { ...update, id: 'e3', actorId: '0199f3a2-ffff-7000-8000-00000000ffff' };
@@ -153,7 +153,8 @@ describe('AuditLog', () => {
 
       const [first, second] = rows(host);
       expect(first).toContain('10:30');
-      expect(first).toContain('ana@juguera.pe');
+      expect(first).toContain('Ana');
+      expect(first).not.toContain('ana@juguera.pe');
       expect(first).toContain('Administrador');
       expect(first).toContain('PRODUCT_UPDATED');
       expect(first).toContain('Producto');
@@ -178,22 +179,41 @@ describe('AuditLog', () => {
     });
 
     it('shows the label stored with the row for an actor that no longer exists, never its raw id', async () => {
-      const deleted: AuditEntry = { ...stranger, actorLabel: 'luz@juguera.pe', entityLabel: 'Jugo de mango' };
+      const deleted: AuditEntry = { ...stranger, actorLabel: 'Luz', entityLabel: 'Jugo de mango' };
       const { host } = await rendered('/audit', page([deleted]));
 
       const [row] = rows(host);
-      expect(row).toContain('luz@juguera.pe');
+      expect(row).toContain('Luz');
       expect(row).not.toContain('0199f3a2…');
       expect(row).toContain('Jugo de mango');
     });
 
-    it('shows the live account only as a complement when the stored label differs', async () => {
-      const renamed: AuditEntry = { ...update, actorLabel: 'ana.old@juguera.pe' };
+    it('shows the role the actor had at the time as a tag beside the name', async () => {
+      const cashier: AuditEntry = { ...update, actorLabel: 'Ana', actorRole: 'CASHIER' };
+      const { host } = await rendered('/audit', page([cashier]));
+
+      const tag = host.querySelector('tbody tr td app-status-tag');
+      expect(tag?.textContent).toContain('Cajero');
+      expect(rows(host)[0]).toContain('Ana');
+    });
+
+    it('prefers the stored label to the live username, which may have changed since', async () => {
+      const renamed: AuditEntry = { ...update, actorLabel: 'Ana vieja' };
       const { host } = await rendered('/audit', page([renamed]));
 
       const [row] = rows(host);
-      expect(row).toContain('ana.old@juguera.pe');
-      expect(row).toContain('ana@juguera.pe');
+      expect(row).toContain('Ana vieja');
+      expect(row.replace('Ana vieja', '')).not.toContain('Ana');
+    });
+
+    it('falls back to the live username, then to a shortened id, and never to an email', async () => {
+      const byBeto: AuditEntry = { ...update, id: 'e4', actorId: BETO };
+      const { host } = await rendered('/audit', page([update, byBeto]));
+
+      const [named, unnamed] = rows(host);
+      expect(named).toContain('Ana');
+      expect(unnamed).toContain('0199f3a2…');
+      expect(unnamed).not.toContain('beto@juguera.pe');
     });
 
     it('says "or more" when the total reached the point where the API stops counting', async () => {
@@ -432,7 +452,7 @@ describe('AuditLog', () => {
       });
       request.flush(page([]));
       await fixture.whenStable();
-      expect(selectedLabel(host, 'audit-actor')).toBe('ana@juguera.pe');
+      expect(selectedLabel(host, 'audit-actor')).toBe('Ana');
       expect(selectedLabel(host, 'audit-entity-type')).toBe('Personal');
       expect(selectedLabel(host, 'audit-action')).toBe('USER_CREATED');
       expect(host.querySelector<HTMLInputElement>('#audit-range')!.value).toBe(

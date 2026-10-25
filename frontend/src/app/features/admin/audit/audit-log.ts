@@ -24,6 +24,7 @@ import { formatInStoreZone } from '../../../core/time/store-time';
 import { datePickerAriaInvalid } from '../../../shared/forms/aria-invalid';
 import { DataColumn, DataTable, type DataTableLazyEvent } from '../../../shared/ui/data-table/data-table';
 import { FormField } from '../../../shared/ui/form-field/form-field';
+import { StatusTag } from '../../../shared/ui/status-tag/status-tag';
 import { AuditApi } from './audit-api';
 import { AuditDetail } from './audit-detail';
 import {
@@ -67,6 +68,7 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
     FormField,
     Tooltip,
     AuditDetail,
+    StatusTag,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['../admin-section.scss', './audit-log.scss'],
@@ -257,21 +259,16 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
               <time [attr.datetime]="entry.occurredAt">{{ when(entry) }}</time>
             </td>
             <td>
-              @if (actorText(entry); as text) {
-                <span>{{ text }}</span>
-              } @else if (entry.actorId) {
-                <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
-                  short(entry.actorId)
-                }}</code>
-              } @else {
-                <span>{{ roleName(entry) }}</span>
-              }
-              @if (liveAccount(entry); as live) {
-                <small class="muted">{{ live }}</small>
-              }
-              @if (entry.actorId) {
-                <small class="muted">{{ roleName(entry) }}</small>
-              }
+              <div class="actor">
+                @if (actorText(entry); as text) {
+                  <span>{{ text }}</span>
+                } @else if (entry.actorId) {
+                  <code class="id" [pTooltip]="entry.actorId" tooltipPosition="top">{{
+                    short(entry.actorId)
+                  }}</code>
+                }
+                <app-status-tag [value]="roleName(entry)" />
+              </div>
             </td>
             <td>
               <code>{{ entry.action }}</code>
@@ -327,7 +324,12 @@ const WHEN: Intl.DateTimeFormatOptions = { dateStyle: 'short', timeStyle: 'mediu
       (visibleChange)="closeIfHidden($event)"
     >
       @if (selected(); as entry) {
-        <app-audit-detail [entry]="entry" [when]="when(entry)" [actor]="actorName(entry)" />
+        <app-audit-detail
+          [entry]="entry"
+          [when]="when(entry)"
+          [actor]="actorName(entry)"
+          [role]="roleName(entry)"
+        />
       }
       <ng-template #footer>
         <button
@@ -408,7 +410,7 @@ export class AuditLog {
 
   protected readonly actorOptions = computed<Option[]>(() => {
     const options = this.staff()
-      .map((member) => ({ value: member.id, label: member.email }))
+      .map((member) => ({ value: member.id, label: member.username ?? member.email }))
       .sort((a, b) => a.label.localeCompare(b.label));
     const chosen = this.applied().actorId;
     return chosen && !this.staffById().has(chosen)
@@ -444,22 +446,17 @@ export class AuditLog {
     return formatInStoreZone(entry.occurredAt, this.timeZone(), WHEN);
   }
 
-  protected actorEmail(entry: AuditEntry): string | null {
-    return (entry.actorId && this.staffById().get(entry.actorId)?.email) || null;
+  protected liveUsername(entry: AuditEntry): string | null {
+    return (entry.actorId && this.staffById().get(entry.actorId)?.username) || null;
   }
 
   // The label stored with the row wins: the live account may have been renamed or deleted since.
   protected actorText(entry: AuditEntry): string | null {
-    return entry.actorLabel ?? this.actorEmail(entry);
-  }
-
-  protected liveAccount(entry: AuditEntry): string | null {
-    const live = this.actorEmail(entry);
-    return entry.actorLabel && live && live !== entry.actorLabel ? live : null;
+    return entry.actorLabel ?? this.liveUsername(entry);
   }
 
   protected actorName(entry: AuditEntry): string {
-    return this.actorText(entry) ?? (entry.actorId ? shortId(entry.actorId) : this.roleName(entry));
+    return this.actorText(entry) ?? (entry.actorId ? shortId(entry.actorId) : '');
   }
 
   protected roleName(entry: AuditEntry): string {

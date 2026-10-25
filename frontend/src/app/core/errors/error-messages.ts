@@ -50,6 +50,7 @@ export const ERROR_MESSAGES = {
   'identity.cannot-modify-own-account': $localize`:@@error.identity.cannot-modify-own-account:No puedes modificar tu propia cuenta.`,
   'identity.email-already-registered': $localize`:@@error.identity.email-already-registered:Ya existe una cuenta con ese correo.`,
   'identity.invalid-staff-role': $localize`:@@error.identity.invalid-staff-role:El rol elegido no es válido para el personal.`,
+  'identity.username-already-taken': $localize`:@@error.identity.username-already-taken:Ya hay una cuenta activa con ese nombre de usuario.`,
   'identity.last-active-admin-required': $localize`:@@error.identity.last-active-admin-required:Debe quedar al menos un administrador activo.`,
   'instore.invalid-date-range': $localize`:@@error.instore.invalid-date-range:La fecha final es anterior a la inicial.`,
   'instore.invalid-reason': $localize`:@@error.instore.invalid-reason:El motivo no es válido. Elige uno de la lista y, si es «Otro», escribe una nota.`,

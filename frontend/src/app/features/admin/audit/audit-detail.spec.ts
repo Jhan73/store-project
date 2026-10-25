@@ -18,11 +18,12 @@ const entry: AuditEntry = {
   actorLabel: null,
 };
 
-function render(value: AuditEntry) {
+function render(value: AuditEntry, actor = 'Ana', role = 'Administrador') {
   const fixture = TestBed.createComponent(AuditDetail);
   fixture.componentRef.setInput('entry', value);
   fixture.componentRef.setInput('when', '5/10/26, 10:30:00');
-  fixture.componentRef.setInput('actor', 'ana@juguera.pe');
+  fixture.componentRef.setInput('actor', actor);
+  fixture.componentRef.setInput('role', role);
   fixture.detectChanges();
   return fixture.nativeElement as HTMLElement;
 }
@@ -32,11 +33,23 @@ describe('AuditDetail', () => {
     const text = render(entry).textContent ?? '';
 
     expect(text).toContain('5/10/26, 10:30:00');
-    expect(text).toContain('ana@juguera.pe');
+    expect(text).toContain('Ana');
     expect(text).toContain('PRODUCT_UPDATED');
     expect(text).toContain('0199f3a2-7c1e-7b1a-8f00-3c1d2e4a5b6c');
     expect(text).toContain('Ajuste de precio');
     expect(text).toContain('req-1');
+  });
+
+  it('shows the role the actor had as a tag beside the name', () => {
+    const host = render(entry);
+
+    expect(host.querySelector('app-status-tag')?.textContent).toContain('Administrador');
+  });
+
+  it('shows the role alone when there is no named actor', () => {
+    const host = render({ ...entry, actorId: null, actorRole: 'SYSTEM' }, '', 'Sistema');
+
+    expect(host.querySelector('app-status-tag')?.textContent).toContain('Sistema');
   });
 
   it('names the entity by the label stored with the row and keeps the id beside it', () => {

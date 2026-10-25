@@ -24,7 +24,7 @@ function product(id: string): Product {
 }
 
 function member(id: string): StaffMember {
-  return { id, email: `${id}@juguera.pe`, role: 'SERVER', active: true, createdAt: '2026-01-01T00:00:00Z' };
+  return { id, username: null, email: `${id}@juguera.pe`, role: 'SERVER', active: true, createdAt: '2026-01-01T00:00:00Z' };
 }
 
 describe('StockApi', () => {
