@@ -72,7 +72,7 @@ class AuditRollbackIT {
 			.uri(STAFF)
 			.with(admin())
 			.contentType(MediaType.APPLICATION_JSON)
-			.content("{\"email\":\"%s\",\"role\":\"CASHIER\"}".formatted(email))
+			.content("{\"username\":\"Rollback\",\"email\":\"%s\",\"role\":\"CASHIER\"}".formatted(email))
 			.exchange();
 
 		assertThat(result).hasStatus(HttpStatus.INTERNAL_SERVER_ERROR);
