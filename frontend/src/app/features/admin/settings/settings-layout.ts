@@ -46,6 +46,15 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             >Motivos</a
           >
         </li>
+        <li>
+          <a
+            routerLink="wallets"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            i18n="@@admin.settings.nav.wallets"
+            >Billeteras</a
+          >
+        </li>
       </ul>
     </nav>
     <router-outlet />

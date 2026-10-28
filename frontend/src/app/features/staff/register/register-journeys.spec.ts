@@ -88,7 +88,7 @@ describe('register journeys', () => {
     const request = http.expectOne(`${BASE}/quick-sales`);
     expect(request.request.body.customerName).toBe('Ana');
     expect(request.request.body.lines.map((line: { productId: string }) => line.productId)).toEqual(['a', 'b', 'c']);
-    expect(request.request.body.payment).toEqual({ method: 'CASH', receivedAmount: pen('50.00') });
+    expect(request.request.body.payment).toEqual({ method: 'CASH', receivedAmount: pen('50.00'), walletProviderId: null });
     request.flush(
       {
         id: 'k1',

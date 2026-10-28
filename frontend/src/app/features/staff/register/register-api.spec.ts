@@ -210,7 +210,7 @@ describe('RegisterApi', () => {
     const sale = {
       customerName: null,
       lines: [{ productId: 'p1', quantity: 1, modifierOptionIds: [], note: null, allergy: false }],
-      payment: { method: 'CARD' as const, receivedAmount: null },
+      payment: { method: 'CARD' as const, receivedAmount: null, walletProviderId: null },
     };
     api.quickSale(sale, 'key-4').subscribe();
     const request = http.expectOne(`${BASE}/quick-sales`);

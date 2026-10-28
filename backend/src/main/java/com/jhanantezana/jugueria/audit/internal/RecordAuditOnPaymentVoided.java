@@ -28,6 +28,7 @@ class RecordAuditOnPaymentVoided {
 		after.put("ticketId", event.ticketId().toString());
 		after.put("shiftId", event.shiftId() == null ? null : event.shiftId().toString());
 		after.put("method", event.method().name());
+		after.put("walletProvider", event.walletProviderName());
 		after.put("amount", event.amount().amount().toPlainString());
 		after.put("saleVoidId", event.saleVoidId() == null ? null : event.saleVoidId().toString());
 		auditLog.record(new AuditEntry(event.occurredAt(), event.actorId(), event.actorRole(), "PAYMENT_VOIDED",

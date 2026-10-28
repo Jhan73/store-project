@@ -10,7 +10,8 @@ import com.jhanantezana.jugueria.instore.PaymentMethod;
 import com.jhanantezana.jugueria.shared.Money;
 
 /** {@code received} and {@code change} are for cash; {@code lineIds} are the lines of a payment made by items. */
-public record PaymentView(UUID id, PaymentMethod method, Money paid, @Nullable Money received, @Nullable Money change,
+public record PaymentView(UUID id, PaymentMethod method, @Nullable UUID walletProviderId,
+		@Nullable String walletProviderName, Money paid, @Nullable Money received, @Nullable Money change,
 		List<UUID> lineIds, UUID recordedBy, Instant recordedAt, boolean voided, @Nullable String voidReasonCode,
 		@Nullable String voidNote) {
 

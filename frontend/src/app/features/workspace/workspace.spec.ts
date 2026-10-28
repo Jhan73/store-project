@@ -507,6 +507,7 @@ describe('staff and admin area', () => {
       '/admin/settings/hours',
       '/admin/settings/zones',
       '/admin/settings/reasons',
+      '/admin/settings/wallets',
     ]);
     expect(url()).toBe('/admin/settings/general');
     expect(page().body.textContent).toContain('Configuración de la tienda');

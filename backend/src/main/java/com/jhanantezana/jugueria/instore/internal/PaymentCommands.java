@@ -30,16 +30,18 @@ public class PaymentCommands {
 
 	@Transactional
 	public Outcome<TicketView> quickSale(UUID actorId, UUID key, String requestHash, @Nullable String customerName,
-			List<LineDraft> lines, PaymentMethod method, @Nullable Money received) {
+			List<LineDraft> lines, PaymentMethod method, @Nullable Money received,
+			@Nullable UUID walletProviderId) {
 		return idempotent.once(actorId, key, requestHash, CREATED, TicketView.class,
-				() -> quickSales.sell(customerName, lines, method, received));
+				() -> quickSales.sell(customerName, lines, method, received, walletProviderId));
 	}
 
 	@Transactional
 	public Outcome<TicketView> record(UUID actorId, UUID key, String requestHash, UUID ticketId, PaymentMethod method,
-			Money amount, @Nullable Money received, @Nullable List<UUID> lineIds) {
+			Money amount, @Nullable Money received, @Nullable List<UUID> lineIds,
+			@Nullable UUID walletProviderId) {
 		return idempotent.once(actorId, key, requestHash, CREATED, TicketView.class,
-				() -> payments.record(ticketId, method, amount, received, lineIds));
+				() -> payments.record(ticketId, method, amount, received, lineIds, walletProviderId));
 	}
 
 }

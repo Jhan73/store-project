@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.instore.internal;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,7 @@ public class QuickSales {
 	/** Sells the lines and takes the whole total with one payment; cash states the amount received. */
 	@Transactional
 	public TicketView sell(@Nullable String customerName, List<LineDraft> drafts, PaymentMethod method,
-			@Nullable Money received) {
+			@Nullable Money received, @Nullable UUID walletProviderId) {
 		var actor = currentActor.id();
 		if (actor == null) {
 			throw new IllegalStateException("A quick sale needs a signed-in user");
@@ -66,7 +67,7 @@ public class QuickSales {
 		sending.send(id);
 		var ticket = tickets.require(id);
 		var total = TicketRules.total(tickets.lines(id), ticket.currency());
-		return payments.record(id, method, total, received, null);
+		return payments.record(id, method, total, received, null, walletProviderId);
 	}
 
 	// An unknown product is left to the line itself, which answers not found.

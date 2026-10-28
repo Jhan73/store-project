@@ -8,11 +8,13 @@ import type {
   DeliveryZone,
   OpeningHour,
   Reason,
+  SaveWalletProviderRequest,
   ReasonType,
   StoreSettings,
   UpdateDeliveryZoneRequest,
   UpdateOpeningHourRequest,
   UpdateStoreSettingsRequest,
+  WalletProvider,
 } from '../../../core/api/api-types';
 
 // A singleton resource and the ETag of the response that carried it; the next write sends it back.
@@ -102,6 +104,38 @@ export class SettingsApi {
   reactivateZone(id: string, etag: string): Observable<DeliveryZone> {
     return this.http.post<DeliveryZone>(
       `${this.base}/delivery-zones/${id}/reactivate`,
+      null,
+      ifMatch(etag),
+    );
+  }
+
+  walletProviders(): Observable<WalletProvider[]> {
+    return this.http.get<WalletProvider[]>(`${this.base}/wallet-providers`);
+  }
+
+  createWalletProvider(body: SaveWalletProviderRequest): Observable<WalletProvider> {
+    return this.http.post<WalletProvider>(`${this.base}/wallet-providers`, body);
+  }
+
+  renameWalletProvider(
+    id: string,
+    etag: string,
+    body: SaveWalletProviderRequest,
+  ): Observable<WalletProvider> {
+    return this.http.put<WalletProvider>(`${this.base}/wallet-providers/${id}`, body, ifMatch(etag));
+  }
+
+  deactivateWalletProvider(id: string, etag: string): Observable<WalletProvider> {
+    return this.http.post<WalletProvider>(
+      `${this.base}/wallet-providers/${id}/deactivate`,
+      null,
+      ifMatch(etag),
+    );
+  }
+
+  reactivateWalletProvider(id: string, etag: string): Observable<WalletProvider> {
+    return this.http.post<WalletProvider>(
+      `${this.base}/wallet-providers/${id}/reactivate`,
       null,
       ifMatch(etag),
     );

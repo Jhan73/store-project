@@ -22,6 +22,7 @@ import type {
   Ticket,
   VoidPaymentRequest,
   VoidSaleRequest,
+  WalletProviderOption,
 } from '../../../core/api/api-types';
 import { ApiError } from '../../../core/errors/api-error';
 
@@ -38,6 +39,10 @@ const idempotencyKey = (key: string) => ({ headers: new HttpHeaders({ 'Idempoten
 export class RegisterApi {
   private readonly http = inject(HttpClient);
   private readonly base = inject(API_BASE_URL);
+
+  walletProviders(): Observable<WalletProviderOption[]> {
+    return this.http.get<WalletProviderOption[]>(`${this.base}/wallet-providers`);
+  }
 
   openShift(request: OpenShiftRequest, key: string): Observable<Shift> {
     return this.http.post<Shift>(`${this.base}/shifts`, request, idempotencyKey(key));

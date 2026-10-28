@@ -27,6 +27,7 @@ class RecordAuditOnPaymentRecorded {
 		after.put("ticketId", event.ticketId().toString());
 		after.put("shiftId", event.shiftId().toString());
 		after.put("method", event.method().name());
+		after.put("walletProvider", event.walletProviderName());
 		after.put("paid", event.paid().amount().toPlainString());
 		after.put("received", event.received() == null ? null : event.received().amount().toPlainString());
 		after.put("change", event.change() == null ? null : event.change().amount().toPlainString());

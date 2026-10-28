@@ -1,6 +1,7 @@
 package com.jhanantezana.jugueria.instore.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.PayloadApplicationEvent;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -158,6 +160,83 @@ class TicketPaymentIT {
 		}
 
 		assertThat(paymentMethods()).containsExactlyInAnyOrder("CARD", "WALLET", "TRANSFER");
+	}
+
+	@Test
+	void aWalletPaymentKeepsTheProviderNameItWasTakenWith() {
+		sentLine(juice.small());
+		sentLine(juice.small());
+		var provider = InstoreTables.aWalletProvider(jdbc, "Wallet-" + UUID.randomUUID(), true);
+		var name = jdbc.sql("select name from instore.wallet_provider where id = ?")
+			.param(provider)
+			.query(String.class)
+			.single();
+
+		var result = payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), walletBody("5.00", provider));
+
+		assertThat(result).hasStatus(HttpStatus.CREATED);
+		assertThat(result).bodyJson().extractingPath("$.payments[0].walletProviderId").isEqualTo(provider.toString());
+		assertThat(result).bodyJson().extractingPath("$.payments[0].walletProviderName").isEqualTo(name);
+		assertThat(events.stream(PaymentRecorded.class)).singleElement().satisfies(recorded -> {
+			assertThat(recorded.walletProviderId()).isEqualTo(provider);
+			assertThat(recorded.walletProviderName()).isEqualTo(name);
+		});
+		jdbc.sql("update instore.wallet_provider set name = 'Renamed-' || id where id = ?").param(provider).update();
+		var reread = mvc.get()
+			.uri(TICKETS + "/" + ticket)
+			.with(AuthenticatedAs.user(cashier, Role.CASHIER))
+			.exchange();
+		assertThat(reread).bodyJson().extractingPath("$.payments[0].walletProviderName").isEqualTo(name);
+	}
+
+	@Test
+	void aWalletPaymentNeedsAnActiveKnownProvider() {
+		sentLine(juice.small());
+		var retired = InstoreTables.aWalletProvider(jdbc, "Retired-" + UUID.randomUUID(), false);
+
+		assertProblem(payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), paymentBodyWithoutProvider("WALLET")),
+				HttpStatus.UNPROCESSABLE_CONTENT, "instore.wallet-provider-required");
+		assertProblem(payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), walletBody("5.00", UUID.randomUUID())),
+				HttpStatus.NOT_FOUND, "instore.wallet-provider-not-found");
+		assertProblem(payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), walletBody("5.00", retired)),
+				HttpStatus.CONFLICT, "instore.wallet-provider-inactive");
+		assertThat(paymentCount()).isZero();
+	}
+
+	@Test
+	void onlyAWalletPaymentMayNameAProvider() {
+		sentLine(juice.small());
+		var body = "{\"method\":\"CARD\",\"amount\":{\"amount\":\"5.00\",\"currency\":\"PEN\"},\"walletProviderId\":\"%s\"}"
+			.formatted(InstoreTables.YAPE);
+
+		assertProblem(payRaw(ticket, cashier, Role.CASHIER, UUID.randomUUID(), body), HttpStatus.UNPROCESSABLE_CONTENT,
+				"instore.wallet-provider-not-allowed");
+		assertThat(paymentCount()).isZero();
+	}
+
+	@Test
+	void theDatabaseRefusesAProviderOnANonWalletPaymentButLetsAnOlderImageInsertAWalletOneWithout() {
+		var insert = """
+				insert into instore.in_store_payment (id, ticket_id, shift_id, method, currency, paid_amount,
+					change_amount, recorded_by, recorded_at, wallet_provider_id, wallet_provider_name)
+				values (?, ?, ?, ?, 'PEN', 5.00, 0, ?, now(), ?, ?)
+				""";
+
+		assertThatThrownBy(() -> insertPayment(insert, "CARD", InstoreTables.YAPE, "Yape"))
+			.isInstanceOf(DataIntegrityViolationException.class);
+		assertThat(insertPayment(insert, "WALLET", null, null)).isEqualTo(1);
+	}
+
+	private int insertPayment(String sql, String method, UUID provider, String providerName) {
+		return jdbc.sql(sql)
+			.param(UUID.randomUUID())
+			.param(UUID.fromString(ticket))
+			.param(UUID.fromString(shift))
+			.param(method)
+			.param(cashier)
+			.param(provider)
+			.param(providerName)
+			.update();
 	}
 
 	@Test
@@ -848,9 +927,19 @@ class TicketPaymentIT {
 	}
 
 	private static String paymentBody(String method, String amount, String received, List<UUID> lineIds) {
-		return "{\"method\":\"%s\",\"amount\":{\"amount\":\"%s\",\"currency\":\"PEN\"}%s%s}".formatted(method, amount,
+		return "{\"method\":\"%s\",\"amount\":{\"amount\":\"%s\",\"currency\":\"PEN\"}%s%s%s}".formatted(method, amount,
 				received == null ? "" : ",\"receivedAmount\":{\"amount\":\"%s\",\"currency\":\"PEN\"}".formatted(received),
-				lineIds == null ? "" : ",\"lineIds\":" + lineIds.stream().map(l -> "\"" + l + "\"").toList());
+				lineIds == null ? "" : ",\"lineIds\":" + lineIds.stream().map(l -> "\"" + l + "\"").toList(),
+				method.equals("WALLET") ? ",\"walletProviderId\":\"%s\"".formatted(InstoreTables.YAPE) : "");
+	}
+
+	private static String walletBody(String amount, UUID provider) {
+		return "{\"method\":\"WALLET\",\"amount\":{\"amount\":\"%s\",\"currency\":\"PEN\"},\"walletProviderId\":\"%s\"}"
+			.formatted(amount, provider);
+	}
+
+	private static String paymentBodyWithoutProvider(String method) {
+		return "{\"method\":\"%s\",\"amount\":{\"amount\":\"5.00\",\"currency\":\"PEN\"}}".formatted(method);
 	}
 
 	private MvcTestResult pay(String target, String method, String amount, String received) {

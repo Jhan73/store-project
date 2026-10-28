@@ -50,7 +50,9 @@ class QuickSaleController {
 	@PostMapping
 	@PreAuthorize(REGISTER_STAFF)
 	@ApiResponse(responseCode = "201", description = "Created")
-	@ApiErrors({ "instore.no-open-shift", "instore.shift-closing", "instore.product-not-quick-sale", "instore.invalid-amount", "instore.invalid-payment",
+	@ApiErrors({ "instore.no-open-shift", "instore.shift-closing", "instore.product-not-quick-sale", "instore.invalid-amount",
+			"instore.invalid-payment", "instore.wallet-provider-required", "instore.wallet-provider-not-allowed",
+			"instore.wallet-provider-not-found", "instore.wallet-provider-inactive",
 			"catalog.product-not-found", "catalog.product-unavailable", "catalog.modifier-option-unavailable",
 			"catalog.invalid-modifier-selection", "catalog.price-currency-mismatch", "inventory.insufficient-stock",
 			"common.idempotency-key-required", "common.idempotency-key-reused", "common.idempotency-in-progress" })
@@ -64,7 +66,7 @@ class QuickSaleController {
 		}
 		var drafts = request.lines().stream().map(LineRequest::toDraft).toList();
 		var outcome = commands.quickSale(actor, key, RequestHash.of("POST", BASE, request), request.customerName(), drafts,
-				request.payment().method(), request.payment().receivedAmount());
+				request.payment().method(), request.payment().receivedAmount(), request.payment().walletProviderId());
 		var response = ResponseEntity.status(HttpStatus.CREATED)
 			.contentType(MediaType.APPLICATION_JSON)
 			.location(URI.create(TicketController.BASE + "/" + outcome.value().id()));

@@ -57,6 +57,8 @@ class TicketPaymentController {
 	@ApiErrors({ "instore.ticket-not-found", "instore.ticket-closed", "instore.no-open-shift", "instore.shift-closing",
 			"instore.invalid-amount", "instore.invalid-payment", "instore.payment-exceeds-balance",
 			"instore.ticket-has-unsent-lines", "instore.line-not-found", "instore.line-already-paid",
+			"instore.wallet-provider-required", "instore.wallet-provider-not-allowed",
+			"instore.wallet-provider-not-found", "instore.wallet-provider-inactive",
 			"inventory.insufficient-stock", "common.idempotency-key-required", "common.idempotency-key-reused",
 			"common.idempotency-in-progress" })
 	ResponseEntity<TicketResponse> record(@PathVariable UUID id,
@@ -65,7 +67,7 @@ class TicketPaymentController {
 		var key = IdempotencyKeyHeader.require(idempotencyKey);
 		var path = TicketController.BASE + "/" + id + "/payments";
 		var outcome = commands.record(requireActor(), key, RequestHash.of("POST", path, request), id, request.method(),
-				request.amount(), request.receivedAmount(), request.lineIds());
+				request.amount(), request.receivedAmount(), request.lineIds(), request.walletProviderId());
 		var response = ResponseEntity.status(HttpStatus.CREATED)
 			.contentType(MediaType.APPLICATION_JSON)
 			.location(URI.create(TicketController.BASE + "/" + id));

@@ -115,6 +115,28 @@ class QuickSaleIT {
 		assertThat(result).hasStatus(HttpStatus.CREATED);
 		assertThat(result).bodyJson().extractingPath("$.payments[0].method").isEqualTo("WALLET");
 		assertThat(result).bodyJson().extractingPath("$.payments[0].paid.amount").isEqualTo("13.00");
+		assertThat(result).bodyJson().extractingPath("$.payments[0].walletProviderName").isEqualTo("Yape");
+		assertThat(events.stream(PaymentRecorded.class)).singleElement()
+			.satisfies(recorded -> assertThat(recorded.walletProviderId()).isEqualTo(InstoreTables.YAPE));
+	}
+
+	@Test
+	void aWalletSaleNeedsAnActiveProviderAndLeavesNothingBehindWithout() {
+		var retired = InstoreTables.aWalletProvider(jdbc, "Retired-" + UUID.randomUUID(), false);
+		var lines = line(juice.small(), 1);
+		var noProvider = "{\"lines\":[%s],\"payment\":{\"method\":\"WALLET\"}}".formatted(lines);
+		var inactive = "{\"lines\":[%s],\"payment\":{\"method\":\"WALLET\",\"walletProviderId\":\"%s\"}}".formatted(lines,
+				retired);
+		var card = "{\"lines\":[%s],\"payment\":{\"method\":\"CARD\",\"walletProviderId\":\"%s\"}}".formatted(lines,
+				InstoreTables.YAPE);
+
+		assertProblem(quickSale(cashier, Role.CASHIER, UUID.randomUUID(), noProvider), HttpStatus.UNPROCESSABLE_CONTENT,
+				"instore.wallet-provider-required");
+		assertProblem(quickSale(cashier, Role.CASHIER, UUID.randomUUID(), inactive), HttpStatus.CONFLICT,
+				"instore.wallet-provider-inactive");
+		assertProblem(quickSale(cashier, Role.CASHIER, UUID.randomUUID(), card), HttpStatus.UNPROCESSABLE_CONTENT,
+				"instore.wallet-provider-not-allowed");
+		assertThat(InstoreTables.count(jdbc, "ticket")).isZero();
 	}
 
 	@Test
@@ -270,9 +292,10 @@ class QuickSaleIT {
 	}
 
 	private static String body(String customer, String lines, String method, String received) {
-		return "{%s\"lines\":[%s],\"payment\":{\"method\":\"%s\"%s}}".formatted(
+		return "{%s\"lines\":[%s],\"payment\":{\"method\":\"%s\"%s%s}}".formatted(
 				customer == null ? "" : "\"customerName\":\"%s\",".formatted(customer), lines, method,
-				received == null ? "" : ",\"receivedAmount\":{\"amount\":\"%s\",\"currency\":\"PEN\"}".formatted(received));
+				received == null ? "" : ",\"receivedAmount\":{\"amount\":\"%s\",\"currency\":\"PEN\"}".formatted(received),
+				method.equals("WALLET") ? ",\"walletProviderId\":\"%s\"".formatted(InstoreTables.YAPE) : "");
 	}
 
 	private MvcTestResult quickSale(UUID actor, Role role, UUID key, String body) {
