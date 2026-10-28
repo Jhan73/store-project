@@ -21,6 +21,10 @@ export const SETTINGS_ROUTES: Routes = [
         loadComponent: () => import('./zone-list').then((m) => m.ZoneList),
       },
       {
+        path: 'wallets',
+        loadComponent: () => import('./wallet-provider-list').then((m) => m.WalletProviderList),
+      },
+      {
         path: 'reasons',
         loadComponent: () => import('./reason-list').then((m) => m.ReasonList),
       },

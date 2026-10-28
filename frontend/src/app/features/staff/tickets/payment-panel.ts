@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,6 +20,8 @@ import { FormField } from '../../../shared/ui/form-field/form-field';
 import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { methodLabel, PAYMENT_METHODS } from '../register/payment-methods';
 import { ShiftStore } from '../register/shift-store';
+import { WalletProviderField } from '../register/wallet-provider-field';
+import { WalletProviderOptions } from '../register/wallet-provider-options';
 import { TicketEditorStore } from './ticket-editor-store';
 
 const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
@@ -36,10 +38,12 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
     Select,
     FormField,
     MoneyInput,
+    WalletProviderField,
     Tooltip,
     TablerIconComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [WalletProviderOptions],
   styleUrl: './payment-panel.scss',
   template: `
     <h3 id="pay-heading" i18n="@@staff.tickets.pay.title">Cobrar</h3>
@@ -101,6 +105,16 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
           fluid
         />
       </app-form-field>
+
+      @if (chosenMethod() === 'WALLET') {
+        <app-wallet-provider-field
+          controlId="pay-wallet"
+          [control]="provider"
+          [providers]="wallets.providers()"
+          [failed]="wallets.failed()"
+          (retry)="wallets.load()"
+        />
+      }
 
       @if (payableLines().length > 0) {
         <fieldset>
@@ -237,6 +251,7 @@ const SPLIT_PARTS = Array.from({ length: 19 }, (_, index) => index + 2);
 export class PaymentPanel {
   protected readonly store = inject(TicketEditorStore);
   protected readonly shifts = inject(ShiftStore);
+  protected readonly wallets = inject(WalletProviderOptions);
 
   readonly ticket = input.required<Ticket>();
 
@@ -251,6 +266,7 @@ export class PaymentPanel {
   protected readonly methods = PAYMENT_METHODS.map((value) => ({ value, label: methodLabel(value) }));
   protected readonly partOptions = SPLIT_PARTS.map((value) => ({ value, label: String(value) }));
   protected readonly method = new FormControl<PaymentMethod>('CASH', { nonNullable: true });
+  protected readonly provider = new FormControl<string | null>(null);
   protected readonly amount = new FormControl('', { nonNullable: true });
   protected readonly received = new FormControl('', { nonNullable: true });
   protected readonly parts = new FormControl<number | null>(null);
@@ -260,6 +276,7 @@ export class PaymentPanel {
 
   protected readonly chosenMethod = toSignal(this.method.valueChanges, { initialValue: 'CASH' as PaymentMethod });
   protected readonly chosenParts = toSignal(this.parts.valueChanges, { initialValue: null });
+  private readonly chosenProvider = toSignal(this.provider.valueChanges, { initialValue: null });
   private readonly typedAmount = toSignal(this.amount.valueChanges, { initialValue: '' });
   private readonly typedReceived = toSignal(this.received.valueChanges, { initialValue: '' });
   private readonly balance = computed(() => this.ticket().balance.amount);
@@ -304,6 +321,9 @@ export class PaymentPanel {
     if (this.shifts.shift() === null || this.store.unsent().length > 0) {
       return false;
     }
+    if (this.chosenMethod() === 'WALLET' && this.chosenProvider() === null) {
+      return false;
+    }
     const minor = toMinorUnits({ amount, currency });
     const balance = safeMinorUnits(this.ticket().balance);
     if (balance === null || minor > balance) {
@@ -323,6 +343,9 @@ export class PaymentPanel {
     }
     if (this.store.unsent().length > 0) {
       return null;
+    }
+    if (this.chosenMethod() === 'WALLET' && this.chosenProvider() === null) {
+      return $localize`:@@staff.tickets.pay.why.wallet:Elige la billetera con la que se pagó.`;
     }
     const currency = this.ticket().total.currency;
     const amount = parseAmount(this.typedAmount());
@@ -345,6 +368,11 @@ export class PaymentPanel {
 
   constructor() {
     this.shifts.load('shift');
+    this.method.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+      if (value === 'WALLET') {
+        this.wallets.load();
+      }
+    });
     inject(DestroyRef).onDestroy(() => this.store.clearSplit());
     effect(() => {
       const payable = new Set(this.payableLines().map((line) => line.id));
@@ -411,18 +439,32 @@ export class PaymentPanel {
     if (this.method.value === 'CASH') {
       request.receivedAmount = { amount: parseAmount(this.received.value) ?? amount, currency };
     }
+    if (this.method.value === 'WALLET' && this.provider.value !== null) {
+      request.walletProviderId = this.provider.value;
+    }
     const chosen = this.chosenLines();
     if (chosen.length > 0) {
       request.lineIds = chosen.map((line) => line.id);
     }
     const part = this.partIndex();
-    this.store.pay(request, () => {
-      this.selected.set(new Set());
-      this.received.reset();
-      if (part !== null) {
-        this.paidParts.update((current) => new Set(current).add(part));
-        this.partIndex.set(null);
-      }
-    });
+    this.store.pay(
+      request,
+      () => {
+        this.selected.set(new Set());
+        this.received.reset();
+        if (part !== null) {
+          this.paidParts.update((current) => new Set(current).add(part));
+          this.partIndex.set(null);
+        }
+      },
+      (error) => this.walletRefused(error),
+    );
+  }
+
+  private walletRefused(error: unknown): void {
+    if (WalletProviderOptions.refuses(error)) {
+      this.provider.reset();
+      this.wallets.load(true);
+    }
   }
 }

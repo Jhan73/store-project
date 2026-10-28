@@ -7,6 +7,8 @@ final class Constraints {
 
 	static final String TABLE_NAME = "dining_table_name_key";
 
+	static final String WALLET_PROVIDER_NAME = "wallet_provider_active_name_key";
+
 	static final String TICKET_TABLE_FK = "ticket_table_id_fkey";
 
 	private Constraints() {

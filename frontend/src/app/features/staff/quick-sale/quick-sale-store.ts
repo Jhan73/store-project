@@ -40,6 +40,8 @@ export interface SellInput {
   readonly method: PaymentMethod;
   // An amount string like "20.00", for cash only.
   readonly received: string | null;
+  // The wallet a wallet payment was made with.
+  readonly walletProviderId?: string | null;
 }
 
 // Provided by the screen: the cart and the sale in progress belong to it.
@@ -161,7 +163,7 @@ export class QuickSaleStore {
     );
   }
 
-  sell(input: SellInput): void {
+  sell(input: SellInput, refused?: (error: unknown) => void): void {
     const currency = this.estimatedTotal()?.currency;
     const lines = this.cart();
     if (lines.length === 0 || currency === undefined) {
@@ -182,6 +184,7 @@ export class QuickSaleStore {
       payment: {
         method: input.method,
         receivedAmount: input.received === null ? null : { amount: input.received, currency },
+        walletProviderId: input.method === 'WALLET' ? (input.walletProviderId ?? null) : null,
       },
     };
     const intent = `sale:${JSON.stringify(request)}`;
@@ -207,6 +210,9 @@ export class QuickSaleStore {
           this.notifier.show(error);
           if (!this.destroyed && isShiftStateError(error)) {
             this.loadShift();
+          }
+          if (!this.destroyed) {
+            refused?.(error);
           }
         },
       });

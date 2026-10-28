@@ -104,6 +104,7 @@ test('table service with a change: sent, voided, prepared on the board and paid 
     await expect(cashier.getByTestId(/^payment-/).first()).toContainText('9.00');
 
     await pickOption(cashier, 'Método de pago', 'Billetera');
+    await pickOption(cashier, 'Billetera', 'Yape', { exact: true });
     await cashier.getByTestId('split-part-1').click();
     await cashier.getByTestId('pay-submit').click();
     await expect(cashier.getByTestId('closed-notice')).toBeVisible();

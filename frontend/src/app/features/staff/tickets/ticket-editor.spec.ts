@@ -94,6 +94,8 @@ function payment(id: string, overrides: Partial<Payment> = {}): Payment {
     voided: false,
     voidReasonCode: null,
     voidNote: null,
+    walletProviderId: null,
+    walletProviderName: null,
     ...overrides,
   };
 }
@@ -1198,6 +1200,11 @@ describe('TicketEditor', () => {
   describe('taking payment', () => {
     const SHIFT = `${BASE}/shifts/current`;
     const PAYMENTS = `${TICKET}/payments`;
+    const WALLETS = 'http://api.test/api/v1/wallet-providers';
+    const wallets = [
+      { id: 'w1', name: 'Yape' },
+      { id: 'w2', name: 'Plin' },
+    ];
     const sentLine = (id: string, total = '10.00') =>
       line(id, { state: 'SENT', sentAt: SENT_AT, lineTotal: pen(total) });
     const sent = (overrides: Partial<Ticket> = {}) =>
@@ -1348,20 +1355,103 @@ describe('TicketEditor', () => {
       request.flush(sent(), { status: 201, statusText: 'Created' });
     });
 
+    it('asks for the wallet and blocks the payment until one is chosen', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+      http.expectOne(WALLETS).flush(wallets);
+      await fixture.whenStable();
+
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+      expect(text(fixture, 'pay-why')).toContain('Elige la billetera');
+      await chooseOption(fixture, host(fixture), 'pay-wallet', 'Plin');
+
+      expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(false);
+      await press(fixture, 'pay-submit');
+      const request = http.expectOne(PAYMENTS);
+      expect(request.request.body).toEqual({ method: 'WALLET', amount: pen('30.00'), walletProviderId: 'w2' });
+      request.flush(sent(), { status: 201, statusText: 'Created' });
+    });
+
+    it.each(['instore.wallet-provider-inactive', 'instore.wallet-provider-not-found'])(
+      'reads the wallets again and clears the choice when the payment is refused with %s',
+      async (code) => {
+        const fixture = await openPanel();
+        await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+        http.expectOne(WALLETS).flush(wallets);
+        await fixture.whenStable();
+        await chooseOption(fixture, host(fixture), 'pay-wallet', 'Yape');
+        await press(fixture, 'pay-submit');
+
+        http
+          .expectOne(PAYMENTS)
+          .flush({ type: 'about:blank', status: 409, code, correlationId: 'c' }, { status: 409, statusText: 'Conflict' });
+        await fixture.whenStable();
+        http.expectOne(TICKET).flush(sent());
+        flushBoard([]);
+        http.expectOne(WALLETS).flush([{ id: 'w2', name: 'Plin' }]);
+        await fixture.whenStable();
+
+        expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(true);
+        expect(text(fixture, 'pay-why')).toContain('Elige la billetera');
+        await chooseOption(fixture, host(fixture), 'pay-wallet', 'Plin');
+        expect(find<HTMLButtonElement>(fixture, 'pay-submit')!.disabled).toBe(false);
+      },
+    );
+
+    it('offers a retry when the wallets cannot be read', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+      http
+        .expectOne(WALLETS)
+        .flush({ type: 'about:blank', status: 500, code: 'common.internal-error', correlationId: 'c' }, { status: 500, statusText: 'Server Error' });
+      await fixture.whenStable();
+
+      await press(fixture, 'wallet-retry');
+      http.expectOne(WALLETS).flush(wallets);
+      await fixture.whenStable();
+
+      expect(find(fixture, 'wallet-retry')).toBeNull();
+    });
+
+    it('shows no wallet field for other methods and reads the wallets only once', async () => {
+      const fixture = await openPanel();
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+      expect(document.body.querySelector('#pay-wallet')).toBeNull();
+
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+      http.expectOne(WALLETS).flush(wallets);
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Tarjeta');
+      await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+
+      http.expectNone(WALLETS);
+    });
+
     it('takes a partial payment and offers the new balance for the next one', async () => {
       const fixture = await openPanel();
       await chooseOption(fixture, host(fixture), 'pay-method', 'Billetera');
+      http.expectOne(WALLETS).flush(wallets);
+      await fixture.whenStable();
+      await chooseOption(fixture, host(fixture), 'pay-wallet', 'Yape');
       type(fixture, 'pay-amount', '10');
       await fixture.whenStable();
 
       await press(fixture, 'pay-submit');
       const request = http.expectOne(PAYMENTS);
-      expect(request.request.body).toEqual({ method: 'WALLET', amount: pen('10.00') });
+      expect(request.request.body).toEqual({ method: 'WALLET', amount: pen('10.00'), walletProviderId: 'w1' });
       request.flush(
         sent({
           paid: pen('10.00'),
           balance: pen('20.00'),
-          payments: [payment('p1', { method: 'WALLET', paid: pen('10.00'), received: null, change: null })],
+          payments: [
+            payment('p1', {
+              method: 'WALLET',
+              walletProviderId: 'w1',
+              walletProviderName: 'Yape',
+              paid: pen('10.00'),
+              received: null,
+              change: null,
+            }),
+          ],
         }),
         { status: 201, statusText: 'Created' },
       );
@@ -1370,6 +1460,7 @@ describe('TicketEditor', () => {
       expect(find<HTMLInputElement>(fixture, 'pay-amount')!.value).toBe('20.00');
       expect(text(fixture, 'ticket-balance')).toContain('20.00');
       expect(text(fixture, 'payment-p1')).toContain('Billetera');
+      expect(text(fixture, 'payment-p1')).toContain('Yape');
     });
 
     it('retries a refused payment with the same idempotency key', async () => {

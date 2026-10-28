@@ -362,7 +362,12 @@ type RegisterVoid = { readonly kind: 'payment'; readonly id: string } | { readon
             <ul class="payments">
               @for (payment of ticket.payments; track payment.id) {
                 <li [attr.data-testid]="'payment-' + payment.id" [class.voided]="payment.voided">
-                  <span class="name">{{ method(payment.method) }}</span>
+                  <span class="name"
+                    >{{ method(payment.method)
+                    }}@if (payment.walletProviderName) {
+                      · {{ payment.walletProviderName }}
+                    }</span
+                  >
                   <span>{{ money(payment.paid) }}</span>
                   @if (payment.received && payment.change) {
                     <span class="detail">

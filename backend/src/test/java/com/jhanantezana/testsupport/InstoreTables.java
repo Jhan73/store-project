@@ -13,6 +13,11 @@ public final class InstoreTables {
 	public record SizedProduct(UUID productId, UUID small, UUID large) {
 	}
 
+	/** The wallet providers every database starts with. */
+	public static final UUID YAPE = UUID.fromString("01999999-0000-7000-8000-000000000101");
+
+	public static final UUID PLIN = UUID.fromString("01999999-0000-7000-8000-000000000102");
+
 	private InstoreTables() {
 	}
 
@@ -21,6 +26,20 @@ public final class InstoreTables {
 		jdbc.sql("delete from instore.ticket_line").update();
 		jdbc.sql("delete from instore.ticket").update();
 		jdbc.sql("delete from instore.dining_table").update();
+		jdbc.sql("delete from instore.wallet_provider where id not in (?, ?)").param(YAPE).param(PLIN).update();
+		jdbc.sql("update instore.wallet_provider set active = true, name = case id when ? then 'Yape' else 'Plin' end")
+			.param(YAPE)
+			.update();
+	}
+
+	public static UUID aWalletProvider(JdbcClient jdbc, String name, boolean active) {
+		var now = OffsetDateTime.now(ZoneOffset.UTC);
+		var id = UUID.randomUUID();
+		jdbc.sql("""
+				insert into instore.wallet_provider (id, name, active, created_at, updated_at)
+				values (:id, :name, :active, :now, :now)
+				""").param("id", id).param("name", name).param("active", active).param("now", now).update();
+		return id;
 	}
 
 	/** Cleans what tickets reach into: the board, the catalog and the void reasons. */

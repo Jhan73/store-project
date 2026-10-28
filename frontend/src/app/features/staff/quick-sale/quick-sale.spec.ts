@@ -228,7 +228,7 @@ describe('QuickSale', () => {
     expect(request.request.body).toEqual({
       customerName: 'Ana',
       lines: [{ productId: 'p1', quantity: 1, modifierOptionIds: [], note: null, allergy: false }],
-      payment: { method: 'CASH', receivedAmount: pen('20.00') },
+      payment: { method: 'CASH', receivedAmount: pen('20.00'), walletProviderId: null },
     });
     expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
     request.flush(sale(), { status: 201, statusText: 'Created' });
@@ -273,7 +273,7 @@ describe('QuickSale', () => {
 
     await press(fixture, 'qs-submit');
     const request = http.expectOne(`${BASE}/quick-sales`);
-    expect(request.request.body.payment).toEqual({ method: 'CASH', receivedAmount: pen('5.00') });
+    expect(request.request.body.payment).toEqual({ method: 'CASH', receivedAmount: pen('5.00'), walletProviderId: null });
     request.flush(problem(422, 'instore.invalid-payment'), { status: 422, statusText: 'Unprocessable' });
     await fixture.whenStable();
 
@@ -313,10 +313,58 @@ describe('QuickSale', () => {
     await press(fixture, 'qs-submit');
 
     const request = http.expectOne(`${BASE}/quick-sales`);
-    expect(request.request.body.payment).toEqual({ method: 'CARD', receivedAmount: null });
+    expect(request.request.body.payment).toEqual({ method: 'CARD', receivedAmount: null, walletProviderId: null });
     expect(request.request.body.customerName).toBeNull();
     request.flush(sale({ payments: [] }), { status: 201, statusText: 'Created' });
   });
+
+  it('asks for the wallet and sells with the chosen one', async () => {
+    const fixture = await open();
+    await press(fixture, 'item-p1');
+    await chooseOption(fixture, host(fixture), 'qs-method', 'Billetera');
+    http.expectOne(`${BASE}/wallet-providers`).flush([
+      { id: 'w1', name: 'Yape' },
+      { id: 'w2', name: 'Plin' },
+    ]);
+    await fixture.whenStable();
+
+    expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(true);
+    expect(find(fixture, 'qs-why')!.textContent).toContain('Elige la billetera');
+    await chooseOption(fixture, host(fixture), 'qs-wallet', 'Yape');
+    await press(fixture, 'qs-submit');
+
+    const request = http.expectOne(`${BASE}/quick-sales`);
+    expect(request.request.body.payment).toEqual({
+      method: 'WALLET',
+      receivedAmount: null,
+      walletProviderId: 'w1',
+    });
+    request.flush(sale({ payments: [] }), { status: 201, statusText: 'Created' });
+  });
+
+  it.each(['instore.wallet-provider-inactive', 'instore.wallet-provider-not-found'])(
+    'reads the wallets again and clears the choice when the sale is refused with %s',
+    async (code) => {
+      const fixture = await open();
+      await press(fixture, 'item-p1');
+      await chooseOption(fixture, host(fixture), 'qs-method', 'Billetera');
+      http.expectOne(`${BASE}/wallet-providers`).flush([{ id: 'w1', name: 'Yape' }]);
+      await fixture.whenStable();
+      await chooseOption(fixture, host(fixture), 'qs-wallet', 'Yape');
+      await press(fixture, 'qs-submit');
+
+      http
+        .expectOne(`${BASE}/quick-sales`)
+        .flush({ type: 'about:blank', status: 409, code, correlationId: 'c' }, { status: 409, statusText: 'Conflict' });
+      await fixture.whenStable();
+      http.expectOne(`${BASE}/wallet-providers`).flush([{ id: 'w2', name: 'Plin' }]);
+      await fixture.whenStable();
+
+      expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(true);
+      await chooseOption(fixture, host(fixture), 'qs-wallet', 'Plin');
+      expect(find<HTMLButtonElement>(fixture, 'qs-submit')!.disabled).toBe(false);
+    },
+  );
 
   it('keeps the cart when the sale is refused', async () => {
     const fixture = await open();

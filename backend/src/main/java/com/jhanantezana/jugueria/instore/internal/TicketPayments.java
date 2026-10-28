@@ -41,6 +41,8 @@ public class TicketPayments {
 
 	private final Payments payments;
 
+	private final WalletProviderService walletProviders;
+
 	private final Shifts shifts;
 
 	private final TicketSettlement settlement;
@@ -53,12 +55,14 @@ public class TicketPayments {
 
 	private final Clock clock;
 
-	TicketPayments(Tickets tickets, TicketService ticketService, Payments payments, Shifts shifts,
+	TicketPayments(Tickets tickets, TicketService ticketService, Payments payments,
+			WalletProviderService walletProviders, Shifts shifts,
 			TicketSettlement settlement, VoidReasons voidReasons, ApplicationEventPublisher events,
 			CurrentActor currentActor, Clock clock) {
 		this.tickets = tickets;
 		this.ticketService = ticketService;
 		this.payments = payments;
+		this.walletProviders = walletProviders;
 		this.shifts = shifts;
 		this.settlement = settlement;
 		this.voidReasons = voidReasons;
@@ -74,7 +78,7 @@ public class TicketPayments {
 	 */
 	@Transactional
 	public TicketView record(UUID ticketId, PaymentMethod method, Money amount, @Nullable Money received,
-			@Nullable List<UUID> lineIds) {
+			@Nullable List<UUID> lineIds, @Nullable UUID walletProviderId) {
 		var now = Instant.now(clock);
 		var actor = requireActor();
 		var ticket = tickets.lockOpen(ticketId, now);
@@ -92,15 +96,17 @@ public class TicketPayments {
 			throw new BusinessException(InstoreError.PAYMENT_EXCEEDS_BALANCE,
 					"The payment is more than what is still owed", Map.of("balance", balance));
 		}
+		var wallet = walletProviders.requireFor(method, walletProviderId);
 		var change = change(method, amount, received, currency);
 		var items = lineIds == null ? List.<UUID>of() : List.copyOf(new HashSet<>(lineIds));
 		if (!items.isEmpty()) {
 			requireItemsPayment(ticketId, lines, items, amount);
 		}
 		var id = Ids.newId();
-		payments.insert(id, ticketId, shift.id(), method, amount, received, change, items, actor, now);
+		payments.insert(id, ticketId, shift.id(), method, wallet, amount, received, change, items, actor, now);
 		var closed = settlement.closeWhenSettled(ticket, now);
-		events.publishEvent(new PaymentRecorded(id, ticketId, shift.id(), method, amount, received,
+		events.publishEvent(new PaymentRecorded(id, ticketId, shift.id(), method,
+				wallet == null ? null : wallet.id(), wallet == null ? null : wallet.name(), amount, received,
 				method == PaymentMethod.CASH ? change : null, items, closed, actor, currentActor.role(), now));
 		return ticketService.view(tickets.require(ticketId));
 	}
@@ -123,7 +129,8 @@ public class TicketPayments {
 		var reason = voidReasons.require(ReasonType.VOID, reasonCode, text);
 		var shiftId = Voiding.shiftFor(shifts, actor, currentActor.role(), payment);
 		if (payments.insertVoid(Ids.newId(), paymentId, ticketId, shiftId, null, reason, text, actor, now)) {
-			events.publishEvent(new PaymentVoided(paymentId, ticketId, shiftId, payment.method(), payment.paidMoney(),
+			events.publishEvent(new PaymentVoided(paymentId, ticketId, shiftId, payment.method(),
+					payment.walletProviderName(), payment.paidMoney(),
 					reason, text, null, actor, currentActor.role(), now));
 		}
 		return ticketService.view(tickets.require(ticketId));

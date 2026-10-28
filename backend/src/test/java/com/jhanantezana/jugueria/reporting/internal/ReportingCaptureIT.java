@@ -224,10 +224,10 @@ class ReportingCaptureIT {
 
 		publish(new SaleVoided(ticket, saleVoid, TicketType.TABLE, false, Money.of("10.00", PEN), List.of(),
 				"Changed mind", null, cashier, Role.CASHIER, NOW));
-		publish(new PaymentVoided(inSale, ticket, null, PaymentMethod.CASH, Money.of("10.00", PEN), "Changed mind", null,
-				saleVoid, cashier, Role.CASHIER, NOW));
-		publish(new PaymentVoided(alone, ticket, null, PaymentMethod.CARD, Money.of("4.00", PEN), "Wrong tender", null,
-				null, cashier, Role.CASHIER, NOW));
+		publish(new PaymentVoided(inSale, ticket, null, PaymentMethod.CASH, null, Money.of("10.00", PEN), "Changed mind",
+				null, saleVoid, cashier, Role.CASHIER, NOW));
+		publish(new PaymentVoided(alone, ticket, null, PaymentMethod.CARD, null, Money.of("4.00", PEN), "Wrong tender",
+				null, null, cashier, Role.CASHIER, NOW));
 
 		await().atMost(Duration.ofSeconds(20)).untilAsserted(() -> {
 			assertThat(exceptionTypes(saleVoid)).containsExactly("SALE_VOID");

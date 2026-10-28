@@ -41,6 +41,9 @@ import com.jhanantezana.jugueria.instore.TicketLinesSent;
 import com.jhanantezana.jugueria.instore.TicketOpened;
 import com.jhanantezana.jugueria.instore.TicketTransferred;
 import com.jhanantezana.jugueria.instore.TicketsMerged;
+import com.jhanantezana.jugueria.instore.WalletProviderChangeKind;
+import com.jhanantezana.jugueria.instore.WalletProviderChanged;
+import com.jhanantezana.jugueria.instore.WalletProviderSnapshot;
 import com.jhanantezana.jugueria.instore.TicketType;
 import com.jhanantezana.jugueria.shared.Money;
 import com.jhanantezana.jugueria.shared.Role;
@@ -392,8 +395,9 @@ class RecordAuditOnInstoreEventsIT {
 		var ticketId = UUID.randomUUID();
 		var line = UUID.randomUUID();
 
-		publish(new PaymentRecorded(paymentId, ticketId, UUID.randomUUID(), PaymentMethod.CASH, Money.of("5.00", PEN),
-				Money.of("10.00", PEN), Money.of("5.00", PEN), List.of(line), true, UUID.randomUUID(), Role.CASHIER, NOW));
+		publish(new PaymentRecorded(paymentId, ticketId, UUID.randomUUID(), PaymentMethod.CASH, null, null,
+				Money.of("5.00", PEN), Money.of("10.00", PEN), Money.of("5.00", PEN), List.of(line), true,
+				UUID.randomUUID(), Role.CASHIER, NOW));
 
 		var entry = findByEntityId(paymentId);
 		assertThat(entry.getAction()).isEqualTo("PAYMENT_RECORDED");
@@ -408,11 +412,47 @@ class RecordAuditOnInstoreEventsIT {
 	}
 
 	@Test
+	void aWalletPaymentShowsItsProvider() {
+		var paymentId = UUID.randomUUID();
+
+		publish(new PaymentRecorded(paymentId, UUID.randomUUID(), UUID.randomUUID(), PaymentMethod.WALLET,
+				UUID.randomUUID(), "Yape", Money.of("5.00", PEN), null, null, List.of(), true, UUID.randomUUID(),
+				Role.CASHIER, NOW));
+
+		assertThat(findByEntityId(paymentId).getAfter()).containsEntry("method", "WALLET")
+			.containsEntry("walletProvider", "Yape");
+	}
+
+	@Test
+	void recordsAWalletProviderLifecycle() {
+		var providerId = UUID.randomUUID();
+		var admin = UUID.randomUUID();
+		var created = new WalletProviderSnapshot("Yape", true);
+
+		publish(new WalletProviderChanged(providerId, WalletProviderChangeKind.CREATED, null, created, admin,
+				Role.ADMIN, NOW));
+		publish(new WalletProviderChanged(providerId, WalletProviderChangeKind.DEACTIVATED, created,
+				new WalletProviderSnapshot("Yape", false), admin, Role.ADMIN, NOW.plusSeconds(1)));
+
+		var entries = auditLogs.findAll()
+			.stream()
+			.filter(entry -> providerId.equals(entry.getEntityId()))
+			.sorted(java.util.Comparator.comparing(AuditLog::getOccurredAt))
+			.toList();
+		assertThat(entries).extracting(AuditLog::getAction)
+			.containsExactly("WALLET_PROVIDER_CREATED", "WALLET_PROVIDER_DEACTIVATED");
+		assertThat(entries).extracting(AuditLog::getEntityType).containsOnly("WALLET_PROVIDER");
+		assertThat(entries).extracting(AuditLog::getEntityLabel).containsOnly("Yape");
+		assertThat(entries.get(1).getBefore()).containsEntry("active", true);
+		assertThat(entries.get(1).getAfter()).containsEntry("active", false);
+	}
+
+	@Test
 	void recordsAPaymentVoidWithItsReason() {
 		var paymentId = UUID.randomUUID();
 
-		publish(new PaymentVoided(paymentId, UUID.randomUUID(), UUID.randomUUID(), PaymentMethod.CARD, Money.of("5.00", PEN),
-				"Changed mind", "Wrong method", null, UUID.randomUUID(), Role.CASHIER, NOW));
+		publish(new PaymentVoided(paymentId, UUID.randomUUID(), UUID.randomUUID(), PaymentMethod.CARD, null,
+				Money.of("5.00", PEN), "Changed mind", "Wrong method", null, UUID.randomUUID(), Role.CASHIER, NOW));
 
 		var entry = findByEntityId(paymentId);
 		assertThat(entry.getAction()).isEqualTo("PAYMENT_VOIDED");

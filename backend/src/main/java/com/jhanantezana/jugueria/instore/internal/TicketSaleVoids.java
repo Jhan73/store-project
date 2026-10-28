@@ -85,7 +85,8 @@ public class TicketSaleVoids {
 			var payment = live.get(i);
 			var shiftId = shiftIds.get(i);
 			payments.insertVoid(Ids.newId(), payment.id(), ticketId, shiftId, saleVoidId, reason, text, actor, now);
-			events.publishEvent(new PaymentVoided(payment.id(), ticketId, shiftId, payment.method(), payment.paidMoney(),
+			events.publishEvent(new PaymentVoided(payment.id(), ticketId, shiftId, payment.method(),
+					payment.walletProviderName(), payment.paidMoney(),
 					reason, text, saleVoidId, actor, role, now));
 		}
 		var lines = tickets.lines(ticketId);

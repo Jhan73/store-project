@@ -6656,6 +6656,648 @@
         "tags" : [ "table-admin-controller" ]
       }
     },
+    "/api/v1/admin/wallet-providers" : {
+      "get" : {
+        "operationId" : "walletProviderAdminList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WalletProviderResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-admin-controller" ]
+      },
+      "post" : {
+        "operationId" : "walletProviderAdminCreate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveWalletProviderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WalletProviderResponse"
+                }
+              }
+            },
+            "description" : "Created",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the returned resource.",
+                "schema" : {
+                  "type" : "string"
+                }
+              },
+              "Location" : {
+                "description" : "URI of the created resource.",
+                "schema" : {
+                  "type" : "string",
+                  "format" : "uri-reference"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: instore.wallet-provider-name-already-used",
+            "x-error-codes" : [ "instore.wallet-provider-name-already-used" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/wallet-providers/{id}" : {
+      "put" : {
+        "operationId" : "walletProviderAdminRename",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SaveWalletProviderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WalletProviderResponse"
+                }
+              }
+            },
+            "description" : "OK",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the returned resource.",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request, common.validation-failed",
+            "x-error-codes" : [ "common.malformed-request", "common.validation-failed" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.wallet-provider-not-found",
+            "x-error-codes" : [ "instore.wallet-provider-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification, instore.wallet-provider-name-already-used",
+            "x-error-codes" : [ "common.concurrent-modification", "instore.wallet-provider-name-already-used" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "415" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unsupported Media Type. Error codes: common.unsupported-media-type",
+            "x-error-codes" : [ "common.unsupported-media-type" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/wallet-providers/{id}/deactivate" : {
+      "post" : {
+        "operationId" : "walletProviderAdminDeactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WalletProviderResponse"
+                }
+              }
+            },
+            "description" : "OK",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the returned resource.",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.wallet-provider-not-found",
+            "x-error-codes" : [ "instore.wallet-provider-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification",
+            "x-error-codes" : [ "common.concurrent-modification" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-admin-controller" ]
+      }
+    },
+    "/api/v1/admin/wallet-providers/{id}/reactivate" : {
+      "post" : {
+        "operationId" : "walletProviderAdminReactivate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "header",
+          "name" : "If-Match",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WalletProviderResponse"
+                }
+              }
+            },
+            "description" : "OK",
+            "headers" : {
+              "ETag" : {
+                "description" : "Version of the returned resource.",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          },
+          "400" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Bad Request. Error codes: common.malformed-request",
+            "x-error-codes" : [ "common.malformed-request" ]
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "404" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Found. Error codes: instore.wallet-provider-not-found",
+            "x-error-codes" : [ "instore.wallet-provider-not-found" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "409" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Conflict. Error codes: common.concurrent-modification, instore.wallet-provider-name-already-used",
+            "x-error-codes" : [ "common.concurrent-modification", "instore.wallet-provider-name-already-used" ]
+          },
+          "412" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Failed. Error codes: common.precondition-failed",
+            "x-error-codes" : [ "common.precondition-failed" ]
+          },
+          "428" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Precondition Required. Error codes: common.precondition-required",
+            "x-error-codes" : [ "common.precondition-required" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-admin-controller" ]
+      }
+    },
     "/api/v1/audit-entries" : {
       "get" : {
         "operationId" : "auditSearch",
@@ -8551,8 +9193,8 @@
                 }
               }
             },
-            "description" : "Not Found. Error codes: catalog.product-not-found",
-            "x-error-codes" : [ "catalog.product-not-found" ]
+            "description" : "Not Found. Error codes: catalog.product-not-found, instore.wallet-provider-not-found",
+            "x-error-codes" : [ "catalog.product-not-found", "instore.wallet-provider-not-found" ]
           },
           "406" : {
             "content" : {
@@ -8573,8 +9215,8 @@
                 }
               }
             },
-            "description" : "Conflict. Error codes: catalog.modifier-option-unavailable, catalog.price-currency-mismatch, catalog.product-unavailable, common.idempotency-in-progress, instore.no-open-shift, instore.shift-closing, inventory.insufficient-stock",
-            "x-error-codes" : [ "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-unavailable", "common.idempotency-in-progress", "instore.no-open-shift", "instore.shift-closing", "inventory.insufficient-stock" ]
+            "description" : "Conflict. Error codes: catalog.modifier-option-unavailable, catalog.price-currency-mismatch, catalog.product-unavailable, common.idempotency-in-progress, instore.no-open-shift, instore.shift-closing, instore.wallet-provider-inactive, inventory.insufficient-stock",
+            "x-error-codes" : [ "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-unavailable", "common.idempotency-in-progress", "instore.no-open-shift", "instore.shift-closing", "instore.wallet-provider-inactive", "inventory.insufficient-stock" ]
           },
           "415" : {
             "content" : {
@@ -8595,8 +9237,8 @@
                 }
               }
             },
-            "description" : "Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.product-not-quick-sale",
-            "x-error-codes" : [ "catalog.invalid-modifier-selection", "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment", "instore.product-not-quick-sale" ]
+            "description" : "Unprocessable Content. Error codes: catalog.invalid-modifier-selection, common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.product-not-quick-sale, instore.wallet-provider-not-allowed, instore.wallet-provider-required",
+            "x-error-codes" : [ "catalog.invalid-modifier-selection", "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment", "instore.product-not-quick-sale", "instore.wallet-provider-not-allowed", "instore.wallet-provider-required" ]
           },
           "500" : {
             "content" : {
@@ -12837,8 +13479,8 @@
                 }
               }
             },
-            "description" : "Not Found. Error codes: instore.line-not-found, instore.ticket-not-found",
-            "x-error-codes" : [ "instore.line-not-found", "instore.ticket-not-found" ]
+            "description" : "Not Found. Error codes: instore.line-not-found, instore.ticket-not-found, instore.wallet-provider-not-found",
+            "x-error-codes" : [ "instore.line-not-found", "instore.ticket-not-found", "instore.wallet-provider-not-found" ]
           },
           "406" : {
             "content" : {
@@ -12859,8 +13501,8 @@
                 }
               }
             },
-            "description" : "Conflict. Error codes: common.idempotency-in-progress, instore.line-already-paid, instore.no-open-shift, instore.shift-closing, instore.ticket-closed, inventory.insufficient-stock",
-            "x-error-codes" : [ "common.idempotency-in-progress", "instore.line-already-paid", "instore.no-open-shift", "instore.shift-closing", "instore.ticket-closed", "inventory.insufficient-stock" ]
+            "description" : "Conflict. Error codes: common.idempotency-in-progress, instore.line-already-paid, instore.no-open-shift, instore.shift-closing, instore.ticket-closed, instore.wallet-provider-inactive, inventory.insufficient-stock",
+            "x-error-codes" : [ "common.idempotency-in-progress", "instore.line-already-paid", "instore.no-open-shift", "instore.shift-closing", "instore.ticket-closed", "instore.wallet-provider-inactive", "inventory.insufficient-stock" ]
           },
           "415" : {
             "content" : {
@@ -12881,8 +13523,8 @@
                 }
               }
             },
-            "description" : "Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.payment-exceeds-balance, instore.ticket-has-unsent-lines",
-            "x-error-codes" : [ "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment", "instore.payment-exceeds-balance", "instore.ticket-has-unsent-lines" ]
+            "description" : "Unprocessable Content. Error codes: common.idempotency-key-reused, instore.invalid-amount, instore.invalid-payment, instore.payment-exceeds-balance, instore.ticket-has-unsent-lines, instore.wallet-provider-not-allowed, instore.wallet-provider-required",
+            "x-error-codes" : [ "common.idempotency-key-reused", "instore.invalid-amount", "instore.invalid-payment", "instore.payment-exceeds-balance", "instore.ticket-has-unsent-lines", "instore.wallet-provider-not-allowed", "instore.wallet-provider-required" ]
           },
           "500" : {
             "content" : {
@@ -13714,6 +14356,74 @@
         } ],
         "tags" : [ "ticket-payment-controller" ]
       }
+    },
+    "/api/v1/wallet-providers" : {
+      "get" : {
+        "operationId" : "walletProviderListActive",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WalletProviderOptionResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "401" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Unauthorized. Error codes: auth.unauthenticated",
+            "x-error-codes" : [ "auth.unauthenticated" ]
+          },
+          "403" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Forbidden. Error codes: auth.forbidden",
+            "x-error-codes" : [ "auth.forbidden" ]
+          },
+          "406" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Not Acceptable. Error codes: common.not-acceptable",
+            "x-error-codes" : [ "common.not-acceptable" ]
+          },
+          "500" : {
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description" : "Internal Server Error. Error codes: common.internal-error",
+            "x-error-codes" : [ "common.internal-error" ]
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "wallet-provider-controller" ]
+      }
     }
   },
   "components" : {
@@ -14421,7 +15131,7 @@
       "ErrorCode" : {
         "type" : "string",
         "description" : "Every error code the API can return; codes are never renamed or reused.",
-        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-in-use", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.default-station-required", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-in-use", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-has-active-categories", "catalog.station-has-live-orders", "catalog.station-has-unsent-lines", "catalog.station-inactive", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.idempotency-in-progress", "common.idempotency-key-required", "common.idempotency-key-reused", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "identity.staff-account-in-use", "identity.username-already-taken", "instore.cash-movement-not-found", "instore.cash-out-exceeds-drawer", "instore.counted-cash-locked", "instore.difference-note-required", "instore.invalid-amount", "instore.invalid-cash-movement", "instore.invalid-date-range", "instore.invalid-merge", "instore.invalid-payment", "instore.invalid-reason", "instore.invalid-ticket", "instore.line-already-paid", "instore.line-already-sent", "instore.line-comped", "instore.line-covered-by-payment", "instore.line-not-found", "instore.line-not-sent", "instore.line-product-unavailable", "instore.line-voided", "instore.no-open-shift", "instore.payment-exceeds-balance", "instore.payment-not-found", "instore.product-not-quick-sale", "instore.sale-void-not-permitted", "instore.shift-already-open", "instore.shift-closed", "instore.shift-closing", "instore.shift-not-found", "instore.table-has-open-ticket", "instore.table-in-use", "instore.table-inactive", "instore.table-name-already-used", "instore.table-not-found", "instore.table-occupied", "instore.ticket-closed", "instore.ticket-has-no-table", "instore.ticket-has-payments", "instore.ticket-has-unsent-lines", "instore.ticket-not-closed", "instore.ticket-not-empty", "instore.ticket-not-found", "instore.too-many-lines", "instore.user-has-open-shift", "inventory.insufficient-stock", "inventory.invalid-quantity", "inventory.invalid-reason", "inventory.product-not-found", "inventory.product-not-tracked", "inventory.product-out-of-stock", "inventory.reservation-not-active", "inventory.stock-item-not-found", "inventory.stock-reserved", "preparation.line-already-flagged", "preparation.line-already-ready", "preparation.line-comped", "preparation.line-flagged-unavailable", "preparation.line-not-found", "preparation.line-not-pending", "preparation.lines-not-acknowledged", "preparation.marker-already-acknowledged", "preparation.marker-not-found", "preparation.order-already-started", "preparation.order-cancelled", "preparation.order-closed", "preparation.order-not-completed", "preparation.order-not-found", "preparation.order-not-preparing", "preparation.order-not-ready", "preparation.recall-window-expired", "store.currency-locked", "store.delivery-zone-currency-mismatch", "store.delivery-zone-in-use", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
+        "enum" : [ "auth.account-locked", "auth.forbidden", "auth.invalid-credentials", "auth.invalid-refresh-token", "auth.invalid-set-password-token", "auth.unauthenticated", "catalog.category-in-use", "catalog.category-name-already-used", "catalog.category-not-found", "catalog.currency-mismatch", "catalog.default-station-required", "catalog.invalid-image", "catalog.invalid-modifier-group", "catalog.invalid-modifier-selection", "catalog.invalid-price", "catalog.invalid-product", "catalog.modifier-group-in-use", "catalog.modifier-group-name-already-used", "catalog.modifier-group-not-found", "catalog.modifier-option-not-found", "catalog.modifier-option-unavailable", "catalog.price-currency-mismatch", "catalog.product-in-use", "catalog.product-name-already-used", "catalog.product-not-found", "catalog.product-unavailable", "catalog.provider-unavailable", "catalog.station-has-active-categories", "catalog.station-has-live-orders", "catalog.station-has-unsent-lines", "catalog.station-inactive", "catalog.station-name-already-used", "catalog.station-not-found", "catalog.unknown-category", "catalog.unknown-modifier-group", "catalog.unknown-station", "common.concurrent-modification", "common.content-too-large", "common.idempotency-in-progress", "common.idempotency-key-required", "common.idempotency-key-reused", "common.internal-error", "common.malformed-request", "common.method-not-allowed", "common.not-acceptable", "common.not-found", "common.precondition-failed", "common.precondition-required", "common.service-unavailable", "common.unsupported-media-type", "common.validation-failed", "identity.cannot-modify-own-account", "identity.email-already-registered", "identity.invalid-staff-role", "identity.last-active-admin-required", "identity.staff-account-in-use", "identity.username-already-taken", "instore.cash-movement-not-found", "instore.cash-out-exceeds-drawer", "instore.counted-cash-locked", "instore.difference-note-required", "instore.invalid-amount", "instore.invalid-cash-movement", "instore.invalid-date-range", "instore.invalid-merge", "instore.invalid-payment", "instore.invalid-reason", "instore.invalid-ticket", "instore.line-already-paid", "instore.line-already-sent", "instore.line-comped", "instore.line-covered-by-payment", "instore.line-not-found", "instore.line-not-sent", "instore.line-product-unavailable", "instore.line-voided", "instore.no-open-shift", "instore.payment-exceeds-balance", "instore.payment-not-found", "instore.product-not-quick-sale", "instore.sale-void-not-permitted", "instore.shift-already-open", "instore.shift-closed", "instore.shift-closing", "instore.shift-not-found", "instore.table-has-open-ticket", "instore.table-in-use", "instore.table-inactive", "instore.table-name-already-used", "instore.table-not-found", "instore.table-occupied", "instore.ticket-closed", "instore.ticket-has-no-table", "instore.ticket-has-payments", "instore.ticket-has-unsent-lines", "instore.ticket-not-closed", "instore.ticket-not-empty", "instore.ticket-not-found", "instore.too-many-lines", "instore.user-has-open-shift", "instore.wallet-provider-inactive", "instore.wallet-provider-name-already-used", "instore.wallet-provider-not-allowed", "instore.wallet-provider-not-found", "instore.wallet-provider-required", "inventory.insufficient-stock", "inventory.invalid-quantity", "inventory.invalid-reason", "inventory.product-not-found", "inventory.product-not-tracked", "inventory.product-out-of-stock", "inventory.reservation-not-active", "inventory.stock-item-not-found", "inventory.stock-reserved", "preparation.line-already-flagged", "preparation.line-already-ready", "preparation.line-comped", "preparation.line-flagged-unavailable", "preparation.line-not-found", "preparation.line-not-pending", "preparation.lines-not-acknowledged", "preparation.marker-already-acknowledged", "preparation.marker-not-found", "preparation.order-already-started", "preparation.order-cancelled", "preparation.order-closed", "preparation.order-not-completed", "preparation.order-not-found", "preparation.order-not-preparing", "preparation.order-not-ready", "preparation.recall-window-expired", "store.currency-locked", "store.delivery-zone-currency-mismatch", "store.delivery-zone-in-use", "store.delivery-zone-name-already-used", "store.delivery-zone-not-found", "store.invalid-board-thresholds", "store.invalid-delivery-zone", "store.invalid-opening-hours", "store.invalid-settings-value", "store.reason-code-already-used", "store.reason-not-found" ]
       },
       "ForceCloseShiftRequest" : {
         "type" : "object",
@@ -15132,9 +15842,16 @@
           },
           "voided" : {
             "type" : "boolean"
+          },
+          "walletProviderId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
+          },
+          "walletProviderName" : {
+            "type" : [ "string", "null" ]
           }
         },
-        "required" : [ "change", "id", "lineIds", "method", "paid", "received", "recordedAt", "recordedBy", "voidNote", "voidReasonCode", "voided" ]
+        "required" : [ "change", "id", "lineIds", "method", "paid", "received", "recordedAt", "recordedBy", "voidNote", "voidReasonCode", "voided", "walletProviderId", "walletProviderName" ]
       },
       "Problem" : {
         "type" : "object",
@@ -15273,9 +15990,13 @@
             }, {
               "type" : "null"
             } ]
+          },
+          "walletProviderId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
           }
         },
-        "required" : [ "method", "receivedAmount" ]
+        "required" : [ "method", "receivedAmount", "walletProviderId" ]
       },
       "QuickSaleRequest" : {
         "type" : "object",
@@ -15364,6 +16085,10 @@
             }, {
               "type" : "null"
             } ]
+          },
+          "walletProviderId" : {
+            "type" : [ "string", "null" ],
+            "format" : "uuid"
           }
         },
         "required" : [ "amount", "method" ]
@@ -15524,6 +16249,17 @@
           "name" : {
             "type" : "string",
             "maxLength" : 80,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "name" ]
+      },
+      "SaveWalletProviderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 60,
             "minLength" : 0
           }
         },
@@ -16274,6 +17010,38 @@
           }
         },
         "required" : [ "reason" ]
+      },
+      "WalletProviderOptionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name" ]
+      },
+      "WalletProviderResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "etag" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "active", "etag", "id", "name" ]
       }
     },
     "securitySchemes" : {

@@ -23,10 +23,12 @@ describe('audit labels', () => {
         'SHIFT',
         'CASH_MOVEMENT',
         'STOCK_ITEM',
+        'WALLET_PROVIDER',
       ]),
     );
     expect(entityTypeLabel('CATEGORY')).toBe('Categoría');
     expect(entityTypeLabel('STATION')).toBe('Estación');
+    expect(entityTypeLabel('WALLET_PROVIDER')).toBe('Billetera');
     for (const type of AUDIT_ENTITY_TYPES) {
       expect(entityTypeLabel(type)).not.toBe(type);
     }
@@ -46,6 +48,10 @@ describe('audit labels', () => {
         'CATEGORY_REACTIVATED',
         'STATION_CREATED',
         'STATION_UPDATED',
+        'WALLET_PROVIDER_CREATED',
+        'WALLET_PROVIDER_UPDATED',
+        'WALLET_PROVIDER_DEACTIVATED',
+        'WALLET_PROVIDER_REACTIVATED',
       ]),
     );
     expect(AUDIT_ACTIONS).toContain('MODIFIER_OPTION_AVAILABILITY_CHANGED');

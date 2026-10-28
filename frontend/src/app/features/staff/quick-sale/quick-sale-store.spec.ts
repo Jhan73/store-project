@@ -276,7 +276,7 @@ describe('QuickSaleStore', () => {
       expect(request.request.body).toEqual({
         customerName: 'Ana',
         lines: [{ productId: 'p1', quantity: 1, modifierOptionIds: [], note: null, allergy: false }],
-        payment: { method: 'CASH', receivedAmount: pen('10.00') },
+        payment: { method: 'CASH', receivedAmount: pen('10.00'), walletProviderId: null },
       });
       expect(request.request.headers.get('Idempotency-Key')).toBeTruthy();
       request.flush({ id: 'k1', number: 7, quickSale: true }, { status: 201, statusText: 'Created' });
@@ -330,7 +330,7 @@ describe('QuickSaleStore', () => {
 
       const request = http.expectOne(`${BASE}/quick-sales`);
       expect(request.request.body.customerName).toBeNull();
-      expect(request.request.body.payment).toEqual({ method: 'CARD', receivedAmount: null });
+      expect(request.request.body.payment).toEqual({ method: 'CARD', receivedAmount: null, walletProviderId: null });
       request.flush({ id: 'k1', number: 8 }, { status: 201, statusText: 'Created' });
     });
 

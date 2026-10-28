@@ -27,7 +27,7 @@ import com.jhanantezana.jugueria.shared.Money;
 class Payments {
 
 	record PaymentRow(UUID id, UUID ticketId, UUID shiftId, PaymentMethod method, Currency currency, BigDecimal paid,
-			@Nullable BigDecimal received, BigDecimal change, boolean voided) {
+			@Nullable BigDecimal received, BigDecimal change, boolean voided, @Nullable String walletProviderName) {
 
 		Money paidMoney() {
 			return new Money(paid, currency);
@@ -37,7 +37,8 @@ class Payments {
 
 	private static final String SELECT = """
 			SELECT p.id, p.ticket_id, p.shift_id, p.method, p.currency, p.paid_amount, p.received_amount, p.change_amount,
-				p.recorded_by, p.recorded_at, v.id IS NOT NULL AS voided, v.reason_code AS void_reason, v.note AS void_note
+				p.recorded_by, p.recorded_at, p.wallet_provider_id, p.wallet_provider_name, v.id IS NOT NULL AS voided,
+				v.reason_code AS void_reason, v.note AS void_note
 			FROM instore.in_store_payment p LEFT JOIN instore.payment_void v ON v.payment_id = p.id
 			""";
 
@@ -47,12 +48,14 @@ class Payments {
 		this.jdbc = jdbc;
 	}
 
-	void insert(UUID id, UUID ticketId, UUID shiftId, PaymentMethod method, Money paid, @Nullable Money received,
+	void insert(UUID id, UUID ticketId, UUID shiftId, PaymentMethod method, @Nullable WalletProviderRef wallet,
+			Money paid, @Nullable Money received,
 			Money change, List<UUID> lineIds, UUID recordedBy, Instant now) {
 		jdbc.sql("""
 				INSERT INTO instore.in_store_payment (id, ticket_id, shift_id, method, currency, paid_amount, received_amount,
-					change_amount, recorded_by, recorded_at)
-				VALUES (:id, :ticket, :shift, :method, :currency, :paid, :received, :change, :by, :now)
+					change_amount, recorded_by, recorded_at, wallet_provider_id, wallet_provider_name)
+				VALUES (:id, :ticket, :shift, :method, :currency, :paid, :received, :change, :by, :now, :walletId,
+					:walletName)
 				""")
 			.param("id", id)
 			.param("ticket", ticketId)
@@ -64,6 +67,8 @@ class Payments {
 			.param("change", change.amount())
 			.param("by", recordedBy)
 			.param("now", Tickets.utc(now))
+			.param("walletId", wallet == null ? null : wallet.id())
+			.param("walletName", wallet == null ? null : wallet.name())
 			.update();
 		for (var lineId : lineIds) {
 			jdbc.sql("INSERT INTO instore.payment_line (payment_id, line_id) VALUES (:payment, :line)")
@@ -178,7 +183,8 @@ class Payments {
 		return new PaymentRow(rs.getObject("id", UUID.class), rs.getObject("ticket_id", UUID.class),
 				rs.getObject("shift_id", UUID.class), PaymentMethod.valueOf(rs.getString("method")),
 				Currency.getInstance(rs.getString("currency").trim()), rs.getBigDecimal("paid_amount"),
-				rs.getBigDecimal("received_amount"), rs.getBigDecimal("change_amount"), rs.getBoolean("voided"));
+				rs.getBigDecimal("received_amount"), rs.getBigDecimal("change_amount"), rs.getBoolean("voided"),
+				rs.getString("wallet_provider_name"));
 	}
 
 	private static PaymentView view(ResultSet rs, Map<UUID, List<UUID>> lines) throws SQLException {
@@ -186,7 +192,8 @@ class Payments {
 		var id = rs.getObject("id", UUID.class);
 		var method = PaymentMethod.valueOf(rs.getString("method"));
 		var received = rs.getBigDecimal("received_amount");
-		return new PaymentView(id, method, new Money(rs.getBigDecimal("paid_amount"), currency),
+		return new PaymentView(id, method, rs.getObject("wallet_provider_id", UUID.class),
+				rs.getString("wallet_provider_name"), new Money(rs.getBigDecimal("paid_amount"), currency),
 				received == null ? null : new Money(received, currency),
 				method == PaymentMethod.CASH ? new Money(rs.getBigDecimal("change_amount"), currency) : null,
 				lines.getOrDefault(id, List.of()), rs.getObject("recorded_by", UUID.class),

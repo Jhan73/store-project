@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
@@ -24,6 +24,8 @@ import { FormField } from '../../../shared/ui/form-field/form-field';
 import { MoneyInput } from '../../../shared/ui/money-input/money-input';
 import { ProductConfigurator } from '../../../shared/ui/product-configurator/product-configurator';
 import { methodLabel, PAYMENT_METHODS } from '../register/payment-methods';
+import { WalletProviderField } from '../register/wallet-provider-field';
+import { WalletProviderOptions } from '../register/wallet-provider-options';
 import { QuickSaleStore } from './quick-sale-store';
 
 interface Configuring {
@@ -34,6 +36,7 @@ interface Configuring {
 @Component({
   selector: 'app-quick-sale',
   imports: [
+    WalletProviderField,
     ReactiveFormsModule,
     RouterLink,
     ButtonDirective,
@@ -46,7 +49,7 @@ interface Configuring {
     FormField,
     MoneyInput,
   ],
-  providers: [QuickSaleStore],
+  providers: [QuickSaleStore, WalletProviderOptions],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './quick-sale.scss',
   template: `
@@ -277,6 +280,15 @@ interface Configuring {
                 fluid
               />
             </app-form-field>
+            @if (chosenMethod() === 'WALLET') {
+              <app-wallet-provider-field
+                controlId="qs-wallet"
+                [control]="provider"
+                [providers]="wallets.providers()"
+                [failed]="wallets.failed()"
+                (retry)="wallets.load()"
+              />
+            }
             @if (chosenMethod() === 'CASH') {
               <app-form-field
                 label="Efectivo recibido"
@@ -337,6 +349,7 @@ interface Configuring {
 })
 export class QuickSale {
   protected readonly store = inject(QuickSaleStore);
+  protected readonly wallets = inject(WalletProviderOptions);
 
   protected readonly icons = {
     add: IconPlus,
@@ -356,6 +369,9 @@ export class QuickSale {
     if (this.store.estimatedTotal() === null || !this.store.hasShift()) {
       return null;
     }
+    if (this.chosenMethod() === 'WALLET' && this.chosenProvider() === null) {
+      return $localize`:@@staff.quickSale.why.wallet:Elige la billetera con la que se pagó.`;
+    }
     return this.chosenMethod() === 'CASH' && parseAmount(this.typedReceived()) === null
       ? $localize`:@@staff.quickSale.why.received:Escribe el efectivo recibido para cobrar.`
       : null;
@@ -365,13 +381,18 @@ export class QuickSale {
   protected readonly customerName = new FormControl('', { nonNullable: true });
   protected readonly method = new FormControl<PaymentMethod>('CASH', { nonNullable: true });
   protected readonly received = new FormControl('', { nonNullable: true });
+  protected readonly provider = new FormControl<string | null>(null);
   protected readonly configuring = signal<Configuring | null>(null);
 
   protected readonly chosenMethod = toSignal(this.method.valueChanges, { initialValue: 'CASH' as PaymentMethod });
   private readonly typedReceived = toSignal(this.received.valueChanges, { initialValue: '' });
+  private readonly chosenProvider = toSignal(this.provider.valueChanges, { initialValue: null });
   protected readonly selling = computed(() => this.store.pending.has('sell'));
   protected readonly canSell = computed(() => {
     if (this.store.estimatedTotal() === null || !this.store.hasShift()) {
+      return false;
+    }
+    if (this.chosenMethod() === 'WALLET' && this.chosenProvider() === null) {
       return false;
     }
     // Whether the cash covers the sale is the API's call; the estimate is only a preview.
@@ -380,6 +401,11 @@ export class QuickSale {
 
   constructor() {
     this.store.load();
+    this.method.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
+      if (value === 'WALLET') {
+        this.wallets.load();
+      }
+    });
   }
 
   protected changeOf(sold: { payments: { voided: boolean; change: { amount: string; currency: string } | null }[] }) {
@@ -414,11 +440,22 @@ export class QuickSale {
     if (!this.canSell() || this.selling()) {
       return;
     }
-    this.store.sell({
-      customerName: this.customerName.value,
-      method: this.method.value,
-      received: this.method.value === 'CASH' ? parseAmount(this.received.value) : null,
-    });
+    this.store.sell(
+      {
+        customerName: this.customerName.value,
+        method: this.method.value,
+        received: this.method.value === 'CASH' ? parseAmount(this.received.value) : null,
+        walletProviderId: this.method.value === 'WALLET' ? this.provider.value : null,
+      },
+      (error) => this.walletRefused(error),
+    );
+  }
+
+  private walletRefused(error: unknown): void {
+    if (WalletProviderOptions.refuses(error)) {
+      this.provider.reset();
+      this.wallets.load(true);
+    }
   }
 
   protected newSale(): void {

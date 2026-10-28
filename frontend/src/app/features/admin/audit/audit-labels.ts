@@ -20,6 +20,7 @@ export const AUDIT_ENTITY_TYPES: readonly string[] = [
   'TICKET',
   'TICKET_LINE',
   'USER',
+  'WALLET_PROVIDER',
 ];
 
 export const AUDIT_ACTIONS: readonly string[] = [
@@ -78,6 +79,10 @@ export const AUDIT_ACTIONS: readonly string[] = [
   'USER_REACTIVATED',
   'USER_RENAMED',
   'USER_ROLE_CHANGED',
+  'WALLET_PROVIDER_CREATED',
+  'WALLET_PROVIDER_DEACTIVATED',
+  'WALLET_PROVIDER_REACTIVATED',
+  'WALLET_PROVIDER_UPDATED',
 ];
 
 export function entityTypeLabel(type: string): string {
@@ -116,6 +121,8 @@ export function entityTypeLabel(type: string): string {
       return $localize`:@@admin.audit.entity.table:Mesa`;
     case 'USER':
       return $localize`:@@admin.audit.entity.user:Personal`;
+    case 'WALLET_PROVIDER':
+      return $localize`:@@admin.audit.entity.walletProvider:Billetera`;
     default:
       return type;
   }

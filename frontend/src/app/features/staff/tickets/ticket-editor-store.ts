@@ -364,7 +364,7 @@ export class TicketEditorStore {
     this.command('transfer', this.api.transfer(this.ticketId, tableId), moved);
   }
 
-  pay(request: RecordPaymentRequest, paid: () => void): void {
+  pay(request: RecordPaymentRequest, paid: () => void, refused?: (error: unknown) => void): void {
     const intent = `pay:${JSON.stringify(request)}`;
     this.command(
       'pay',
@@ -374,6 +374,7 @@ export class TicketEditorStore {
         paid();
       },
       true,
+      refused,
     );
   }
 
@@ -526,6 +527,7 @@ export class TicketEditorStore {
     request: Observable<Ticket>,
     done?: () => void,
     detached = false,
+    refused?: (error: unknown) => void,
   ): void {
     this.pending.add(pendingId);
     (detached ? request : request.pipe(takeUntilDestroyed(this.destroyRef))).subscribe({
@@ -549,11 +551,11 @@ export class TicketEditorStore {
         }
         done?.();
       },
-      error: (error: unknown) => this.commandFailed(pendingId, error),
+      error: (error: unknown) => this.commandFailed(pendingId, error, refused),
     });
   }
 
-  private commandFailed(pendingId: string, error: unknown): void {
+  private commandFailed(pendingId: string, error: unknown, refused?: (error: unknown) => void): void {
     this.pending.delete(pendingId);
     this.notifier.show(error);
     if (this.destroyed) {
@@ -562,6 +564,7 @@ export class TicketEditorStore {
     if (isShiftStateError(error)) {
       this.shiftErrors.update((count) => count + 1);
     }
+    refused?.(error);
     this.load();
   }
 }
