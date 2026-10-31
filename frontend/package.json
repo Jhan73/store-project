@@ -35,7 +35,7 @@
     "@angular/router": "^22.2.1",
     "@angular/ssr": "^22.2.2",
     "@primeuix/themes": "^2.0.3",
-    "@tabler/icons-angular": "^3.48.0",
+    "@tabler/icons-angular": "^3.50.0",
     "express": "^5.1.0",
     "primeng": "21.1.10",
     "rxjs": "~7.8.0",
