@@ -1,3 +1,5 @@
+# Version updates are paused while the project is in standby: a limit of 0 opens no PRs.
+# Restore the previous limits (5 for maven and npm, default for the rest) to resume.
 version: 2
 
 updates:
@@ -6,7 +8,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
     groups:
@@ -19,7 +21,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
     groups:
@@ -53,6 +55,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
     ignore:
@@ -65,6 +68,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
     ignore:
@@ -76,6 +80,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
     ignore:
@@ -90,6 +95,7 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
 
@@ -98,5 +104,6 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    open-pull-requests-limit: 0
     commit-message:
       prefix: "chore(deps)"
